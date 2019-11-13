@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+        xmlns:dc="http://purl.org/dc/elements/1.1/"
+        xmlns:cc="http://creativecommons.org/ns#"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.w3.org/2000/svg"
+        xmlns:xlink="http://www.w3.org/1999/xlink"
+        id="svg6350"
+        height="540"
+        width="810"
+        version="1.1">
+  <metadata
+     id="metadata6391">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <desc
+     id="desc6352">European flag</desc>
+  <defs
+     id="defs6354">
+    <g
+       id="s">
+      <g
+         id="c">
+        <path
+           transform="translate(0,-1)rotate(18)"
+           d="M0,0v1h0.5z"
+           id="t" />
+        <use
+           id="use6359"
+           transform="scale(-1,1)"
+           xlink:href="#t" />
+      </g>
+      <g
+         id="a">
+        <use
+           id="use6362"
+           transform="rotate(72)"
+           xlink:href="#c" />
+        <use
+           id="use6364"
+           transform="rotate(144)"
+           xlink:href="#c" />
+      </g>
+      <use
+         id="use6366"
+         transform="scale(-1,1)"
+         xlink:href="#a" />
+    </g>
+  </defs>
+  <g
+     id="g6370"
+     transform="scale(30)translate(13.5,9)"
+     fill="#fc0">
+    <use
+       id="use6372"
+       y="-6"
+       xlink:href="#s" />
+    <use
+       id="use6374"
+       y="6"
+       xlink:href="#s" />
+    <g
+       id="l">
+      <use
+         id="use6377"
+         x="-6"
+         xlink:href="#s" />
+      <use
+         id="use6379"
+         transform="rotate(150)translate(0,6)rotate(66)"
+         xlink:href="#s" />
+      <use
+         id="use6381"
+         transform="rotate(120)translate(0,6)rotate(24)"
+         xlink:href="#s" />
+      <use
+         id="use6383"
+         transform="rotate(60)translate(0,6)rotate(12)"
+         xlink:href="#s" />
+      <use
+         id="use6385"
+         transform="rotate(30)translate(0,6)rotate(42)"
+         xlink:href="#s" />
+    </g>
+    <use
+       id="use6387"
+       transform="scale(-1,1)"
+       xlink:href="#l" />
+  </g>
+</svg>

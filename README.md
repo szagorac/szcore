@@ -1,0 +1,2 @@
+# szcore
+SZcore old version

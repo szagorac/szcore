@@ -2,21 +2,8 @@ package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.instrument.BasicInstrument;
-import com.xenaksys.szcore.model.Id;
-import com.xenaksys.szcore.model.Instrument;
-import com.xenaksys.szcore.model.NoteDuration;
-import com.xenaksys.szcore.model.Score;
-import com.xenaksys.szcore.model.Script;
-import com.xenaksys.szcore.model.Tempo;
-import com.xenaksys.szcore.model.TempoImpl;
-import com.xenaksys.szcore.model.TimeSignature;
-import com.xenaksys.szcore.model.TimeSignatureImpl;
-import com.xenaksys.szcore.model.Transition;
-import com.xenaksys.szcore.model.id.BarId;
-import com.xenaksys.szcore.model.id.BeatId;
-import com.xenaksys.szcore.model.id.IntId;
-import com.xenaksys.szcore.model.id.PageId;
-import com.xenaksys.szcore.model.id.StrId;
+import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.model.id.*;
 import com.xenaksys.szcore.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,9 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import static com.xenaksys.szcore.score.ResourceType.FILE;
-import static com.xenaksys.szcore.score.ResourceType.JAVASCRIPT;
-import static com.xenaksys.szcore.score.ResourceType.TRANSITION;
+import static com.xenaksys.szcore.score.ResourceType.*;
 
 
 public class ScoreLoader {
@@ -44,7 +29,7 @@ public class ScoreLoader {
     static final String SINGLE_QUOTE = "'";
     static final String AV = "AV";
 
-
+    public static volatile String workingDir;
 
     private static String[] expextedHeaders = {
             "scoreName",            //0
@@ -74,11 +59,20 @@ public class ScoreLoader {
     };
 
     static Score load(String path) throws Exception {
-        List<String> lines = FileUtil.loadLinesFromFile(path);
-        return loadLines(lines);
+        if(path != null) {
+            File file = FileUtil.getFileFromClassPath(path);
+            return load(file);
+        }
+        return null;
     }
 
     static Score load(File file) throws Exception {
+        if(file == null) {
+           return null;
+        }
+
+        workingDir = file.getParent();
+
         List<String> lines = FileUtil.loadFile(file);
         return loadLines(lines);
     }
@@ -96,6 +90,24 @@ public class ScoreLoader {
             LOG.error("Unexpeted headers: " + headers);
             return null;
         }
+
+        List<ScoreElement> scoreElements = new ArrayList<>();
+
+        for (String line : lines) {
+            ScoreElement scoreElement = parseLine(line);
+            scoreElements.add(scoreElement);
+        }
+
+        BasicScore score = createScoreFromElements(scoreElements);
+
+        return score;
+    }
+
+    static Score loadInscoreMapLines(List<String> lines) throws Exception {
+        if (lines == null || lines.isEmpty()) {
+            return null;
+        }
+
 
         List<ScoreElement> scoreElements = new ArrayList<>();
 
@@ -198,6 +210,7 @@ public class ScoreLoader {
             fileName = fileName.substring(fileName.lastIndexOf(Consts.SLASH) + 1);
         }
         PageId pageId = new PageId(pageNo, instrumentId, scoreId);
+        loadPageInscoreMap(pageId, pageName, fileName);
         BasicPage page = new BasicPage(pageId, pageName, fileName);
         if (!score.containsPage(page)) {
             score.addPage(page);
@@ -249,6 +262,25 @@ public class ScoreLoader {
         if (!score.containsBeat(beat)) {
             score.addBeat(beat);
         }
+    }
+
+    private static InscorePageMap loadPageInscoreMap(PageId pageId, String pageName, String fileName) {
+        String mapFilename = fileName + Consts.INSCORE_FILE_SUFFIX + Consts.TXT_FILE_EXTENSION;
+        String path = workingDir + Consts.SLASH + mapFilename;
+        InscorePageMap inscorePageMap = new InscorePageMap(pageId);
+        try {
+            File file = FileUtil.getFileFromPath(path);
+            List<String> lines = FileUtil.loadFile(file);
+
+            for(String line : lines) {
+                InscoreMapElement inscoreMapElement = InscoreMapElement.parseLine(line);
+                inscorePageMap.addElement(inscoreMapElement);
+            }
+        } catch (Exception e) {
+            LOG.error("Failed to load map file {}", path, e);
+        }
+
+        return inscorePageMap;
     }
 
     private static void processJavascriptScoreElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) throws Exception {

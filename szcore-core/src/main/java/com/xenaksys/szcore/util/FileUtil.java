@@ -35,6 +35,37 @@ public class FileUtil {
         return null;
     }
 
+    public static File getFileFromClassPath(String path) {
+        try {
+            URL url = ClassLoader.getSystemResource(path);
+            File file = FileUtils.toFile(url);
+            if (!file.exists()) {
+                LOG.error("File does not exist for path: " + path);
+                return null;
+            }
+
+            return file;
+        } catch (Exception e) {
+            LOG.error("Failed to process file path: " + path);
+        }
+        return null;
+    }
+
+    public static File getFileFromPath(String path) {
+        try {
+            File file = new File(path);
+            if (!file.exists()) {
+                LOG.error("File does not exist for path: " + path);
+                return null;
+            }
+
+            return file;
+        } catch (Exception e) {
+            LOG.error("Failed to process file path: " + path);
+        }
+        return null;
+    }
+
     public static List<String> loadFile(File file) throws Exception {
         return FileUtils.readLines(file, CHARSET);
     }

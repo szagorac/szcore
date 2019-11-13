@@ -18,6 +18,10 @@ public interface Consts {
     public static final String EMPTY = "";
     public static final String COLUMN = ":";
     public static final String SPACE = " ";
+    public static final String BRACKET_SQUARE_OPEN = "[";
+    public static final String BRACKET_SQUARE_CLOSE = "]";
+    public static final String BRACKET_OPEN = "(";
+    public static final String BRACKET_CLOSE = ")";
     public static final String SLASH = "/";
     public static final String NEW_LINE = "\n";
     public static final String EIGHTH = "/8";

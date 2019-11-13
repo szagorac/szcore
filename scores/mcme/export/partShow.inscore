@@ -1,0 +1,624 @@
+<? javascript
+
+var SERVER_ADDRESS = "192.168.0.13";
+var SERVER_PORT = "7777";
+
+var LOCAL_PORT = "7000";
+var LOCAL_OUT_PORT = "7001";
+
+var SPACE = " ";
+var NL = "\n";
+var SEMICOLON = ";";
+var UNDERSCORE = "_";
+var PLUS = "+";
+var COMMA = ",";
+var SINGLE_QUOTE = "'";
+var DOT = ".";
+var SLASH = "/";
+var BASE_BEAT_FRACTION = "/8";
+
+var ALPHA = "alpha";
+var PEN_COLOR = "penColor";
+var PEN_WIDTH = "penWidth";
+var SHOW = "show";
+var COLOR = "color";
+var SET = "set";
+var FILE = "file";
+var TXT = "txt";
+var DATE = "date";
+var TEMPO = "tempo";
+
+var SZCORE = "SZCORE";
+var HELLO = "HELLO";
+var PING = "PING";
+var SET_INSTRUMENT = "SET_INSTRUMENT";
+
+var STAVE1 = "/ITL/scene/stave";
+var STAVE2 = "/ITL/scene/stave2";
+var BEATER = "/ITL/scene/beater";
+var SCORE_FOLLOW_BEATER = "/ITL/scene/slaveBeat";
+var SCORE_FOLLOW_BEATER2 = "/ITL/scene/slaveBeat2";
+var SCORE_FOLLOW_LINE = "/ITL/scene/slaveFollow";
+var SCORE_FOLLOW_LINE2 = "/ITL/scene/slaveFollow2";
+var SCORE_START_MARK = "/ITL/scene/slaveStartMark";
+var SCORE_START_MARK2 = "/ITL/scene/slaveStartMark2";
+var STAVE_MASK = "/ITL/scene/staveMask";
+var STAVE2_MASK = "/ITL/scene/stave2Mask";
+var LOGGER = "/ITL/scene/logger";
+var CONNECT = "/ITL/scene/connect";
+var SERVER = "/ITL/scene/server";
+var TITLE = "/ITL/scene/title";
+var PART = "/ITL/scene/part";
+var SELECT_PART_LAYER = "/ITL/scene/selectPartLayer";
+
+var RSRC_DIR = "rsrc/";
+
+var ACTIVE_PEN_COLOR = SPACE + PEN_COLOR + " 250 150 150;";
+var INACTIVE_PEN_COLOR = SPACE + PEN_COLOR + " 200 200 200;";
+var ACTIVE_PEN_WIDTH = SPACE + PEN_WIDTH + " 2.;";
+var INACTIVE_PEN_WIDTH = SPACE + PEN_WIDTH + " 1.;";
+
+var ACTIVE_ALPHA = SPACE + ALPHA + " 0;";
+var INACTIVE_ALPHA = SPACE + ALPHA + " 80;";
+var BEATER_ON = SHOW + " 1;";
+var BEATER_OFF = SHOW + " 0;";
+var COLOR_GREEN = COLOR + " 0 255 0 255;";
+var COLOR_RED = COLOR + " 255 0 0 255;";
+var COLOR_YELLOW = COLOR + " 255 255 0 255;";
+var COLOR_ORANGE = COLOR + " 255 153 0 255;";
+var DEFAULT_INST_Y = -0.6;
+var SHOW_SELECT_PART_LAYER = SELECT_PART_LAYER +  " " + SHOW + " 1;";
+var HIDE_SELECT_PART_LAYER = SELECT_PART_LAYER +  " " + SHOW + " 0;";
+
+var JS_RUN = "/ITL/scene/javascript run ";
+var DEFAULT_STAVE = "rsrc/blankStave.png";
+var DEFAULT_TITLE = "Ukodus";
+var DEFAULT_PART = "Part";
+
+var CONNECTED_PREFIX = "'Connected to: ";
+var COMMAND_SUFFIX = "';";
+var SET_TXT_COMMAND = " set txt ";
+var CONNECT_SET_TXT = CONNECT + SET_TXT_COMMAND + CONNECTED_PREFIX;
+var SERVER_TXT = "'Server: ";
+var SERVER_SET_TXT = SERVER + SET_TXT_COMMAND + SERVER_TXT;
+var DATE_SET_TXT = SPACE + DATE + SPACE + SINGLE_QUOTE;
+var BB_FRACTION_TXT = BASE_BEAT_FRACTION + SINGLE_QUOTE + SEMICOLON;
+var TEMPO_SET_TXT = SPACE + TEMPO + SPACE;
+var PING_TXT = SPACE + PING + SPACE + "'";
+
+var instX = 0.0;
+var instY = DEFAULT_INST_Y;
+var instZ = 10.0;
+var instTxtScale = 2.0;
+var deltaInstY = 0.1;
+var inactiveColor = "100 0 0";
+var activeColor = "255 0 0";
+var DEFAULT_INST_Y = -0.6;
+
+var instruments = [];
+var instControls = [];
+var instControlIdx = 0;
+var connectAddr = SERVER_ADDRESS + ":" + SERVER_PORT + SLASH + SZCORE;
+var serverAddress;
+
+var activeStave = STAVE1;
+var currentTempo = 0;
+
+var maxBeaterNo = 4;
+
+function isArray(obj) {
+    return Object.prototype.toString.call(obj) === '[object Array]';
+};
+function log(value){
+    if(!value){
+        return;
+    }
+    post(LOGGER, SET, TXT, value);
+}
+function logArray(arr){
+    if(!arr || !isArray(arr)){
+        return;
+    }
+    var out = "";
+    for (var i = 0; i < arr.length; i++) {
+        out += arr[i] + NL;
+    }
+    post(LOGGER, SET, TXT, out);
+}
+function activateStave1(){
+    return activate(STAVE1);
+}
+function activateStave2(){
+    return activate(STAVE2);
+}
+function deactivateStave1(){
+    return deactivate(STAVE1);
+}
+function deactivateStave2(){
+    return deactivate(STAVE2);
+}
+function allBeatersOff(){
+    return beatersOff(this.maxBeaterNo);
+}
+function allBeatersOn(){
+    return beatersOn(this.maxBeaterNo);
+}
+function beatersOn(beaterNo, colourId){
+
+    if(beaterNo <= 0 || beaterNo > maxBeaterNo){
+        return;
+    }
+
+    var colour = getColour(colourId);
+
+    var out = [];
+    for(var i = 1; i <= beaterNo; i++){
+         out.push(BEATER + i + SPACE + BEATER_ON);
+         out.push(BEATER + i + SPACE + colour);
+    }
+    return out;
+}
+function beatersOff(beaterNo){
+
+    if(beaterNo <= 0 || beaterNo > maxBeaterNo){
+        return;
+    }
+
+    var out = [];
+    for(var i = 1; i <= beaterNo; i++){
+         out.push(BEATER + i + SPACE + BEATER_OFF);
+    }
+//    log(msg);
+    return out;
+}
+function getColour(colourId){
+    if(!colourId){
+        colourId = 1;
+    }
+
+    var colour;
+    switch (colourId){
+        case 4:
+            colour = COLOR_RED;
+         I  break;
+        case 3:
+            colour = COLOR_ORANGE;
+            break;
+        case 2:
+            colour = COLOR_YELLOW;
+            break;
+        case 1:
+        default :
+            colour = COLOR_GREEN;
+    }
+    return colour;
+}
+function activate (stave) {
+//    log("activate stave: " + stave);
+    var mask = getMask(stave);
+    if(!mask){
+        return;
+    }
+
+    activeStave = stave;
+    log("activeStave: " + activeStave);
+    var out = setStaveTempo(stave, currentTempo);
+    if(!out){
+        out = [];
+    }
+
+    out.push(mask + ACTIVE_ALPHA);
+    out.push(mask + ACTIVE_PEN_COLOR);
+    out.push(mask + ACTIVE_PEN_WIDTH);
+//    log("msg: " + msg);
+    return out;
+}
+function resetStave (stave) {
+    deactivate(stave);
+    post(stave, SET, FILE, DEFAULT_STAVE);
+}
+function resetTitle () {
+    post(TITLE, SET, TXT, DEFAULT_TITLE);
+}
+function resetPart () {
+    post(PART, SET, TXT, DEFAULT_PART);
+}
+function showSelectPartLayer(){
+    post(SELECT_PART_LAYER, SHOW, 1);
+}
+function hideSelectPartLayer(){
+    post(SELECT_PART_LAYER, SHOW, 0);
+}
+function setNoMask(){
+    post(STAVE2_MASK, "alpha", 0);
+}
+function deactivate (stave) {
+    var mask = getMask(stave);
+    if(!mask){
+        return;
+    }
+
+    var out = setStaveTempo(stave, 0);
+    if(!out){
+        out = [];
+    }
+    out.push(mask + INACTIVE_ALPHA);
+    out.push(mask + INACTIVE_PEN_COLOR);
+    out.push(mask + INACTIVE_PEN_WIDTH);
+//    log("msg: " + msg);
+    return out;
+}
+function getMask(stave){
+    var mask;
+    switch (stave){
+        case STAVE1:
+            mask = STAVE_MASK;
+            break;
+        case STAVE2:
+            mask = STAVE2_MASK;
+            break;
+    }
+    return mask;
+}
+function getFollowBeater(staveId){
+    var followBeater;
+    switch (staveId){
+        case 1:
+            followBeater = SCORE_FOLLOW_BEATER;
+            break;
+        case 2:
+            followBeater = SCORE_FOLLOW_BEATER2;
+            break;
+    }
+    return followBeater;
+}
+function getFollowLine(staveId){
+    var followLine;
+    switch (staveId){
+        case 1:
+            followLine = SCORE_FOLLOW_LINE;
+            break;
+        case 2:
+            followLine = SCORE_FOLLOW_LINE2;
+            break;
+    }
+//    log("getFollowLine staveId: " + staveId + " followLine: " + followLine);
+    return followLine;
+}
+function setDate (staveId, beatNo) {
+//    log("sendDate stave: " + staveId + " beatNo: " + beatNo);
+    var followBeater = getFollowBeater(staveId);
+    var followLine = getFollowLine(staveId);
+
+    var out = [];
+    out.push(followBeater + DATE_SET_TXT + beatNo + BB_FRACTION_TXT);
+    out.push(followLine + DATE_SET_TXT + beatNo + BB_FRACTION_TXT);
+    return out;
+}
+function getStaveId(stave){
+    var staveId = 1;
+    if(stave === STAVE2){
+        staveId = 2;
+    }
+    return staveId;
+}
+function setStaveTempo(stave, tempo) {
+
+    var staveId = getStaveId(stave);
+    var out = [];
+
+    var followLine = getFollowLine(staveId);
+    if(followLine){
+        out.push(followLine + TEMPO_SET_TXT + tempo + SEMICOLON);
+    }
+    var followBeater = getFollowBeater(staveId);
+    if(followBeater){
+        out.push(followBeater + TEMPO_SET_TXT + tempo + SEMICOLON);
+    }
+//    logArray(out);
+    return out;
+}
+function endsWith(str, suffix) {
+    if (!str || !suffix || suffix.length > str.length) {
+        return false;
+    }
+
+    return str.slice(-1 * suffix.length) === suffix;
+};
+function removeLastChar(str){
+    if(!str || str.length < 2){
+        return str;
+    }
+    return str.substring(0, (str.length - 1));
+}
+function serverHello(addr) {
+    serverAddress = addr;
+
+    var msg = SERVER_SET_TXT + addr + COMMAND_SUFFIX;
+    return msg;
+}
+function ping(serverTime) {
+    var msg = connectAddr + PING_TXT + serverTime + COMMAND_SUFFIX;
+    //log(msg);
+    return msg;
+   // post(connectAddr, PING, serverTime);
+}
+function setTitle(title) {
+    var out = TITLE + " set txt '" + title + "';";
+    return out;
+}
+function setPart(part) {
+    var out = PART + " set txt '" + part + "';";
+    return out;
+}
+function sendHello() { 
+    log("Connecting to " + connectAddr);
+    post(connectAddr, HELLO, LOCAL_PORT, LOCAL_OUT_PORT);
+}
+function setInstrument(idx) {
+    hideSelectPartLayer();
+    if(idx < 0 || idx >= instruments.length){
+        log("Invalid index: " + idx);
+        return;
+    }
+    var inst = instruments[idx];
+    log("Sending instrument to " + inst);
+    post(connectAddr, SET_INSTRUMENT, inst);
+}
+function logInstrument(idx){
+    if(idx < 0 || idx >= instruments.length){
+        log("Invalid index: " + idx);
+        return;
+    }
+    var inst = instruments[idx];
+    log("Selected instrument: " + inst + " idx: " + idx);
+}
+function addInstrument(name){
+    var idx = instruments.indexOf(name);
+    if(idx < 0){
+        instruments.push(name);   
+    } else {
+        log("Already Have instrument: " + name);
+        return instControls;
+    }
+
+    idx = instruments.indexOf(name);
+     
+    instY += deltaInstY;
+    
+    var controlName = name.replace(SPACE, UNDERSCORE);
+
+    var instTxt = "/ITL/scene/selectPartLayer/inst" + controlName;
+    instControls[instControlIdx++] = instTxt + " set txt '" + name +  "';";
+    instControls[instControlIdx++] = instTxt + " x " + instX + ";";
+    instControls[instControlIdx++] = instTxt + " y " + instY + ";";
+    instControls[instControlIdx++] = instTxt + " z " + instZ + ";";
+    instControls[instControlIdx++] = instTxt + " scale " + instTxtScale + ";";
+    instControls[instControlIdx++] = instTxt + " watch mouseEnter ( " + instTxt + " color " + activeColor + " );";
+    instControls[instControlIdx++] = instTxt + " watch mouseLeave ( " + instTxt + " color " + inactiveColor + " );";
+    instControls[instControlIdx++] = instTxt + " watch mouseUp ( " + JS_RUN + " 'setInstrument("+ idx + ")' );";
+    
+    return instControls;
+}
+function setInstruments(csvInstruments){ 
+    if(!csvInstruments){
+        return;
+    }
+    
+    instControls = [];
+    instruments = [];
+    instY = DEFAULT_INST_Y;
+    
+    var instNameArr = convertCsvToArr(csvInstruments);
+    
+    for (var i = 0; i < instNameArr.length; i++) {
+       addInstrument(instNameArr[i]);
+    }
+
+    showSelectPartLayer();
+
+    return instControls;
+}
+function convertCsvToArr(csvStr) {
+    if (!csvStr) {
+        return [];
+    }
+
+    return csvStr.split(COMMA);
+}
+function resetScore(){
+    resetStave(STAVE1);
+    resetStave(STAVE2);
+    resetTitle();
+    resetPart();
+}
+function resetStaves(){
+    resetStave(STAVE1);
+    resetStave(STAVE2);
+}
+function setTempo(tempo){
+    log("setting tempo: " + tempo);
+    currentTempo = tempo;
+    return setStaveTempo(activeStave, tempo);
+}
+function stop(){
+    out = [];
+    var tp = setTempo(0);
+    if(tp){
+       out = out.concat(tp);
+    }
+    var staveId = getStaveId(activeStave);
+    var dt = setDate(staveId, "0");
+    if(dt){
+       out = out.concat(dt);
+    }
+    var bOff = allBeatersOff();
+    if(bOff){
+        out = out.concat(bOff);
+    }
+    var bOn = beatersOn(1, 4);
+    if(bOn){
+        out = out.concat(bOn);
+    }
+//    logArray(out);
+    return out;
+}
+//  ########################## END JS ##############################
+?>
+
+/ITL/scene/* del;
+/ITL/scene color 255 255 255 255;
+
+/ITL/scene/title set txt "Ukodus";
+/ITL/scene/title x 0.0;
+/ITL/scene/title y -0.9;
+/ITL/scene/title z 3.0;
+/ITL/scene/title scale 3.0;
+
+/ITL/scene/part set txt "Cello";
+/ITL/scene/part x 0.0;
+/ITL/scene/part y -0.8;
+/ITL/scene/part scale 1.5;
+
+/ITL/scene/stave set file 'rsrc/Ukodus_Cello_page7.png' ;
+/ITL/scene/stave x 0.0;
+/ITL/scene/stave y -0.4;
+/ITL/scene/stave scale 1.4;
+/ITL/scene/stave z 1.0;
+/ITL/scene/stave show 1;
+
+/ITL/scene/staveMask  set 'rect' -10.0 0.7;
+/ITL/scene/staveMask x 0.0;
+/ITL/scene/staveMask y -0.4;
+/ITL/scene/staveMask z 5.0;
+/ITL/scene/staveMask scale 1.0;
+/ITL/scene/staveMask color 255 255 255 0;
+/ITL/scene/staveMask penColor 200 150 150;
+/ITL/scene/staveMask penWidth 2.;
+
+/ITL/scene/stave2 set file 'rsrc/Ukodus_Cello_page8.png' ;
+/ITL/scene/stave2 x 0.0;
+/ITL/scene/stave2 y 0.4;
+/ITL/scene/stave2 scale 1.4;
+/ITL/scene/stave2 z 1.0;
+/ITL/scene/stave2 show 1;
+
+/ITL/scene/stave2Mask  set 'rect' -10.0 0.7;
+/ITL/scene/stave2Mask x 0.0;
+/ITL/scene/stave2Mask y 0.4;
+/ITL/scene/stave2Mask z 5.0;
+/ITL/scene/stave2Mask scale 1.0;
+/ITL/scene/stave2Mask color 255 255 255 80;
+/ITL/scene/stave2Mask penColor 200 200 200;
+/ITL/scene/stave2Mask penWidth 1.;
+
+/ITL/scene/beater1 set "ellipse" 0.08 0.08;
+/ITL/scene/beater1 x -0.7;
+/ITL/scene/beater1 y -0.9;
+/ITL/scene/beater1 z 3.0;
+/ITL/scene/beater1 color 255 0 0 255;
+/ITL/scene/beater1 show 0;
+
+/ITL/scene/beater2 set "ellipse" 0.08 0.08;
+/ITL/scene/beater2 x -0.8;
+/ITL/scene/beater2 y -0.9;
+/ITL/scene/beater2 z 3.0;
+/ITL/scene/beater2 color 255 0 0 255;
+/ITL/scene/beater2 show 0;
+
+/ITL/scene/beater3 set "ellipse" 0.08 0.08;
+/ITL/scene/beater3 x -0.9;
+/ITL/scene/beater3 y -0.9;
+/ITL/scene/beater3 z 3.0;
+/ITL/scene/beater3 color 255 0 0 255;
+/ITL/scene/beater3 show 0;
+
+/ITL/scene/beater4 set "ellipse" 0.08 0.08;
+/ITL/scene/beater4 x -1.0;
+/ITL/scene/beater4 y -0.9;
+/ITL/scene/beater4 z 3.0;
+/ITL/scene/beater4 color 255 0 0 255;
+/ITL/scene/beater4 show 0;
+
+/ITL/scene/slaveBeat set 'ellipse' 0.02 0.02;
+/ITL/scene/slaveBeat color 200 0 0 200;
+/ITL/scene/slaveBeat z 2.0;
+/ITL/scene/sync slaveBeat stave syncOver;
+
+/ITL/scene/slaveFollow set 'rect' 0.01 0.5;
+/ITL/scene/slaveFollow color 0 100 0 100;
+/ITL/scene/slaveFollow z 2.0;
+/ITL/scene/sync slaveFollow stave syncOver;
+
+/ITL/scene/slaveStartMark set 'rect' 0.01 0.5;
+/ITL/scene/slaveStartMark color 204 102 255 100;
+/ITL/scene/slaveStartMark z 2.0;
+/ITL/scene/sync slaveStartMark stave syncOver;
+
+/ITL/scene/slaveBeat2 set 'ellipse' 0.02 0.02;
+/ITL/scene/slaveBeat2 color 200 0 0 200;
+/ITL/scene/slaveBeat2 z 2.0;
+/ITL/scene/sync slaveBeat2 stave2 syncOver;
+
+/ITL/scene/slaveFollow2 set 'rect' 0.01 0.5;
+/ITL/scene/slaveFollow2 color 0 100 0 100;
+/ITL/scene/slaveFollow2 z 2.0;
+/ITL/scene/sync slaveFollow2 stave2 syncOver;
+
+/ITL/scene/slaveStartMark2 set 'rect' 0.01 0.5;
+/ITL/scene/slaveStartMark2 color 204 102 255 100;
+/ITL/scene/slaveStartMark2 z 2.0;
+/ITL/scene/sync slaveStartMark2 stave2 syncOver;
+
+/ITL/scene/connect set txt "Connect";
+/ITL/scene/connect x 1.0;
+/ITL/scene/connect y -0.9;
+/ITL/scene/connect scale 1.5;
+/ITL/scene/connect color 0 0 0;
+/ITL/scene/connect z 2.0;
+/ITL/scene/connect watch mouseEnter ( /ITL/scene/connect color 255 0 0 );
+/ITL/scene/connect watch mouseDown  ( /ITL/scene/javascript run "sendHello()" );
+
+/ITL/scene/connectBox set rect 0.3 0.12;
+/ITL/scene/connectBox x 1.0;
+/ITL/scene/connectBox y -0.91;
+/ITL/scene/connectBox color 200 255 200;
+/ITL/scene/connectBox watch mouseEnter ( /ITL/scene/connect color 255 0 0 );
+/ITL/scene/connectBox watch mouseLeave ( /ITL/scene/connect color 0 0 0 );
+/ITL/scene/connectBox watch mouseDown  ( /ITL/scene/javascript run "sendHello()" );
+
+/ITL/scene/server set txt "Server: 192.168.0.11";
+/ITL/scene/server x 1.0;
+/ITL/scene/server y -0.8;
+/ITL/scene/server scale 1.2;
+/ITL/scene/server color 0 0 0;
+
+/ITL/scene/selectPartLayer set layer;
+/ITL/scene/selectPartLayer z 5.0;
+/ITL/scene/selectPartLayer show 0;
+
+/ITL/scene/selectPartLayer/selectTxt set txt "Select Part: ";
+/ITL/scene/selectPartLayer/selectTxt x 0.0;
+/ITL/scene/selectPartLayer/selectTxt y -0.6;
+/ITL/scene/selectPartLayer/selectTxt z 7.0;
+/ITL/scene/selectPartLayer/selectTxt scale 2.2;
+
+/ITL/scene/selectPartLayer/selectTxtBox set 'rect' 1.0 2.0;
+/ITL/scene/selectPartLayer/selectTxtBox color 0 230 0 230;
+/ITL/scene/selectPartLayer/selectTxtBox x 0.0;
+/ITL/scene/selectPartLayer/selectTxtBox y -0.0;
+/ITL/scene/selectPartLayer/selectTxtBox z 6.0;
+
+/ITL/scene/logger set txt "logger";
+/ITL/scene/logger x 0.0;
+/ITL/scene/logger y 0.95;
+/ITL/scene/logger scale 0.8;
+
+<? javascript
+//addInstrument("Cello");
+//addInstrument("Clarinet");
+//addInstrument("El Violin");
+//setInstruments("Cello, Clarinet,El Violin");
+//setTempo(120);
+beatersOn(4, 4);
+?>

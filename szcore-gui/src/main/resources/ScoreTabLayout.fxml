@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<BorderPane xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.xenaksys.szcore.gui.view.ScoreController">
+   <bottom>
+      <AnchorPane BorderPane.alignment="CENTER">
+         <children>
+            <VBox spacing="10.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+               <children>
+                  <Separator />
+                  <HBox alignment="CENTER_LEFT" spacing="10.0">
+                     <children>
+                        <Label prefWidth="200.0" styleClass="label-subtitle" stylesheets="@css/szcoreStyle.css" text="Participants" />
+                        <Label text="Send part choice to selected Participants:" />
+                        <Button fx:id="sendSelectedPartsBtn" mnemonicParsing="false" onAction="#sendPartsToSelectedParticipants" text="Send" />
+                     </children>
+                  </HBox>
+                  <TableView fx:id="participantsTable" prefHeight="150.0" prefWidth="550.0">
+                     <columns>
+                        <TableColumn fx:id="hostAddressColumn" maxWidth="200.0" minWidth="100.0" prefWidth="120.0" text="Host" />
+                        <TableColumn fx:id="inPortColumn" maxWidth="150.0" minWidth="50.0" prefWidth="70.0" text="In port" />
+                        <TableColumn fx:id="outPortColumn" maxWidth="150.0" minWidth="50.0" prefWidth="70.0" text="Out port" />
+                        <TableColumn fx:id="errPortColumn" maxWidth="150.0" minWidth="50.0" prefWidth="70.0" text="Err port" />
+                        <TableColumn fx:id="pingColumn" maxWidth="150.0" minWidth="50.0" prefWidth="70.0" text="Ping millis" />
+                        <TableColumn fx:id="instrumentColumn" maxWidth="300.0" minWidth="100.0" prefWidth="150.0" text="Instrument" />
+                     </columns>
+                  </TableView>
+               </children>
+            </VBox>
+         </children>
+      </AnchorPane>
+   </bottom>
+   <center>
+      <AnchorPane BorderPane.alignment="CENTER">
+         <children>
+            <VBox spacing="10.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+               <children>
+                  <HBox alignment="CENTER_LEFT" spacing="10.0">
+                     <children>
+                        <Label prefWidth="100.0" styleClass="label-title" stylesheets="@css/szcoreStyle.css" text="SZcore" />
+                        <Label text="Server Address: " />
+                        <Label fx:id="localInetAddrLbl" styleClass="label-subtitle-black" stylesheets="@css/szcoreStyle.css" text="-.-.-" textFill="#468686">
+                           <font>
+                              <Font name="Courier New" size="18.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </HBox>
+                  <Separator />
+                  <HBox alignment="CENTER_LEFT" spacing="10.0">
+                     <children>
+                        <Button fx:id="loadScoreBtn" minWidth="50.0" mnemonicParsing="false" onAction="#openScoreFile" prefWidth="100.0" text="Load Score" />
+                        <Label text="Playing: " />
+                        <Label fx:id="scoreNameLbl" prefWidth="100.0" styleClass="label-subtitle-black" stylesheets="@css/szcoreStyle.css" text="___" textFill="#7c2828">
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                        </Label>
+                        <Label text="Parts:" />
+                        <ListView fx:id="instrumentsListView" prefHeight="100.0" prefWidth="150.0" />
+                        <Button fx:id="sendPartsBtn" minWidth="50.0" mnemonicParsing="false" onAction="#sendParts" text="Send to Participants" />
+                     </children>
+                  </HBox>
+                  <Separator />
+                  <HBox alignment="CENTER_LEFT" spacing="10.0" />
+                  <HBox alignment="CENTER_LEFT" spacing="10.0">
+                     <children>
+                        <Label prefWidth="100.0" text="Start Position: " />
+                        <Label text="Page:" />
+                        <ComboBox fx:id="pageNoCbx" editable="true" onAction="#setPageNo" prefHeight="27.0" prefWidth="70.0" />
+                        <Label text="Bar: " />
+                        <ComboBox fx:id="barNoCbx" editable="true" onAction="#setBarNo" prefHeight="27.0" prefWidth="70.0" />
+                        <Label text="Beat: " />
+                        <ComboBox fx:id="beatNoCbx" editable="true" onAction="#setBeatNo" prefWidth="70.0" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_LEFT" spacing="10.0">
+                     <children>
+                        <Label prefWidth="100.0" text="Play Control: " />
+                        <Button fx:id="setPositionBtn" minWidth="50.0" mnemonicParsing="false" onAction="#sendPosition" text="Send Start Position" />
+                        <Button fx:id="scorePlayBtn" minWidth="50.0" mnemonicParsing="false" onAction="#playScore" prefWidth="100.0" text="Play" />
+                        <Button fx:id="scoreStopBtn" minWidth="50.0" mnemonicParsing="false" onAction="#stopScore" prefWidth="100.0" text="Stop" />
+                     </children>
+                  </HBox>
+                  <Separator />
+                  <HBox alignment="CENTER_LEFT" spacing="10.0">
+                     <children>
+                        <Label text="Current Position: " />
+                        <Label text="Page: " />
+                        <Label fx:id="pageNoLbl" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="__" />
+                        <Label text="Bar:" />
+                        <Label fx:id="barNoLbl" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="__" />
+                        <Label text="Beat:" />
+                        <Label fx:id="beatNoLbl" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="__" />
+                        <Label text="Tick:" />
+                        <Label fx:id="tickNoLbl" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="__" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_LEFT" spacing="10.0">
+                     <children>
+                        <Label text="Current Tempo: " />
+                        <Label fx:id="tempoLbl" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="__" />
+                        <Label text="Tempo Multiplier: " />
+                        <ChoiceBox fx:id="tempoModifierChob" />
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+         </children>
+      </AnchorPane>
+   </center>
+</BorderPane>

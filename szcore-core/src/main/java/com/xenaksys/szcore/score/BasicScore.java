@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.model.Bar;
 import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.Id;
@@ -69,9 +70,16 @@ public class BasicScore implements Score {
 
     public boolean isUseContinuousPage = true;
     public int noContinuousPages = 10;
+    public boolean isRandomizeContinuousPageContent = true;
+    private ScoreRandomisationStrategy randomisationStrategy;
 
     public BasicScore(StrId id) {
         this.id = id;
+    }
+
+    public void initRandomisation() {
+        randomisationStrategy = new ScoreRandomisationStrategy(this);
+        randomisationStrategy.init();
     }
 
     public void addInitEvent(SzcoreEvent initEvent) {
@@ -634,6 +642,8 @@ public class BasicScore implements Score {
         return next;
     }
 
+
+
     @Override
     public List<BeatId> getBeatIds(Id transportId, int beatNo) {
         TransportContext transportContext = transportSpecificData.get(transportId);
@@ -771,4 +781,7 @@ public class BasicScore implements Score {
         return beats.get(offsetBeatId);
     }
 
+    public String getRandomPageName(Id instrumentId) {
+        return randomisationStrategy.getRandomPageName(instrumentId);
+    }
 }

@@ -164,7 +164,14 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             lastBeat = prepareInstrument(instrument, transport);
             Page lastPage =  szcore.getLastInstrumentPage(instrumentId);
             szcore.setContinuousPage(instrumentId, lastPage);
-            prepareContinuousPages(instrumentId, lastPage);
+
+            if(szcore.isUseContinuousPage) {
+                prepareContinuousPages(instrumentId, lastPage);
+            }
+        }
+
+        if(szcore.isRandomizeContinuousPageContent) {
+            szcore.initRandomisation();
         }
 
         if(!szcore.isUseContinuousPage) {
@@ -354,9 +361,26 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             nextPage = prepareContinuousPage(instrumentId, pageId);
         }
 
-        addOneOffNewPageEvents(nextPage, currentStave, pageChangeBeatId, transportId);
+        if(szcore.isUseContinuousPage && szcore.isRandomizeContinuousPageContent) {
+            Page continuousPage = szcore.getContinuousPage(instrumentId);
+            int currentPageNo = pageId.getPageNo();
+            int continuousPageNo = continuousPage.getPageNo();
+            boolean isRandomReady = currentPageNo >= continuousPageNo;
+
+            String pageFileName = szcore.getRandomPageName(instrument.getId());
+            if(isRandomReady && pageFileName != null) {
+                LOG.info("Using random page file name: {} ", pageFileName);
+                addOneOffNewPageEvents(nextPage, pageFileName, currentStave, pageChangeBeatId, transportId);
+            } else {
+                LOG.info("isRandomReady: {} pageFileName:{}", isRandomReady, pageFileName);
+                addOneOffNewPageEvents(nextPage, nextPage == null ? null: nextPage.getFileName(), currentStave, pageChangeBeatId, transportId);
+            }
+        } else {
+            addOneOffNewPageEvents(nextPage, nextPage == null ? null: nextPage.getFileName(), currentStave, pageChangeBeatId, transportId);
+        }
 
     }
+
 
     private Page prepareContinuousPage(Id instrumentId, PageId currentPageId) {
         Page continuousPage = szcore.getContinuousPage(instrumentId);
@@ -371,7 +395,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         int lastBeatNo = lastBeat.getBeatNo();
 
         Id scoreId = currentPageId.getScoreId();
-        PageId newPageId = new PageId(currentPageId.getPageNo() + 1, instrumentId, scoreId);
+        int cPageNo = currentPageId.getPageNo() + 1;
+        PageId newPageId = new PageId(cPageNo, instrumentId, scoreId);
 
         InscorePageMap continuousInscorePageMap = continuousPage.getInscorePageMap();
         InscorePageMap newInscorePageMap = new InscorePageMap(newPageId);
@@ -532,14 +557,12 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
     }
 
-    private void addOneOffNewPageEvents(Page page, BasicStave stave, BeatId eventBaseBeat, Id transportId) {
+    private void addOneOffNewPageEvents(Page page, String pageName, BasicStave stave, BeatId eventBaseBeat, Id transportId) {
         if (page == null || stave == null || transportId == null) {
             return;
         }
 
         StaveId staveId = stave.getId();
-        String pageName = page.getFileName();
-
         OscEvent pageDisplayEvent = createDisplayPageEvent(pageName, stave, eventBaseBeat);
         szcore.addOneOffBaseBeatEvent(transportId, pageDisplayEvent);
 
@@ -1573,7 +1596,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         Beat currentBeat = beatTracker.getCurrent();
 
         if(first.getId().equals(instrumentId)) {
-            LOG.debug("Calculated dy: " + y + " beatNo: " + beatNo + " tickNo: " + tickNo + " beatPercComplete: " + beatPercComplete + " dyPerc: " + dyPerc + " trackerBeatNo: " + trackerBeatNo + " trackerTick:" + trackerTick + " trCbBaseBeatAtStart: " + currentBeat.getBaseBeatUnitsNoAtStart() + " isUpbeat: " + currentBeat.isUpbeat());
+//            LOG.debug("Calculated dy: " + y + " beatNo: " + beatNo + " tickNo: " + tickNo + " beatPercComplete: " + beatPercComplete + " dyPerc: " + dyPerc + " trackerBeatNo: " + trackerBeatNo + " trackerTick:" + trackerTick + " trCbBaseBeatAtStart: " + currentBeat.getBaseBeatUnitsNoAtStart() + " isUpbeat: " + currentBeat.isUpbeat());
         }
 
         ArrayList<Object> args = (ArrayList<Object>) event.getArguments();
@@ -1700,7 +1723,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void processBaseBeat(int beatNo, Id transportId) {
         baseBeatEventsToProcess.clear();
-        LOG.debug("###### Processing beat: " + beatNo);
+//        LOG.debug("###### Processing beat: " + beatNo);
         if (szcore == null) {
             LOG.error("Invalid NULL score");
             return;

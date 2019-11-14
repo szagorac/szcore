@@ -1,5 +1,7 @@
 package com.xenaksys.szcore.model;
 
+import com.xenaksys.szcore.score.InscorePageMap;
+
 import java.util.Collection;
 
 public interface Page extends Identifiable, Comparable<Page> {
@@ -16,4 +18,5 @@ public interface Page extends Identifiable, Comparable<Page> {
 
     Id getScoreId();
 
+    InscorePageMap getInscorePageMap();
 }

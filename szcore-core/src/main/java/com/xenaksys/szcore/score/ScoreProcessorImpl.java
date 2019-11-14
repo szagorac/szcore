@@ -162,14 +162,24 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             Id instrumentId = instrument.getId();
             instrumentBeatTrackers.put(instrumentId, new InstrumentBeatTracker(transport, instrumentId));
             lastBeat = prepareInstrument(instrument, transport);
+            Page lastPage =  szcore.getLastInstrumentPage(instrumentId);
+            szcore.setContinuousPage(instrumentId, lastPage);
+            prepareContinuousPages(instrumentId, lastPage);
         }
 
-        addStopEvent(lastBeat, transport.getId());
-
+        if(!szcore.isUseContinuousPage) {
+            addStopEvent(lastBeat, transport.getId());
+        }
         int precountMillis = 5 * 1000;
         int precountBeatNo = 4;
         szcore.setPrecount(precountMillis, precountBeatNo);
         isScoreLoaded = true;
+    }
+
+    private void prepareContinuousPages(Id instrumentId, Page lastPage) {
+        for (int i = 0; i < szcore.noContinuousPages; i++) {
+            lastPage = prepareContinuousPage(instrumentId, (PageId)lastPage.getId());
+        }
     }
 
     private BeatId prepareInstrument(Instrument instrument, Transport transport) {
@@ -260,7 +270,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                     Beat deactivateBeat = szcore.getOffsetBeat(beatId, 1);
                     Beat pageChangeBeat = szcore.getOffsetBeat(beatId, 4);
 
-                    addPrepStaveChangeEvent(executeBeat.getBeatId(), beatId, deactivateBeat.getBeatId(), pageChangeBeat.getBeatId(), transport.getId());
+                    addPrepStaveChangeEvent(executeBeat.getBeatId(), beatId, deactivateBeat.getBeatId(), pageChangeBeat.getBeatId(), null, transport.getId());
                 }
             }
 
@@ -319,7 +329,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
     }
 
-    public void processPrepStaveChange(Id instrumentId, BeatId currentBeatId, BeatId activateBeatId, BeatId deactivateBeatId, BeatId pageChangeBeatId){
+    public void processPrepStaveChange(Id instrumentId, BeatId currentBeatId, BeatId activateBeatId, BeatId deactivateBeatId, BeatId pageChangeBeatId, PageId nextPageId){
         if(szcore == null){
             return;
         }
@@ -335,8 +345,99 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         //change next stave page after 4 beats of the current page
         PageId pageId = (PageId)pageChangeBeatId.getPageId();
-        Page nextPage = szcore.getNextPage(pageId);
+        Page nextPage = szcore.getPage(nextPageId);
+        if(nextPage == null) {
+            nextPage = szcore.getNextPage(pageId);
+        }
+
+        if(nextPage == null && szcore.isUseContinuousPage) {
+            nextPage = prepareContinuousPage(instrumentId, pageId);
+        }
+
         addOneOffNewPageEvents(nextPage, currentStave, pageChangeBeatId, transportId);
+
+    }
+
+    private Page prepareContinuousPage(Id instrumentId, PageId currentPageId) {
+        Page continuousPage = szcore.getContinuousPage(instrumentId);
+        Page currentPage = szcore.getPage(currentPageId);
+
+        List<Bar> bars = (List<Bar>)currentPage.getBars();
+        Bar lastBar = bars.get(bars.size() - 1);
+        int lastBarNo = lastBar.getBarNo();
+        List<Beat> beats  = (List<Beat>) lastBar.getBeats();
+        Beat lastBeat = beats.get(beats.size() - 1);
+        int lastBeatNo = lastBeat.getBeatNo();
+
+        Id scoreId = currentPageId.getScoreId();
+        PageId newPageId = new PageId(currentPageId.getPageNo() + 1, instrumentId, scoreId);
+
+        BasicPage newPage = new BasicPage(newPageId, continuousPage.getPageName(), continuousPage.getFileName(), continuousPage.getInscorePageMap());
+        if (!szcore.containsPage(newPage)) {
+            szcore.addPage(newPage);
+        }
+
+        bars = (List<Bar>)continuousPage.getBars();
+        BeatId firstBeatId = null;
+        for(Bar bar : bars) {
+            BarId newBarId = new BarId(lastBarNo, instrumentId, newPageId, scoreId);
+            lastBarNo++;
+            BasicBar newBar = new BasicBar(newBarId, bar.getBarName(), bar.getTempo(), bar.getTimeSignature());
+            if (!szcore.containsBar(newBar)) {
+                szcore.addBar(newBar);
+            }
+
+            beats = (List<Beat>) bar.getBeats();
+
+            for(Beat beat : beats) {
+                if(beat.isUpbeat()) {
+                    BeatId newBeatId = new BeatId(lastBeatNo, instrumentId, newPageId, scoreId, newBarId, lastBeat.getBaseBeatUnitsNoAtStart());
+                    if(firstBeatId == null) {
+                        firstBeatId = newBeatId;
+                    }
+                    BasicBeat newBeat = new BasicBeat(newBeatId, lastBeat.getStartTimeMillis(), beat.getDurationMillis(), lastBeat.getEndTimeMillis(),
+                            lastBeat.getBaseBeatUnitsNoAtStart(), lastBeat.getBaseBeatUnitsDuration(), lastBeat.getBaseBeatUnitsNoOnEnd(),
+                            beat.getPositionXStartPxl(), beat.getPositionXEndPxl(), beat.getPositionYStartPxl(), beat.getPositionYEndPxl(), beat.isUpbeat());
+
+                    if (!szcore.containsBeat(newBeat)) {
+                        szcore.addBeat(newBeat);
+                    }
+                    lastBeat = newBeat;
+                } else {
+                    lastBeatNo++;
+                    long startTimeMillis = lastBeat.getEndTimeMillis();
+                    int baseBeatUnitsNoAtStart = lastBeat.getBaseBeatUnitsNoOnEnd();
+                    BeatId newBeatId = new BeatId(lastBeatNo, instrumentId, newPageId, scoreId, newBarId, baseBeatUnitsNoAtStart);
+                    if(firstBeatId == null) {
+                        firstBeatId = newBeatId;
+                    }
+
+                    long durationMillis = beat.getDurationMillis();
+                    int baseBeatUnitsDuration = beat.getBaseBeatUnitsDuration();
+                    long endTimeMillis = startTimeMillis + durationMillis;
+                    int baseBeatUnitsNoOnEnd = baseBeatUnitsNoAtStart + baseBeatUnitsDuration;
+                    BasicBeat newBeat = new BasicBeat(newBeatId, startTimeMillis, durationMillis, endTimeMillis, baseBeatUnitsNoAtStart,
+                            baseBeatUnitsDuration, baseBeatUnitsNoOnEnd, beat.getPositionXStartPxl(), beat.getPositionXEndPxl(),
+                            beat.getPositionYStartPxl(), beat.getPositionYEndPxl(), beat.isUpbeat());
+
+                    if (!szcore.containsBeat(newBeat)) {
+                        szcore.addBeat(newBeat);
+                    }
+                    lastBeat = newBeat;
+                }
+            }
+
+        }
+
+        Beat executeBeat = szcore.getOffsetBeat(firstBeatId, -1);
+        Beat deactivateBeat = szcore.getOffsetBeat(firstBeatId, 1);
+        Beat pageChangeBeat = szcore.getOffsetBeat(firstBeatId, 4);
+
+        Transport transport = szcore.getInstrumentTransport(instrumentId);
+
+        addPrepStaveChangeEvent(executeBeat.getBeatId(), firstBeatId, deactivateBeat.getBeatId(), pageChangeBeat.getBeatId(), null, transport.getId());
+
+        return newPage;
     }
 
     private void createInstrumentStaves(Instrument instrument) {
@@ -413,6 +514,28 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     private void addOneOffNewPageEvents(Page page, BasicStave stave, BeatId eventBaseBeat, Id transportId) {
+        if (page == null || stave == null || transportId == null) {
+            return;
+        }
+
+        StaveId staveId = stave.getId();
+        String pageName = page.getFileName();
+
+        OscEvent pageDisplayEvent = createDisplayPageEvent(pageName, stave, eventBaseBeat);
+        szcore.addOneOffBaseBeatEvent(transportId, pageDisplayEvent);
+
+        if(page.getPageName().equals(Consts.BLANK_PAGE_NAME)){
+            return;
+        }
+
+        String address = stave.getOscAddress();
+        String destination = szcore.getOscDestination(staveId.getInstrumentId());
+        OscEvent pageMapDisplayEvent = createPageMapFileEvent(pageName, address, destination, eventBaseBeat);
+        szcore.addOneOffBaseBeatEvent(transportId, pageMapDisplayEvent);
+
+    }
+
+    private void addOneOffXPageEvents(Page page, BasicStave stave, BeatId eventBaseBeat, Id transportId) {
         if (page == null || stave == null || transportId == null) {
             return;
         }
@@ -657,8 +780,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 //        LOG.info("Added stop event: " + stopEvent);
     }
 
-    public void addPrepStaveChangeEvent(BeatId executeOnBaseBeat, BeatId activateOnBaseBeat, BeatId deactivateOnBaseBeat, BeatId pageChangeOnBaseBeat, Id transportId){
-        PrepStaveChangeEvent event = eventFactory.createPrepStaveChangeEvent(executeOnBaseBeat, activateOnBaseBeat, deactivateOnBaseBeat, pageChangeOnBaseBeat, clock.getSystemTimeMillis());
+    public void addPrepStaveChangeEvent(BeatId executeOnBaseBeat, BeatId activateOnBaseBeat, BeatId deactivateOnBaseBeat, BeatId pageChangeOnBaseBeat, PageId nextPageId, Id transportId){
+        PrepStaveChangeEvent event = eventFactory.createPrepStaveChangeEvent(executeOnBaseBeat, activateOnBaseBeat, deactivateOnBaseBeat, pageChangeOnBaseBeat, nextPageId, clock.getSystemTimeMillis());
         szcore.addScoreBaseBeatEvent(transportId, event);
     }
 
@@ -927,6 +1050,15 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         initEvents = createRequiredEventsForBaseBeat(beatId.getBaseBeatNo());
 
+        TIntObjectMap<List<SzcoreEvent>> events =  szcore.getScoreBaseBeatEvents(transport.getId());
+        int[] keys = events.keys();
+        for(int key: keys) {
+            LOG.info("### List Events for beat: {}", key);
+            List<SzcoreEvent> beatEvents = events.get(key);
+            for(SzcoreEvent event : beatEvents) {
+                LOG.info("###### event: {}", event);
+            }
+        }
 
         processInitEvents(initEvents);
     }

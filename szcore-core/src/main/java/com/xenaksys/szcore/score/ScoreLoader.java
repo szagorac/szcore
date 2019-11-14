@@ -2,8 +2,21 @@ package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.instrument.BasicInstrument;
-import com.xenaksys.szcore.model.*;
-import com.xenaksys.szcore.model.id.*;
+import com.xenaksys.szcore.model.Id;
+import com.xenaksys.szcore.model.Instrument;
+import com.xenaksys.szcore.model.NoteDuration;
+import com.xenaksys.szcore.model.Score;
+import com.xenaksys.szcore.model.Script;
+import com.xenaksys.szcore.model.Tempo;
+import com.xenaksys.szcore.model.TempoImpl;
+import com.xenaksys.szcore.model.TimeSignature;
+import com.xenaksys.szcore.model.TimeSignatureImpl;
+import com.xenaksys.szcore.model.Transition;
+import com.xenaksys.szcore.model.id.BarId;
+import com.xenaksys.szcore.model.id.BeatId;
+import com.xenaksys.szcore.model.id.IntId;
+import com.xenaksys.szcore.model.id.PageId;
+import com.xenaksys.szcore.model.id.StrId;
 import com.xenaksys.szcore.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +27,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import static com.xenaksys.szcore.score.ResourceType.*;
+import static com.xenaksys.szcore.score.ResourceType.FILE;
+import static com.xenaksys.szcore.score.ResourceType.JAVASCRIPT;
+import static com.xenaksys.szcore.score.ResourceType.TRANSITION;
 
 
 public class ScoreLoader {
@@ -90,24 +105,6 @@ public class ScoreLoader {
             LOG.error("Unexpeted headers: " + headers);
             return null;
         }
-
-        List<ScoreElement> scoreElements = new ArrayList<>();
-
-        for (String line : lines) {
-            ScoreElement scoreElement = parseLine(line);
-            scoreElements.add(scoreElement);
-        }
-
-        BasicScore score = createScoreFromElements(scoreElements);
-
-        return score;
-    }
-
-    static Score loadInscoreMapLines(List<String> lines) throws Exception {
-        if (lines == null || lines.isEmpty()) {
-            return null;
-        }
-
 
         List<ScoreElement> scoreElements = new ArrayList<>();
 
@@ -210,9 +207,10 @@ public class ScoreLoader {
             fileName = fileName.substring(fileName.lastIndexOf(Consts.SLASH) + 1);
         }
         PageId pageId = new PageId(pageNo, instrumentId, scoreId);
-        loadPageInscoreMap(pageId, pageName, fileName);
-        BasicPage page = new BasicPage(pageId, pageName, fileName);
-        if (!score.containsPage(page)) {
+
+        if (!score.containsPage(pageId)) {
+            InscorePageMap inscorePageMap = loadPageInscoreMap(pageId, fileName);
+            BasicPage page = new BasicPage(pageId, pageName, fileName, inscorePageMap);
             score.addPage(page);
         }
 
@@ -264,7 +262,7 @@ public class ScoreLoader {
         }
     }
 
-    private static InscorePageMap loadPageInscoreMap(PageId pageId, String pageName, String fileName) {
+    public static InscorePageMap loadPageInscoreMap(PageId pageId, String fileName) {
         String mapFilename = fileName + Consts.INSCORE_FILE_SUFFIX + Consts.TXT_FILE_EXTENSION;
         String path = workingDir + Consts.SLASH + mapFilename;
         InscorePageMap inscorePageMap = new InscorePageMap(pageId);

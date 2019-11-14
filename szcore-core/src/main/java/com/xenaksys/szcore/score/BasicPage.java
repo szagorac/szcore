@@ -19,6 +19,7 @@ public class BasicPage implements Page {
     private final PageId id;
     private final String name;
     private final String fileName;
+    private final InscorePageMap inscorePageMap;
 
     List<Bar> bars = new ArrayList<>();
 
@@ -27,9 +28,13 @@ public class BasicPage implements Page {
     }
 
     public BasicPage(PageId id, String name, String fileName) {
+        this(id, name, fileName, null);
+    }
+    public BasicPage(PageId id, String name, String fileName, InscorePageMap inscorePageMap) {
         this.id = id;
         this.fileName = fileName;
         this.name = name;
+        this.inscorePageMap = inscorePageMap;
     }
 
     @Override
@@ -60,6 +65,10 @@ public class BasicPage implements Page {
     @Override
     public Id getScoreId() {
         return id.getScoreId();
+    }
+
+    public InscorePageMap getInscorePageMap() {
+        return inscorePageMap;
     }
 
     @Override

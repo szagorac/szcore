@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 
 public class BasicScore implements Score {
@@ -64,11 +65,14 @@ public class BasicScore implements Score {
     private final MutableBeatId tempBeatId = new MutableBeatId(0, null, null, null, null, 0);
 
     private Page blankPage;
+    private Map<Id, Page> instrumentContinuousPage = new HashMap<>();
+
+    public boolean isUseContinuousPage = true;
+    public int noContinuousPages = 10;
 
     public BasicScore(StrId id) {
         this.id = id;
     }
-
 
     public void addInitEvent(SzcoreEvent initEvent) {
         initEvents.add(initEvent);
@@ -84,6 +88,14 @@ public class BasicScore implements Score {
 
     public void setBlankPage(Page blankPage) {
         this.blankPage = blankPage;
+    }
+
+    public Page getContinuousPage(Id instrumentId) {
+        return instrumentContinuousPage.get(instrumentId);
+    }
+
+    public void setContinuousPage(Id instrumentId, Page continuousPage) {
+        this.instrumentContinuousPage.put(instrumentId, continuousPage);
     }
 
     public void addInstrumentTransport(Instrument instrument, Transport transport) {
@@ -255,8 +267,29 @@ public class BasicScore implements Score {
         pages.put(page.getId(), page);
     }
 
+    public Page getLastInstrumentPage(Id instrumentId) {
+        TreeSet<Page> out = getInstrumentPages(instrumentId);
+        return out.last();
+    }
+
+    public TreeSet<Page> getInstrumentPages(Id instrumentId) {
+        TreeSet<Page> out = new TreeSet<>();
+
+        for(Id pid : pages.keySet()) {
+            PageId pageId = (PageId) pid;
+            if(pageId.getInstrumentId().equals(instrumentId)) {
+                out.add(pages.get(pageId));
+            }
+        }
+        return out;
+    }
+
     public boolean containsPage(Page page) {
         return pages.containsKey(page.getId());
+    }
+
+    public boolean containsPage(PageId pageId) {
+        return pages.containsKey(pageId);
     }
 
     public void addBar(Bar bar) {
@@ -456,7 +489,10 @@ public class BasicScore implements Score {
         if (id == null) {
             return null;
         }
-        return pages.get(id);
+        if(pages.containsKey(id)) {
+            return pages.get(id);
+        }
+        return null;
     }
 
     @Override

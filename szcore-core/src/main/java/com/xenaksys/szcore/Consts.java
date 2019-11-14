@@ -24,6 +24,7 @@ public interface Consts {
     public static final String BRACKET_CLOSE = ")";
     public static final String SLASH = "/";
     public static final String NEW_LINE = "\n";
+    public static final String SYSTEM_NEW_LINE = System.lineSeparator();
     public static final String EIGHTH = "/8";
     public final Integer ONE_I = 1;
     public final Double ONE_D = 1.0;

@@ -6,6 +6,7 @@ import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.TimeSignature;
 import com.xenaksys.szcore.model.Transition;
 import com.xenaksys.szcore.model.id.BeatId;
+import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
 
 import java.net.InetAddress;
@@ -71,8 +72,9 @@ public class EventFactory {
                                                            BeatId activateOnBaseBeat,
                                                            BeatId deactivateOnBaseBeat,
                                                            BeatId pageChangeOnBaseBeat,
+                                                           PageId nextPageId,
                                                            long creationTime) {
-        return new PrepStaveChangeEvent(executeOnBaseBeat, activateOnBaseBeat, deactivateOnBaseBeat, pageChangeOnBaseBeat, creationTime);
+        return new PrepStaveChangeEvent(executeOnBaseBeat, activateOnBaseBeat, deactivateOnBaseBeat, pageChangeOnBaseBeat, nextPageId, creationTime);
     }
 
     public ParticipantEvent createParticipantEvent(InetAddress inetAddress, String hostAddress, int portIn, int portOut, int portErr, int ping, String instrument, long creationTime) {

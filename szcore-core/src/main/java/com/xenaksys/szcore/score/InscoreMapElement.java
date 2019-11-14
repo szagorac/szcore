@@ -67,6 +67,43 @@ public class InscoreMapElement {
         return beatEndDenom;
     }
 
+    public String toInscoreString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(Consts.BRACKET_OPEN);
+        sb.append(Consts.SPACE);
+        sb.append(Consts.BRACKET_SQUARE_OPEN);
+        sb.append(xStart);
+        sb.append(Consts.COMMA);
+        sb.append(Consts.SPACE);
+        sb.append(xEnd);
+        sb.append(Consts.BRACKET_SQUARE_OPEN);
+        sb.append(Consts.SPACE);
+        sb.append(Consts.BRACKET_SQUARE_OPEN);
+        sb.append(yStart);
+        sb.append(Consts.COMMA);
+        sb.append(Consts.SPACE);
+        sb.append(yEnd);
+        sb.append(Consts.BRACKET_SQUARE_OPEN);
+        sb.append(Consts.SPACE);
+        sb.append(Consts.BRACKET_CLOSE);
+        sb.append(Consts.SPACE);
+        sb.append(Consts.BRACKET_OPEN);
+        sb.append(Consts.SPACE);
+        sb.append(Consts.BRACKET_SQUARE_OPEN);
+        sb.append(beatStartNum);
+        sb.append(Consts.SLASH);
+        sb.append(beatStartDenom);
+        sb.append(Consts.COMMA);
+        sb.append(Consts.SPACE);
+        sb.append(beatEndNum);
+        sb.append(Consts.SLASH);
+        sb.append(beatEndDenom);
+        sb.append(Consts.BRACKET_SQUARE_OPEN);
+        sb.append(Consts.SPACE);
+        sb.append(Consts.BRACKET_CLOSE);
+        return sb.toString();
+    }
+
     public static InscoreMapElement parseLine(String line) {
         if(line == null) {
             return null;

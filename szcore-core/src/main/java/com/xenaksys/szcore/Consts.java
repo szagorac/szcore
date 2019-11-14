@@ -74,6 +74,7 @@ public interface Consts {
     public static final String OSC_INSCORE_LOAD = "load";
     public static final String OSC_INSCORE_SET = "set";
     public static final String OSC_INSCORE_FILE = "file";
+    public static final String OSC_INSCORE_MAP = "map";
     public static final String OSC_INSCORE_MAPF = "mapf";
     public static final String OSC_INSCORE_TEMPO = "tempo";
 

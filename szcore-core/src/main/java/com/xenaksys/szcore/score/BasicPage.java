@@ -20,6 +20,7 @@ public class BasicPage implements Page {
     private final String name;
     private final String fileName;
     private final InscorePageMap inscorePageMap;
+    private final boolean isSendInscoreMap;
 
     List<Bar> bars = new ArrayList<>();
 
@@ -30,11 +31,17 @@ public class BasicPage implements Page {
     public BasicPage(PageId id, String name, String fileName) {
         this(id, name, fileName, null);
     }
+
     public BasicPage(PageId id, String name, String fileName, InscorePageMap inscorePageMap) {
+        this(id, name, fileName, inscorePageMap, false);
+    }
+
+    public BasicPage(PageId id, String name, String fileName, InscorePageMap inscorePageMap, boolean isSendInscoreMap) {
         this.id = id;
         this.fileName = fileName;
         this.name = name;
         this.inscorePageMap = inscorePageMap;
+        this.isSendInscoreMap = isSendInscoreMap;
     }
 
     @Override
@@ -69,6 +76,10 @@ public class BasicPage implements Page {
 
     public InscorePageMap getInscorePageMap() {
         return inscorePageMap;
+    }
+
+    public boolean isSendInscoreMap() {
+        return isSendInscoreMap;
     }
 
     @Override

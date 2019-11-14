@@ -93,6 +93,7 @@ public class InstrumentBeatTracker {
         if(currentTick < 0){
             currentTick = 0;
         }
+//LOG.info("getPercentCompleted currentTick: " + currentTick + " beatTickNo: " + beatTickNo);
         return (currentTick * 100)/beatTickNo;
     }
 }

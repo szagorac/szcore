@@ -21,7 +21,7 @@ public class TransportContext {
     private List<SzcoreEvent> clockBaseBeatEvents = new ArrayList<>();
     private TIntObjectMap<List<SzcoreEvent>> scoreBaseBeatEvents = new TIntObjectHashMap<>();
     private TIntObjectMap<List<SzcoreEvent>> oneOffBaseBeatEvents = new TIntObjectHashMap<>();
-    private TIntObjectMap<List<BeatId>> betNoToId = new TIntObjectHashMap<>();
+    private TIntObjectMap<List<BeatId>> beatNoToId = new TIntObjectHashMap<>();
 
     public TransportContext(Id transportId) {
         this.transportId = transportId;
@@ -95,10 +95,10 @@ public class TransportContext {
             baseBeatNo = beatId.getBaseBeatNo();
         }
 
-        List<BeatId> beatIds = betNoToId.get(baseBeatNo);
+        List<BeatId> beatIds = beatNoToId.get(baseBeatNo);
         if (beatIds == null) {
             beatIds = new ArrayList<>();
-            betNoToId.put(baseBeatNo, beatIds);
+            beatNoToId.put(baseBeatNo, beatIds);
         }
 
         beatIds.add(beatId);
@@ -106,7 +106,7 @@ public class TransportContext {
     }
 
     public List<BeatId> getBeatIds(int beatNo) {
-        return betNoToId.get(beatNo);
+        return beatNoToId.get(beatNo);
     }
 
     public List<SzcoreEvent> getInitEvents() {

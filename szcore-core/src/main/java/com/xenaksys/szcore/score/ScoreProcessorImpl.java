@@ -369,7 +369,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
             String pageFileName = szcore.getRandomPageName(instrument.getId());
             if(isRandomReady && pageFileName != null) {
-                LOG.info("Using random page file name: {} ", pageFileName);
+                LOG.info("Using random page file name: {} for instrument: {}", pageFileName, instrument.getId());
                 addOneOffNewPageEvents(nextPage, pageFileName, currentStave, pageChangeBeatId, transportId);
             } else {
                 LOG.info("isRandomReady: {} pageFileName:{}", isRandomReady, pageFileName);
@@ -473,7 +473,6 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                     newBeat.getBaseBeatUnitsNoAtStart(), continuousMapElement.getBeatStartDenom(), newBeat.getBaseBeatUnitsNoOnEnd(), continuousMapElement.getBeatEndDenom());
             newInscorePageMap.addElement(newInscoreMapElement);
         }
-
 
         Beat executeBeat = szcore.getOffsetBeat(firstBeatId, -1);
         Beat deactivateBeat = szcore.getOffsetBeat(firstBeatId, 1);
@@ -1287,6 +1286,14 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         TempoChangeEvent tempoChangeEvent = createTempoChangeEvent(newTempo, null, Consts.ALL_DESTINATIONS, transportId);
         process(tempoChangeEvent);
+    }
+
+    @Override
+    public void setRandomisationStrategy(List<Integer> randomisationStrategy) {
+        if(randomisationStrategy == null) {
+            return;
+        }
+        szcore.setRandomisationStrategy(randomisationStrategy);
     }
 
     public boolean isReadyToPlay(){

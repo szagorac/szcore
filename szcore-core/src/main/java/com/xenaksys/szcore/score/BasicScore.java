@@ -82,6 +82,14 @@ public class BasicScore implements Score {
         randomisationStrategy.init();
     }
 
+    public void setRandomisationStrategy(List<Integer> strategy) {
+        if(randomisationStrategy == null || strategy == null) {
+            return;
+        }
+
+        randomisationStrategy.setAssignmentStrategy(strategy);
+    }
+
     public void addInitEvent(SzcoreEvent initEvent) {
         initEvents.add(initEvent);
     }

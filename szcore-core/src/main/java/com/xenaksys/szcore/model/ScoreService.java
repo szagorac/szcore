@@ -3,6 +3,7 @@ package com.xenaksys.szcore.model;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 
 import java.io.File;
+import java.util.List;
 
 public interface ScoreService {
 
@@ -21,4 +22,6 @@ public interface ScoreService {
     void subscribe(SzcoreEngineEventListener eventListener);
 
     void setTempoModifier(Id transportId, TempoModifier tempoModifier);
+
+    void setRandomisationStrategy(List<Integer> randomisationStrategy);
 }

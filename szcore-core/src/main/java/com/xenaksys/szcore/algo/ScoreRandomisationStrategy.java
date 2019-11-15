@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,6 +42,7 @@ public class ScoreRandomisationStrategy {
             if(Consts.NAME_FULL_SCORE.equalsIgnoreCase(instrument.getName())) {
                 continue;
             }
+
             this.instruments.add(instrument.getId());
             this.instrumentPage.put(instrument.getId(), 0);
 
@@ -52,14 +54,20 @@ public class ScoreRandomisationStrategy {
             }
         }
 
-        assignmentStrategy.add(3);
-        assignmentStrategy.add(1);
+        assignmentStrategy.add(2);
+    }
+
+    private void reset() {
+        for(Id instrumentId : instrumentPage.keySet()) {
+            instrumentPage.put(instrumentId, 0);
+        }
     }
 
     public void setAssignmentStrategy(List<Integer> strategy) {
         if(strategy == null) {
             return;
         }
+        LOG.debug("setAssignmentStrategy() {}", Arrays.toString(strategy.toArray()));
         assignmentStrategy.clear();
         assignmentStrategy.addAll(strategy);
     }
@@ -78,6 +86,10 @@ public class ScoreRandomisationStrategy {
 
         int pageNo = instrumentPage.get(instrumentId);
 
+        if(pageNo == 0) {
+            return null;
+        }
+
         Page page = getPage(pageNo, instrumentId);
         if(page != null) {
             return page.getFileName();
@@ -87,6 +99,7 @@ public class ScoreRandomisationStrategy {
     }
 
     private void recalcStrategy() {
+        reset();
 
         int rndNo = assignmentStrategy.size();
         int[] rndNos = new int[rndNo];

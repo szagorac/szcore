@@ -374,6 +374,16 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         }
     }
 
+    @Override
+    public void setRandomisationStrategy(List<Integer> randomisationStrategy) {
+        try {
+            scoreProcessor.setRandomisationStrategy(randomisationStrategy);
+        } catch (Exception e) {
+            LOG.error("Failed to set randomisation strategy", e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set randomisation strategy", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
     protected void tick(){
         if(pingEvent == null) {
             pingEvent = eventFactory.createPingEvent(Consts.ALL_DESTINATIONS, clock.getSystemTimeMillis());

@@ -195,6 +195,20 @@ public interface Consts {
                                                         1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5,
                                                         1.6, 1.7, 1.8, 1.9, 2.0};
 
+    public static final String RND_STRATEGY_1 = "1";
+    public static final String RND_STRATEGY_1_1 = "1,1";
+    public static final String RND_STRATEGY_1_1_1 = "1,1,1";
+    public static final String RND_STRATEGY_1_1_1_1 = "1,1,1,1";
+    public static final String RND_STRATEGY_2 = "2";
+    public static final String RND_STRATEGY_2_1 = "2,1";
+    public static final String RND_STRATEGY_2_1_1 = "2,1,1";
+    public static final String RND_STRATEGY_2_2 = "2,2";
+    public static final String RND_STRATEGY_3 = "3";
+    public static final String RND_STRATEGY_3_1 = "3,1";
+    public static final String RND_STRATEGY_4 = "4";
+    public static final String[] RANDOMISATION_STRATEGIES = {RND_STRATEGY_1, RND_STRATEGY_1_1, RND_STRATEGY_1_1_1, RND_STRATEGY_2,
+            RND_STRATEGY_2_1, RND_STRATEGY_2_1_1, RND_STRATEGY_2_2, RND_STRATEGY_3, RND_STRATEGY_3_1, RND_STRATEGY_4};
+
     public static final String DISRUPTOR_THREAD_FACTORY = "SZCore_Dsrptr";
     public static final String DISRUPTOR_OUT_THREAD_FACTORY = "SZCore_Out_Dsrptr";
     public static final String DISRUPTOR_IN_THREAD_FACTORY = "SZCore_In_Dsrptr";

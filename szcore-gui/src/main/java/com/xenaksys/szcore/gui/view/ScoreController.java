@@ -28,6 +28,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -106,6 +107,12 @@ public class ScoreController {
     private Label tempoLbl;
     @FXML
     private ChoiceBox<Double> tempoModifierChob;
+    @FXML
+    private ChoiceBox<String> randomStrategyChob;
+    @FXML
+    private CheckBox usePageRandomisationChb;
+    @FXML
+    private CheckBox useContinousPageChb;
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -117,6 +124,7 @@ public class ScoreController {
     private ObservableList<Integer> barsList = FXCollections.observableArrayList();
     private ObservableList<Integer> beatsList = FXCollections.observableArrayList();
     private ObservableList<Double> tempoMultipliers = FXCollections.observableArrayList();
+    private ObservableList<String> randomisationStrategies = FXCollections.observableArrayList();
 
     private boolean isPageSetCall = false;
     private boolean isBarSetCall = false;
@@ -135,16 +143,26 @@ public class ScoreController {
         beatNoCbx.setItems(beatsList);
         participantsTable.setItems(mainApp.getParticipants());
         tempoModifierChob.setItems(tempoMultipliers);
+        randomStrategyChob.setItems(randomisationStrategies);
 
         tempoMultipliers.addAll(getTempoMultiplierValues());
         tempoModifierChob.getSelectionModel().select(Consts.ONE_D);
-
         tempoModifierChob.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection == null) {
                 return;
             }
 
             onTempoModifierChobChange(newSelection);
+        });
+
+        randomisationStrategies.addAll(getPageRandomisationStrategisValues());
+        randomStrategyChob.getSelectionModel().select(Consts.RND_STRATEGY_2);
+        randomStrategyChob.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            if (newSelection == null) {
+                return;
+            }
+
+            onRandomStrategyChobChange(newSelection);
         });
     }
 
@@ -742,6 +760,12 @@ public class ScoreController {
         return Consts.TEMPO_MULTIPLIERS;
     }
 
+    private String[] getPageRandomisationStrategisValues() {
+        return Consts.RANDOMISATION_STRATEGIES;
+    }
+
+
+
     private void onTempoModifierChobChange(Double newSelection) {
         if(score == null){
             return;
@@ -756,6 +780,26 @@ public class ScoreController {
         for(Id transportId : transportIds) {
             scoreService.setTempoModifier(transportId, tempoModifier);
         }
+    }
+
+    private void onRandomStrategyChobChange(String newSelection) {
+        if(score == null){
+            return;
+        }
+        LOG.info("Have new Random Strategy selection: " + newSelection);
+
+        List<Integer> randomisationStrategy = new ArrayList<>();
+        try {
+            String[] instNos = newSelection.split(Consts.COMMA);
+            for(String instNo : instNos) {
+                randomisationStrategy.add(Integer.parseInt(instNo));
+            }
+        } catch (Exception e) {
+            LOG.error("Failed to process randomisation strategies selection: {}", newSelection, e);
+        }
+
+        scoreService.setRandomisationStrategy(randomisationStrategy);
+
     }
 
     class TransportBeatUpdater implements Runnable {

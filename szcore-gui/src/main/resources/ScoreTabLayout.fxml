@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -13,7 +15,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
-<BorderPane xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.xenaksys.szcore.gui.view.ScoreController">
+<BorderPane xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.xenaksys.szcore.gui.view.ScoreController">
    <bottom>
       <AnchorPane BorderPane.alignment="CENTER">
          <children>
@@ -114,6 +116,20 @@
                         <Label fx:id="tempoLbl" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="__" />
                         <Label text="Tempo Multiplier: " />
                         <ChoiceBox fx:id="tempoModifierChob" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="327.0" spacing="10.0">
+                     <children>
+                        <CheckBox fx:id="useContinousPageChb" mnemonicParsing="false" text="Use Continuous Page" />
+                        <CheckBox fx:id="usePageRandomisationChb" mnemonicParsing="false" text="Use CP Randomisation" />
+                        <Label text="Randomisation Strategy" />
+                        <ChoiceBox fx:id="randomStrategyChob" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="372.0" spacing="10.0">
+                     <children>
+                        <Label text="Dynamics" />
+                        <Slider />
                      </children>
                   </HBox>
                </children>

@@ -1,8 +1,10 @@
 package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.algo.ValueScaler;
 import com.xenaksys.szcore.event.BeatScriptEvent;
 import com.xenaksys.szcore.event.DateTickEvent;
+import com.xenaksys.szcore.event.ElementYPositionEvent;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.EventType;
 import com.xenaksys.szcore.event.MusicEvent;
@@ -55,6 +57,7 @@ import com.xenaksys.szcore.model.id.StrId;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
+import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
 import gnu.trove.map.TIntObjectMap;
 import org.slf4j.Logger;
@@ -70,6 +73,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import static com.xenaksys.szcore.Consts.DYNAMICS_LINE_Y_MAX;
 
 public class ScoreProcessorImpl implements ScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(ScoreProcessorImpl.class);
@@ -96,6 +102,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private BeatFollowerPositionStrategy beatFollowerPositionStrategy = new BeatFollowerPositionStrategy();
     private List<SzcoreEngineEventListener> scoreEventListeners = new CopyOnWriteArrayList<>();
     private Map<Id, TempoModifier> transportTempoModifiers = new ConcurrentHashMap<>();
+    private ValueScaler dynamicsValueScaler = new ValueScaler(0.0, 100.0, 0.0, DYNAMICS_LINE_Y_MAX);
 
     public ScoreProcessorImpl(TransportFactory transportFactory, MutableClock clock, OscPublisher oscPublisher,
                               Scheduler scheduler, EventFactory eventFactory, TaskFactory taskFactory) {
@@ -669,6 +676,50 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 //        StaveDyTickEvent staveDyTickEvent = eventFactory.createStaveDyTickEvent(address, destination, id, clock.getSystemTimeMillis());
         StaveDyTickEvent staveDyTickEvent = eventFactory.createStaveDyTickEvent(address, destination, staveId, clock.getSystemTimeMillis());
         szcore.addClockTickEvent(transportId, staveDyTickEvent);
+    }
+
+    public void addDynamicsYPositionEvent(Id instrumentId, Stave stave, double yDelta) throws Exception {
+        StaveId staveId = (StaveId) stave.getId();
+        String destination = szcore.getOscDestination(staveId.getInstrumentId());
+
+        Transport transport = szcore.getInstrumentTransport(instrumentId);
+        Id transportId = transport.getId();
+
+        //dynamics y position
+        String address = stave.getOscAddressScoreDynamicsLine();
+
+        int staveNo = ((StaveId) stave.getId()).getStaveNo();
+        double y;
+        switch (staveNo) {
+            case 1:
+                y = Consts.DYNAMICS_LINE1_Y_MIN_POSITION - yDelta;
+                break;
+            case 2:
+                y = Consts.DYNAMICS_LINE2_Y_MIN_POSITION + yDelta;
+                break;
+            default:
+                LOG.error("Invalid stave dynamics Y position event");
+                return;
+        }
+
+        y = MathUtil.roundTo5DecimalPlaces(y);
+        double current = stave.getDynamicsValue();
+        double diff = Math.abs(y - current);
+        double threshold = Math.abs(2 * DYNAMICS_LINE_Y_MAX/100.0);
+        if(diff < threshold) {
+            LOG.info("addDynamicsYPositionEvent y position change: {} is less than threshold: {}, ignoring update ... ", diff, threshold);
+            return;
+        }
+
+        LOG.info("addDynamicsYPositionEvent sending y position: {} to: {} addr: '{}' yDelta: {} ", y, address, instrumentId, yDelta);
+
+//        szcore.addOneOffClockTickEvent(transportId, dynYEvent);
+
+        ElementYPositionEvent dynYEvent = eventFactory.createElementYPositionEvent(address, destination, staveId, clock.getSystemTimeMillis());
+        dynYEvent.setYPosition(y);
+        stave.setDynamicsValue(y);
+
+        process(dynYEvent);
     }
 
     public void addTempoChangeInitEvent(Tempo tempo, BeatId beatId, Id transportId, boolean isSendOscEvents, List<SzcoreEvent> initEvents) {
@@ -1296,6 +1347,24 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         szcore.setRandomisationStrategy(randomisationStrategy);
     }
 
+    @Override
+    public void usePageRandomisation(Boolean value) {
+        LOG.debug("usePageRandomisation: {} ", value);
+        szcore.isRandomizeContinuousPageContent = value;
+    }
+
+    @Override
+    public void useContinuousPageChange(Boolean value) {
+        LOG.debug("useContinuousPageChange: {} ", value);
+        szcore.isUseContinuousPage = value;
+    }
+
+    @Override
+    public void setDynamicsValue(long value) throws Exception {
+        LOG.debug("setDynamicsValue: {} ", value);
+        onDynamicsValueChange(value);
+    }
+
     public boolean isReadyToPlay(){
         return isScoreLoaded && isInitDone;
     }
@@ -1486,6 +1555,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 break;
             case BEAT_SCRIPT:
                 processBeatScriptEvent((BeatScriptEvent) event, beatNo);
+                break;
+            case ELEMENT_Y_POSITION:
             case RESET_INSTRUMENT:
             case RESET_SCORE:
             case RESET_STAVES:
@@ -1719,12 +1790,24 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
 
         List<SzcoreEvent> clockTickEvents = szcore.getClockTickEvents(transportId);
-        if (clockTickEvents == null) {
-            return;
+        if (clockTickEvents != null) {
+            for (SzcoreEvent clockEvent : clockTickEvents) {
+                process(clockEvent, beatNo, tickNo);
+            }
         }
-        for (SzcoreEvent clockEvent : clockTickEvents) {
-            process(clockEvent, beatNo, tickNo);
+
+
+        LinkedBlockingQueue<SzcoreEvent> oneOffClockTickEvents = szcore.getOneOffClockTickEvents(transportId);
+        if (oneOffClockTickEvents != null) {
+            while (oneOffClockTickEvents.size() != 0) {
+                SzcoreEvent event = oneOffClockTickEvents.poll();
+                if(event == null) {
+                    continue;
+                }
+                process(event, beatNo, tickNo);
+            }
         }
+
 //        notifyListenersOnTick(transportId, currentBeatNo, currentBaseBeatNo, currentTick);
     }
 
@@ -1793,6 +1876,27 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void processTransportPositionChange(Id transportId, int beatNo) {
         notifyListenersOnTransportPositionChange(transportId, beatNo);
+    }
+
+
+    private void onDynamicsValueChange(long value) throws Exception {
+        double scaled = dynamicsValueScaler.scaleValue(value);
+
+        LOG.info("onDynamicsValueChange scaled value: {} to: {}", value, scaled);
+        Collection<Stave> staves = szcore.getStaves();
+        Collection<Instrument> instruments = szcore.getInstruments();
+        for (Stave stave : staves) {
+            StaveId staveId = (StaveId)stave.getId();
+            Id instrumentId = staveId.getInstrumentId();
+            Instrument instrument = szcore.getInstrument(instrumentId);
+            if(instrument.isAv()) {
+                continue;
+            }
+            if(Consts.NAME_FULL_SCORE.equalsIgnoreCase(instrument.getName())) {
+                continue;
+            }
+            addDynamicsYPositionEvent(instrumentId, stave, scaled);
+        }
     }
 
     class ScoreTransportListener implements TransportListener {

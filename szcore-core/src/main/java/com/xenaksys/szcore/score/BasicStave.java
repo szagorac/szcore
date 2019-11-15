@@ -9,6 +9,7 @@ public class BasicStave implements Stave {
     private final String oscAddressScoreFollower;
     private final String oscAddressScoreBeater;
     private final String oscAddressScoreStartMark;
+    private final String oscAddressScoreDynamicsLine;
     private final double xPosition;
     private final double yPosition;
     private final double zPosition;
@@ -18,12 +19,14 @@ public class BasicStave implements Stave {
     private final double scale;
     private final boolean isVisible;
     private volatile boolean isActive;
+    private volatile double dynamicsValue;
 
     public BasicStave(StaveId id,
                       String oscAddress,
                       String oscAddressScoreFollower,
                       String oscAddressScoreBeater,
                       String oscAddressScoreStartMark,
+                      String oscAddressScoreDynamicsLine,
                       double xPosition,
                       double yPosition,
                       double zPosition,
@@ -36,6 +39,7 @@ public class BasicStave implements Stave {
         this.oscAddressScoreFollower = oscAddressScoreFollower;
         this.oscAddressScoreBeater = oscAddressScoreBeater;
         this.oscAddressScoreStartMark = oscAddressScoreStartMark;
+        this.oscAddressScoreDynamicsLine = oscAddressScoreDynamicsLine;
         this.xPosition = xPosition;
         this.yPosition = yPosition;
         this.zPosition = zPosition;
@@ -99,6 +103,18 @@ public class BasicStave implements Stave {
         return beaterYPositionMax;
     }
 
+    public String getOscAddressScoreDynamicsLine() {
+        return oscAddressScoreDynamicsLine;
+    }
+
+    public double getDynamicsValue() {
+        return dynamicsValue;
+    }
+
+    public void setDynamicsValue(double dynamicsValue) {
+        this.dynamicsValue = dynamicsValue;
+    }
+
     @Override
     public double getBeaterYPositionDelta() {
         return beaterYPositionDelta;
@@ -133,6 +149,7 @@ public class BasicStave implements Stave {
                 ", oscAddressScoreFollower='" + oscAddressScoreFollower + '\'' +
                 ", oscAddressScoreBeater='" + oscAddressScoreBeater + '\'' +
                 ", oscAddressScoreStartMark='" + oscAddressScoreStartMark + '\'' +
+                ", oscAddressScoreDynamicsLine='" + oscAddressScoreDynamicsLine + '\'' +
                 ", xPosition=" + xPosition +
                 ", yPosition=" + yPosition +
                 ", zPosition=" + zPosition +

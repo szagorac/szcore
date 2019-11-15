@@ -15,4 +15,8 @@ public class MathUtil {
         return interpolator.interpolate(x, y);
     }
 
+    public static double roundTo5DecimalPlaces(double value){
+        return (double)Math.round(value * 100000d) / 100000d;
+    }
+
 }

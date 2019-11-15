@@ -384,6 +384,36 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         }
     }
 
+    @Override
+    public void usePageRandomisation(Boolean value) {
+        try {
+            scoreProcessor.usePageRandomisation(value);
+        } catch (Exception e) {
+            LOG.error("Failed to set Use Randomisation Strategy: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Use Randomisation Strategy", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void useContinuousPageChange(Boolean value) {
+        try {
+            scoreProcessor.useContinuousPageChange(value);
+        } catch (Exception e) {
+            LOG.error("Failed to set Use Continuous Page Change: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Use Continuous Page Change", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void setDynamicsValue(long value) {
+        try {
+            scoreProcessor.setDynamicsValue(value);
+        } catch (Exception e) {
+            LOG.error("Failed to set Dynamics Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Dynamics Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
     protected void tick(){
         if(pingEvent == null) {
             pingEvent = eventFactory.createPingEvent(Consts.ALL_DESTINATIONS, clock.getSystemTimeMillis());

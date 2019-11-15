@@ -28,4 +28,10 @@ public interface ScoreProcessor extends Processor {
     void setTempoModifier(Id transportId, TempoModifier tempoModifier);
 
     void setRandomisationStrategy(List<Integer> randomisationStrategy);
+
+    void usePageRandomisation(Boolean value);
+
+    void useContinuousPageChange(Boolean value);
+
+    void setDynamicsValue(long value) throws Exception;
 }

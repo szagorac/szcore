@@ -121,6 +121,10 @@ public class EventFactory {
         return new StaveYPositionEvent(address, oscYPositionArgs, destination, staveId, creationTime);
     }
 
+    public ElementYPositionEvent createElementYPositionEvent(String address, String destination, StaveId staveId, long creationTime) {
+        return new ElementYPositionEvent(address, oscYPositionArgs, destination, staveId, creationTime);
+    }
+
     public OscEvent createPageDisplayEvent(String address, List<Object> args, BeatId eventBaseBeat, String destination, long creationTime) {
         return new OscEvent(address, args, eventBaseBeat, destination, creationTime);
     }

@@ -51,6 +51,8 @@ public interface Consts {
     public static final String OSC_ADDRESS_SCORE_FOLLOW_BEATER_STAVE2 = "/ITL/scene/slaveBeat2";
     public static final String OSC_ADDRESS_SCORE_START_MARK_STAVE1 = "/ITL/scene/slaveStartMark";
     public static final String OSC_ADDRESS_SCORE_START_MARK_STAVE2 = "/ITL/scene/slaveStartMark2";
+    public static final String OSC_ADDRESS_SCORE_DYNAMICS_LINE_STAVE1 = "/ITL/scene/dynStaveValueLine";
+    public static final String OSC_ADDRESS_SCORE_DYNAMICS_LINE_STAVE2 = "/ITL/scene/dynStaveValueLine2";
 
     public static final String OSC_ADDRESS_SCORE_JAVASCRIPT = "/ITL/scene/javascript";
 
@@ -206,13 +208,22 @@ public interface Consts {
     public static final String RND_STRATEGY_3 = "3";
     public static final String RND_STRATEGY_3_1 = "3,1";
     public static final String RND_STRATEGY_4 = "4";
-    public static final String[] RANDOMISATION_STRATEGIES = {RND_STRATEGY_1, RND_STRATEGY_1_1, RND_STRATEGY_1_1_1, RND_STRATEGY_2,
-            RND_STRATEGY_2_1, RND_STRATEGY_2_1_1, RND_STRATEGY_2_2, RND_STRATEGY_3, RND_STRATEGY_3_1, RND_STRATEGY_4};
+    public static final String[] RANDOMISATION_STRATEGIES = {RND_STRATEGY_1, RND_STRATEGY_1_1, RND_STRATEGY_1_1_1, RND_STRATEGY_1_1_1_1,
+            RND_STRATEGY_2, RND_STRATEGY_2_1, RND_STRATEGY_2_1_1, RND_STRATEGY_2_2, RND_STRATEGY_3, RND_STRATEGY_3_1, RND_STRATEGY_4};
 
     public static final String DISRUPTOR_THREAD_FACTORY = "SZCore_Dsrptr";
     public static final String DISRUPTOR_OUT_THREAD_FACTORY = "SZCore_Out_Dsrptr";
     public static final String DISRUPTOR_IN_THREAD_FACTORY = "SZCore_In_Dsrptr";
     public static final String SCHEDULER_THREAD_FACTORY = "SZCore_Schedlr";
     public static final String DEFAULT_THREAD_SUFFIX = "-Thread-";
+
+    // 0.037
+    public static final double DYNAMICS_LINE_Y_MAX = 0.074;
+    public static final double DYNAMICS_LINE_Y_MIN = 0.0;
+    public static final double DYNAMICS_LINE1_Y_MID_POSITION = -0.077;
+    public static final double DYNAMICS_LINE1_Y_MIN_POSITION = -0.04;
+    public static final double DYNAMICS_LINE1_Y_MAX_POSITION = -0.114;
+    public static final double DYNAMICS_LINE2_Y_MIN_POSITION = -0.04;
+
 
 }

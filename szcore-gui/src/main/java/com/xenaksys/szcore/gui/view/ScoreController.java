@@ -22,6 +22,8 @@ import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.util.Util;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -34,11 +36,13 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.Slider;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
+import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,6 +117,10 @@ public class ScoreController {
     private CheckBox usePageRandomisationChb;
     @FXML
     private CheckBox useContinousPageChb;
+    @FXML
+    private Slider dynamicsSldr;
+    @FXML
+    private Label dynamicsValLbl;
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -144,6 +152,8 @@ public class ScoreController {
         participantsTable.setItems(mainApp.getParticipants());
         tempoModifierChob.setItems(tempoMultipliers);
         randomStrategyChob.setItems(randomisationStrategies);
+        usePageRandomisationChb.setSelected(true);
+        useContinousPageChb.setSelected(true);
 
         tempoMultipliers.addAll(getTempoMultiplierValues());
         tempoModifierChob.getSelectionModel().select(Consts.ONE_D);
@@ -163,6 +173,66 @@ public class ScoreController {
             }
 
             onRandomStrategyChobChange(newSelection);
+        });
+
+        usePageRandomisationChb.selectedProperty().addListener(new ChangeListener<Boolean>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                onUsePageRandomisationChange(newValue);
+            }
+        });
+
+        useContinousPageChb.selectedProperty().addListener(new ChangeListener<Boolean>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                onUseContinuousPageChange(newValue);
+            }
+        });
+
+        dynamicsSldr.setLabelFormatter(new StringConverter<Double>() {
+            @Override
+            public String toString(Double n) {
+                if (n < 10.0) return "ppp";
+                if (n < 25.0) return "pp";
+                if (n < 50.0) return "p";
+                if (n < 75.0) return "mf";
+                if (n < 85.0) return "f";
+                if (n < 90.0) return "ff";
+
+                return "fff";
+            }
+
+            @Override
+            public Double fromString(String s) {
+                switch (s) {
+                    case "ppp":
+                        return 10d;
+                    case "pp":
+                        return 25d;
+                    case "p":
+                        return 35d;
+                    case "mf":
+                        return 50d;
+                    case "f":
+                        return 75d;
+                    case "ff":
+                        return 85d;
+                    case "fff":
+                        return 100d;
+
+                    default:
+                        return 50d;
+                }
+            }
+        });
+
+        dynamicsSldr.valueProperty().addListener((ov, old_val, new_val) -> {
+//            LOG.debug("old_val: {}, new_val: {}", old_val, new_val);
+            long newVal = Math.round(new_val.doubleValue());
+            onDynamicsValueChange(newVal);
+            String lblVal = String.valueOf(newVal);
+            String out = fixedLengthString(lblVal, 3);
+            dynamicsValLbl.setText(out);
         });
     }
 
@@ -800,6 +870,23 @@ public class ScoreController {
 
         scoreService.setRandomisationStrategy(randomisationStrategy);
 
+    }
+
+    private void onUsePageRandomisationChange(Boolean newValue) {
+        scoreService.usePageRandomisation(newValue);
+    }
+
+    private void onUseContinuousPageChange(Boolean newValue) {
+        scoreService.useContinuousPageChange(newValue);
+    }
+
+
+    private void onDynamicsValueChange(long newVal) {
+        scoreService.setDynamicsValue(newVal);
+    }
+
+    public static String fixedLengthString(String string, int length) {
+        return String.format("%1$"+length+ "s", string);
     }
 
     class TransportBeatUpdater implements Runnable {

@@ -128,8 +128,9 @@
                   </HBox>
                   <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="372.0" spacing="10.0">
                      <children>
-                        <Label text="Dynamics" />
-                        <Slider />
+                        <Label text="Dynamics:" />
+                        <Label fx:id="dynamicsValLbl" minWidth="40.0" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___" />
+                        <Slider fx:id="dynamicsSldr" showTickLabels="true" showTickMarks="true" />
                      </children>
                   </HBox>
                </children>

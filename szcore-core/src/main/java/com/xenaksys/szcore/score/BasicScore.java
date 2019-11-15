@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.LinkedBlockingQueue;
 
 
 public class BasicScore implements Score {
@@ -142,6 +143,18 @@ public class BasicScore implements Score {
         transportContext.addClockTickEvent(clockTickEvent);
     }
 
+    public void addOneOffClockTickEvent(Id transportId, SzcoreEvent clockTickEvent) throws Exception {
+
+        TransportContext transportContext = transportSpecificData.get(transportId);
+        if (transportContext == null) {
+            transportContext = new TransportContext(transportId);
+            transportSpecificData.put(transportId, transportContext);
+            addTransportId(transportId);
+        }
+
+        transportContext.addOneOffClockTickEvent(clockTickEvent);
+    }
+
     public void addClockBaseBeatTickEvent(Id transportId, SzcoreEvent clockBaseBeatEvent) {
         TransportContext transportContext = transportSpecificData.get(transportId);
         if (transportContext == null) {
@@ -204,6 +217,15 @@ public class BasicScore implements Score {
             return null;
         }
         return transportContext.getClockTickEvents();
+    }
+
+    @Override
+    public LinkedBlockingQueue<SzcoreEvent> getOneOffClockTickEvents(Id transportId) {
+        TransportContext transportContext = transportSpecificData.get(transportId);
+        if (transportContext == null) {
+            return null;
+        }
+        return transportContext.getOneOffClockTickEvents();
     }
 
     @Override

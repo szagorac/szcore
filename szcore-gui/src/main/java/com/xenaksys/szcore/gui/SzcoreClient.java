@@ -20,6 +20,7 @@ import com.xenaksys.szcore.model.id.OscListenerId;
 import com.xenaksys.szcore.server.SzcoreServer;
 import com.xenaksys.szcore.time.clock.SimpleClock;
 import javafx.application.Application;
+import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
@@ -54,7 +55,7 @@ public class SzcoreClient extends Application {
 
     private ScoreController scoreController;
 
-    private ObservableList<Participant> participants = FXCollections.observableArrayList();
+    private ObservableList<Participant> participants = FXCollections.observableArrayList(param -> new Observable[] {param.getSelectProperty()});
 
     @Override
     public void start(Stage primaryStage) throws Exception {

@@ -405,12 +405,42 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
-    public void setDynamicsValue(long value) {
+    public void setDynamicsValue(long value, List<Id> instrumentIds) {
         try {
-            scoreProcessor.setDynamicsValue(value);
+            scoreProcessor.setDynamicsValue(value, instrumentIds);
         } catch (Exception e) {
             LOG.error("Failed to set Dynamics Value: {}", value, e);
             eventProcessor.notifyListeners(new ErrorEvent("Failed to set Dynamics Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void onUseDynamicsOverlay(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUseDynamicsOverlay(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Dynamics Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Dynamics Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void setPressureValue(long value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.setPressureValue(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Pressure Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Pressure Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void onUsePressureOverlay(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUsePressureOverlay(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Pressure Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Pressure Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
         }
     }
 

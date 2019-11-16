@@ -53,6 +53,10 @@ public interface Consts {
     public static final String OSC_ADDRESS_SCORE_START_MARK_STAVE2 = "/ITL/scene/slaveStartMark2";
     public static final String OSC_ADDRESS_SCORE_DYNAMICS_LINE_STAVE1 = "/ITL/scene/dynStaveValueLine";
     public static final String OSC_ADDRESS_SCORE_DYNAMICS_LINE_STAVE2 = "/ITL/scene/dynStaveValueLine2";
+    public static final String OSC_ADDRESS_SCORE_DYNAMICS_BOX_STAVE1 = "/ITL/scene/dynStaveBox";
+    public static final String OSC_ADDRESS_SCORE_DYNAMICS_BOX_STAVE2 = "/ITL/scene/dynStaveBox2";
+    public static final String OSC_ADDRESS_SCORE_PRESSURE_BOX_STAVE1 = "/ITL/scene/pressureStaveBox";
+    public static final String OSC_ADDRESS_SCORE_PRESSURE_BOX_STAVE2 = "/ITL/scene/pressureStaveBox2";
 
     public static final String OSC_ADDRESS_SCORE_JAVASCRIPT = "/ITL/scene/javascript";
 
@@ -161,6 +165,9 @@ public interface Consts {
     public static final String OSC_ARG_DATE = "date";
     public static final String OSC_ARG_DY = "dy";
     public static final String OSC_ARG_Y_POSITION = "y";
+    public static final String OSC_ARG_ALPHA = "alpha";
+    public static final String OSC_ARG_PEN_ALPHA = "penAlpha";
+    public static final String OSC_ARG_PEN_COLOR = "color";
     ///ITL/scene/javascript run "activate('/ITL/scene/stave2')"
     public static final String RUN = "run";
     public static final String HELLO = "hello";
@@ -223,7 +230,8 @@ public interface Consts {
     public static final double DYNAMICS_LINE1_Y_MID_POSITION = -0.077;
     public static final double DYNAMICS_LINE1_Y_MIN_POSITION = -0.04;
     public static final double DYNAMICS_LINE1_Y_MAX_POSITION = -0.114;
-    public static final double DYNAMICS_LINE2_Y_MIN_POSITION = -0.04;
-
+    public static final double DYNAMICS_LINE2_Y_MID_POSITION = 0.713;
+    public static final double DYNAMICS_LINE2_Y_MAX_POSITION = 0.676;
+    public static final double DYNAMICS_LINE2_Y_MIN_POSITION = 0.75;
 
 }

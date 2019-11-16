@@ -33,5 +33,12 @@ public interface ScoreProcessor extends Processor {
 
     void useContinuousPageChange(Boolean value);
 
-    void setDynamicsValue(long value) throws Exception;
+    void setDynamicsValue(long value, List<Id> instrumentIds) throws Exception;
+
+    void onUseDynamicsOverlay(Boolean value, List<Id> instrumentIds) throws Exception;
+
+    void setPressureValue(long value, List<Id> instrumentIds) throws Exception;
+
+    void onUsePressureOverlay(Boolean value, List<Id> instrumentIds) throws Exception;
+
 }

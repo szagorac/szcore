@@ -68,4 +68,28 @@ public class TestValueScaler {
         out = MathUtil.roundTo5DecimalPlaces(out);
         Assert.assertEquals(0.037, out, 10E-5);
     }
+
+    @Test
+    public void testScaleInvertedRange(){
+        double minInput = 0.0;
+        double maxInput = 100.0;
+        double minOutput = 255.0;
+        double maxOutput = 0.0;
+        ValueScaler vt = new ValueScaler(minInput, maxInput, minOutput, maxOutput);
+
+        double out = vt.scaleValue(50.0);
+        Assert.assertEquals(127.5, out, 10E-5);
+
+        out = vt.scaleValue(0.0);
+        Assert.assertEquals(255.0, out, 10E-5);
+
+        out = vt.scaleValue(100.0);
+        Assert.assertEquals(0.0, out, 10E-5);
+
+        out = vt.scaleValue(90L);
+        Assert.assertEquals( 25.5, out, 10E-5);
+
+        out = vt.scaleValue(10L);
+        Assert.assertEquals( 229.5, out, 10E-5);
+    }
 }

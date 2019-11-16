@@ -29,5 +29,12 @@ public interface ScoreService {
 
     void useContinuousPageChange(Boolean value);
 
-    void setDynamicsValue(long value);
+    void setDynamicsValue(long value, List<Id> instrumentIds);
+
+    void onUseDynamicsOverlay(Boolean value, List<Id> instrumentIds);
+
+    void setPressureValue(long value, List<Id> instrumentIds);
+
+    void onUsePressureOverlay(Boolean value, List<Id> instrumentIds);
+
 }

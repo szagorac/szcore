@@ -19,6 +19,9 @@ public class EventFactory {
     List<Object> oscDateArgs = new ArrayList<>();
     List<Object> oscDyArgs = new ArrayList<>();
     List<Object> oscYPositionArgs = new ArrayList<>();
+    List<Object> oscAlphaArgs = new ArrayList<>();
+    List<Object> oscPenAlphaArgs = new ArrayList<>();
+    List<Object> oscColorArgs = new ArrayList<>();
 
     public EventFactory() {
         init();
@@ -29,6 +32,9 @@ public class EventFactory {
         oscDateArgs.add(Consts.OSC_ARG_DATE);
         oscDyArgs.add(Consts.OSC_ARG_DY);
         oscYPositionArgs.add(Consts.OSC_ARG_Y_POSITION);
+        oscAlphaArgs.add(Consts.OSC_ARG_ALPHA);
+        oscPenAlphaArgs.add(Consts.OSC_ARG_PEN_ALPHA);
+        oscColorArgs.add(Consts.OSC_ARG_PEN_COLOR);
     }
 
     public TempoChangeEvent createTempoChangeEvent(Tempo tempo,
@@ -123,6 +129,18 @@ public class EventFactory {
 
     public ElementYPositionEvent createElementYPositionEvent(String address, String destination, StaveId staveId, long creationTime) {
         return new ElementYPositionEvent(address, oscYPositionArgs, destination, staveId, creationTime);
+    }
+
+    public ElementAlphaEvent createElementAlphaEvent(String address, String destination, long creationTime) {
+        return new ElementAlphaEvent(address, oscAlphaArgs, destination, creationTime);
+    }
+
+    public ElementAlphaEvent createElementPenAlphaEvent(String address, String destination, long creationTime) {
+        return new ElementAlphaEvent(address, oscPenAlphaArgs, destination, creationTime);
+    }
+
+    public ElementColorEvent createElementColorEvent(String address, String destination, long creationTime) {
+        return new ElementColorEvent(address, oscColorArgs, destination, creationTime);
     }
 
     public OscEvent createPageDisplayEvent(String address, List<Object> args, BeatId eventBaseBeat, String destination, long creationTime) {

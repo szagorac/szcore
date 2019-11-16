@@ -1,9 +1,11 @@
 package com.xenaksys.szcore.gui.model;
 
 import com.xenaksys.szcore.Consts;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -20,6 +22,7 @@ public class Participant {
     private IntegerProperty portErr = new SimpleIntegerProperty(0);
     private DoubleProperty ping = new SimpleDoubleProperty(0.0);
     private StringProperty instrument = new SimpleStringProperty(Consts.EMPTY);
+    private BooleanProperty select = new SimpleBooleanProperty(false);
 
     public InetAddress getInetAddress() {
         return inetAddress.get();
@@ -99,6 +102,18 @@ public class Participant {
 
     public void setInstrument(String instrument) {
         this.instrument.set(instrument);
+    }
+
+    public BooleanProperty getSelectProperty() {
+        return select;
+    }
+
+    public Boolean getSelect() {
+        return select.get();
+    }
+
+    public void setSelect(Boolean select) {
+        this.select.set(select);
     }
 
     @Override

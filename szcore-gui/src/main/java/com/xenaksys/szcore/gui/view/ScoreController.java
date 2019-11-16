@@ -22,9 +22,8 @@ import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.util.Util;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -40,6 +39,7 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.util.StringConverter;
@@ -50,8 +50,10 @@ import java.io.File;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class ScoreController {
     static final Logger LOG = LoggerFactory.getLogger(ScoreController.class);
@@ -84,7 +86,7 @@ public class ScoreController {
     @FXML
     private ListView<String> instrumentsListView;
     @FXML
-    private TableView<Participant> participantsTable;
+    private TableView<Participant> participantsTableView;
     @FXML
     private TableColumn<Participant, String> hostAddressColumn;
     @FXML
@@ -97,6 +99,8 @@ public class ScoreController {
     private TableColumn<Participant, Double> pingColumn;
     @FXML
     private TableColumn<Participant, String> instrumentColumn;
+    @FXML
+    private TableColumn<Participant, Boolean> selectColumn;
     @FXML
     private Label localInetAddrLbl;
     @FXML
@@ -112,6 +116,8 @@ public class ScoreController {
     @FXML
     private ChoiceBox<Double> tempoModifierChob;
     @FXML
+    private Slider tempoModifierSldr;
+    @FXML
     private ChoiceBox<String> randomStrategyChob;
     @FXML
     private CheckBox usePageRandomisationChb;
@@ -121,11 +127,24 @@ public class ScoreController {
     private Slider dynamicsSldr;
     @FXML
     private Label dynamicsValLbl;
+    @FXML
+    private CheckBox useDynamicsOverlayChb;
+    @FXML
+    private CheckBox useAllOverlaysChb;
+    @FXML
+    private CheckBox sendToAllChb;
+    @FXML
+    private Slider pressureSldr;
+    @FXML
+    private Label pressureValLbl;
+    @FXML
+    private CheckBox usePressureOverlayChb;
+
 
     private SzcoreClient mainApp;
     private EventService publisher;
     private InetAddress localAddress;
-//    private PlayPosition playPosition = new PlayPosition();
+    //    private PlayPosition playPosition = new PlayPosition();
     private Clock clock;
     private ObservableList<String> instrumentsList = FXCollections.observableArrayList();
     private ObservableList<Integer> pagesList = FXCollections.observableArrayList();
@@ -138,6 +157,11 @@ public class ScoreController {
     private boolean isBarSetCall = false;
     private boolean isBeatSetCall = false;
 
+    private Map<String, Id> instrumentNameId = new HashMap<>();
+    private ObservableList<Participant> selectedParticipants = FXCollections.observableArrayList();
+    private ObservableList<Participant> participants;
+    private int tempo;
+
     private long positionMillis = 0L;
 
     public void setMainApp(SzcoreClient mainApp) {
@@ -145,15 +169,32 @@ public class ScoreController {
     }
 
     public void populate() {
+        participants = mainApp.getParticipants();
         instrumentsListView.setItems(instrumentsList);
         pageNoCbx.setItems(pagesList);
         barNoCbx.setItems(barsList);
         beatNoCbx.setItems(beatsList);
-        participantsTable.setItems(mainApp.getParticipants());
+        participantsTableView.setItems(participants);
         tempoModifierChob.setItems(tempoMultipliers);
         randomStrategyChob.setItems(randomisationStrategies);
         usePageRandomisationChb.setSelected(true);
         useContinousPageChb.setSelected(true);
+        useDynamicsOverlayChb.setSelected(false);
+        useAllOverlaysChb.setSelected(false);
+        sendToAllChb.setSelected(true);
+        usePressureOverlayChb.setSelected(false);
+
+        participants.addListener((ListChangeListener<Participant>) p -> {
+            while (p.next()) {
+                if (p.wasUpdated()) {
+                    if(participants.get(p.getFrom()).getSelect()) {
+                        selectedParticipants.add(participants.get(p.getFrom()));
+                    } else {
+                        selectedParticipants.remove(participants.get(p.getFrom()));
+                    }
+                }
+            }
+        });
 
         tempoMultipliers.addAll(getTempoMultiplierValues());
         tempoModifierChob.getSelectionModel().select(Consts.ONE_D);
@@ -163,6 +204,10 @@ public class ScoreController {
             }
 
             onTempoModifierChobChange(newSelection);
+        });
+        tempoModifierSldr.valueProperty().addListener((ov, old_val, new_val) -> {
+//            LOG.debug("old_val: {}, new_val: {}", old_val, new_val);
+            onTempoModifierChobChange(new_val.doubleValue());
         });
 
         randomisationStrategies.addAll(getPageRandomisationStrategisValues());
@@ -175,19 +220,15 @@ public class ScoreController {
             onRandomStrategyChobChange(newSelection);
         });
 
-        usePageRandomisationChb.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                onUsePageRandomisationChange(newValue);
-            }
-        });
+        usePageRandomisationChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePageRandomisationChange(newValue));
 
-        useContinousPageChb.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                onUseContinuousPageChange(newValue);
-            }
-        });
+        useContinousPageChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseContinuousPageChange(newValue));
+
+        useDynamicsOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseDynamicsOverlay(newValue));
+
+        useAllOverlaysChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseAllOverlays(newValue));
+
+        usePressureOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePressureOverlay(newValue));
 
         dynamicsSldr.setLabelFormatter(new StringConverter<Double>() {
             @Override
@@ -234,6 +275,15 @@ public class ScoreController {
             String out = fixedLengthString(lblVal, 3);
             dynamicsValLbl.setText(out);
         });
+
+        pressureSldr.valueProperty().addListener((ov, old_val, new_val) -> {
+//            LOG.debug("old_val: {}, new_val: {}", old_val, new_val);
+            long newVal = Math.round(new_val.doubleValue());
+            onPressureValueChange(newVal);
+            String lblVal = String.valueOf(newVal);
+            String out = fixedLengthString(lblVal, 3);
+            pressureValLbl.setText(out);
+        });
     }
 
     public void setScoreService(ScoreService scoreService) {
@@ -250,7 +300,7 @@ public class ScoreController {
     @FXML
     private void initialize() {
 
-        participantsTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        participantsTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         hostAddressColumn.setCellValueFactory(cellData -> cellData.getValue().getHostAddressProperty());
         inPortColumn.setCellValueFactory(cellData -> cellData.getValue().getPortInProperty().asObject());
@@ -258,6 +308,18 @@ public class ScoreController {
         errPortColumn.setCellValueFactory(cellData -> cellData.getValue().getPortErrProperty().asObject());
         pingColumn.setCellValueFactory(cellData -> cellData.getValue().getPingProperty().asObject());
         instrumentColumn.setCellValueFactory(cellData -> cellData.getValue().getInstrumentProperty());
+        selectColumn.setCellValueFactory(cellData -> cellData.getValue().getSelectProperty());
+
+        selectColumn.setCellFactory(CheckBoxTableCell.forTableColumn(selectColumn));
+        participantsTableView.setEditable(true);
+        selectColumn.setEditable(true);
+//        selectColumn.setCellValueFactory(cellData -> {
+//            Participant cellValue = cellData.getValue();
+//            BooleanProperty property = cellValue.getSelectProperty();
+//            // Add listener to handler change
+//            property.addListener((observable, oldValue, newValue) -> cellValue.setSelect(newValue));
+//            return property;
+//        });
 
 //        pageNoLbl.textProperty().bind(playPosition.pageNoProperty());
 //        barNoLbl.textProperty().bind(playPosition.barNoProperty());
@@ -277,8 +339,7 @@ public class ScoreController {
                         setText(Consts.NAME_NA);
                         setTextFill(Color.BLACK);
                         setStyle("-fx-background-color: red");
-                    }
-                    else {
+                    } else {
                         // Format date.
                         setText(item);
                         setStyle("");
@@ -323,7 +384,7 @@ public class ScoreController {
         ObservableList<Participant> participants = mainApp.getParticipants();
 
 
-        for(Participant participant : participants){
+        for (Participant participant : participants) {
             sendAddParts(participant, instrumentsCsv);
         }
     }
@@ -332,74 +393,74 @@ public class ScoreController {
     private void sendPartsToSelectedParticipants(ActionEvent event) {
         String instrumentsCsv = getInstrumentsCsv();
 
-        ObservableList<Participant> selectedParticipants = participantsTable.getSelectionModel().getSelectedItems();
-        if(selectedParticipants == null){
+        ObservableList<Participant> selectedParticipants = getSelectedParticipants();
+        if (selectedParticipants == null) {
             return;
         }
 
-        for(Participant participant : selectedParticipants){
+        for (Participant participant : selectedParticipants) {
             sendAddParts(participant, instrumentsCsv);
         }
     }
 
     @FXML
     private void setPageNo(ActionEvent event) {
-        if(isBarSetCall || isBeatSetCall){
+        if (isBarSetCall || isBeatSetCall) {
             return;
         }
         isPageSetCall = true;
         try {
             setPageValue();
         } catch (Exception e) {
-           LOG.error("Failed to set page number", e);
+            LOG.error("Failed to set page number", e);
         } finally {
             isPageSetCall = false;
         }
     }
 
-    private void setPageValue(){
-        if(pagesList.isEmpty()){
+    private void setPageValue() {
+        if (pagesList.isEmpty()) {
             return;
         }
 
         Object selected = pageNoCbx.getSelectionModel().getSelectedItem();
-        if(selected == null) {
+        if (selected == null) {
             return;
         }
         Integer v = 1;
-        if(selected instanceof Integer) {
-              v = (Integer)selected;
+        if (selected instanceof Integer) {
+            v = (Integer) selected;
         } else if (selected instanceof String) {
-              v = Integer.valueOf((String)selected);
+            v = Integer.valueOf((String) selected);
         }
-        
+
         int pageNo = v.intValue();
         Collection<Page> pages = score.getPages();
         Page selectedPage = null;
-        for(Page page : pages){
-            if(pageNo == page.getPageNo()){
+        for (Page page : pages) {
+            if (pageNo == page.getPageNo()) {
                 selectedPage = page;
                 break;
             }
         }
-        if(selectedPage == null){
+        if (selectedPage == null) {
             return;
         }
 
         Bar selectedBar = null;
         Integer minBarNo = Integer.MAX_VALUE;
         Collection<Bar> bars = selectedPage.getBars();
-        for(Bar bar : bars){
-            if(bar.isUpbeatBar()){
+        for (Bar bar : bars) {
+            if (bar.isUpbeatBar()) {
                 continue;
             }
-            if(bar.getBarNo() < minBarNo){
+            if (bar.getBarNo() < minBarNo) {
                 minBarNo = bar.getBarNo();
                 selectedBar = bar;
             }
         }
 
-        if(selectedBar == null){
+        if (selectedBar == null) {
             return;
         }
         barNoCbx.getSelectionModel().select(minBarNo);
@@ -408,15 +469,15 @@ public class ScoreController {
         selectedBar.getTimeSignature();
         Collection<Beat> beats = selectedBar.getBeats();
         beatsList.clear();
-        for(Beat beat : beats){
-            if(beat.isUpbeat()){
+        for (Beat beat : beats) {
+            if (beat.isUpbeat()) {
                 continue;
             }
             int beatNo = beat.getBeatNo();
-            if(beatNo < minBeatNo){
+            if (beatNo < minBeatNo) {
                 minBeatNo = beatNo;
             }
-            if(!beatsList.contains(beatNo)) {
+            if (!beatsList.contains(beatNo)) {
                 beatsList.add(beatNo);
             }
         }
@@ -426,7 +487,7 @@ public class ScoreController {
 
     @FXML
     private void setBarNo(ActionEvent event) {
-        if(isPageSetCall || isBeatSetCall){
+        if (isPageSetCall || isBeatSetCall) {
             return;
         }
 
@@ -442,55 +503,55 @@ public class ScoreController {
 
     private void setBarValue() {
 
-        if(barsList.isEmpty()){
+        if (barsList.isEmpty()) {
             return;
         }
 
         Object selected = barNoCbx.getSelectionModel().getSelectedItem();
-        if(selected == null) {
+        if (selected == null) {
             return;
         }
         Integer v = 1;
-        if(selected instanceof Integer) {
-            v = (Integer)selected;
+        if (selected instanceof Integer) {
+            v = (Integer) selected;
         } else if (selected instanceof String) {
-            v = Integer.valueOf((String)selected);
+            v = Integer.valueOf((String) selected);
         }
 
         int barNo = v.intValue();
         Collection<Bar> bars = score.getBars();
         Bar selectedBar = null;
         List<Bar> barsWithNo = new ArrayList<>();
-        for(Bar bar : bars){
-            if(bar.isUpbeatBar()){
+        for (Bar bar : bars) {
+            if (bar.isUpbeatBar()) {
                 continue;
             }
-            if(barNo == bar.getBarNo()){
+            if (barNo == bar.getBarNo()) {
                 barsWithNo.add(bar);
             }
         }
 
         PageId minPageId = null;
-        for(Bar bar : barsWithNo){
+        for (Bar bar : barsWithNo) {
             Id pid = bar.getPageId();
-            if(pid == null){
+            if (pid == null) {
                 continue;
             }
 
-            PageId pageId = (PageId)pid;
-            if(minPageId == null){
+            PageId pageId = (PageId) pid;
+            if (minPageId == null) {
                 minPageId = pageId;
                 selectedBar = bar;
                 continue;
             }
 
-            if(pageId.getPageNo() < minPageId.getPageNo()){
+            if (pageId.getPageNo() < minPageId.getPageNo()) {
                 minPageId = pageId;
                 selectedBar = bar;
             }
         }
 
-        if(selectedBar == null){
+        if (selectedBar == null) {
             return;
         }
 
@@ -500,12 +561,12 @@ public class ScoreController {
         Integer minBeatNo = Integer.MAX_VALUE;
         Collection<Beat> beats = selectedBar.getBeats();
         beatsList.clear();
-        for(Beat beat : beats){
+        for (Beat beat : beats) {
             int beatNo = beat.getBeatNo();
-            if(beatNo < minBeatNo){
+            if (beatNo < minBeatNo) {
                 minBeatNo = beatNo;
             }
-            if(!beatsList.contains(beatNo)) {
+            if (!beatsList.contains(beatNo)) {
                 beatsList.add(beatNo);
             }
         }
@@ -516,7 +577,7 @@ public class ScoreController {
 
     @FXML
     private void setBeatNo(ActionEvent event) {
-        if(isPageSetCall || isBarSetCall){
+        if (isPageSetCall || isBarSetCall) {
             return;
         }
         isBeatSetCall = true;
@@ -532,125 +593,126 @@ public class ScoreController {
 
     private void setBeatValue() {
 
-        if(beatsList.isEmpty()){
+        if (beatsList.isEmpty()) {
             return;
         }
 
-        Object selected  = beatNoCbx.getSelectionModel().getSelectedItem();
-        if(selected == null) {
+        Object selected = beatNoCbx.getSelectionModel().getSelectedItem();
+        if (selected == null) {
             return;
         }
         Integer v = 1;
-        if(selected instanceof Integer) {
-            v = (Integer)selected;
+        if (selected instanceof Integer) {
+            v = (Integer) selected;
         } else if (selected instanceof String) {
-            v = Integer.valueOf((String)selected);
+            v = Integer.valueOf((String) selected);
         }
 
         int beatNo = v.intValue();
-        
+
         Collection<Beat> beats = score.getBeats();
         List<Beat> beatsWithNo = new ArrayList<>();
-        for(Beat beat : beats){
-            if(beat.isUpbeat()){
+        for (Beat beat : beats) {
+            if (beat.isUpbeat()) {
                 continue;
             }
-            if(beatNo == beat.getBeatNo()){
+            if (beatNo == beat.getBeatNo()) {
                 beatsWithNo.add(beat);
             }
         }
 
         BarId selectedBarId = null;
         Integer minBarId = 0;
-        for(Beat beat : beatsWithNo){
+        for (Beat beat : beatsWithNo) {
             Id bid = beat.getBarId();
-            if(bid == null) {
+            if (bid == null) {
                 continue;
             }
-            BarId barId = (BarId)bid;
-            if(selectedBarId == null){
+            BarId barId = (BarId) bid;
+            if (selectedBarId == null) {
                 selectedBarId = barId;
                 minBarId = selectedBarId.getBarNo();
                 continue;
             }
 
-            if(barId.getBarNo() < selectedBarId.getBarNo()){
+            if (barId.getBarNo() < selectedBarId.getBarNo()) {
                 selectedBarId = barId;
                 minBarId = selectedBarId.getBarNo();
             }
         }
 
-        if(selectedBarId == null){
+        if (selectedBarId == null) {
             return;
         }
         barNoCbx.getSelectionModel().select(minBarId);
 
         Id pid = selectedBarId.getPageId();
-        if(pid == null){
+        if (pid == null) {
             return;
         }
 
-        PageId pageId = (PageId)pid;
+        PageId pageId = (PageId) pid;
         Integer minPageNo = pageId.getPageNo();
         pageNoCbx.getSelectionModel().select(minPageNo);
     }
 
     @FXML
     private void sendPosition(ActionEvent event) {
-        if(beatNoCbx == null || beatNoCbx.getSelectionModel() == null || beatNoCbx.getSelectionModel().isEmpty()){
+        if (beatNoCbx == null || beatNoCbx.getSelectionModel() == null || beatNoCbx.getSelectionModel().isEmpty()) {
             return;
         }
 
-        Object selected  = beatNoCbx.getSelectionModel().getSelectedItem();
-        if(selected == null) {
+        Object selected = beatNoCbx.getSelectionModel().getSelectedItem();
+        if (selected == null) {
             return;
         }
         Integer v = 1;
-        if(selected instanceof Integer) {
-            v = (Integer)selected;
+        if (selected instanceof Integer) {
+            v = (Integer) selected;
         } else if (selected instanceof String) {
-            v = Integer.valueOf((String)selected);
+            v = Integer.valueOf((String) selected);
         }
 
         int beatNo = v;
 
         Collection<Beat> beats = score.getBeats();
         List<Beat> beatsWithNo = new ArrayList<>();
-        for(Beat beat : beats){
-            if(beat.isUpbeat()){
+        for (Beat beat : beats) {
+            if (beat.isUpbeat()) {
                 continue;
             }
-            if(beatNo == beat.getBeatNo()){
+            if (beatNo == beat.getBeatNo()) {
                 beatsWithNo.add(beat);
             }
         }
 
 
-        if(beatsWithNo.isEmpty()){
+        if (beatsWithNo.isEmpty()) {
             mainApp.showDialog("Score Controller", Alert.AlertType.ERROR, "Send Position Error", "Failed to find beat: " + beatNo);
             return;
         }
 
         long minMillis = Long.MAX_VALUE;
-        for(Beat beat : beatsWithNo){
+        for (Beat beat : beatsWithNo) {
             long startTime = beat.getStartTimeMillis();
-            if(startTime < minMillis){
+            if (startTime < minMillis) {
                 minMillis = startTime;
             }
         }
 
-        if(minMillis == Long.MAX_VALUE){
+        if (minMillis == Long.MAX_VALUE) {
             mainApp.showDialog("Score Controller", Alert.AlertType.ERROR, "Send Position Error", "Failed to find populate millis for beat: " + beatNo);
             return;
         }
 
         positionMillis = minMillis;
         scoreService.setPosition(positionMillis);
+        updateOverlays();
     }
 
-    private String getInstrumentsCsv(){
+    private String getInstrumentsCsv() {
         StringBuilder sb = new StringBuilder();
-        for(String instrumentName : instrumentsList){
+        for (String instrumentName : instrumentsList) {
             sb.append(instrumentName);
             sb.append(Consts.COMMA);
         }
@@ -659,8 +721,8 @@ public class ScoreController {
         return Util.removeEndComma(instrumentCsv);
     }
 
-    private void sendAddParts(Participant participant, String instrumentsCsv){
-        if(participant == null || instrumentsCsv == null || instrumentsCsv.length() < 1){
+    private void sendAddParts(Participant participant, String instrumentsCsv) {
+        if (participant == null || instrumentsCsv == null || instrumentsCsv.length() < 1) {
             return;
         }
         EventFactory eventFactory = publisher.getEventFactory();
@@ -680,7 +742,7 @@ public class ScoreController {
     }
 
     private void reset() {
-        if(!scoreService.reset()){
+        if (!scoreService.reset()) {
             LOG.warn("Sever failed to reset");
             return;
         }
@@ -694,14 +756,14 @@ public class ScoreController {
         isBeatSetCall = false;
         positionMillis = 0L;
         ObservableList<Participant> participants = mainApp.getParticipants();
-        for(Participant participant : participants){
+        for (Participant participant : participants) {
             participant.setInstrument(Consts.NAME_NA);
         }
 
     }
 
-    public void viewScore(){
-        if(score == null){
+    public void viewScore() {
+        if (score == null) {
             return;
         }
 
@@ -709,20 +771,21 @@ public class ScoreController {
         scoreNameLbl.setText(name);
 
         Collection<Instrument> instruments = score.getInstruments();
-        if(instruments == null){
+        if (instruments == null) {
             return;
         }
         Iterator<Instrument> instIter = instruments.iterator();
-        while(instIter.hasNext()){
+        while (instIter.hasNext()) {
             Instrument instrument = instIter.next();
             instrumentsList.add(instrument.getName());
+            instrumentNameId.put(instrument.getName(), instrument.getId());
         }
 
         pagesList.add(Consts.ONE_I);
         Collection<Page> pages = score.getPages();
-        for(Page page : pages){
+        for (Page page : pages) {
             int pageNo = page.getPageNo();
-            if(!pagesList.contains(pageNo)) {
+            if (!pagesList.contains(pageNo)) {
                 pagesList.add(pageNo);
             }
         }
@@ -731,12 +794,12 @@ public class ScoreController {
 
         barsList.add(Consts.ONE_I);
         Collection<Bar> bars = score.getBars();
-        for(Bar bar : bars){
-            if(bar.isUpbeatBar()){
+        for (Bar bar : bars) {
+            if (bar.isUpbeatBar()) {
                 continue;
             }
             int barNo = bar.getBarNo();
-            if(!barsList.contains(barNo)) {
+            if (!barsList.contains(barNo)) {
                 barsList.add(barNo);
             }
         }
@@ -745,23 +808,30 @@ public class ScoreController {
 
         beatsList.add(Consts.ONE_I);
         Collection<Beat> beats = score.getBeats();
-        for(Beat beat : beats){
-            if(beat.isUpbeat()){
+        for (Beat beat : beats) {
+            if (beat.isUpbeat()) {
                 continue;
             }
             int beatNo = beat.getBeatNo();
-            if(!beatsList.contains(beatNo)) {
+            if (!beatsList.contains(beatNo)) {
                 beatsList.add(beatNo);
             }
         }
         FXCollections.sort(beatsList);
         beatNoCbx.getSelectionModel().select(Consts.ONE_I);
 
+        usePageRandomisationChb.setSelected(true);
+        useContinousPageChb.setSelected(true);
+        useDynamicsOverlayChb.setSelected(false);
+        usePressureOverlayChb.setSelected(false);
+        dynamicsSldr.setValue(50.0);
+        pressureSldr.setValue(0.0);
+        tempoModifierSldr.setValue(1.0);
     }
 
 
     private void updateBeatInfo(Id transportId, int pageNo, int barNo, int beatNo, int baseBeatNo) {
-        if(this.score == null){
+        if (this.score == null) {
             return;
         }
 
@@ -771,26 +841,25 @@ public class ScoreController {
     }
 
     private void updateTempo(Id transportId, int tempo) {
-        if(this.score == null){
+        if (this.score == null) {
             return;
         }
-
         tempoLbl.setText(String.valueOf(tempo));
     }
 
-    public void onTransportBeatEvent(Id transportId, int beatNo, int baseBeatNo){
+    public void onTransportBeatEvent(Id transportId, int beatNo, int baseBeatNo) {
         List<BeatId> beatIds = score.findBeatIds(transportId, baseBeatNo);
-        if(beatIds == null) {
+        if (beatIds == null) {
             LOG.info("BeatIds are NULL");
             return;
         }
         int pageNo = 0;
         int barNo = 0;
-        for(BeatId beatId : beatIds){
-            if(beatId.getBaseBeatNo() == baseBeatNo){
-                PageId pageId = (PageId)beatId.getPageId();
+        for (BeatId beatId : beatIds) {
+            if (beatId.getBaseBeatNo() == baseBeatNo) {
+                PageId pageId = (PageId) beatId.getPageId();
                 pageNo = pageId.getPageNo();
-                BarId barId = (BarId)beatId.getBarId();
+                BarId barId = (BarId) beatId.getBarId();
                 barNo = barId.getBarNo();
                 break;
             }
@@ -799,20 +868,20 @@ public class ScoreController {
         Platform.runLater(new TransportBeatUpdater(transportId, pageNo, barNo, beatNo, baseBeatNo));
     }
 
-    public void onTransportPoisitionChange(Id transportId, int baseBeatNo){
+    public void onTransportPoisitionChange(Id transportId, int baseBeatNo) {
         List<BeatId> beatIds = score.findBeatIds(transportId, baseBeatNo);
-        if(beatIds == null) {
+        if (beatIds == null) {
             LOG.info("BeatIds are NULL");
             return;
         }
         int pageNo = 0;
         int barNo = 0;
         int beatNo = 0;
-        for(BeatId beatId : beatIds){
-            if(beatId.getBaseBeatNo() == baseBeatNo){
-                PageId pageId = (PageId)beatId.getPageId();
+        for (BeatId beatId : beatIds) {
+            if (beatId.getBaseBeatNo() == baseBeatNo) {
+                PageId pageId = (PageId) beatId.getPageId();
                 pageNo = pageId.getPageNo();
-                BarId barId = (BarId)beatId.getBarId();
+                BarId barId = (BarId) beatId.getBarId();
                 barNo = barId.getBarNo();
                 beatNo = beatId.getBeatNo();
                 break;
@@ -822,7 +891,7 @@ public class ScoreController {
         Platform.runLater(new TransportBeatUpdater(transportId, pageNo, barNo, beatNo, baseBeatNo));
     }
 
-    public void onTempoEvent(Id transportId, Tempo tempo){
+    public void onTempoEvent(Id transportId, Tempo tempo) {
         Platform.runLater(new TempoUpdater(transportId, tempo.getBpm()));
     }
 
@@ -835,25 +904,24 @@ public class ScoreController {
     }
 
 
-
     private void onTempoModifierChobChange(Double newSelection) {
-        if(score == null){
+        if (score == null) {
             return;
         }
- LOG.info("Have new Modifier selection: " + newSelection);
+        LOG.info("Have new Modifier selection: " + newSelection);
         TempoModifier tempoModifier = new TempoModifier(newSelection);
         Collection<Id> transportIds = score.getTransportIds();
-        if(transportIds == null){
+        if (transportIds == null) {
             return;
         }
 
-        for(Id transportId : transportIds) {
+        for (Id transportId : transportIds) {
             scoreService.setTempoModifier(transportId, tempoModifier);
         }
     }
 
     private void onRandomStrategyChobChange(String newSelection) {
-        if(score == null){
+        if (score == null) {
             return;
         }
         LOG.info("Have new Random Strategy selection: " + newSelection);
@@ -861,7 +929,7 @@ public class ScoreController {
         List<Integer> randomisationStrategy = new ArrayList<>();
         try {
             String[] instNos = newSelection.split(Consts.COMMA);
-            for(String instNo : instNos) {
+            for (String instNo : instNos) {
                 randomisationStrategy.add(Integer.parseInt(instNo));
             }
         } catch (Exception e) {
@@ -880,13 +948,140 @@ public class ScoreController {
         scoreService.useContinuousPageChange(newValue);
     }
 
+    private void updateOverlays() {
+        onUseDynamicsOverlay(useDynamicsOverlayChb.isSelected());
+        onUsePressureOverlay(usePressureOverlayChb.isSelected());
+    }
+
+    private void onUseAllOverlays(Boolean newValue) {
+        useDynamicsOverlayChb.setSelected(newValue);
+        usePressureOverlayChb.setSelected(newValue);
+    }
+
+    private void onUseDynamicsOverlay(Boolean newValue) {
+        List<Id> instrumentIds;
+        if(sendToAllChb.isSelected()) {
+            instrumentIds = getAllInstruments();
+        } else {
+            instrumentIds = getSelectedInstruments();
+        }
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        sendDynamicsValueChange(Math.round(dynamicsSldr.getValue()), instrumentIds);
+        sendUseDynamicsOverlay(newValue, instrumentIds);
+    }
 
     private void onDynamicsValueChange(long newVal) {
-        scoreService.setDynamicsValue(newVal);
+        if(!useDynamicsOverlayChb.isSelected()) {
+            return;
+        }
+        List<Id> instrumentIds;
+        if(sendToAllChb.isSelected()) {
+            instrumentIds = getAllInstruments();
+        } else {
+            instrumentIds = getSelectedInstruments();
+        }
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        sendDynamicsValueChange(newVal, instrumentIds);
+    }
+
+    private void onUsePressureOverlay(Boolean newValue) {
+        List<Id> instrumentIds;
+        if(sendToAllChb.isSelected()) {
+            instrumentIds = getAllInstruments();
+        } else {
+            instrumentIds = getSelectedInstruments();
+        }
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        sendPressureValueChange(Math.round(pressureSldr.getValue()), instrumentIds);
+        sendUsePressureOverlay(newValue, instrumentIds);
+    }
+
+    private void onPressureValueChange(long newVal) {
+        if(!usePressureOverlayChb.isSelected()) {
+            return;
+        }
+        List<Id> instrumentIds;
+        if(sendToAllChb.isSelected()) {
+            instrumentIds = getAllInstruments();
+        } else {
+            instrumentIds = getSelectedInstruments();
+        }
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        sendPressureValueChange(newVal, instrumentIds);
+    }
+
+    private void sendUseDynamicsOverlay(Boolean newVal, List<Id> instrumentIds) {
+        scoreService.onUseDynamicsOverlay(newVal, instrumentIds);
+    }
+
+    private void sendDynamicsValueChange(long newVal, List<Id> instrumentIds) {
+        scoreService.setDynamicsValue(newVal, instrumentIds);
+    }
+
+    private void sendUsePressureOverlay(Boolean newVal, List<Id> instrumentIds) {
+        scoreService.onUsePressureOverlay(newVal, instrumentIds);
+    }
+
+    private void sendPressureValueChange(long newVal, List<Id> instrumentIds) {
+        scoreService.setPressureValue(newVal, instrumentIds);
+    }
+
+    private List<Id> getSelectedInstruments() {
+        List<Id> instrumentIds = new ArrayList<>();
+        ObservableList<Participant> participants = getSelectedParticipants();
+        if(participants == null) {
+            return instrumentIds;
+        }
+        for(Participant participant : participants) {
+            Id instrumentId = instrumentNameId.get(participant.getInstrument());
+            if(instrumentId == null) {
+                LOG.info("Could not find ID for participant instrument {}", participant.getInstrument());
+                continue;
+            }
+            instrumentIds.add(instrumentId);
+        }
+        return  instrumentIds;
+    }
+
+    private List<Id> getAllInstruments() {
+        List<Id> instrumentIds = new ArrayList<>();
+        ObservableList<Participant> participants = getAllParticipants();
+        if(participants == null) {
+            return instrumentIds;
+        }
+        for(Participant participant : participants) {
+            if(Consts.NAME_FULL_SCORE.equalsIgnoreCase(participant.getInstrument())) {
+                continue;
+            }
+            Id instrumentId = instrumentNameId.get(participant.getInstrument());
+            if(instrumentId == null) {
+                LOG.info("Could not find ID for participant instrument {}", participant.getInstrument());
+                continue;
+            }
+            instrumentIds.add(instrumentId);
+        }
+        return  instrumentIds;
+    }
+
+    private ObservableList<Participant> getSelectedParticipants() {
+        return selectedParticipants;
+//        return participantsTableView.getSelectionModel().getSelectedItems();
+    }
+
+    private ObservableList<Participant> getAllParticipants() {
+        return participantsTableView.getItems();
     }
 
     public static String fixedLengthString(String string, int length) {
-        return String.format("%1$"+length+ "s", string);
+        return String.format("%1$" + length + "s", string);
     }
 
     class TransportBeatUpdater implements Runnable {

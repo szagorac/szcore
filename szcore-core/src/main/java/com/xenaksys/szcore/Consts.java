@@ -57,6 +57,8 @@ public interface Consts {
     public static final String OSC_ADDRESS_SCORE_DYNAMICS_BOX_STAVE2 = "/ITL/scene/dynStaveBox2";
     public static final String OSC_ADDRESS_SCORE_PRESSURE_BOX_STAVE1 = "/ITL/scene/pressureStaveBox";
     public static final String OSC_ADDRESS_SCORE_PRESSURE_BOX_STAVE2 = "/ITL/scene/pressureStaveBox2";
+    public static final String OSC_ADDRESS_SCORE_PRESSURE_BOX_LINE1 = "/ITL/scene/pressureStaveValueLine";
+    public static final String OSC_ADDRESS_SCORE_PRESSURE_BOX_LINE2 = "/ITL/scene/pressureStaveValueLine2";
 
     public static final String OSC_ADDRESS_SCORE_JAVASCRIPT = "/ITL/scene/javascript";
 
@@ -224,8 +226,7 @@ public interface Consts {
     public static final String SCHEDULER_THREAD_FACTORY = "SZCore_Schedlr";
     public static final String DEFAULT_THREAD_SUFFIX = "-Thread-";
 
-    // 0.037
-    public static final double DYNAMICS_LINE_Y_MAX = 0.074;
+    public static final double DYNAMICS_LINE_Y_MAX = 0.074;      //half  0.037
     public static final double DYNAMICS_LINE_Y_MIN = 0.0;
     public static final double DYNAMICS_LINE1_Y_MID_POSITION = -0.077;
     public static final double DYNAMICS_LINE1_Y_MIN_POSITION = -0.04;
@@ -233,5 +234,14 @@ public interface Consts {
     public static final double DYNAMICS_LINE2_Y_MID_POSITION = 0.713;
     public static final double DYNAMICS_LINE2_Y_MAX_POSITION = 0.676;
     public static final double DYNAMICS_LINE2_Y_MIN_POSITION = 0.75;
+
+    public static final double PRESSURE_LINE_Y_MAX = 0.055;  //half 0.0275
+    public static final double PRESSURE_LINE_Y_MIN = 0.0;
+    public static final double PRESSURE_LINE1_Y_MID_POSITION = -0.4;
+    public static final double PRESSURE_LINE1_Y_MIN_POSITION = -0.3725;
+    public static final double PRESSURE_LINE1_Y_MAX_POSITION = -0.4275;
+    public static final double PRESSURE_LINE2_Y_MID_POSITION = 0.391;
+    public static final double PRESSURE_LINE2_Y_MAX_POSITION = 0.3635;
+    public static final double PRESSURE_LINE2_Y_MIN_POSITION = 0.4185;
 
 }

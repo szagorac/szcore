@@ -79,6 +79,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static com.xenaksys.szcore.Consts.DYNAMICS_LINE_Y_MAX;
+import static com.xenaksys.szcore.Consts.PRESSURE_LINE_Y_MAX;
 
 public class ScoreProcessorImpl implements ScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(ScoreProcessorImpl.class);
@@ -106,7 +107,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private List<SzcoreEngineEventListener> scoreEventListeners = new CopyOnWriteArrayList<>();
     private Map<Id, TempoModifier> transportTempoModifiers = new ConcurrentHashMap<>();
     private ValueScaler dynamicsValueScaler = new ValueScaler(0.0, 100.0, 0.0, DYNAMICS_LINE_Y_MAX);
-    private ValueScaler pressureValueScaler = new ValueScaler(0.0, 100.0, 255, 0);
+    private ValueScaler pressureLineValueScaler = new ValueScaler(0.0, 100.0, PRESSURE_LINE_Y_MAX, 0.0);
+    private ValueScaler pressureColorValueScaler = new ValueScaler(50.0, 100.0, 255, 0);
 
     public ScoreProcessorImpl(TransportFactory transportFactory, MutableClock clock, OscPublisher oscPublisher,
                               Scheduler scheduler, EventFactory eventFactory, TaskFactory taskFactory) {
@@ -761,7 +763,13 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String address = stave.getOscAddressScorePressureBox();
         ElementAlphaEvent dynYEvent = eventFactory.createElementAlphaEvent(address, destination, clock.getSystemTimeMillis());
         dynYEvent.setAlpha(alpha);
-        LOG.info("sendDynamicsAlphaEvent sending alpha: {} to: {} addr: '{}'", alpha, instrumentId, address);
+        LOG.info("sendPressureAlphaEvent sending alpha: {} to: {} addr: '{}'", alpha, instrumentId, address);
+        process(dynYEvent);
+
+        address = stave.getOscAddressScorePressureLine();
+        dynYEvent = eventFactory.createElementPenAlphaEvent(address, destination, clock.getSystemTimeMillis());
+        dynYEvent.setAlpha(alpha);
+        LOG.info("sendPressureAlphaEvent sending alpha: {} to: {} addr: '{}'", alpha, instrumentId, address);
         process(dynYEvent);
     }
 
@@ -774,6 +782,43 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         colorEvent.setColor(r, g, b);
         LOG.info("sendDynamicsAlphaEvent sending r: {}  g: {}  b: {} to: {} addr: '{}'", r, g, b, instrumentId, address);
         process(colorEvent);
+    }
+
+    public void sendPressureChangeEvent(Id instrumentId, Stave stave, double yDelta) throws Exception {
+        StaveId staveId = (StaveId) stave.getId();
+        String destination = szcore.getOscDestination(staveId.getInstrumentId());
+
+        int staveNo = ((StaveId) stave.getId()).getStaveNo();
+        double y;
+        switch (staveNo) {
+            case 1:
+                y = Consts.PRESSURE_LINE1_Y_MIN_POSITION - yDelta;
+                break;
+            case 2:
+                y = Consts.PRESSURE_LINE2_Y_MIN_POSITION - yDelta;
+                break;
+            default:
+                LOG.error("Invalid stave dynamics Y position event");
+                return;
+        }
+
+        y = MathUtil.roundTo5DecimalPlaces(y);
+        double current = stave.getDynamicsValue();
+        double diff = Math.abs(y - current);
+        double threshold = Math.abs(2 * PRESSURE_LINE_Y_MAX/100.0);
+        if(diff < threshold) {
+            LOG.debug("sendPressureChangeEvent y position change: {} is less than threshold: {}, ignoring update ... ", diff, threshold);
+            return;
+        }
+
+        String address = stave.getOscAddressScorePressureLine();
+        LOG.info("sendPressureChangeEvent sending y position: {} to: {} addr: '{}' yDelta: {} ", y, address, instrumentId, yDelta);
+
+        ElementYPositionEvent dynYEvent = eventFactory.createElementYPositionEvent(address, destination, staveId, clock.getSystemTimeMillis());
+        dynYEvent.setYPosition(y);
+        stave.setDynamicsValue(y);
+
+        process(dynYEvent);
     }
 
     public void addTempoChangeInitEvent(Tempo tempo, BeatId beatId, Id transportId, boolean isSendOscEvents, List<SzcoreEvent> initEvents) {
@@ -1994,8 +2039,6 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         if(instrumentIds == null) {
             return;
         }
-        int scaled = (int) Math.round(pressureValueScaler.scaleValue(value));
-        LOG.info("onPressureValueChange scaled value: {} to: {}, instruments: {}", value, scaled, Arrays.toString(instrumentIds.toArray()));
 
         for(Id instrumentId : instrumentIds) {
             Instrument instrument = szcore.getInstrument(instrumentId);
@@ -2004,7 +2047,15 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             }
             Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
             for (Stave stave : staves) {
-                sendPressureColorEvent(instrumentId, stave, scaled, scaled, scaled);
+
+                if(value > 50) {
+                    int scaled = (int) Math.round(pressureColorValueScaler.scaleValue(value));
+                    LOG.info("onPressureValueChange scaled value: {} to: {}, instruments: {}", value, scaled, Arrays.toString(instrumentIds.toArray()));
+                    sendPressureColorEvent(instrumentId, stave, scaled, scaled, scaled);
+                }
+
+                double scaled = pressureLineValueScaler.scaleValue(value);
+                sendPressureChangeEvent(instrumentId, stave, scaled);
             }
         }
     }

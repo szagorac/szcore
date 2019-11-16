@@ -60,6 +60,7 @@ public class StaveFactory {
         String oscAddressScoreDynamicsLine = Consts.OSC_ADDRESS_SCORE_DYNAMICS_LINE_STAVE1;
         String oscAddressScoreDynamicsBox = Consts.OSC_ADDRESS_SCORE_DYNAMICS_BOX_STAVE1;
         String oscAddressScorePressureBox = Consts.OSC_ADDRESS_SCORE_PRESSURE_BOX_STAVE1;
+        String oscAddressScorePressureLine = Consts.OSC_ADDRESS_SCORE_PRESSURE_BOX_LINE1;
         double xPosition = Consts.OSC_STAVE1_X;
         double yPosition = Consts.OSC_STAVE1_Y;
         double zPosition = Consts.OSC_STAVE1_Z;
@@ -75,6 +76,7 @@ public class StaveFactory {
                 oscAddressScoreDynamicsLine,
                 oscAddressScoreDynamicsBox,
                 oscAddressScorePressureBox,
+                oscAddressScorePressureLine,
                 xPosition,
                 yPosition,
                 zPosition,
@@ -94,6 +96,7 @@ public class StaveFactory {
         String oscAddressScoreDynamicsLine = Consts.OSC_ADDRESS_SCORE_DYNAMICS_LINE_STAVE2;
         String oscAddressScoreDynamicsBox = Consts.OSC_ADDRESS_SCORE_DYNAMICS_BOX_STAVE2;
         String oscAddressScorePressureBox = Consts.OSC_ADDRESS_SCORE_PRESSURE_BOX_STAVE2;
+        String oscAddressScorePressureLine = Consts.OSC_ADDRESS_SCORE_PRESSURE_BOX_LINE2;
         double xPosition = Consts.OSC_STAVE2_X;
         double yPosition = Consts.OSC_STAVE2_Y;
         double zPosition = Consts.OSC_STAVE2_Z;
@@ -109,6 +112,7 @@ public class StaveFactory {
                 oscAddressScoreDynamicsLine,
                 oscAddressScoreDynamicsBox,
                 oscAddressScorePressureBox,
+                oscAddressScorePressureLine,
                 xPosition,
                 yPosition,
                 zPosition,
@@ -140,6 +144,7 @@ public class StaveFactory {
                 null,
                 null,
                 null,
+                null,
                 xPosition,
                 yPosition,
                 zPosition,
@@ -168,6 +173,7 @@ public class StaveFactory {
                 oscAddressScoreFollower,
                 oscAddressScoreBeater,
                 oscAddressScoreStartMark,
+                null,
                 null,
                 null,
                 null,

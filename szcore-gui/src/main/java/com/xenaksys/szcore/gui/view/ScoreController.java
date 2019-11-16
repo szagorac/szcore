@@ -267,6 +267,35 @@ public class ScoreController {
             }
         });
 
+        pressureSldr.setLabelFormatter(new StringConverter<Double>() {
+            @Override
+            public String toString(Double n) {
+                if (n < 20.0) return "light";
+                if (n < 40.0) return "low";
+                if (n < 60.0) return "ord";
+                if (n < 80.0) return "high";
+                return "heavy";
+            }
+
+            @Override
+            public Double fromString(String s) {
+                switch (s) {
+                    case "light":
+                        return 0d;
+                    case "low":
+                        return 30d;
+                    case "ord":
+                        return 50d;
+                    case "high":
+                        return 70d;
+                    case "heavy":
+                        return 100d;
+                    default:
+                        return 50d;
+                }
+            }
+        });
+
         dynamicsSldr.valueProperty().addListener((ov, old_val, new_val) -> {
 //            LOG.debug("old_val: {}, new_val: {}", old_val, new_val);
             long newVal = Math.round(new_val.doubleValue());
@@ -825,7 +854,7 @@ public class ScoreController {
         useDynamicsOverlayChb.setSelected(false);
         usePressureOverlayChb.setSelected(false);
         dynamicsSldr.setValue(50.0);
-        pressureSldr.setValue(0.0);
+        pressureSldr.setValue(50.0);
         tempoModifierSldr.setValue(1.0);
     }
 

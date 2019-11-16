@@ -12,6 +12,7 @@ public class BasicStave implements Stave {
     private final String oscAddressScoreDynamicsLine;
     private final String oscAddressScoreDynamicsBox;
     private final String oscAddressScorePressureBox;
+    private final String oscAddressScorePressureLine;
     private final double xPosition;
     private final double yPosition;
     private final double zPosition;
@@ -31,6 +32,7 @@ public class BasicStave implements Stave {
                       String oscAddressScoreDynamicsLine,
                       String oscAddressScoreDynamicsBox,
                       String oscAddressScorePressureBox,
+                      String oscAddressScorePressureLine,
                       double xPosition,
                       double yPosition,
                       double zPosition,
@@ -46,6 +48,7 @@ public class BasicStave implements Stave {
         this.oscAddressScoreDynamicsLine = oscAddressScoreDynamicsLine;
         this.oscAddressScoreDynamicsBox = oscAddressScoreDynamicsBox;
         this.oscAddressScorePressureBox = oscAddressScorePressureBox;
+        this.oscAddressScorePressureLine = oscAddressScorePressureLine;
         this.xPosition = xPosition;
         this.yPosition = yPosition;
         this.zPosition = zPosition;
@@ -80,6 +83,11 @@ public class BasicStave implements Stave {
     @Override
     public String getOscAddressScorePressureBox() {
         return oscAddressScorePressureBox;
+    }
+
+    @Override
+    public String getOscAddressScorePressureLine() {
+        return oscAddressScorePressureLine;
     }
 
     public double getxPosition() {

@@ -154,6 +154,19 @@
                         <Slider fx:id="pressureSldr" layoutX="150.0" layoutY="10.0" showTickLabels="true" showTickMarks="true" />
                      </children>
                   </HBox>
+                  <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="402.0" spacing="10.0">
+                     <children>
+                        <CheckBox fx:id="useSpeedOverlayChb" mnemonicParsing="false" />
+                        <Label prefHeight="17.0" prefWidth="53.0" text="Speed" />
+                        <Label fx:id="speedValLbl" minWidth="40.0" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___" />
+                        <Slider fx:id="speedSldr" showTickLabels="true" showTickMarks="true" />
+                        <Separator orientation="VERTICAL" prefHeight="200.0" />
+                        <CheckBox fx:id="usePositionOverlayChb" layoutX="10.0" layoutY="21.0" mnemonicParsing="false" />
+                        <Label layoutX="36.0" layoutY="21.0" prefHeight="17.0" prefWidth="47.0" text="Position" />
+                        <Label fx:id="positionValLbl" layoutX="100.0" layoutY="12.0" minWidth="40.0" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___" />
+                        <Slider fx:id="positionSldr" layoutX="150.0" layoutY="10.0" showTickLabels="true" showTickMarks="true" />
+                     </children>
+                  </HBox>
                </children>
             </VBox>
          </children>

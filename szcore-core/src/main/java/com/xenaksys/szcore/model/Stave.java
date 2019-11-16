@@ -18,9 +18,29 @@ public interface Stave extends Identifiable {
 
     String getOscAddressScorePressureLine();
 
+    String getOscAddressScoreSpeedBox();
+
+    String getOscAddressScoreSpeedLine();
+
+    String getOscAddressScorePositionBox();
+
+    String getOscAddressScorePositionLine();
+
     double getDynamicsValue();
 
-    void setDynamicsValue(double dynamicsValue);
+    void setDynamicsValue(double value);
+
+    double getPressureValue();
+
+    void setPressureValue(double value);
+
+    double getSpeedValue();
+
+    void setSpeedValue(double value);
+
+    double getPositionValue();
+
+    void setPositionValue(double value);
 
     double getxPosition();
 

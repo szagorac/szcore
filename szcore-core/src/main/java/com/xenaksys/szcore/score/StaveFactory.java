@@ -61,6 +61,10 @@ public class StaveFactory {
         String oscAddressScoreDynamicsBox = Consts.OSC_ADDRESS_SCORE_DYNAMICS_BOX_STAVE1;
         String oscAddressScorePressureBox = Consts.OSC_ADDRESS_SCORE_PRESSURE_BOX_STAVE1;
         String oscAddressScorePressureLine = Consts.OSC_ADDRESS_SCORE_PRESSURE_BOX_LINE1;
+        String oscAddressScoreSpeedBox = Consts.OSC_ADDRESS_SCORE_SPEED_BOX_STAVE1;
+        String oscAddressScoreSpeedLine = Consts.OSC_ADDRESS_SCORE_SPEED_BOX_LINE1;
+        String oscAddressScorePositionBox = Consts.OSC_ADDRESS_SCORE_POSITION_BOX_STAVE1;
+        String oscAddressScorePositionLine = Consts.OSC_ADDRESS_SCORE_POSITION_BOX_LINE1;
         double xPosition = Consts.OSC_STAVE1_X;
         double yPosition = Consts.OSC_STAVE1_Y;
         double zPosition = Consts.OSC_STAVE1_Z;
@@ -77,6 +81,10 @@ public class StaveFactory {
                 oscAddressScoreDynamicsBox,
                 oscAddressScorePressureBox,
                 oscAddressScorePressureLine,
+                oscAddressScoreSpeedBox,
+                oscAddressScoreSpeedLine,
+                oscAddressScorePositionBox,
+                oscAddressScorePositionLine,
                 xPosition,
                 yPosition,
                 zPosition,
@@ -97,6 +105,10 @@ public class StaveFactory {
         String oscAddressScoreDynamicsBox = Consts.OSC_ADDRESS_SCORE_DYNAMICS_BOX_STAVE2;
         String oscAddressScorePressureBox = Consts.OSC_ADDRESS_SCORE_PRESSURE_BOX_STAVE2;
         String oscAddressScorePressureLine = Consts.OSC_ADDRESS_SCORE_PRESSURE_BOX_LINE2;
+        String oscAddressScoreSpeedBox = Consts.OSC_ADDRESS_SCORE_SPEED_BOX_STAVE2;
+        String oscAddressScoreSpeedLine = Consts.OSC_ADDRESS_SCORE_SPEED_BOX_LINE2;
+        String oscAddressScorePositionBox = Consts.OSC_ADDRESS_SCORE_POSITION_BOX_STAVE2;
+        String oscAddressScorePositionLine = Consts.OSC_ADDRESS_SCORE_POSITION_BOX_LINE2;
         double xPosition = Consts.OSC_STAVE2_X;
         double yPosition = Consts.OSC_STAVE2_Y;
         double zPosition = Consts.OSC_STAVE2_Z;
@@ -113,6 +125,10 @@ public class StaveFactory {
                 oscAddressScoreDynamicsBox,
                 oscAddressScorePressureBox,
                 oscAddressScorePressureLine,
+                oscAddressScoreSpeedBox,
+                oscAddressScoreSpeedLine,
+                oscAddressScorePositionBox,
+                oscAddressScorePositionLine,
                 xPosition,
                 yPosition,
                 zPosition,
@@ -145,6 +161,10 @@ public class StaveFactory {
                 null,
                 null,
                 null,
+                null,
+                null,
+                null,
+                null,
                 xPosition,
                 yPosition,
                 zPosition,
@@ -173,6 +193,10 @@ public class StaveFactory {
                 oscAddressScoreFollower,
                 oscAddressScoreBeater,
                 oscAddressScoreStartMark,
+                null,
+                null,
+                null,
+                null,
                 null,
                 null,
                 null,

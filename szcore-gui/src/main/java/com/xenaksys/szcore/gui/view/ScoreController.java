@@ -139,7 +139,18 @@ public class ScoreController {
     private Label pressureValLbl;
     @FXML
     private CheckBox usePressureOverlayChb;
-
+    @FXML
+    private Slider speedSldr;
+    @FXML
+    private Label speedValLbl;
+    @FXML
+    private CheckBox useSpeedOverlayChb;
+    @FXML
+    private Slider positionSldr;
+    @FXML
+    private Label positionValLbl;
+    @FXML
+    private CheckBox usePositionOverlayChb;
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -183,6 +194,8 @@ public class ScoreController {
         useAllOverlaysChb.setSelected(false);
         sendToAllChb.setSelected(true);
         usePressureOverlayChb.setSelected(false);
+        useSpeedOverlayChb.setSelected(false);
+        usePositionOverlayChb.setSelected(false);
 
         participants.addListener((ListChangeListener<Participant>) p -> {
             while (p.next()) {
@@ -229,6 +242,10 @@ public class ScoreController {
         useAllOverlaysChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseAllOverlays(newValue));
 
         usePressureOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePressureOverlay(newValue));
+
+        useSpeedOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePressureOverlay(newValue));
+
+        usePositionOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePressureOverlay(newValue));
 
         dynamicsSldr.setLabelFormatter(new StringConverter<Double>() {
             @Override
@@ -296,6 +313,70 @@ public class ScoreController {
             }
         });
 
+        speedSldr.setLabelFormatter(new StringConverter<Double>() {
+            @Override
+            public String toString(Double n) {
+                if (n < 20.0) return "vslow";
+                if (n < 40.0) return "slow";
+                if (n < 60.0) return "ord";
+                if (n < 80.0) return "fast";
+                return "vfast";
+            }
+
+            @Override
+            public Double fromString(String s) {
+                switch (s) {
+                    case "vslow":
+                        return 0d;
+                    case "slow":
+                        return 30d;
+                    case "ord":
+                        return 50d;
+                    case "fast":
+                        return 70d;
+                    case "vfast":
+                        return 100d;
+                    default:
+                        return 50d;
+                }
+            }
+        });
+
+        positionSldr.setLabelFormatter(new StringConverter<Double>() {
+            @Override
+            public String toString(Double n) {
+                if (n < 10.0) return "tp";
+                if (n < 20.0) return "ob";
+                if (n < 30.0) return "msp";
+                if (n < 40.0) return "sp";
+                if (n < 60.0) return "ord";
+                if (n < 80.0) return "st";
+                return "mst";
+            }
+
+            @Override
+            public Double fromString(String s) {
+                switch (s) {
+                    case "tp":
+                        return 0d;
+                    case "ob":
+                        return 15d;
+                    case "msp":
+                        return 25d;
+                    case "sp":
+                        return 35d;
+                    case "ord":
+                        return 50d;
+                    case "st":
+                        return 75d;
+                    case "mst":
+                        return 90d;
+                    default:
+                        return 50d;
+                }
+            }
+        });
+
         dynamicsSldr.valueProperty().addListener((ov, old_val, new_val) -> {
 //            LOG.debug("old_val: {}, new_val: {}", old_val, new_val);
             long newVal = Math.round(new_val.doubleValue());
@@ -312,6 +393,24 @@ public class ScoreController {
             String lblVal = String.valueOf(newVal);
             String out = fixedLengthString(lblVal, 3);
             pressureValLbl.setText(out);
+        });
+
+        speedSldr.valueProperty().addListener((ov, old_val, new_val) -> {
+//            LOG.debug("old_val: {}, new_val: {}", old_val, new_val);
+            long newVal = Math.round(new_val.doubleValue());
+            onSpeedValueChange(newVal);
+            String lblVal = String.valueOf(newVal);
+            String out = fixedLengthString(lblVal, 3);
+            speedValLbl.setText(out);
+        });
+
+        positionSldr.valueProperty().addListener((ov, old_val, new_val) -> {
+//            LOG.debug("old_val: {}, new_val: {}", old_val, new_val);
+            long newVal = Math.round(new_val.doubleValue());
+            onPositionValueChange(newVal);
+            String lblVal = String.valueOf(newVal);
+            String out = fixedLengthString(lblVal, 3);
+            positionValLbl.setText(out);
         });
     }
 
@@ -853,8 +952,12 @@ public class ScoreController {
         useContinousPageChb.setSelected(true);
         useDynamicsOverlayChb.setSelected(false);
         usePressureOverlayChb.setSelected(false);
+        useSpeedOverlayChb.setSelected(false);
+        usePositionOverlayChb.setSelected(false);
         dynamicsSldr.setValue(50.0);
         pressureSldr.setValue(50.0);
+        speedSldr.setValue(50.0);
+        positionSldr.setValue(50.0);
         tempoModifierSldr.setValue(1.0);
     }
 
@@ -980,11 +1083,15 @@ public class ScoreController {
     private void updateOverlays() {
         onUseDynamicsOverlay(useDynamicsOverlayChb.isSelected());
         onUsePressureOverlay(usePressureOverlayChb.isSelected());
+        onUseSpeedOverlay(useSpeedOverlayChb.isSelected());
+        onUsePositionOverlay(usePositionOverlayChb.isSelected());
     }
 
     private void onUseAllOverlays(Boolean newValue) {
         useDynamicsOverlayChb.setSelected(newValue);
         usePressureOverlayChb.setSelected(newValue);
+        useSpeedOverlayChb.setSelected(newValue);
+        usePositionOverlayChb.setSelected(newValue);
     }
 
     private void onUseDynamicsOverlay(Boolean newValue) {
@@ -1047,6 +1154,66 @@ public class ScoreController {
         sendPressureValueChange(newVal, instrumentIds);
     }
 
+    private void onUseSpeedOverlay(Boolean newValue) {
+        List<Id> instrumentIds;
+        if(sendToAllChb.isSelected()) {
+            instrumentIds = getAllInstruments();
+        } else {
+            instrumentIds = getSelectedInstruments();
+        }
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        sendSpeedValueChange(Math.round(speedSldr.getValue()), instrumentIds);
+        sendUseSpeedOverlay(newValue, instrumentIds);
+    }
+
+    private void onSpeedValueChange(long newVal) {
+        if(!useSpeedOverlayChb.isSelected()) {
+            return;
+        }
+        List<Id> instrumentIds;
+        if(sendToAllChb.isSelected()) {
+            instrumentIds = getAllInstruments();
+        } else {
+            instrumentIds = getSelectedInstruments();
+        }
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        sendSpeedValueChange(newVal, instrumentIds);
+    }
+
+    private void onUsePositionOverlay(Boolean newValue) {
+        List<Id> instrumentIds;
+        if(sendToAllChb.isSelected()) {
+            instrumentIds = getAllInstruments();
+        } else {
+            instrumentIds = getSelectedInstruments();
+        }
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        sendPositionValueChange(Math.round(speedSldr.getValue()), instrumentIds);
+        sendUsePositionOverlay(newValue, instrumentIds);
+    }
+
+    private void onPositionValueChange(long newVal) {
+        if(!usePositionOverlayChb.isSelected()) {
+            return;
+        }
+        List<Id> instrumentIds;
+        if(sendToAllChb.isSelected()) {
+            instrumentIds = getAllInstruments();
+        } else {
+            instrumentIds = getSelectedInstruments();
+        }
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        sendPositionValueChange(newVal, instrumentIds);
+    }
+
     private void sendUseDynamicsOverlay(Boolean newVal, List<Id> instrumentIds) {
         scoreService.onUseDynamicsOverlay(newVal, instrumentIds);
     }
@@ -1061,6 +1228,22 @@ public class ScoreController {
 
     private void sendPressureValueChange(long newVal, List<Id> instrumentIds) {
         scoreService.setPressureValue(newVal, instrumentIds);
+    }
+
+    private void sendUseSpeedOverlay(Boolean newVal, List<Id> instrumentIds) {
+        scoreService.onUseSpeedOverlay(newVal, instrumentIds);
+    }
+
+    private void sendSpeedValueChange(long newVal, List<Id> instrumentIds) {
+        scoreService.setSpeedValue(newVal, instrumentIds);
+    }
+
+    private void sendUsePositionOverlay(Boolean newVal, List<Id> instrumentIds) {
+        scoreService.onUsePositionOverlay(newVal, instrumentIds);
+    }
+
+    private void sendPositionValueChange(long newVal, List<Id> instrumentIds) {
+        scoreService.setPositionValue(newVal, instrumentIds);
     }
 
     private List<Id> getSelectedInstruments() {

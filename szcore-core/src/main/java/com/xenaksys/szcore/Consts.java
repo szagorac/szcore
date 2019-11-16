@@ -59,6 +59,14 @@ public interface Consts {
     public static final String OSC_ADDRESS_SCORE_PRESSURE_BOX_STAVE2 = "/ITL/scene/pressureStaveBox2";
     public static final String OSC_ADDRESS_SCORE_PRESSURE_BOX_LINE1 = "/ITL/scene/pressureStaveValueLine";
     public static final String OSC_ADDRESS_SCORE_PRESSURE_BOX_LINE2 = "/ITL/scene/pressureStaveValueLine2";
+    public static final String OSC_ADDRESS_SCORE_SPEED_BOX_STAVE1 = "/ITL/scene/speedStaveBox";
+    public static final String OSC_ADDRESS_SCORE_SPEED_BOX_STAVE2 = "/ITL/scene/speedStaveBox2";
+    public static final String OSC_ADDRESS_SCORE_SPEED_BOX_LINE1 = "/ITL/scene/speedStaveValueLine";
+    public static final String OSC_ADDRESS_SCORE_SPEED_BOX_LINE2 = "/ITL/scene/speedStaveValueLine2";
+    public static final String OSC_ADDRESS_SCORE_POSITION_BOX_STAVE1 = "/ITL/scene/positionStaveBox";
+    public static final String OSC_ADDRESS_SCORE_POSITION_BOX_STAVE2 = "/ITL/scene/positionStaveBox2";
+    public static final String OSC_ADDRESS_SCORE_POSITION_BOX_LINE1 = "/ITL/scene/positionStaveValueLine";
+    public static final String OSC_ADDRESS_SCORE_POSITION_BOX_LINE2 = "/ITL/scene/positionStaveValueLine2";
 
     public static final String OSC_ADDRESS_SCORE_JAVASCRIPT = "/ITL/scene/javascript";
 
@@ -243,5 +251,23 @@ public interface Consts {
     public static final double PRESSURE_LINE2_Y_MID_POSITION = 0.391;
     public static final double PRESSURE_LINE2_Y_MAX_POSITION = 0.3635;
     public static final double PRESSURE_LINE2_Y_MIN_POSITION = 0.4185;
+
+    public static final double SPEED_LINE_Y_MAX = 0.055;      //half  0.0275
+    public static final double SPEED_LINE_Y_MIN = 0.0;
+    public static final double SPEED_LINE1_Y_MID_POSITION = -0.457;
+    public static final double SPEED_LINE1_Y_MIN_POSITION = -0.435;
+    public static final double SPEED_LINE1_Y_MAX_POSITION = -0.48;
+    public static final double SPEED_LINE2_Y_MID_POSITION = 0.334;
+    public static final double SPEED_LINE2_Y_MAX_POSITION = 0.308;
+    public static final double SPEED_LINE2_Y_MIN_POSITION = 0.355;
+
+    public static final double POSITION_LINE_Y_MAX = 0.074;      //half  0.037
+    public static final double POSITION_LINE_Y_MIN = 0.0;
+    public static final double POSITION_LINE1_Y_MID_POSITION = -0.077;
+    public static final double POSITION_LINE1_Y_MIN_POSITION = -0.04;
+    public static final double POSITION_LINE1_Y_MAX_POSITION = -0.114;
+    public static final double POSITION_LINE2_Y_MID_POSITION = 0.713;
+    public static final double POSITION_LINE2_Y_MAX_POSITION = 0.676;
+    public static final double POSITION_LINE2_Y_MIN_POSITION = 0.75;
 
 }

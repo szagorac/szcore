@@ -41,4 +41,12 @@ public interface ScoreProcessor extends Processor {
 
     void onUsePressureOverlay(Boolean value, List<Id> instrumentIds) throws Exception;
 
+    void setSpeedValue(long value, List<Id> instrumentIds) throws Exception;
+
+    void onUseSpeedOverlay(Boolean value, List<Id> instrumentIds) throws Exception;
+
+    void setPositionValue(long value, List<Id> instrumentIds) throws Exception;
+
+    void onUsePositionOverlay(Boolean value, List<Id> instrumentIds) throws Exception;
+
 }

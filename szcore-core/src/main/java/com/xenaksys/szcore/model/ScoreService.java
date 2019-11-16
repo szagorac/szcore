@@ -37,4 +37,12 @@ public interface ScoreService {
 
     void onUsePressureOverlay(Boolean value, List<Id> instrumentIds);
 
+    void setSpeedValue(long value, List<Id> instrumentIds);
+
+    void onUseSpeedOverlay(Boolean value, List<Id> instrumentIds);
+
+    void setPositionValue(long value, List<Id> instrumentIds);
+
+    void onUsePositionOverlay(Boolean value, List<Id> instrumentIds);
+
 }

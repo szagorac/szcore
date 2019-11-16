@@ -444,6 +444,46 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         }
     }
 
+    @Override
+    public void setSpeedValue(long value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.setSpeedValue(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Speed Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Speed Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void onUseSpeedOverlay(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUseSpeedOverlay(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Speed Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Speed Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void setPositionValue(long value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.setPositionValue(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Position Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Position Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void onUsePositionOverlay(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUsePositionOverlay(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Position Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Position Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
     protected void tick(){
         if(pingEvent == null) {
             pingEvent = eventFactory.createPingEvent(Consts.ALL_DESTINATIONS, clock.getSystemTimeMillis());

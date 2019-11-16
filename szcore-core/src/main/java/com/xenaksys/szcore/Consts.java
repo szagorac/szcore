@@ -261,13 +261,13 @@ public interface Consts {
     public static final double SPEED_LINE2_Y_MAX_POSITION = 0.308;
     public static final double SPEED_LINE2_Y_MIN_POSITION = 0.355;
 
-    public static final double POSITION_LINE_Y_MAX = 0.074;      //half  0.037
+    public static final double POSITION_LINE_Y_MAX = 0.135;      //half 0.0675
     public static final double POSITION_LINE_Y_MIN = 0.0;
-    public static final double POSITION_LINE1_Y_MID_POSITION = -0.077;
-    public static final double POSITION_LINE1_Y_MIN_POSITION = -0.04;
-    public static final double POSITION_LINE1_Y_MAX_POSITION = -0.114;
-    public static final double POSITION_LINE2_Y_MID_POSITION = 0.713;
-    public static final double POSITION_LINE2_Y_MAX_POSITION = 0.676;
-    public static final double POSITION_LINE2_Y_MIN_POSITION = 0.75;
+    public static final double POSITION_LINE1_Y_MID_POSITION = -0.555;
+    public static final double POSITION_LINE1_Y_MIN_POSITION = -0.492;
+    public static final double POSITION_LINE1_Y_MAX_POSITION = -0.62;
+    public static final double POSITION_LINE2_Y_MID_POSITION = 0.236;
+    public static final double POSITION_LINE2_Y_MAX_POSITION = 0.17;
+    public static final double POSITION_LINE2_Y_MIN_POSITION = 0.298;
 
 }

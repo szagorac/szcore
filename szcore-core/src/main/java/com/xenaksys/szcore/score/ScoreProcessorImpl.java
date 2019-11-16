@@ -112,7 +112,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private ValueScaler pressureLineValueScaler = new ValueScaler(0.0, 100.0, PRESSURE_LINE_Y_MAX, 0.0);
     private ValueScaler pressureColorValueScaler = new ValueScaler(50.0, 100.0, 255, 0);
     private ValueScaler speedValueScaler = new ValueScaler(0.0, 100.0, 0.0, SPEED_LINE_Y_MAX);
-    private ValueScaler positionValueScaler = new ValueScaler(0.0, 100.0, 0.0, POSITION_LINE_Y_MAX);
+    private ValueScaler positionValueScaler = new ValueScaler(0.0, 100.0, POSITION_LINE_Y_MAX,0.0);
 
     public ScoreProcessorImpl(TransportFactory transportFactory, MutableClock clock, OscPublisher oscPublisher,
                               Scheduler scheduler, EventFactory eventFactory, TaskFactory taskFactory) {

@@ -243,9 +243,9 @@ public class ScoreController {
 
         usePressureOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePressureOverlay(newValue));
 
-        useSpeedOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePressureOverlay(newValue));
+        useSpeedOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseSpeedOverlay(newValue));
 
-        usePositionOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePressureOverlay(newValue));
+        usePositionOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePositionOverlay(newValue));
 
         dynamicsSldr.setLabelFormatter(new StringConverter<Double>() {
             @Override
@@ -346,11 +346,12 @@ public class ScoreController {
             @Override
             public String toString(Double n) {
                 if (n < 10.0) return "tp";
-                if (n < 20.0) return "ob";
-                if (n < 30.0) return "msp";
-                if (n < 40.0) return "sp";
-                if (n < 60.0) return "ord";
-                if (n < 80.0) return "st";
+                if (n < 20.0) return "bb";
+                if (n < 40.0) return "ob";
+                if (n < 50.0) return "msp";
+                if (n < 60.0) return "sp";
+                if (n < 75.0) return "ord";
+                if (n < 90.0) return "st";
                 return "mst";
             }
 
@@ -359,20 +360,22 @@ public class ScoreController {
                 switch (s) {
                     case "tp":
                         return 0d;
+                    case "bb":
+                        return 10d;
                     case "ob":
-                        return 15d;
+                        return 38d;
                     case "msp":
-                        return 25d;
+                        return 45d;
                     case "sp":
-                        return 35d;
+                        return 55d;
                     case "ord":
-                        return 50d;
+                        return 74d;
                     case "st":
-                        return 75d;
+                        return 85d;
                     case "mst":
-                        return 90d;
+                        return 100d;
                     default:
-                        return 50d;
+                        return 70d;
                 }
             }
         });
@@ -957,7 +960,7 @@ public class ScoreController {
         dynamicsSldr.setValue(50.0);
         pressureSldr.setValue(50.0);
         speedSldr.setValue(50.0);
-        positionSldr.setValue(50.0);
+        positionSldr.setValue(72.0);
         tempoModifierSldr.setValue(1.0);
     }
 

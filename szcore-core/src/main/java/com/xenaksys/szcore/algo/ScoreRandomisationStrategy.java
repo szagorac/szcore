@@ -9,13 +9,7 @@ import com.xenaksys.szcore.score.BasicScore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class ScoreRandomisationStrategy {
@@ -30,6 +24,7 @@ public class ScoreRandomisationStrategy {
     private Map<Id, Integer> instrumentPage = new HashMap<>();
     private List<Integer> assignmentStrategy = new ArrayList<>();
     private int maxPageNo = Integer.MAX_VALUE;
+    private Random rnd = new Random();
 
     public ScoreRandomisationStrategy(BasicScore szcore) {
         this.szcore = szcore;
@@ -109,7 +104,7 @@ public class ScoreRandomisationStrategy {
         }
 
         List<Id> rndInst = new ArrayList<>(instrumentPage.keySet());
-        Collections.shuffle(rndInst);
+        Collections.shuffle(rndInst, rnd);
         int instStart = 0;
         int instEnd = 0;
         for(int i = 0; i < rndNo; i++) {

@@ -12,19 +12,33 @@ public interface Stave extends Identifiable {
 
     String getOscAddressScoreDynamicsLine();
 
+    String getOscAddressScoreDynamicsMidLine();
+
     String getOscAddressScoreDynamicsBox();
 
     String getOscAddressScorePressureBox();
 
     String getOscAddressScorePressureLine();
 
+    String getOscAddressScorePressureMidLine();
+
     String getOscAddressScoreSpeedBox();
 
     String getOscAddressScoreSpeedLine();
 
+    String getOscAddressScoreSpeedMidLine();
+
     String getOscAddressScorePositionBox();
 
     String getOscAddressScorePositionLine();
+
+    String getOscAddressScorePositionOrdLine();
+
+    String getOscAddressScorePositionBridgeLine();
+
+    String getOscAddressScoreContentBox();
+
+    String getOscAddressScoreContentLine();
 
     double getDynamicsValue();
 
@@ -41,6 +55,10 @@ public interface Stave extends Identifiable {
     double getPositionValue();
 
     void setPositionValue(double value);
+
+    double getContentValue();
+
+    void setContentValue(double value);
 
     double getxPosition();
 

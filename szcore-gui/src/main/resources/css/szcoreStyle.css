@@ -63,3 +63,10 @@
     -fx-opacity: 1;
 }
 
+.label-ord-bold {
+    -fx-font-size: 10pt;
+    -fx-font-family: "System";
+    -fx-font-weight: bold;
+    -fx-text-fill: black;
+    -fx-opacity: 1;
+}

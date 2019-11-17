@@ -33,16 +33,30 @@ public interface ScoreService {
 
     void onUseDynamicsOverlay(Boolean value, List<Id> instrumentIds);
 
+    void onUseDynamicsLine(Boolean value, List<Id> instrumentIds);
+
     void setPressureValue(long value, List<Id> instrumentIds);
 
     void onUsePressureOverlay(Boolean value, List<Id> instrumentIds);
+
+    void onUsePressureLine(Boolean value, List<Id> instrumentIds);
 
     void setSpeedValue(long value, List<Id> instrumentIds);
 
     void onUseSpeedOverlay(Boolean value, List<Id> instrumentIds);
 
+    void onUseSpeedLine(Boolean value, List<Id> instrumentIds);
+
     void setPositionValue(long value, List<Id> instrumentIds);
 
     void onUsePositionOverlay(Boolean value, List<Id> instrumentIds);
+
+    void onUsePositionLine(Boolean value, List<Id> instrumentIds);
+
+    void setContentValue(long value, List<Id> instrumentIds);
+
+    void onUseContentOverlay(Boolean value, List<Id> instrumentIds);
+
+    void onUseContentLine(Boolean value, List<Id> instrumentIds);
 
 }

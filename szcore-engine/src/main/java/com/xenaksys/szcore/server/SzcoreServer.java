@@ -425,6 +425,16 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
+    public void onUseDynamicsLine(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUseDynamicsLine(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Dynamics Line Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Dynamics Line Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
     public void setPressureValue(long value, List<Id> instrumentIds) {
         try {
             scoreProcessor.setPressureValue(value, instrumentIds);
@@ -441,6 +451,16 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         } catch (Exception e) {
             LOG.error("Failed to set Pressure Value: {}", value, e);
             eventProcessor.notifyListeners(new ErrorEvent("Failed to set Pressure Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void onUsePressureLine(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUsePressureLine(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Pressure Line Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Pressure Line Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
         }
     }
 
@@ -465,6 +485,16 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
+    public void onUseSpeedLine(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUseSpeedLine(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Speed Line Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Speed Line Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
     public void setPositionValue(long value, List<Id> instrumentIds) {
         try {
             scoreProcessor.setPositionValue(value, instrumentIds);
@@ -481,6 +511,46 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         } catch (Exception e) {
             LOG.error("Failed to set Position Value: {}", value, e);
             eventProcessor.notifyListeners(new ErrorEvent("Failed to set Position Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void onUsePositionLine(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUsePositionLine(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Position Line Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Position Line Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void setContentValue(long value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.setContentValue(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Content Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Content Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void onUseContentOverlay(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUseContentOverlay(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Content Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Content Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void onUseContentLine(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUseContentLine(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Content Line Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Content Line Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
         }
     }
 

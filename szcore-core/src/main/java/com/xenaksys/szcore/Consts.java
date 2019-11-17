@@ -53,20 +53,34 @@ public interface Consts {
     public static final String OSC_ADDRESS_SCORE_START_MARK_STAVE2 = "/ITL/scene/slaveStartMark2";
     public static final String OSC_ADDRESS_SCORE_DYNAMICS_LINE_STAVE1 = "/ITL/scene/dynStaveValueLine";
     public static final String OSC_ADDRESS_SCORE_DYNAMICS_LINE_STAVE2 = "/ITL/scene/dynStaveValueLine2";
+    public static final String OSC_ADDRESS_SCORE_DYNAMICS_MID_LINE_STAVE1 = "/ITL/scene/dynStaveMidLine";
+    public static final String OSC_ADDRESS_SCORE_DYNAMICS_MID_LINE_STAVE2 = "/ITL/scene/dynStaveMidLine2";
     public static final String OSC_ADDRESS_SCORE_DYNAMICS_BOX_STAVE1 = "/ITL/scene/dynStaveBox";
     public static final String OSC_ADDRESS_SCORE_DYNAMICS_BOX_STAVE2 = "/ITL/scene/dynStaveBox2";
     public static final String OSC_ADDRESS_SCORE_PRESSURE_BOX_STAVE1 = "/ITL/scene/pressureStaveBox";
     public static final String OSC_ADDRESS_SCORE_PRESSURE_BOX_STAVE2 = "/ITL/scene/pressureStaveBox2";
-    public static final String OSC_ADDRESS_SCORE_PRESSURE_BOX_LINE1 = "/ITL/scene/pressureStaveValueLine";
-    public static final String OSC_ADDRESS_SCORE_PRESSURE_BOX_LINE2 = "/ITL/scene/pressureStaveValueLine2";
+    public static final String OSC_ADDRESS_SCORE_PRESSURE_LINE1 = "/ITL/scene/pressureStaveValueLine";
+    public static final String OSC_ADDRESS_SCORE_PRESSURE_LINE2 = "/ITL/scene/pressureStaveValueLine2";
+    public static final String OSC_ADDRESS_SCORE_PRESSURE_MID_LINE1 = "/ITL/scene/pressureStaveMidLine";
+    public static final String OSC_ADDRESS_SCORE_PRESSURE_MID_LINE2 = "/ITL/scene/pressureStaveMidLine2";
     public static final String OSC_ADDRESS_SCORE_SPEED_BOX_STAVE1 = "/ITL/scene/speedStaveBox";
     public static final String OSC_ADDRESS_SCORE_SPEED_BOX_STAVE2 = "/ITL/scene/speedStaveBox2";
-    public static final String OSC_ADDRESS_SCORE_SPEED_BOX_LINE1 = "/ITL/scene/speedStaveValueLine";
-    public static final String OSC_ADDRESS_SCORE_SPEED_BOX_LINE2 = "/ITL/scene/speedStaveValueLine2";
+    public static final String OSC_ADDRESS_SCORE_SPEED_LINE1 = "/ITL/scene/speedStaveValueLine";
+    public static final String OSC_ADDRESS_SCORE_SPEED_LINE2 = "/ITL/scene/speedStaveValueLine2";
+    public static final String OSC_ADDRESS_SCORE_SPEED_MID_LINE1 = "/ITL/scene/speedStaveMidLine";
+    public static final String OSC_ADDRESS_SCORE_SPEED_MID_LINE2 = "/ITL/scene/speedStaveMidLine2";
     public static final String OSC_ADDRESS_SCORE_POSITION_BOX_STAVE1 = "/ITL/scene/positionStaveBox";
     public static final String OSC_ADDRESS_SCORE_POSITION_BOX_STAVE2 = "/ITL/scene/positionStaveBox2";
-    public static final String OSC_ADDRESS_SCORE_POSITION_BOX_LINE1 = "/ITL/scene/positionStaveValueLine";
-    public static final String OSC_ADDRESS_SCORE_POSITION_BOX_LINE2 = "/ITL/scene/positionStaveValueLine2";
+    public static final String OSC_ADDRESS_SCORE_POSITION_LINE1 = "/ITL/scene/positionStaveValueLine";
+    public static final String OSC_ADDRESS_SCORE_POSITION_LINE2 = "/ITL/scene/positionStaveValueLine2";
+    public static final String OSC_ADDRESS_SCORE_POSITION_ORD_LINE1 = "/ITL/scene/positionStaveOrdLine";
+    public static final String OSC_ADDRESS_SCORE_POSITION_ORD_LINE2 = "/ITL/scene/positionStaveOrdLine2";
+    public static final String OSC_ADDRESS_SCORE_POSITION_BRIDGE_LINE1 = "/ITL/scene/positionStaveBridgeLine";
+    public static final String OSC_ADDRESS_SCORE_POSITION_BRIDGE_LINE2 = "/ITL/scene/positionStaveBridgeLine2";
+    public static final String OSC_ADDRESS_SCORE_CONTENT_BOX_STAVE1 = "/ITL/scene/contentStaveBox";
+    public static final String OSC_ADDRESS_SCORE_CONTENT_BOX_STAVE2 = "/ITL/scene/contentStaveBox2";
+    public static final String OSC_ADDRESS_SCORE_CONTENT_LINE1 = "/ITL/scene/contentStaveValueLine";
+    public static final String OSC_ADDRESS_SCORE_CONTENT_LINE2 = "/ITL/scene/contentStaveValueLine2";
 
     public static final String OSC_ADDRESS_SCORE_JAVASCRIPT = "/ITL/scene/javascript";
 
@@ -252,7 +266,7 @@ public interface Consts {
     public static final double PRESSURE_LINE2_Y_MAX_POSITION = 0.3635;
     public static final double PRESSURE_LINE2_Y_MIN_POSITION = 0.4185;
 
-    public static final double SPEED_LINE_Y_MAX = 0.055;      //half  0.0275
+    public static final double SPEED_LINE_Y_MAX = 0.045;      //half  0.0275
     public static final double SPEED_LINE_Y_MIN = 0.0;
     public static final double SPEED_LINE1_Y_MID_POSITION = -0.457;
     public static final double SPEED_LINE1_Y_MIN_POSITION = -0.435;
@@ -261,7 +275,7 @@ public interface Consts {
     public static final double SPEED_LINE2_Y_MAX_POSITION = 0.308;
     public static final double SPEED_LINE2_Y_MIN_POSITION = 0.355;
 
-    public static final double POSITION_LINE_Y_MAX = 0.135;      //half 0.0675
+    public static final double POSITION_LINE_Y_MAX = 0.128;      //half 0.0675
     public static final double POSITION_LINE_Y_MIN = 0.0;
     public static final double POSITION_LINE1_Y_MID_POSITION = -0.555;
     public static final double POSITION_LINE1_Y_MIN_POSITION = -0.492;
@@ -269,5 +283,14 @@ public interface Consts {
     public static final double POSITION_LINE2_Y_MID_POSITION = 0.236;
     public static final double POSITION_LINE2_Y_MAX_POSITION = 0.17;
     public static final double POSITION_LINE2_Y_MIN_POSITION = 0.298;
+
+    public static final double CONTENT_LINE_Y_MAX = 0.244;      //half 0.125
+    public static final double CONTENT_LINE_Y_MIN = 0.0;
+    public static final double CONTENT_LINE1_Y_MID_POSITION = -0.245;
+    public static final double CONTENT_LINE1_Y_MIN_POSITION = -0.125;
+    public static final double CONTENT_LINE1_Y_MAX_POSITION = -0.365;
+    public static final double CONTENT_LINE2_Y_MID_POSITION = 0.545;
+    public static final double CONTENT_LINE2_Y_MAX_POSITION = 0.425;
+    public static final double CONTENT_LINE2_Y_MIN_POSITION = 0.665;
 
 }

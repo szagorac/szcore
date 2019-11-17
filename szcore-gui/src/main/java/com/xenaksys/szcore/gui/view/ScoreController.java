@@ -130,6 +130,8 @@ public class ScoreController {
     @FXML
     private CheckBox useDynamicsOverlayChb;
     @FXML
+    private CheckBox useDynamicsLineChb;
+    @FXML
     private CheckBox useAllOverlaysChb;
     @FXML
     private CheckBox sendToAllChb;
@@ -140,17 +142,31 @@ public class ScoreController {
     @FXML
     private CheckBox usePressureOverlayChb;
     @FXML
+    private CheckBox usePressureLineChb;
+    @FXML
     private Slider speedSldr;
     @FXML
     private Label speedValLbl;
     @FXML
     private CheckBox useSpeedOverlayChb;
     @FXML
+    private CheckBox useSpeedLineChb;
+    @FXML
     private Slider positionSldr;
     @FXML
     private Label positionValLbl;
     @FXML
     private CheckBox usePositionOverlayChb;
+    @FXML
+    private CheckBox usePositionLineChb;
+    @FXML
+    private Slider contentSldr;
+    @FXML
+    private Label contentValLbl;
+    @FXML
+    private CheckBox useContentOverlayChb;
+    @FXML
+    private CheckBox useContentLineChb;
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -191,11 +207,17 @@ public class ScoreController {
         usePageRandomisationChb.setSelected(true);
         useContinousPageChb.setSelected(true);
         useDynamicsOverlayChb.setSelected(false);
+        useDynamicsLineChb.setSelected(false);
         useAllOverlaysChb.setSelected(false);
         sendToAllChb.setSelected(true);
         usePressureOverlayChb.setSelected(false);
+        usePressureLineChb.setSelected(false);
         useSpeedOverlayChb.setSelected(false);
+        useSpeedLineChb.setSelected(false);
         usePositionOverlayChb.setSelected(false);
+        usePositionLineChb.setSelected(false);
+        useContentOverlayChb.setSelected(false);
+        useContentLineChb.setSelected(false);
 
         participants.addListener((ListChangeListener<Participant>) p -> {
             while (p.next()) {
@@ -239,13 +261,25 @@ public class ScoreController {
 
         useDynamicsOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseDynamicsOverlay(newValue));
 
+        useDynamicsLineChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseDynamicsLine(newValue));
+
         useAllOverlaysChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseAllOverlays(newValue));
 
         usePressureOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePressureOverlay(newValue));
 
+        usePressureLineChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePressureLine(newValue));
+
         useSpeedOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseSpeedOverlay(newValue));
 
+        useSpeedLineChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseSpeedLine(newValue));
+
         usePositionOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePositionOverlay(newValue));
+
+        usePositionLineChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePositionLine(newValue));
+
+        useContentOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseContentOverlay(newValue));
+
+        useContentLineChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseContentLine(newValue));
 
         dynamicsSldr.setLabelFormatter(new StringConverter<Double>() {
             @Override
@@ -346,11 +380,11 @@ public class ScoreController {
             @Override
             public String toString(Double n) {
                 if (n < 10.0) return "tp";
-                if (n < 20.0) return "bb";
-                if (n < 40.0) return "ob";
-                if (n < 50.0) return "msp";
-                if (n < 60.0) return "sp";
-                if (n < 75.0) return "ord";
+                if (n < 35.0) return "bb";
+                if (n < 41.0) return "ob";
+                if (n < 46.0) return "msp";
+                if (n < 61.0) return "sp";
+                if (n < 76.0) return "ord";
                 if (n < 90.0) return "st";
                 return "mst";
             }
@@ -361,15 +395,15 @@ public class ScoreController {
                     case "tp":
                         return 0d;
                     case "bb":
-                        return 10d;
+                        return 30d;
                     case "ob":
-                        return 38d;
+                        return 40d;
                     case "msp":
                         return 45d;
                     case "sp":
-                        return 55d;
+                        return 60d;
                     case "ord":
-                        return 74d;
+                        return 75d;
                     case "st":
                         return 85d;
                     case "mst":
@@ -414,6 +448,15 @@ public class ScoreController {
             String lblVal = String.valueOf(newVal);
             String out = fixedLengthString(lblVal, 3);
             positionValLbl.setText(out);
+        });
+
+        contentSldr.valueProperty().addListener((ov, old_val, new_val) -> {
+//            LOG.debug("old_val: {}, new_val: {}", old_val, new_val);
+            long newVal = Math.round(new_val.doubleValue());
+            onContentValueChange(newVal);
+            String lblVal = String.valueOf(newVal);
+            String out = fixedLengthString(lblVal, 3);
+            contentValLbl.setText(out);
         });
     }
 
@@ -957,10 +1000,12 @@ public class ScoreController {
         usePressureOverlayChb.setSelected(false);
         useSpeedOverlayChb.setSelected(false);
         usePositionOverlayChb.setSelected(false);
+        useContentOverlayChb.setSelected(false);
         dynamicsSldr.setValue(50.0);
         pressureSldr.setValue(50.0);
         speedSldr.setValue(50.0);
         positionSldr.setValue(72.0);
+        contentSldr.setValue(50.0);
         tempoModifierSldr.setValue(1.0);
     }
 
@@ -1085,9 +1130,15 @@ public class ScoreController {
 
     private void updateOverlays() {
         onUseDynamicsOverlay(useDynamicsOverlayChb.isSelected());
+        onUseDynamicsLine(useDynamicsLineChb.isSelected());
         onUsePressureOverlay(usePressureOverlayChb.isSelected());
+        onUsePressureLine(usePressureLineChb.isSelected());
         onUseSpeedOverlay(useSpeedOverlayChb.isSelected());
+        onUseSpeedLine(useSpeedLineChb.isSelected());
         onUsePositionOverlay(usePositionOverlayChb.isSelected());
+        onUsePositionLine(usePositionLineChb.isSelected());
+        onUseContentOverlay(useContentOverlayChb.isSelected());
+        onUseContentLine(useContentLineChb.isSelected());
     }
 
     private void onUseAllOverlays(Boolean newValue) {
@@ -1095,32 +1146,35 @@ public class ScoreController {
         usePressureOverlayChb.setSelected(newValue);
         useSpeedOverlayChb.setSelected(newValue);
         usePositionOverlayChb.setSelected(newValue);
+        useContentOverlayChb.setSelected(newValue);
     }
 
     private void onUseDynamicsOverlay(Boolean newValue) {
-        List<Id> instrumentIds;
-        if(sendToAllChb.isSelected()) {
-            instrumentIds = getAllInstruments();
-        } else {
-            instrumentIds = getSelectedInstruments();
+        List<Id> instrumentIds = getInstrumentsToSend();
+        if(instrumentIds.isEmpty()) {
+            return;
         }
+        if(!newValue) {
+            useDynamicsLineChb.setSelected(false);
+        }
+        sendDynamicsValueChange(Math.round(dynamicsSldr.getValue()), instrumentIds);
+        sendUseDynamicsOverlay(newValue, instrumentIds);
+    }
+
+    private void onUseDynamicsLine(Boolean newValue) {
+        List<Id> instrumentIds = getInstrumentsToSend();
         if(instrumentIds.isEmpty()) {
             return;
         }
         sendDynamicsValueChange(Math.round(dynamicsSldr.getValue()), instrumentIds);
-        sendUseDynamicsOverlay(newValue, instrumentIds);
+        sendUseDynamicsLine(newValue, instrumentIds);
     }
 
     private void onDynamicsValueChange(long newVal) {
         if(!useDynamicsOverlayChb.isSelected()) {
             return;
         }
-        List<Id> instrumentIds;
-        if(sendToAllChb.isSelected()) {
-            instrumentIds = getAllInstruments();
-        } else {
-            instrumentIds = getSelectedInstruments();
-        }
+        List<Id> instrumentIds = getInstrumentsToSend();
         if(instrumentIds.isEmpty()) {
             return;
         }
@@ -1128,29 +1182,31 @@ public class ScoreController {
     }
 
     private void onUsePressureOverlay(Boolean newValue) {
-        List<Id> instrumentIds;
-        if(sendToAllChb.isSelected()) {
-            instrumentIds = getAllInstruments();
-        } else {
-            instrumentIds = getSelectedInstruments();
+        List<Id> instrumentIds = getInstrumentsToSend();
+        if(instrumentIds.isEmpty()) {
+            return;
         }
+        if(!newValue) {
+            usePressureLineChb.setSelected(false);
+        }
+        sendPressureValueChange(Math.round(pressureSldr.getValue()), instrumentIds);
+        sendUsePressureOverlay(newValue, instrumentIds);
+    }
+
+    private void onUsePressureLine(Boolean newValue) {
+        List<Id> instrumentIds = getInstrumentsToSend();
         if(instrumentIds.isEmpty()) {
             return;
         }
         sendPressureValueChange(Math.round(pressureSldr.getValue()), instrumentIds);
-        sendUsePressureOverlay(newValue, instrumentIds);
+        sendUsePressureLine(newValue, instrumentIds);
     }
 
     private void onPressureValueChange(long newVal) {
         if(!usePressureOverlayChb.isSelected()) {
             return;
         }
-        List<Id> instrumentIds;
-        if(sendToAllChb.isSelected()) {
-            instrumentIds = getAllInstruments();
-        } else {
-            instrumentIds = getSelectedInstruments();
-        }
+        List<Id> instrumentIds = getInstrumentsToSend();
         if(instrumentIds.isEmpty()) {
             return;
         }
@@ -1158,29 +1214,31 @@ public class ScoreController {
     }
 
     private void onUseSpeedOverlay(Boolean newValue) {
-        List<Id> instrumentIds;
-        if(sendToAllChb.isSelected()) {
-            instrumentIds = getAllInstruments();
-        } else {
-            instrumentIds = getSelectedInstruments();
+        List<Id> instrumentIds = getInstrumentsToSend();
+        if(instrumentIds.isEmpty()) {
+            return;
         }
+        if(!newValue) {
+            useSpeedLineChb.setSelected(false);
+        }
+        sendSpeedValueChange(Math.round(speedSldr.getValue()), instrumentIds);
+        sendUseSpeedOverlay(newValue, instrumentIds);
+    }
+
+    private void onUseSpeedLine(Boolean newValue) {
+        List<Id> instrumentIds = getInstrumentsToSend();
         if(instrumentIds.isEmpty()) {
             return;
         }
         sendSpeedValueChange(Math.round(speedSldr.getValue()), instrumentIds);
-        sendUseSpeedOverlay(newValue, instrumentIds);
+        sendUseSpeedLine(newValue, instrumentIds);
     }
 
     private void onSpeedValueChange(long newVal) {
         if(!useSpeedOverlayChb.isSelected()) {
             return;
         }
-        List<Id> instrumentIds;
-        if(sendToAllChb.isSelected()) {
-            instrumentIds = getAllInstruments();
-        } else {
-            instrumentIds = getSelectedInstruments();
-        }
+        List<Id> instrumentIds = getInstrumentsToSend();
         if(instrumentIds.isEmpty()) {
             return;
         }
@@ -1188,37 +1246,85 @@ public class ScoreController {
     }
 
     private void onUsePositionOverlay(Boolean newValue) {
-        List<Id> instrumentIds;
-        if(sendToAllChb.isSelected()) {
-            instrumentIds = getAllInstruments();
-        } else {
-            instrumentIds = getSelectedInstruments();
-        }
+        List<Id> instrumentIds = getInstrumentsToSend();
         if(instrumentIds.isEmpty()) {
             return;
         }
-        sendPositionValueChange(Math.round(speedSldr.getValue()), instrumentIds);
+        if(!newValue) {
+            usePositionLineChb.setSelected(false);
+        }
+        sendPositionValueChange(Math.round(positionSldr.getValue()), instrumentIds);
         sendUsePositionOverlay(newValue, instrumentIds);
+    }
+
+    private void onUsePositionLine(Boolean newValue) {
+        List<Id> instrumentIds = getInstrumentsToSend();
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        sendPositionValueChange(Math.round(positionSldr.getValue()), instrumentIds);
+        sendUsePositionLine(newValue, instrumentIds);
     }
 
     private void onPositionValueChange(long newVal) {
         if(!usePositionOverlayChb.isSelected()) {
             return;
         }
-        List<Id> instrumentIds;
-        if(sendToAllChb.isSelected()) {
-            instrumentIds = getAllInstruments();
-        } else {
-            instrumentIds = getSelectedInstruments();
-        }
+        List<Id> instrumentIds = getInstrumentsToSend();
         if(instrumentIds.isEmpty()) {
             return;
         }
         sendPositionValueChange(newVal, instrumentIds);
     }
 
+    private void onUseContentOverlay(Boolean newValue) {
+        List<Id> instrumentIds = getInstrumentsToSend();
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        if(!newValue) {
+            useContentLineChb.setSelected(false);
+        }
+        sendContentValueChange(Math.round(contentSldr.getValue()), instrumentIds);
+        sendUseContentOverlay(newValue, instrumentIds);
+    }
+
+    private void onUseContentLine(Boolean newValue) {
+        List<Id> instrumentIds = getInstrumentsToSend();
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        sendContentValueChange(Math.round(contentSldr.getValue()), instrumentIds);
+        sendUseContentLine(newValue, instrumentIds);
+    }
+
+    private void onContentValueChange(long newVal) {
+        if(!useContentOverlayChb.isSelected()) {
+            return;
+        }
+        List<Id> instrumentIds = getInstrumentsToSend();
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        sendContentValueChange(newVal, instrumentIds);
+    }
+
+    private List<Id> getInstrumentsToSend() {
+        List<Id> instrumentIds;
+        if(sendToAllChb.isSelected()) {
+            instrumentIds = getAllInstruments();
+        } else {
+            instrumentIds = getSelectedInstruments();
+        }
+        return instrumentIds;
+    }
+
     private void sendUseDynamicsOverlay(Boolean newVal, List<Id> instrumentIds) {
         scoreService.onUseDynamicsOverlay(newVal, instrumentIds);
+    }
+
+    private void sendUseDynamicsLine(Boolean newVal, List<Id> instrumentIds) {
+        scoreService.onUseDynamicsLine(newVal, instrumentIds);
     }
 
     private void sendDynamicsValueChange(long newVal, List<Id> instrumentIds) {
@@ -1229,12 +1335,20 @@ public class ScoreController {
         scoreService.onUsePressureOverlay(newVal, instrumentIds);
     }
 
+    private void sendUsePressureLine(Boolean newVal, List<Id> instrumentIds) {
+        scoreService.onUsePressureLine(newVal, instrumentIds);
+    }
+
     private void sendPressureValueChange(long newVal, List<Id> instrumentIds) {
         scoreService.setPressureValue(newVal, instrumentIds);
     }
 
     private void sendUseSpeedOverlay(Boolean newVal, List<Id> instrumentIds) {
         scoreService.onUseSpeedOverlay(newVal, instrumentIds);
+    }
+
+    private void sendUseSpeedLine(Boolean newVal, List<Id> instrumentIds) {
+        scoreService.onUseSpeedLine(newVal, instrumentIds);
     }
 
     private void sendSpeedValueChange(long newVal, List<Id> instrumentIds) {
@@ -1245,8 +1359,24 @@ public class ScoreController {
         scoreService.onUsePositionOverlay(newVal, instrumentIds);
     }
 
+    private void sendUsePositionLine(Boolean newVal, List<Id> instrumentIds) {
+        scoreService.onUsePositionLine(newVal, instrumentIds);
+    }
+
     private void sendPositionValueChange(long newVal, List<Id> instrumentIds) {
         scoreService.setPositionValue(newVal, instrumentIds);
+    }
+
+    private void sendUseContentOverlay(Boolean newVal, List<Id> instrumentIds) {
+        scoreService.onUseContentOverlay(newVal, instrumentIds);
+    }
+
+    private void sendUseContentLine(Boolean newVal, List<Id> instrumentIds) {
+        scoreService.onUseContentLine(newVal, instrumentIds);
+    }
+
+    private void sendContentValueChange(long newVal, List<Id> instrumentIds) {
+        scoreService.setContentValue(newVal, instrumentIds);
     }
 
     private List<Id> getSelectedInstruments() {

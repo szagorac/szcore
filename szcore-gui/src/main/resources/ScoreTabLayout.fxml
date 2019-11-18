@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
-<BorderPane prefHeight="729.0" prefWidth="745.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.xenaksys.szcore.gui.view.ScoreController">
+<BorderPane prefHeight="729.0" prefWidth="870.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.xenaksys.szcore.gui.view.ScoreController">
    <bottom>
       <AnchorPane BorderPane.alignment="CENTER">
          <children>
@@ -127,7 +127,7 @@
                      <children>
                         <CheckBox fx:id="useContinousPageChb" mnemonicParsing="false" text="Use Continuous Page" />
                         <CheckBox fx:id="usePageRandomisationChb" mnemonicParsing="false" text="Use CP Randomisation" />
-                        <Label text="Randomisation Strategy" />
+                        <Label text="Randomisation Strategy:" />
                         <ChoiceBox fx:id="randomStrategyChob" />
                      </children>
                   </HBox>
@@ -135,8 +135,7 @@
                   <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="372.0" spacing="6.0">
                      <children>
                         <Label styleClass="label-subtitle" stylesheets="@css/szcoreStyle.css" text="Overlays " />
-                        <CheckBox fx:id="useAllOverlaysChb" mnemonicParsing="false" />
-                        <Label text="Use All/None" />
+                        <ChoiceBox fx:id="presetsChob" />
                         <CheckBox fx:id="sendToAllChb" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" />
                         <Label layoutX="36.0" layoutY="10.0" prefWidth="134.0" text="Send To All /Selected" />
                         <Separator orientation="VERTICAL" />

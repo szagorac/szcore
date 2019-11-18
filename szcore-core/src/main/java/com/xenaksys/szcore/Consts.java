@@ -242,6 +242,13 @@ public interface Consts {
     public static final String[] RANDOMISATION_STRATEGIES = {RND_STRATEGY_1, RND_STRATEGY_1_1, RND_STRATEGY_1_1_1, RND_STRATEGY_1_1_1_1,
             RND_STRATEGY_2, RND_STRATEGY_2_1, RND_STRATEGY_2_1_1, RND_STRATEGY_2_2, RND_STRATEGY_3, RND_STRATEGY_3_1, RND_STRATEGY_4};
 
+    public static final String PRESET_ALL_OFF = "All OFF";
+    public static final String PRESET_ALL_ON = "All ON Lines OFF";
+    public static final String PRESET_ALL_LINES_ON = "All ON Lines ON";
+    public static final String PRESET_ALL_OFF_CONTENT_ON = "All OFF Content ON";
+    public static final String PRESET_ALL_ON_CONTENT_OFF = "All ON Content OFF";
+    public static final String[] PRESETS = {PRESET_ALL_OFF, PRESET_ALL_ON, PRESET_ALL_LINES_ON, PRESET_ALL_OFF_CONTENT_ON, PRESET_ALL_ON_CONTENT_OFF};
+
     public static final String DISRUPTOR_THREAD_FACTORY = "SZCore_Dsrptr";
     public static final String DISRUPTOR_OUT_THREAD_FACTORY = "SZCore_Out_Dsrptr";
     public static final String DISRUPTOR_IN_THREAD_FACTORY = "SZCore_In_Dsrptr";

@@ -132,8 +132,6 @@ public class ScoreController {
     @FXML
     private CheckBox useDynamicsLineChb;
     @FXML
-    private CheckBox useAllOverlaysChb;
-    @FXML
     private CheckBox sendToAllChb;
     @FXML
     private Slider pressureSldr;
@@ -167,6 +165,8 @@ public class ScoreController {
     private CheckBox useContentOverlayChb;
     @FXML
     private CheckBox useContentLineChb;
+    @FXML
+    private ChoiceBox<String> presetsChob;
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -179,6 +179,7 @@ public class ScoreController {
     private ObservableList<Integer> beatsList = FXCollections.observableArrayList();
     private ObservableList<Double> tempoMultipliers = FXCollections.observableArrayList();
     private ObservableList<String> randomisationStrategies = FXCollections.observableArrayList();
+    private ObservableList<String> presets = FXCollections.observableArrayList();
 
     private boolean isPageSetCall = false;
     private boolean isBarSetCall = false;
@@ -204,11 +205,11 @@ public class ScoreController {
         participantsTableView.setItems(participants);
         tempoModifierChob.setItems(tempoMultipliers);
         randomStrategyChob.setItems(randomisationStrategies);
+        presetsChob.setItems(presets);
         usePageRandomisationChb.setSelected(true);
         useContinousPageChb.setSelected(true);
         useDynamicsOverlayChb.setSelected(false);
         useDynamicsLineChb.setSelected(false);
-        useAllOverlaysChb.setSelected(false);
         sendToAllChb.setSelected(true);
         usePressureOverlayChb.setSelected(false);
         usePressureLineChb.setSelected(false);
@@ -234,11 +235,12 @@ public class ScoreController {
         tempoMultipliers.addAll(getTempoMultiplierValues());
         tempoModifierChob.getSelectionModel().select(Consts.ONE_D);
         tempoModifierChob.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            Double out  = newSelection;
             if (newSelection == null) {
-                return;
+                out = oldSelection;
             }
 
-            onTempoModifierChobChange(newSelection);
+            onTempoModifierChobChange(out);
         });
         tempoModifierSldr.valueProperty().addListener((ov, old_val, new_val) -> {
 //            LOG.debug("old_val: {}, new_val: {}", old_val, new_val);
@@ -248,11 +250,23 @@ public class ScoreController {
         randomisationStrategies.addAll(getPageRandomisationStrategisValues());
         randomStrategyChob.getSelectionModel().select(Consts.RND_STRATEGY_2);
         randomStrategyChob.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            String out  = newSelection;
             if (newSelection == null) {
-                return;
+                out = oldSelection;
             }
 
-            onRandomStrategyChobChange(newSelection);
+            onRandomStrategyChobChange(out);
+        });
+
+        presets.addAll(getPresetValues());
+        presetsChob.getSelectionModel().select(Consts.PRESET_ALL_OFF);
+        presetsChob.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            String out  = newSelection;
+            if (newSelection == null) {
+                out = oldSelection;
+            }
+
+            onPresetsChobChange(out);
         });
 
         usePageRandomisationChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePageRandomisationChange(newValue));
@@ -262,8 +276,6 @@ public class ScoreController {
         useDynamicsOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseDynamicsOverlay(newValue));
 
         useDynamicsLineChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseDynamicsLine(newValue));
-
-        useAllOverlaysChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseAllOverlays(newValue));
 
         usePressureOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePressureOverlay(newValue));
 
@@ -835,6 +847,7 @@ public class ScoreController {
         if (beatNoCbx == null || beatNoCbx.getSelectionModel() == null || beatNoCbx.getSelectionModel().isEmpty()) {
             return;
         }
+        presetsChob.getSelectionModel().select(Consts.PRESET_ALL_ON);
 
         Object selected = beatNoCbx.getSelectionModel().getSelectedItem();
         if (selected == null) {
@@ -996,17 +1009,18 @@ public class ScoreController {
 
         usePageRandomisationChb.setSelected(true);
         useContinousPageChb.setSelected(true);
-        useDynamicsOverlayChb.setSelected(false);
-        usePressureOverlayChb.setSelected(false);
-        useSpeedOverlayChb.setSelected(false);
-        usePositionOverlayChb.setSelected(false);
-        useContentOverlayChb.setSelected(false);
+//        useDynamicsOverlayChb.setSelected(false);
+//        usePressureOverlayChb.setSelected(false);
+//        useSpeedOverlayChb.setSelected(false);
+//        usePositionOverlayChb.setSelected(false);
+//        useContentOverlayChb.setSelected(false);
         dynamicsSldr.setValue(50.0);
         pressureSldr.setValue(50.0);
         speedSldr.setValue(50.0);
         positionSldr.setValue(72.0);
         contentSldr.setValue(50.0);
         tempoModifierSldr.setValue(1.0);
+        presetsChob.getSelectionModel().select(Consts.PRESET_ALL_OFF);
     }
 
 
@@ -1083,6 +1097,9 @@ public class ScoreController {
         return Consts.RANDOMISATION_STRATEGIES;
     }
 
+    private String[] getPresetValues() {
+        return Consts.PRESETS;
+    }
 
     private void onTempoModifierChobChange(Double newSelection) {
         if (score == null) {
@@ -1120,6 +1137,33 @@ public class ScoreController {
 
     }
 
+    private void onPresetsChobChange(String newSelection) {
+        LOG.info("Have new preset selection: " + newSelection);
+
+        switch (newSelection) {
+            case Consts.PRESET_ALL_OFF:
+                onUseAllLines(false);
+                onUseAllOverlays(false);
+                break;
+            case Consts.PRESET_ALL_ON:
+                onUseAllOverlays(true);
+                onUseAllLines(false);
+                break;
+            case Consts.PRESET_ALL_LINES_ON:
+                onUseAllOverlays(true);
+                onUseAllLines(true);
+                break;
+            case Consts.PRESET_ALL_OFF_CONTENT_ON:
+                onUseContentOnly(true);
+                break;
+            case Consts.PRESET_ALL_ON_CONTENT_OFF:
+                onUseContentOnly(false);
+                break;
+            default:
+                LOG.error("Unknown preset selection {}", newSelection);
+        }
+    }
+
     private void onUsePageRandomisationChange(Boolean newValue) {
         scoreService.usePageRandomisation(newValue);
     }
@@ -1129,24 +1173,59 @@ public class ScoreController {
     }
 
     private void updateOverlays() {
-        onUseDynamicsOverlay(useDynamicsOverlayChb.isSelected());
-        onUseDynamicsLine(useDynamicsLineChb.isSelected());
-        onUsePressureOverlay(usePressureOverlayChb.isSelected());
-        onUsePressureLine(usePressureLineChb.isSelected());
-        onUseSpeedOverlay(useSpeedOverlayChb.isSelected());
-        onUseSpeedLine(useSpeedLineChb.isSelected());
-        onUsePositionOverlay(usePositionOverlayChb.isSelected());
-        onUsePositionLine(usePositionLineChb.isSelected());
-        onUseContentOverlay(useContentOverlayChb.isSelected());
-        onUseContentLine(useContentLineChb.isSelected());
+        Platform.runLater(() -> {
+            presetsChob.getSelectionModel().select(Consts.PRESET_ALL_OFF);
+        });
     }
 
     private void onUseAllOverlays(Boolean newValue) {
-        useDynamicsOverlayChb.setSelected(newValue);
-        usePressureOverlayChb.setSelected(newValue);
-        useSpeedOverlayChb.setSelected(newValue);
-        usePositionOverlayChb.setSelected(newValue);
-        useContentOverlayChb.setSelected(newValue);
+        Platform.runLater(() -> {
+            useDynamicsOverlayChb.setSelected(newValue);
+            usePressureOverlayChb.setSelected(newValue);
+            useSpeedOverlayChb.setSelected(newValue);
+            usePositionOverlayChb.setSelected(newValue);
+            useContentOverlayChb.setSelected(newValue);
+        });
+    }
+
+    private void onUseAllLines(Boolean newValue) {
+        Platform.runLater(() -> {
+            useDynamicsLineChb.setSelected(newValue);
+            usePressureLineChb.setSelected(newValue);
+            useSpeedLineChb.setSelected(newValue);
+            usePositionLineChb.setSelected(newValue);
+            useContentLineChb.setSelected(newValue);
+        });
+    }
+
+    private void onUseContentOnly(Boolean newValue) {
+        Platform.runLater(() -> {
+            if (newValue) {
+                useDynamicsLineChb.setSelected(false);
+                usePressureLineChb.setSelected(false);
+                useSpeedLineChb.setSelected(false);
+                usePositionLineChb.setSelected(false);
+                useContentLineChb.setSelected(true);
+
+                useDynamicsOverlayChb.setSelected(false);
+                usePressureOverlayChb.setSelected(false);
+                useSpeedOverlayChb.setSelected(false);
+                usePositionOverlayChb.setSelected(false);
+                useContentOverlayChb.setSelected(true);
+            } else {
+                useDynamicsLineChb.setSelected(true);
+                usePressureLineChb.setSelected(true);
+                useSpeedLineChb.setSelected(true);
+                usePositionLineChb.setSelected(true);
+                useContentLineChb.setSelected(false);
+
+                useDynamicsOverlayChb.setSelected(true);
+                usePressureOverlayChb.setSelected(true);
+                useSpeedOverlayChb.setSelected(true);
+                usePositionOverlayChb.setSelected(true);
+                useContentOverlayChb.setSelected(false);
+            }
+        });
     }
 
     private void onUseDynamicsOverlay(Boolean newValue) {

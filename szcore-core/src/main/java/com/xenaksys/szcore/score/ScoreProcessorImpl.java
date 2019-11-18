@@ -110,9 +110,13 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private List<SzcoreEngineEventListener> scoreEventListeners = new CopyOnWriteArrayList<>();
     private Map<Id, TempoModifier> transportTempoModifiers = new ConcurrentHashMap<>();
     private ValueScaler dynamicsValueScaler = new ValueScaler(0.0, 100.0, 0.0, DYNAMICS_LINE_Y_MAX);
+    private ValueScaler dynamicsForteColorValueScaler = new ValueScaler(50.0, 100.0, 255, 0);
+    private ValueScaler dynamicsPianoColorValueScaler = new ValueScaler(0.0, 50.0, 0, 255);
     private ValueScaler pressureLineValueScaler = new ValueScaler(0.0, 100.0, PRESSURE_LINE_Y_MAX, 0.0);
     private ValueScaler pressureColorValueScaler = new ValueScaler(50.0, 100.0, 255, 0);
     private ValueScaler speedValueScaler = new ValueScaler(0.0, 100.0, 0.0, SPEED_LINE_Y_MAX);
+    private ValueScaler speedFastColorValueScaler = new ValueScaler(50.0, 100.0, 255, 0);
+    private ValueScaler speedSlowColorValueScaler = new ValueScaler(0.0, 50.0, 0, 255);
     private ValueScaler positionValueScaler = new ValueScaler(0.0, 100.0, POSITION_LINE_Y_MAX,0.0);
     private ValueScaler contentValueScaler = new ValueScaler(0.0, 100.0, 0.0, CONTENT_LINE_Y_MAX);
 
@@ -990,7 +994,29 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String address = stave.getOscAddressScorePressureBox();
         ElementColorEvent colorEvent = eventFactory.createElementColorEvent(address, destination, clock.getSystemTimeMillis());
         colorEvent.setColor(r, g, b);
-        LOG.info("sendDynamicsAlphaEvent sending r: {}  g: {}  b: {} to: {} addr: '{}'", r, g, b, instrumentId, address);
+        LOG.info("sendPressureColorEvent sending r: {}  g: {}  b: {} to: {} addr: '{}'", r, g, b, instrumentId, address);
+        process(colorEvent);
+    }
+
+    public void sendDynamicsColorEvent(Id instrumentId, Stave stave, int r, int g, int b) throws Exception {
+        StaveId staveId = (StaveId) stave.getId();
+        String destination = szcore.getOscDestination(staveId.getInstrumentId());
+
+        String address = stave.getOscAddressScoreDynamicsBox();
+        ElementColorEvent colorEvent = eventFactory.createElementColorEvent(address, destination, clock.getSystemTimeMillis());
+        colorEvent.setColor(r, g, b);
+        LOG.info("sendDynamicsColorEvent sending r: {}  g: {}  b: {} to: {} addr: '{}'", r, g, b, instrumentId, address);
+        process(colorEvent);
+    }
+
+    public void sendSpeedColorEvent(Id instrumentId, Stave stave, int r, int g, int b) throws Exception {
+        StaveId staveId = (StaveId) stave.getId();
+        String destination = szcore.getOscDestination(staveId.getInstrumentId());
+
+        String address = stave.getOscAddressScoreSpeedBox();
+        ElementColorEvent colorEvent = eventFactory.createElementColorEvent(address, destination, clock.getSystemTimeMillis());
+        colorEvent.setColor(r, g, b);
+        LOG.info("sendSpeedColorEvent sending r: {}  g: {}  b: {} to: {} addr: '{}'", r, g, b, instrumentId, address);
         process(colorEvent);
     }
 
@@ -2278,8 +2304,19 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         if(instrumentIds == null) {
             return;
         }
+        int r = 255;
+        int g = 255;
+        int b = 255;
         double scaled = dynamicsValueScaler.scaleValue(value);
         LOG.info("onDynamicsValueChange scaled value: {} to: {}, instruments: {}", value, scaled, Arrays.toString(instrumentIds.toArray()));
+
+        if(value > 50) {
+            g = (int) Math.round(dynamicsForteColorValueScaler.scaleValue(value));
+            b = g;
+        } else if(value < 50) {
+            r = (int) Math.round(dynamicsPianoColorValueScaler.scaleValue(value));
+            g = r;
+        }
 
         for(Id instrumentId : instrumentIds) {
             Instrument instrument = szcore.getInstrument(instrumentId);
@@ -2288,6 +2325,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             }
             Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
             for (Stave stave : staves) {
+                sendDynamicsColorEvent(instrumentId, stave, r, g, b);
                 sendDynamicsYPositionEvent(instrumentId, stave, scaled);
             }
         }
@@ -2382,8 +2420,19 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         if(instrumentIds == null) {
             return;
         }
+
+        int r = 255;
+        int g = 255;
+        int b = 255;
         double scaled = speedValueScaler.scaleValue(value);
         LOG.info("onSpeedValueChange scaled value: {} to: {}, instruments: {}", value, scaled, Arrays.toString(instrumentIds.toArray()));
+
+        if(value > 50) {
+            b = (int) Math.round(speedFastColorValueScaler.scaleValue(value));
+            r = b;
+        } else if(value < 50) {
+            g = (int) Math.round(speedSlowColorValueScaler.scaleValue(value));
+        }
 
         for(Id instrumentId : instrumentIds) {
             Instrument instrument = szcore.getInstrument(instrumentId);
@@ -2392,6 +2441,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             }
             Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
             for (Stave stave : staves) {
+                sendSpeedColorEvent(instrumentId, stave, r, g, b);
                 sendSpeedYPositionEvent(instrumentId, stave, scaled);
             }
         }

@@ -9,7 +9,14 @@ import com.xenaksys.szcore.score.BasicScore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class ScoreRandomisationStrategy {
@@ -100,7 +107,7 @@ public class ScoreRandomisationStrategy {
         int[] rndNos = new int[rndNo];
 
         for(int i = 0; i < rndNo; i++) {
-            rndNos[i] = ThreadLocalRandom.current().nextInt(1, maxPageNo + 1);
+            rndNos[i] = ThreadLocalRandom.current().nextInt(1, maxPageNo);
         }
 
         List<Id> rndInst = new ArrayList<>(instrumentPage.keySet());

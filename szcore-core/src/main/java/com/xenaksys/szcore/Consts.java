@@ -247,7 +247,8 @@ public interface Consts {
     public static final String PRESET_ALL_LINES_ON = "All ON Lines ON";
     public static final String PRESET_ALL_OFF_CONTENT_ON = "All OFF Content ON";
     public static final String PRESET_ALL_ON_CONTENT_OFF = "All ON Content OFF";
-    public static final String[] PRESETS = {PRESET_ALL_OFF, PRESET_ALL_ON, PRESET_ALL_LINES_ON, PRESET_ALL_OFF_CONTENT_ON, PRESET_ALL_ON_CONTENT_OFF};
+    public static final String PRESET_ALL_ON_CONTENT_POSITION_OFF = "All ON Cnt/Pos OFF";
+    public static final String[] PRESETS = {PRESET_ALL_OFF, PRESET_ALL_ON, PRESET_ALL_LINES_ON, PRESET_ALL_OFF_CONTENT_ON, PRESET_ALL_ON_CONTENT_OFF, PRESET_ALL_ON_CONTENT_POSITION_OFF};
 
     public static final String DISRUPTOR_THREAD_FACTORY = "SZCore_Dsrptr";
     public static final String DISRUPTOR_OUT_THREAD_FACTORY = "SZCore_Out_Dsrptr";

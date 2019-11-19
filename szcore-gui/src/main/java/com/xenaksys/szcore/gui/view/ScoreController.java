@@ -1159,6 +1159,9 @@ public class ScoreController {
             case Consts.PRESET_ALL_ON_CONTENT_OFF:
                 onUseContentOnly(false);
                 break;
+            case Consts.PRESET_ALL_ON_CONTENT_POSITION_OFF:
+                onUseContentAndPositionOnly(false);
+                break;
             default:
                 LOG.error("Unknown preset selection {}", newSelection);
         }
@@ -1228,6 +1231,36 @@ public class ScoreController {
         });
     }
 
+    private void onUseContentAndPositionOnly(Boolean newValue) {
+        Platform.runLater(() -> {
+            if (newValue) {
+                useDynamicsLineChb.setSelected(false);
+                usePressureLineChb.setSelected(false);
+                useSpeedLineChb.setSelected(false);
+                usePositionLineChb.setSelected(true);
+                useContentLineChb.setSelected(true);
+
+                useDynamicsOverlayChb.setSelected(false);
+                usePressureOverlayChb.setSelected(false);
+                useSpeedOverlayChb.setSelected(false);
+                usePositionOverlayChb.setSelected(true);
+                useContentOverlayChb.setSelected(true);
+            } else {
+                useDynamicsLineChb.setSelected(true);
+                usePressureLineChb.setSelected(true);
+                useSpeedLineChb.setSelected(true);
+                usePositionLineChb.setSelected(false);
+                useContentLineChb.setSelected(false);
+
+                useDynamicsOverlayChb.setSelected(true);
+                usePressureOverlayChb.setSelected(true);
+                useSpeedOverlayChb.setSelected(true);
+                usePositionOverlayChb.setSelected(false);
+                useContentOverlayChb.setSelected(false);
+            }
+        });
+    }
+
     private void onUseDynamicsOverlay(Boolean newValue) {
         List<Id> instrumentIds = getInstrumentsToSend();
         if(instrumentIds.isEmpty()) {
@@ -1244,6 +1277,9 @@ public class ScoreController {
         List<Id> instrumentIds = getInstrumentsToSend();
         if(instrumentIds.isEmpty()) {
             return;
+        }
+        if(newValue && !useDynamicsOverlayChb.isSelected()) {
+            useDynamicsOverlayChb.setSelected(true);
         }
         sendDynamicsValueChange(Math.round(dynamicsSldr.getValue()), instrumentIds);
         sendUseDynamicsLine(newValue, instrumentIds);
@@ -1277,6 +1313,9 @@ public class ScoreController {
         if(instrumentIds.isEmpty()) {
             return;
         }
+        if(newValue && !usePressureOverlayChb.isSelected()) {
+            usePressureOverlayChb.setSelected(true);
+        }
         sendPressureValueChange(Math.round(pressureSldr.getValue()), instrumentIds);
         sendUsePressureLine(newValue, instrumentIds);
     }
@@ -1308,6 +1347,9 @@ public class ScoreController {
         List<Id> instrumentIds = getInstrumentsToSend();
         if(instrumentIds.isEmpty()) {
             return;
+        }
+        if(newValue && !useSpeedOverlayChb.isSelected()) {
+            useSpeedOverlayChb.setSelected(true);
         }
         sendSpeedValueChange(Math.round(speedSldr.getValue()), instrumentIds);
         sendUseSpeedLine(newValue, instrumentIds);
@@ -1341,6 +1383,9 @@ public class ScoreController {
         if(instrumentIds.isEmpty()) {
             return;
         }
+        if(newValue && !usePositionOverlayChb.isSelected()) {
+            usePositionOverlayChb.setSelected(true);
+        }
         sendPositionValueChange(Math.round(positionSldr.getValue()), instrumentIds);
         sendUsePositionLine(newValue, instrumentIds);
     }
@@ -1372,6 +1417,9 @@ public class ScoreController {
         List<Id> instrumentIds = getInstrumentsToSend();
         if(instrumentIds.isEmpty()) {
             return;
+        }
+        if(newValue && !useContentOverlayChb.isSelected()) {
+            useContentOverlayChb.setSelected(true);
         }
         sendContentValueChange(Math.round(contentSldr.getValue()), instrumentIds);
         sendUseContentLine(newValue, instrumentIds);

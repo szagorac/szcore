@@ -60,7 +60,7 @@ public class SzcoreClient extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         this.primaryStage = primaryStage;
-        this.primaryStage.setTitle("SZCORE");
+        this.primaryStage.setTitle("ZSCORE");
         this.primaryStage.getIcons().add(new Image("file:resources/images/Address_Book.png"));
         AquaFx.style();
 

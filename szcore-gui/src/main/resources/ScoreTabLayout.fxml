@@ -52,7 +52,7 @@
                <children>
                   <HBox alignment="CENTER_LEFT" spacing="10.0">
                      <children>
-                        <Label prefWidth="100.0" styleClass="label-title" stylesheets="@css/szcoreStyle.css" text="SZcore" />
+                        <Label prefWidth="100.0" styleClass="label-title" stylesheets="@css/szcoreStyle.css" text="ZScore" />
                         <Label text="Server Address: " />
                         <Label fx:id="localInetAddrLbl" styleClass="label-subtitle-black" stylesheets="@css/szcoreStyle.css" text="-.-.-" textFill="#468686">
                            <font>

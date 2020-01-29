@@ -3,6 +3,7 @@ package com.xenaksys.szcore.model;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 
 import java.io.File;
+import java.net.InetAddress;
 import java.util.List;
 
 public interface ScoreService {
@@ -58,5 +59,7 @@ public interface ScoreService {
     void onUseContentOverlay(Boolean value, List<Id> instrumentIds);
 
     void onUseContentLine(Boolean value, List<Id> instrumentIds);
+
+    void setBroadcastPort(InetAddress addr, int port);
 
 }

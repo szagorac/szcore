@@ -4,6 +4,7 @@ package com.xenaksys.szcore.gui.view;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.AddPartsEvent;
 import com.xenaksys.szcore.event.EventFactory;
+import com.xenaksys.szcore.event.SendServerIpBroadcastEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Participant;
 import com.xenaksys.szcore.model.Bar;
@@ -48,6 +49,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -576,6 +578,21 @@ public class ScoreController {
     }
 
     @FXML
+    private void sendServerIpToParticipants(ActionEvent event) {
+        String subnetMask = "255.255.255.0";
+        String broadcastIp = "192.168.0.255";
+        try {
+            String serverIp = localAddress.getHostAddress();
+            InetAddress addr = InetAddress.getByName(broadcastIp);
+            int remotePort = 7000;
+            scoreService.setBroadcastPort(addr, remotePort);
+            sendServerIpBroadcast(serverIp);
+        } catch (UnknownHostException e) {
+            LOG.error("Failed to send server ip broadcast");
+        }
+    }
+
+    @FXML
     private void sendPartsToSelectedParticipants(ActionEvent event) {
         String instrumentsCsv = getInstrumentsCsv();
 
@@ -916,6 +933,15 @@ public class ScoreController {
         String destination = participant.getHostAddress();
         AddPartsEvent addPartsEvent = eventFactory.createAddPartsEvent(instrumentsCsv, destination, clock.getSystemTimeMillis());
         publisher.publish(addPartsEvent);
+    }
+
+    private void sendServerIpBroadcast(String serverIp) {
+        if (serverIp == null) {
+            return;
+        }
+        EventFactory eventFactory = publisher.getEventFactory();
+        SendServerIpBroadcastEvent serverIpBroadcastEvent = eventFactory.createServerIpBroadcastEvent(serverIp, Consts.BROADCAST, clock.getSystemTimeMillis());
+        publisher.publish(serverIpBroadcastEvent);
     }
 
     private void openFile(File file) {

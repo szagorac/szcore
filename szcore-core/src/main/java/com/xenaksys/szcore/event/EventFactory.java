@@ -221,6 +221,12 @@ public class EventFactory {
         return event;
     }
 
+    public SendServerIpBroadcastEvent createServerIpBroadcastEvent(String serverIp, String destination, long creationTime) {
+        SendServerIpBroadcastEvent event = new SendServerIpBroadcastEvent(createJavaScriptArgs(), destination, creationTime);
+        event.addCommandArg(serverIp);
+        return event;
+    }
+
     public ResetScoreEvent createResetScoreEvent(String destination, long creationTime) {
         ResetScoreEvent resetScoreEvent = new ResetScoreEvent(createJavaScriptArgs(), destination, creationTime);
         resetScoreEvent.addCommandArg();

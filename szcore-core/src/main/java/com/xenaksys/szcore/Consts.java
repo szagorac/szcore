@@ -94,6 +94,7 @@ public interface Consts {
     public static final String DEFAULT_OSC_PORT_NAME = "DEFAULT_OSC_PORT";
 
     public static final String ALL_DESTINATIONS = "ALL";
+    public static final String BROADCAST = "BROADCAST";
 
     public static final int DEFAULT_OSC_PORT = 7000;
     public static final int DEFAULT_OSC_OUT_PORT = 7001;
@@ -136,6 +137,9 @@ public interface Consts {
 
     public static final String CSV_INSTRUMENTS_TOKEN = "$INSTRUMENT";
     public static final String OSC_JS_SET_INSTRUMENTS = "setInstruments('" + CSV_INSTRUMENTS_TOKEN + "')";
+
+    public static final String SERVER_IP__TOKEN = "$SERVER_IP";
+    public static final String OSC_JS_SET_SERVER_IP = "setServerIp('" + SERVER_IP__TOKEN + "')";
 
     public static final String BEAT_TOKEN = "$BEAT";
     public static final String COLOUR_TOKEN = "$COLOUR";

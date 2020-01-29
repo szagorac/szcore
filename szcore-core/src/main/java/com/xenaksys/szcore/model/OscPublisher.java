@@ -9,7 +9,11 @@ public interface OscPublisher extends Processor {
 
     void addOscPort(String destination, OSCPortOut port);
 
+    void setOscBroadcastPort(OSCPortOut port);
+
     OSCPortOut getOutPort(String destination);
+
+    OSCPortOut getBroadcastPort();
 
     void setPublishPorts(Map<String, OSCPortOut> oscPublishPorts);
 

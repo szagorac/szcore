@@ -108,18 +108,21 @@ public class OscDisruptorPublishProcessor extends AbstractOscPublisherDisruptorP
 //long diff = System.currentTimeMillis() - creationTime;
 //LOG.debug("Sending message time diff: " + diff + " creationTime: " + creationTime);
 
-        if (Consts.ALL_DESTINATIONS.equals(destination)){
-            for (OSCPortOut port : oscPublishPorts.values()){
+        if (Consts.ALL_DESTINATIONS.equals(destination)) {
+            for (OSCPortOut port : oscPublishPorts.values()) {
                 send(port, address, args);
             }
+        } else if (Consts.BROADCAST.equals(destination)) {
+            OSCPortOut broadcastPort = getBroadcastPort();
+            if(broadcastPort != null) {
+                send(broadcastPort, address, args);
+            }
         } else {
-
             OSCPortOut port = oscPublishPorts.get(destination);
             if (port == null) {
 //            LOG.error("Failed to find OSC port for destination: " + destination);
                 return;
             }
-
             send(port, address, args);
         }
     }

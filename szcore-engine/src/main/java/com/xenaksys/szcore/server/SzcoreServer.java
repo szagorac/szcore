@@ -248,6 +248,13 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         }
     }
 
+    public void setBroadcastPort(InetAddress addr, int port){
+        OSCPortOut broadcastPort = OscPortFactory.createOutPort(addr, port);
+        if(broadcastPort != null) {
+            eventPublisher.setOscBroadcastPort(broadcastPort);
+        }
+    }
+
     public void addInstrumentOutPort(InetAddress addr, String instrument){
         String remoteAddr = addr.getHostAddress();
         OSCPortOut outPort = eventPublisher.getOutPort(remoteAddr);

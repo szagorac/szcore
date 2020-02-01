@@ -9,6 +9,9 @@ import com.xenaksys.szcore.net.osc.OSCPortOut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+
 abstract public class AbstractOscPublisherDisruptorProcessor implements OscPublisher {
     static final Logger LOG = LoggerFactory.getLogger(AbstractOscPublisherDisruptorProcessor.class);
 
@@ -16,7 +19,7 @@ abstract public class AbstractOscPublisherDisruptorProcessor implements OscPubli
     private final Disruptor<OscEvent> disruptor;
     private final ProcessorEventHandler eventHandler;
     private final OscDisruptorPublisher publisher;
-    private OSCPortOut broadcastPort;
+    private List<OSCPortOut> broadcastPorts = new ArrayList<>();
 
     public AbstractOscPublisherDisruptorProcessor(Disruptor<OscEvent> disruptor) {
         this.disruptor = disruptor;
@@ -40,15 +43,20 @@ abstract public class AbstractOscPublisherDisruptorProcessor implements OscPubli
 
     }
     @Override
-    public void setOscBroadcastPort(OSCPortOut port) {
+    public void addOscBroadcastPort(OSCPortOut port) {
         if(port != null) {
-            this.broadcastPort = port;
+            this.broadcastPorts.add(port);
         }
     }
 
     @Override
-    public OSCPortOut getBroadcastPort() {
-        return broadcastPort;
+    public List<OSCPortOut> getBroadcastPorts() {
+        return broadcastPorts;
+    }
+
+    @Override
+    public void resetBroadcastPorts() {
+        broadcastPorts.clear();
     }
 
     public void start(){

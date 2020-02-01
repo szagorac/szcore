@@ -113,9 +113,11 @@ public class OscDisruptorPublishProcessor extends AbstractOscPublisherDisruptorP
                 send(port, address, args);
             }
         } else if (Consts.BROADCAST.equals(destination)) {
-            OSCPortOut broadcastPort = getBroadcastPort();
-            if(broadcastPort != null) {
-                send(broadcastPort, address, args);
+            List<OSCPortOut> broadcastPorts = getBroadcastPorts();
+            if(broadcastPorts != null && !broadcastPorts.isEmpty()) {
+                for(OSCPortOut broadcastPort : broadcastPorts) {
+                    send(broadcastPort, address, args);
+                }
             }
         } else {
             OSCPortOut port = oscPublishPorts.get(destination);

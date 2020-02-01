@@ -22,7 +22,7 @@ public class OscPublishProcessor implements OscPublisher {
 
     private Map<String, OSCPortOut> oscPublishPorts = new ConcurrentHashMap<>();
     private List<String> toRemove = new ArrayList<>();
-    private OSCPortOut broadcastPort;
+    private List<OSCPortOut> broadcastPorts = new ArrayList<>();
 
     public OscPublishProcessor(Map<String, OSCPortOut> oscPublishPorts) {
         this.oscPublishPorts = oscPublishPorts;
@@ -71,9 +71,9 @@ public class OscPublishProcessor implements OscPublisher {
     }
 
     @Override
-    public void setOscBroadcastPort(OSCPortOut port) {
+    public void addOscBroadcastPort(OSCPortOut port) {
         if(port != null) {
-            this.broadcastPort = port;
+            this.broadcastPorts.add(port);
         }
     }
 
@@ -83,8 +83,13 @@ public class OscPublishProcessor implements OscPublisher {
     }
 
     @Override
-    public OSCPortOut getBroadcastPort() {
-        return broadcastPort;
+    public List<OSCPortOut> getBroadcastPorts() {
+        return broadcastPorts;
+    }
+
+    @Override
+    public void resetBroadcastPorts() {
+        broadcastPorts.clear();
     }
 
     @Override

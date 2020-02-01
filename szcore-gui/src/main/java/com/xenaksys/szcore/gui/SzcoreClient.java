@@ -11,6 +11,7 @@ import com.xenaksys.szcore.gui.processor.GuiLoggerProcessor;
 import com.xenaksys.szcore.gui.view.LoggerController;
 import com.xenaksys.szcore.gui.view.RootLayoutController;
 import com.xenaksys.szcore.gui.view.ScoreController;
+import com.xenaksys.szcore.gui.view.SettingsController;
 import com.xenaksys.szcore.model.EventService;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.ScoreService;
@@ -54,6 +55,7 @@ public class SzcoreClient extends Application {
     private GuiLoggerProcessor loggerProcessor;
 
     private ScoreController scoreController;
+    private SettingsController settingsController;
 
     private ObservableList<Participant> participants = FXCollections.observableArrayList(param -> new Observable[] {param.getSelectProperty()});
 
@@ -72,7 +74,7 @@ public class SzcoreClient extends Application {
 
         initRootLayout();
         initLoggerTab();
-//        initSetupTab();
+        initSettingsTab();
         initScoreTab();
 
         initProcessors();
@@ -140,26 +142,27 @@ public class SzcoreClient extends Application {
             e.printStackTrace();
         }
     }
-//
-//    public void initSetupTab() {
-//        try {
-//
-//            FXMLLoader loader = new FXMLLoader();
-//            loader.setLocation(SzcoreClient.class.getResource("/SetupTabLayout.fxml"));
-//            BorderPane setup = (BorderPane) loader.load();
-//
-//            Tab setupTab = rootController.getSetupTab();
-//
-//            setupTab.setContent(setup);
-//            SetupController controller = loader.getController();
-//
-//            controller.setMainApp(this);
-//
-//            controller.setPublisher(eventService);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
+
+    public void initSettingsTab() {
+        try {
+
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(SzcoreClient.class.getResource("/SettingsTabLayout.fxml"));
+            BorderPane setup = (BorderPane) loader.load();
+
+            Tab setupTab = rootController.getSettingsTab();
+
+            setupTab.setContent(setup);
+            settingsController = loader.getController();
+            settingsController.setMainApp(this);
+            settingsController.setScoreService(scoreService);
+            settingsController.setPublisher(eventService);
+
+            settingsController.populate();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public void initScoreTab() {
         try {

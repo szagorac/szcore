@@ -265,7 +265,4 @@ public class Server implements Runnable {
         return PropertyUtil.parsePropertyValue(propName, defaultValue, properties);
     }
 
-    public InetAddress getServerAddress() {
-        return serverAddress;
-    }
 }

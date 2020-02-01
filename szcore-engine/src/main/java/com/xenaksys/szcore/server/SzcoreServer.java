@@ -46,7 +46,9 @@ import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.time.beatstrategy.SimpleBeatTimeStrategy;
 import com.xenaksys.szcore.time.clock.MutableNanoClock;
 import com.xenaksys.szcore.time.waitstrategy.BockingWaitStrategy;
+import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
+import org.apache.commons.net.util.SubnetUtils;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -82,6 +84,10 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     private Map<String, ParticipantStats> participantStats = new ConcurrentHashMap<>();
     private PingEvent pingEvent;
 
+    private volatile String subnetMask = Consts.DEFAULT_SUBNET_MASK;
+    private volatile int inscorePort = Consts.DEFAULT_OSC_PORT;
+    private InetAddress broadcastAddress = null;
+
     protected SzcoreServer(String id) {
         super(id);
     }
@@ -95,16 +101,60 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         eventFactory = new EventFactory();
         taskFactory = new TaskFactory();
         initProcessors();
+        initNetInfo();
+    }
+
+    public void initNetInfo() {
+        try {
+            String serverIp = getServerAddress().getHostAddress();
+            String subnetMask = getSubnetMask();
+            int remotePort = getInscorePort();
+            initBroadcastAddresses(serverIp, subnetMask, remotePort);
+        } catch (Exception e) {
+            LOG.error("Failed to init net info", e);
+        }
+    }
+
+    public void initBroadcastAddresses(String serverIp, String subnetMask, int remotePort) throws Exception {
+        InetAddress broadcastAddress = getBroadcastAddress();
+        if(broadcastAddress == null) {
+            broadcastAddress = detectBroadcastAddress(serverIp, subnetMask);
+            setBroadcastAddress(broadcastAddress);
+        }
+
+        List<InetAddress> out = new ArrayList<>();
+        List<InetAddress> broadcastAddrs = NetUtil.listAllBroadcastAddresses();
+        if(broadcastAddrs.isEmpty()) {
+            out.add(broadcastAddress);
+        } else {
+            if(!broadcastAddrs.contains(broadcastAddress)) {
+                LOG.warn("Retrieved broadcast addresses do not contain address: {}, adding", broadcastAddress.getHostAddress());
+                out.add(broadcastAddress);
+            }
+            out.addAll(broadcastAddrs);
+        }
+
+        eventPublisher.resetBroadcastPorts();
+        for(InetAddress badr : out) {
+            addBroadcastPort(badr, remotePort);
+        }
+    }
+
+    private InetAddress detectBroadcastAddress(String serverIp, String subnetMask) throws Exception {
+        SubnetUtils su = new SubnetUtils(serverIp, subnetMask);
+        SubnetUtils.SubnetInfo info = su.getInfo();
+        String broadcastAddr = info.getBroadcastAddress();
+        return InetAddress.getByName(broadcastAddr);
     }
 
     public void initProcessors(){
         clock = new MutableNanoClock();
-        eventReceiver = new OscReceiveProcessor(new OscListenerId(Consts.DEFAULT_ALL_PORTS, getAddress().getHostAddress(), "OscReceiveProcessor"), clock);
+        eventReceiver = new OscReceiveProcessor(new OscListenerId(Consts.DEFAULT_ALL_PORTS, getServerAddress().getHostAddress(), "OscReceiveProcessor"), clock);
 
         inDisruptor = DisruptorFactory.createInDisruptor();
         eventProcessor = new ServerEventDisruptorProcessor(this, clock, eventFactory, inDisruptor);
         serverEventReceiver = new ServerEventReceiver(eventProcessor, eventReceiver,
-                new OscListenerId(Consts.DEFAULT_ALL_PORTS, getAddress().getHostAddress(), "ServerEventReceiver"));
+                new OscListenerId(Consts.DEFAULT_ALL_PORTS, getServerAddress().getHostAddress(), "ServerEventReceiver"));
         serverEventReceiver.init();
 
         WaitStrategy waitStrategy = new BockingWaitStrategy(1, TimeUnit.MILLISECONDS);
@@ -167,11 +217,6 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
     public void publish(SzcoreEvent event){
         eventPublisher.process(event);
-    }
-
-    @Override
-    public InetAddress getAddress() {
-        return getServerAddress();
     }
 
     public void subscribe(SzcoreIncomingEventListener listener){
@@ -248,11 +293,58 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         }
     }
 
-    public void setBroadcastPort(InetAddress addr, int port){
-        OSCPortOut broadcastPort = OscPortFactory.createOutPort(addr, port);
-        if(broadcastPort != null) {
-            eventPublisher.setOscBroadcastPort(broadcastPort);
+    public void addBroadcastPort(InetAddress addr, int port){
+        if(addr == null) {
+            return;
         }
+
+        List<OSCPortOut> bPorts = eventPublisher.getBroadcastPorts();
+        for(OSCPortOut bPort : bPorts) {
+            if(bPort.getAddress().equals(addr)) {
+                LOG.info("addBroadcastPort: broadcast addr {} already registered, ignoring add broadcast port", addr.getHostAddress());
+                return;
+            }
+        }
+
+        OSCPortOut broadcastPort = OscPortFactory.createOutPort(addr, port);
+        if (broadcastPort != null) {
+            eventPublisher.addOscBroadcastPort(broadcastPort);
+        }
+    }
+
+    @Override
+    public InetAddress getBroadcastAddress() {
+        return broadcastAddress;
+    }
+
+    @Override
+    public void setBroadcastAddress(InetAddress broadcastAddress) {
+        this.broadcastAddress = broadcastAddress;
+    }
+
+    @Override
+    public List<InetAddress> getDetectedBroadcastAddresses() {
+        List<InetAddress> out = new ArrayList<>();
+        if(eventPublisher == null) {
+            return out;
+        }
+
+        List<OSCPortOut> bPorts = eventPublisher.getBroadcastPorts();
+        for(OSCPortOut bPort : bPorts) {
+            out.add(bPort.getAddress());
+        }
+        return out;
+    }
+
+    public List<NetUtil.NetworkDevice> getParallelConnectedNetworkClients(){
+        List<NetUtil.NetworkDevice> connectedClients = new ArrayList<>();
+        try {
+            connectedClients = NetUtil.discoverConnectedDevices();
+        } catch (Exception e) {
+            LOG.error("Failed to retrieve connected clients", e);
+        }
+
+        return connectedClients;
     }
 
     public void addInstrumentOutPort(InetAddress addr, String instrument){
@@ -559,6 +651,31 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
             LOG.error("Failed to set Content Line Value: {}", value, e);
             eventProcessor.notifyListeners(new ErrorEvent("Failed to set Content Line Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
         }
+    }
+
+    @Override
+    public InetAddress getServerAddress() {
+        return serverAddress;
+    }
+
+    @Override
+    public int getInscorePort() {
+        return inscorePort;
+    }
+
+    @Override
+    public void setInscorePort(int inscorePort) {
+        this.inscorePort = inscorePort;
+    }
+
+    @Override
+    public String getSubnetMask() {
+        return subnetMask;
+    }
+
+    @Override
+    public void  setSubnetMask(String subnetMask) {
+        this.subnetMask = subnetMask;
     }
 
     protected void tick(){

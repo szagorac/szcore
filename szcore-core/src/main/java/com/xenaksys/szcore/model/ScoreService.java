@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.model;
 
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
+import com.xenaksys.szcore.util.NetUtil;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -60,6 +61,25 @@ public interface ScoreService {
 
     void onUseContentLine(Boolean value, List<Id> instrumentIds);
 
-    void setBroadcastPort(InetAddress addr, int port);
+    void addBroadcastPort(InetAddress addr, int port);
 
+    InetAddress getBroadcastAddress();
+
+    void setBroadcastAddress(InetAddress broadcastAddress);
+
+    List<InetAddress> getDetectedBroadcastAddresses();
+
+    InetAddress getServerAddress();
+
+    int getInscorePort();
+
+    void setInscorePort(int inscorePort);
+
+    String getSubnetMask();
+
+    void setSubnetMask(String subnetMask);
+
+    void initNetInfo();
+
+    List<NetUtil.NetworkDevice> getParallelConnectedNetworkClients();
 }

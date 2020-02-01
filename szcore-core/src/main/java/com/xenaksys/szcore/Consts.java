@@ -12,9 +12,11 @@ public interface Consts {
     public static final String ERROR_TANSPORTS = " Failed to process transports";
     public static final String RESULT_OK = "OK";
     public static final String COMMA = ",";
+    public static final String DOT = ".";
     public static final String QUOTE = "'";
     public static final String PLUS = "+";
     public static final String PLUS_REGEX = "\\+";
+    public static final String DOT_REGEX = "\\.";
     public static final String EMPTY = "";
     public static final String COLUMN = ":";
     public static final String SPACE = " ";
@@ -101,6 +103,7 @@ public interface Consts {
     public static final int DEFAULT_OSC_ERR_PORT = 7002;
     public static final int DEFAULT_OSC_SERVER_PORT = 7777;
     public static final int DEFAULT_ALL_PORTS = Integer.MIN_VALUE;
+    public static final String DEFAULT_SUBNET_MASK = "255.255.255.0";
 
     public static final String OSC_INSCORE_LOAD = "load";
     public static final String OSC_INSCORE_SET = "set";

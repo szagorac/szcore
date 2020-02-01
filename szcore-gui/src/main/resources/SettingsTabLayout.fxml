@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<BorderPane prefHeight="729.0" prefWidth="870.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.xenaksys.szcore.gui.view.SettingsController">
+   <top>
+      <AnchorPane prefHeight="455.0" prefWidth="568.0" BorderPane.alignment="CENTER">
+         <children>
+                  <VBox spacing="10.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+                     <children>
+                        <HBox alignment="BOTTOM_LEFT" spacing="10.0">
+                           <children>
+                              <Label text="Server Address: " />
+                              <Label fx:id="serverInetAddrLbl" styleClass="label-subtitle-black" stylesheets="@css/szcoreStyle.css" text="-.-.-" />
+                              <Label text="Inscore Client Port: " />
+                              <Label fx:id="inscoreClientPortLbl" styleClass="label-subtitle-black" stylesheets="@css/szcoreStyle.css" text="---" />
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <Label stylesheets="@css/szcoreStyle.css" text="Broadcast Address:" />
+                              <HBox alignment="BOTTOM_LEFT" spacing="1.0">
+                                 <children>
+                                    <TextField fx:id="broadcastAddrOct1Txt" prefHeight="25.0" prefWidth="35.0" text="255" />
+                                    <Label stylesheets="@css/szcoreStyle.css" text="." />
+                                    <TextField fx:id="broadcastAddrOct2Txt" prefHeight="25.0" prefWidth="35.0" />
+                                    <Label stylesheets="@css/szcoreStyle.css" text="." />
+                                    <TextField fx:id="broadcastAddrOct3Txt" prefHeight="25.0" prefWidth="35.0" />
+                                    <Label stylesheets="@css/szcoreStyle.css" text="." />
+                                    <TextField fx:id="broadcastAddrOct4Txt" prefHeight="25.0" prefWidth="35.0" />
+                                    <HBox alignment="TOP_LEFT" spacing="0.0">
+                                       <children>
+                                          <Button fx:id="setBroadcastAddressBtn" mnemonicParsing="false" onAction="#setBroadcastAddress" prefHeight="24.0" styleClass="css\szcoreStyle.css" text="Set" />
+                                       </children>
+                                    </HBox>
+                                 </children>
+                              </HBox>
+                              <Label stylesheets="@css/szcoreStyle.css" text="Subnet Mask:" />
+                              <HBox alignment="BOTTOM_LEFT" spacing="1.0">
+                                 <children>
+                                    <TextField fx:id="subnetMaskOct1Txt" prefHeight="25.0" prefWidth="35.0" />
+                                    <Label stylesheets="@css/szcoreStyle.css" text="." />
+                                    <TextField fx:id="subnetMaskOct2Txt" prefHeight="25.0" prefWidth="35.0" />
+                                    <Label stylesheets="@css/szcoreStyle.css" text="." />
+                                    <TextField fx:id="subnetMaskOct3Txt" prefHeight="25.0" prefWidth="35.0" />
+                                    <Label stylesheets="@css/szcoreStyle.css" text="." />
+                                    <TextField fx:id="subnetMaskOct4Txt" prefHeight="25.0" prefWidth="35.0" />
+                                    <HBox alignment="TOP_LEFT" spacing="0.0">
+                                       <children>
+                                          <Button fx:id="setSubnetMaskBtn" mnemonicParsing="false" onAction="#setSubnetMask" prefHeight="24.0" styleClass="css\szcoreStyle.css" text="Set" />
+                                       </children>
+                                    </HBox>
+                                 </children>
+                              </HBox>
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <Label stylesheets="@css/szcoreStyle.css" text="Detected Broadcast Addresses:" />
+                              <Label fx:id="detectedBroadcastAddrLbl" stylesheets="@css/szcoreStyle.css" text="-.-.-" />
+                           </children>
+                        </HBox>
+                        <Separator />
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <Label prefWidth="200.0" styleClass="label-subtitle" stylesheets="@css/szcoreStyle.css" text="Connected Clients" />
+                              <Button fx:id="detectConnectedClientsBtn" mnemonicParsing="false" onAction="#detectClients" stylesheets="@css/szcoreStyle.css" text="Detect Connected Clients" />
+                           </children>
+                        </HBox>
+                        <TableView fx:id="networkClientsTableView">
+                           <columns>
+                              <TableColumn fx:id="hostAddressColumn" maxWidth="200.0" minWidth="100.0" prefWidth="120.0" text="HostIp" />
+                              <TableColumn fx:id="hostNameColumn" maxWidth="300.0" minWidth="100.0" prefWidth="120.0" text="HostName" />
+                              <TableColumn fx:id="isParticipantColumn" maxWidth="300.0" minWidth="100.0" prefWidth="120.0" text="IsParticipant" />
+                           </columns>
+                        </TableView>
+                     </children>
+                  </VBox>
+         </children>
+      </AnchorPane>
+   </top>
+</BorderPane>

@@ -49,7 +49,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -103,8 +102,6 @@ public class ScoreController {
     private TableColumn<Participant, String> instrumentColumn;
     @FXML
     private TableColumn<Participant, Boolean> selectColumn;
-    @FXML
-    private Label localInetAddrLbl;
     @FXML
     private Label pageNoLbl;
     @FXML
@@ -172,7 +169,7 @@ public class ScoreController {
 
     private SzcoreClient mainApp;
     private EventService publisher;
-    private InetAddress localAddress;
+    private InetAddress serverAddress;
     //    private PlayPosition playPosition = new PlayPosition();
     private Clock clock;
     private ObservableList<String> instrumentsList = FXCollections.observableArrayList();
@@ -476,13 +473,12 @@ public class ScoreController {
 
     public void setScoreService(ScoreService scoreService) {
         this.scoreService = scoreService;
+        this.serverAddress = scoreService.getServerAddress();
     }
 
     public void setPublisher(EventService publisher) {
         this.publisher = publisher;
         this.clock = publisher.getClock();
-        this.localAddress = publisher.getAddress();
-        localInetAddrLbl.setText(localAddress.getHostAddress());
     }
 
     @FXML
@@ -578,18 +574,13 @@ public class ScoreController {
     }
 
     @FXML
-    private void sendServerIpToParticipants(ActionEvent event) {
-        String subnetMask = "255.255.255.0";
-        String broadcastIp = "192.168.0.255";
-        try {
-            String serverIp = localAddress.getHostAddress();
-            InetAddress addr = InetAddress.getByName(broadcastIp);
-            int remotePort = 7000;
-            scoreService.setBroadcastPort(addr, remotePort);
-            sendServerIpBroadcast(serverIp);
-        } catch (UnknownHostException e) {
-            LOG.error("Failed to send server ip broadcast");
+    private void discoverParticipants(ActionEvent event) {
+        if(serverAddress == null) {
+            LOG.error("discoverParticipants: server address not available, ignore discover participants");
+            return;
         }
+        String serverIp = serverAddress.getHostAddress();
+        sendServerIpBroadcast(serverIp);
     }
 
     @FXML

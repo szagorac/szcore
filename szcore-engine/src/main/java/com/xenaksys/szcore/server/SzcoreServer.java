@@ -48,6 +48,7 @@ import com.xenaksys.szcore.time.clock.MutableNanoClock;
 import com.xenaksys.szcore.time.waitstrategy.BockingWaitStrategy;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
+import com.xenaksys.szcore.web.WebServer;
 import org.apache.commons.net.util.SubnetUtils;
 
 import java.io.File;
@@ -175,6 +176,10 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
         logProcessor = new ServerLogProcessor(new SimpleLogger());
 
+        WebServer webServer = new WebServer("C:\\dev\\projects\\github\\scores\\ligetiq\\export\\web", 80, 1024);
+//        WebServer webServer = new WebServer("C:\\music\\phd\\scores\\4_ligeti\\web", 8080, 1024);
+//        WebServer webServer = new WebServer(null, 8080, 1024);
+        webServer.start();
     }
 
     protected void onStart() throws Exception {

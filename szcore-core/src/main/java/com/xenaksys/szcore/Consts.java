@@ -46,6 +46,7 @@ public interface Consts {
     public static final String BLANK_PAGE_NAME = "blank";
     public static final String BLANK_PAGE_FILE = "blankStave";
     public static final String DEFAULT_FILE_NAME = "part" + INSCORE_FILE_EXTENSION;
+    public static final String INDEX_HTML = "index.html";
 
     public static final String OSC_ADDRESS_SCORE_FOLLOW_LINE_STAVE1 = "/ITL/scene/slaveFollow";
     public static final String OSC_ADDRESS_SCORE_FOLLOW_LINE_STAVE2 = "/ITL/scene/slaveFollow2";
@@ -307,5 +308,6 @@ public interface Consts {
     public static final double CONTENT_LINE2_Y_MID_POSITION = 0.545;
     public static final double CONTENT_LINE2_Y_MAX_POSITION = 0.425;
     public static final double CONTENT_LINE2_Y_MIN_POSITION = 0.665;
+
 
 }

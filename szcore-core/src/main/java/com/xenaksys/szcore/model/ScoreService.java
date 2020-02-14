@@ -2,6 +2,8 @@ package com.xenaksys.szcore.model;
 
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.util.NetUtil;
+import com.xenaksys.szcore.web.ZsHttpRequest;
+import com.xenaksys.szcore.web.ZsHttpResponse;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -82,4 +84,6 @@ public interface ScoreService {
     void initNetInfo();
 
     List<NetUtil.NetworkDevice> getParallelConnectedNetworkClients();
+
+    ZsHttpResponse onHttpRequest(ZsHttpRequest zsRequest);
 }

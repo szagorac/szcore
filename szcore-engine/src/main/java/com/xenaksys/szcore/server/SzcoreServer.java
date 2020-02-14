@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.server;
 
 
+import com.google.gson.Gson;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.ErrorEvent;
@@ -24,6 +25,7 @@ import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.Timer;
 import com.xenaksys.szcore.model.WaitStrategy;
+import com.xenaksys.szcore.model.ZsResponseType;
 import com.xenaksys.szcore.model.id.OscListenerId;
 import com.xenaksys.szcore.net.ParticipantStats;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
@@ -39,6 +41,7 @@ import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.server.processor.ServerEventDisruptorProcessor;
 import com.xenaksys.szcore.server.processor.ServerLogProcessor;
 import com.xenaksys.szcore.server.receive.ServerEventReceiver;
+import com.xenaksys.szcore.server.web.WebServer;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.BasicScheduler;
 import com.xenaksys.szcore.time.BasicTimer;
@@ -48,7 +51,9 @@ import com.xenaksys.szcore.time.clock.MutableNanoClock;
 import com.xenaksys.szcore.time.waitstrategy.BockingWaitStrategy;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
-import com.xenaksys.szcore.web.WebServer;
+import com.xenaksys.szcore.web.WebDataContainer;
+import com.xenaksys.szcore.web.ZsHttpRequest;
+import com.xenaksys.szcore.web.ZsHttpResponse;
 import org.apache.commons.net.util.SubnetUtils;
 
 import java.io.File;
@@ -67,6 +72,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     private static final String PROP_APP_NAME = "appName";
 
     private static final AtomicInteger DEFAULT_POOL_NUMBER = new AtomicInteger(1);
+    private static final Gson GSON = new Gson();
 
     private OscReceiveProcessor eventReceiver;
     private OscPublisher eventPublisher;
@@ -176,9 +182,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
         logProcessor = new ServerLogProcessor(new SimpleLogger());
 
-        WebServer webServer = new WebServer("C:\\dev\\projects\\github\\scores\\ligetiq\\export\\web", 80, 1024);
-//        WebServer webServer = new WebServer("C:\\music\\phd\\scores\\4_ligeti\\web", 8080, 1024);
-//        WebServer webServer = new WebServer(null, 8080, 1024);
+        WebServer webServer = new WebServer("C:\\dev\\projects\\github\\scores\\ligetiq\\export\\web", 80, 1024, this);
         webServer.start();
     }
 
@@ -350,6 +354,24 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         }
 
         return connectedClients;
+    }
+
+    @Override
+    public ZsHttpResponse onHttpRequest(ZsHttpRequest zsRequest) {
+        LOG.info("path: {}", zsRequest.getRequestPath());
+        LOG.info("sourceAddr: {}", zsRequest.getSourceAddr());
+        Map<String, String>  stringParams = zsRequest.getStringParams();
+        LOG.info("request params: ");
+        for(String name : stringParams.keySet()) {
+            LOG.info(" param {}: {}", name, stringParams.get(name));
+        }
+
+        WebDataContainer dataContainer = new WebDataContainer();
+        dataContainer.addToDataBag("message", "Hello from ZScore Server");
+        dataContainer.addToDataBag("time", "" + System.currentTimeMillis());
+
+        String out = GSON.toJson(dataContainer);
+        return new ZsHttpResponse(ZsResponseType.JSON, out);
     }
 
     public void addInstrumentOutPort(InetAddress addr, String instrument){

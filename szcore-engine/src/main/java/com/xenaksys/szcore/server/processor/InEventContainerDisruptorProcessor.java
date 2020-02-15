@@ -2,15 +2,19 @@ package com.xenaksys.szcore.server.processor;
 
 import com.lmax.disruptor.dsl.Disruptor;
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.event.EventContainer;
 import com.xenaksys.szcore.event.EventFactory;
+import com.xenaksys.szcore.event.EventType;
 import com.xenaksys.szcore.event.IncomingOscEvent;
 import com.xenaksys.szcore.event.InstrumentEvent;
+import com.xenaksys.szcore.event.OscEvent;
 import com.xenaksys.szcore.event.ParticipantEvent;
 import com.xenaksys.szcore.event.ParticipantStatsEvent;
+import com.xenaksys.szcore.event.WebEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.net.ParticipantStats;
-import com.xenaksys.szcore.process.AbstractOscReceiverDisruptorProcessor;
+import com.xenaksys.szcore.process.AbstractContainerEventReceiverDisruptorProcessor;
 import com.xenaksys.szcore.receive.SzcoreIncomingEventListener;
 import com.xenaksys.szcore.server.SzcoreServer;
 import com.xenaksys.szcore.util.IpAddressValidator;
@@ -22,8 +26,8 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 
-public class ServerEventDisruptorProcessor extends AbstractOscReceiverDisruptorProcessor {
-    static final Logger LOG = LoggerFactory.getLogger(ServerEventDisruptorProcessor.class);
+public class InEventContainerDisruptorProcessor extends AbstractContainerEventReceiverDisruptorProcessor {
+    static final Logger LOG = LoggerFactory.getLogger(InEventContainerDisruptorProcessor.class);
 
     private List<SzcoreIncomingEventListener> listeners = new CopyOnWriteArrayList<>();
     private final IpAddressValidator ipValidator = new IpAddressValidator();
@@ -32,26 +36,50 @@ public class ServerEventDisruptorProcessor extends AbstractOscReceiverDisruptorP
     private final Clock clock;
     private final EventFactory eventFactory;
 
-    public ServerEventDisruptorProcessor(SzcoreServer server, Clock clock, EventFactory eventFactory, Disruptor<IncomingOscEvent> disruptor) {
+    public InEventContainerDisruptorProcessor(SzcoreServer server, Clock clock, EventFactory eventFactory, Disruptor<EventContainer> disruptor) {
         super(disruptor);
         this.server = server;
         this.clock = clock;
         this.eventFactory = eventFactory;
     }
 
-
     @Override
-    protected void processInternal(IncomingOscEvent event) {
-        if(event == null){
+    protected void processInternal(EventContainer eventContainer) {
+        if(eventContainer == null || eventContainer.getEvent() == null){
             return;
         }
 
+        SzcoreEvent event = eventContainer.getEvent();
         server.logEvent(event);
-
         try {
-            processIncomingOscEvent(event);
+            EventType type = event.getEventType();
+            switch (type) {
+                case OSC:
+                    processOscEvent((OscEvent)event);
+                    break;
+                case WEB:
+                    processWebEvent((WebEvent)event);
+                    break;
+                case GUI:
+                    processOscEvent((OscEvent)event);
+                    break;
+            }
+
         } catch (Exception e) {
-            LOG.error("Failed to process event: " + event, e);
+            LOG.error("Failed to process event: " + eventContainer, e);
+        }
+    }
+
+    private void processWebEvent(WebEvent event) {
+        LOG.info("processWebEvent: {}", event);
+        server.getWebProcessor().process(event);
+    }
+
+    private void processOscEvent(OscEvent oscEvent) {
+        if(oscEvent instanceof IncomingOscEvent) {
+            processIncomingOscEvent((IncomingOscEvent)oscEvent);
+        } else {
+            LOG.error("Unexpected oscEvent type: {}", oscEvent);
         }
     }
 

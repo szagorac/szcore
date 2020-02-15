@@ -6,6 +6,7 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
@@ -68,6 +69,19 @@
                               <Label fx:id="detectedBroadcastAddrLbl" stylesheets="@css/szcoreStyle.css" text="-.-.-" />
                            </children>
                         </HBox>
+                  <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="81.0" spacing="10.0">
+                     <children>
+                        <Label stylesheets="@css/szcoreStyle.css" text="Web Server:" />
+                        <Label fx:id="webServerStatusLbl" stylesheets="@css/szcoreStyle.css" text="status" />
+                        <HBox alignment="CENTER_LEFT">
+                           <children>
+                              <ToggleButton fx:id="webServerOnTgl" alignment="CENTER_LEFT" mnemonicParsing="false" onAction="#setWebServerOn" stylesheets="@css/szcoreStyle.css" text="On" />
+                              <ToggleButton fx:id="webServerOffTgl" alignment="CENTER_LEFT" mnemonicParsing="false" onAction="#setWebServerOff" stylesheets="@css/szcoreStyle.css" text="Off" />
+                           </children>
+                        </HBox>
+                        <Button fx:id="getServerStatusBtn" mnemonicParsing="false" onAction="#detectWebServerStatus" stylesheets="@css/szcoreStyle.css" text="Get Status" />
+                     </children>
+                  </HBox>
                         <Separator />
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                            <children>

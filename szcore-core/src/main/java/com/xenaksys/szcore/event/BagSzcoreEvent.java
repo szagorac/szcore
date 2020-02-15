@@ -6,7 +6,7 @@ import com.xenaksys.szcore.model.id.BeatId;
 import java.util.EnumMap;
 import java.util.Set;
 
-public class BagSzcoreEvent  implements SzcoreEvent {
+public class BagSzcoreEvent implements SzcoreEvent {
 
     private final EnumMap<SzcoreEventParam, Object> params;
     private EventType type;

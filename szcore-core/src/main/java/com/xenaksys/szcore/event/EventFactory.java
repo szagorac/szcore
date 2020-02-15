@@ -244,6 +244,10 @@ public class EventFactory {
         resetScoreEvent.addCommandArg();
         return resetScoreEvent;
     }
+    public ElementSelectedEvent createElementSelectedEvent(String elementId, boolean isSelected, String eventId, String sourceAddr, String requestPath,
+                                                           long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new ElementSelectedEvent(elementId, isSelected, sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
+    }
 
     public List<Object> createJavaScriptArgs() {
         List<Object> jsArgs = new ArrayList<>();

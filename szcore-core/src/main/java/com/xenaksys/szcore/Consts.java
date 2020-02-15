@@ -225,6 +225,21 @@ public interface Consts {
     public static final String NAME_EVENT_OSC_IN = "Event type: OSC In, ";
     public static final String NAME_NA = "N/A";
 
+    public static final String WEB_EVENT_NAME = "ev";
+    public static final String WEB_EVENT_TIME_NAME = "evt";
+    public static final String WEB_EVENT_SENT_TIME_NAME = "t";
+    public static final String WEB_EVENT_ELEMENT_ID = "elementId";
+    public static final String WEB_EVENT_IS_SELECTED = "selected";
+
+    public static final String WEB_RESPONSE_TYPE = "type";
+    public static final String WEB_RESPONSE_MESSAGE = "msg";
+    public static final String WEB_RESPONSE_TIME = "t";
+    public static final String WEB_RESPONSE_SUBMITTED = "Submitted";
+
+    public static final String WEB_TILE_PREFIX = "t";
+    public static final String WEB_ELEMENT_NAME_DELIMITER = "-";
+    public static final String WEB_ELEMENT_GRID = "grid";
+
     public static final String NAME_FULL_SCORE = "FullScore";
 
     public static final int DEFAULT_THREAD_SLEEP_MILLIS = 10;
@@ -261,6 +276,7 @@ public interface Consts {
     public static final String DISRUPTOR_THREAD_FACTORY = "SZCore_Dsrptr";
     public static final String DISRUPTOR_OUT_THREAD_FACTORY = "SZCore_Out_Dsrptr";
     public static final String DISRUPTOR_IN_THREAD_FACTORY = "SZCore_In_Dsrptr";
+    public static final String DISRUPTOR_CONTAINER_IN_THREAD_FACTORY = "SZCore_Container_In_Dsrptr";
     public static final String SCHEDULER_THREAD_FACTORY = "SZCore_Schedlr";
     public static final String DEFAULT_THREAD_SUFFIX = "-Thread-";
 

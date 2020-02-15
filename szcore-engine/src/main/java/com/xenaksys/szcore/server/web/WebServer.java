@@ -25,6 +25,9 @@ public class WebServer {
     private final int transferMinSize;
     private final SzcoreServer szcoreServer;
 
+    private volatile boolean isRunning = false;
+    private Undertow undertow = null;
+
     public WebServer(String staticDataPath, int port, int transferMinSize, SzcoreServer szcoreServer) {
         this.staticDataPath = staticDataPath;
         this.port = port;
@@ -32,8 +35,32 @@ public class WebServer {
         this.szcoreServer = szcoreServer;
     }
 
+    public boolean isRunning(){
+        return isRunning;
+    }
+
     public void start(){
-        initUndertow();
+        LOG.info("Starting Web Server ...");
+        if(undertow == null) {
+            initUndertow();
+        }
+
+        if(isRunning) {
+            return;
+        }
+
+        undertow.start();
+        isRunning = true;
+        LOG.info("Web Server is Running");
+    }
+
+    public void stop(){
+        LOG.info("Stopping Web Server ...");
+        if(isRunning && undertow != null) {
+            undertow.stop();
+            isRunning = false;
+            LOG.info("Web Server is Stopped");
+        }
     }
 
     private void initUndertow() {
@@ -49,34 +76,13 @@ public class WebServer {
             }
         }
 
-        Undertow server = Undertow.builder()
+        undertow = Undertow.builder()
                 .addHttpListener(port, "0.0.0.0")
                 .setHandler(Handlers.path()
                         .addPrefixPath("/", staticDataHandler)
                         .addPrefixPath("/htp", new ZsHttpHandler(szcoreServer))
                 ).build();
-//
-//        Undertow server = Undertow.builder()
-//                .addHttpListener(port, "0.0.0.0")
-//                .setHandler(Handlers.path()
-//                        // REST API path
-//                        .addPrefixPath("/api", Handlers.routing()
-//                                .get("/customers", exchange -> {...})
-//                                .delete("/customers/{customerId}", exchange -> {...})
-//                                .setFallbackHandler(exchange -> {...}))
-//
-//                        // Redirect root path to /static to serve the index.html by default
-//                        .addExactPath("/", Handlers.redirect("/static"))
-//
-//                        // Serve all static files from a folder
-//                        .addPrefixPath("/static", new ResourceHandler(
-//                                new PathResourceManager(Paths.get("/path/to/www/"), 100))
-//                                .setWelcomeFiles("index.html"))
-//
-//                ).build();
-//
 
-        server.start();
     }
 
 }

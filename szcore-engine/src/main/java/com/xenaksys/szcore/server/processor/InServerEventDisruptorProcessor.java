@@ -1,16 +1,16 @@
 package com.xenaksys.szcore.server.processor;
 
+import com.lmax.disruptor.dsl.Disruptor;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.EventType;
 import com.xenaksys.szcore.event.IncomingOscEvent;
 import com.xenaksys.szcore.event.InstrumentEvent;
 import com.xenaksys.szcore.event.ParticipantEvent;
 import com.xenaksys.szcore.event.ParticipantStatsEvent;
 import com.xenaksys.szcore.model.Clock;
-import com.xenaksys.szcore.model.OscReceiver;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.net.ParticipantStats;
+import com.xenaksys.szcore.process.AbstractOscReceiverDisruptorProcessor;
 import com.xenaksys.szcore.receive.SzcoreIncomingEventListener;
 import com.xenaksys.szcore.server.SzcoreServer;
 import com.xenaksys.szcore.util.IpAddressValidator;
@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 
-public class ServerEventProcessor implements OscReceiver {
-    static final Logger LOG = LoggerFactory.getLogger(ServerEventProcessor.class);
+public class InServerEventDisruptorProcessor extends AbstractOscReceiverDisruptorProcessor {
+    static final Logger LOG = LoggerFactory.getLogger(InServerEventDisruptorProcessor.class);
 
     private List<SzcoreIncomingEventListener> listeners = new CopyOnWriteArrayList<>();
     private final IpAddressValidator ipValidator = new IpAddressValidator();
@@ -32,36 +32,24 @@ public class ServerEventProcessor implements OscReceiver {
     private final Clock clock;
     private final EventFactory eventFactory;
 
-    public ServerEventProcessor(SzcoreServer server, Clock clock, EventFactory eventFactory) {
+    public InServerEventDisruptorProcessor(SzcoreServer server, Clock clock, EventFactory eventFactory, Disruptor<IncomingOscEvent> disruptor) {
+        super(disruptor);
         this.server = server;
         this.clock = clock;
         this.eventFactory = eventFactory;
     }
 
+
     @Override
-    public void process(SzcoreEvent event) {
+    protected void processInternal(IncomingOscEvent event) {
         if(event == null){
             return;
         }
 
         server.logEvent(event);
 
-        EventType type = event.getEventType();
-        if(type == null){
-            return;
-        }
-
         try {
-            switch (type){
-                case OSC:
-                    if(!(event instanceof IncomingOscEvent)){
-                        return;
-                    }
-                    processIncomingOscEvent((IncomingOscEvent)event);
-                    return;
-                default:
-                    LOG.error("Unknown event type: " + type);
-            }
+            processIncomingOscEvent(event);
         } catch (Exception e) {
             LOG.error("Failed to process event: " + event, e);
         }
@@ -114,7 +102,7 @@ public class ServerEventProcessor implements OscReceiver {
         String ip = (String)args.get(0);
         InetAddress inetAddress = event.getInetAddress();
         if(!inetAddress.getHostAddress().equals(ip)){
-            LOG.error("Inscore HELLO Event IP address: " + ip + " is not the same as InetAddress: " + inetAddress.getHostAddress());
+            LOG.error("Inscore HELLO Event IP address: " + ip + " is not the same as InetAddress: " + inetAddress.getHostAddress() + ", assuming local host");
         }
         addParticipant(inetAddress);
 
@@ -141,7 +129,7 @@ public class ServerEventProcessor implements OscReceiver {
     }
 
     private void processSzcoreMessage(IncomingOscEvent event) {
-        LOG.debug("Received SZCORE message: " + event.getAddress() + " args: " + event.getArguments());
+//        LOG.debug("Received SZCORE message: " + event.getAddress() + " args: " + event.getArguments());
 
         if(isSzcoreHello(event)) {
             processHello(event);
@@ -243,7 +231,7 @@ public class ServerEventProcessor implements OscReceiver {
         double latency = 1.0*(receivedTime - sendTime);
         double oneWayLatency = latency/2.0;
         oneWayLatency = Math.round(oneWayLatency * 100.0) / 100.0;
-LOG.debug("Caluclated oneWayLatency: " + oneWayLatency + " for " + ipAddress + " receivedTime: " + receivedTime + " sendTime: " + sendTime);
+//LOG.debug("Calculated oneWayLatency: " + oneWayLatency + " roundTriplatency: " + latency + " for " + ipAddress + " receivedTime: " + receivedTime + " sendTime: " + sendTime);
 
         stats.setPingLatency(latency);
         stats.setOneWayPingLatency(oneWayLatency);
@@ -328,10 +316,11 @@ LOG.debug("Caluclated oneWayLatency: " + oneWayLatency + " for " + ipAddress + "
             return false;
         }
 
-        String ip = (String)arg;
-        if(!isIpAddress(ip)){
-            return false;
-        }
+        //TODO when local host Inscore sends empty string
+//        String ip = (String)arg;
+//        if(!isIpAddress(ip)){
+//            return false;
+//        }
 
         for(int i = 1 ; i <=3; i++){
             arg = args.get(i);
@@ -363,8 +352,4 @@ LOG.debug("Caluclated oneWayLatency: " + oneWayLatency + " for " + ipAddress + "
         server.addInPort(port);
     }
 
-    @Override
-    public void start() {
-
-    }
 }

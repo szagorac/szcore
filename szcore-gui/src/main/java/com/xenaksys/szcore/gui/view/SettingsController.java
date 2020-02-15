@@ -22,6 +22,8 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.util.converter.NumberStringConverter;
 import org.slf4j.Logger;
@@ -76,7 +78,14 @@ public class SettingsController {
     public Button setBroadcastAddressBtn;
     @FXML
     public Button setSubnetMaskBtn;
+    @FXML
+    private Label webServerStatusLbl;
+    @FXML
+    private ToggleButton webServerOnTgl;
+    @FXML
+    private ToggleButton webServerOffTgl;
 
+    private ToggleGroup webServerStatusTglGroup = new ToggleGroup();
     private IpAddress broadCastAddress = new IpAddress();
     private IpAddress subnetMask = new IpAddress();
     private ObservableList<NetworkClient> networkClients = FXCollections.observableArrayList();
@@ -154,6 +163,28 @@ public class SettingsController {
         hostNameColumn.setCellValueFactory(cellData -> cellData.getValue().getHostNameProperty());
         isParticipantColumn.setCellValueFactory(cellData -> cellData.getValue().getIsParticipantProperty());
         isParticipantColumn.setCellFactory(CheckBoxTableCell.forTableColumn(isParticipantColumn));
+
+        webServerOnTgl.setToggleGroup(webServerStatusTglGroup);
+        webServerOffTgl.setToggleGroup(webServerStatusTglGroup);
+        detectWebServerStatus(null);
+    }
+
+    @FXML
+    private void detectWebServerStatus(ActionEvent event) {
+        Service<Void> retrieveWebServerStatus = createRetrieveWebServerStatus();
+        retrieveWebServerStatus.start();
+    }
+
+    @FXML
+    private void setWebServerOn(ActionEvent event) {
+        scoreService.startWebServer();
+        detectWebServerStatus(null);
+    }
+
+    @FXML
+    private void setWebServerOff(ActionEvent event) {
+        scoreService.stopWebServer();
+        detectWebServerStatus(null);
     }
 
     @FXML
@@ -198,7 +229,6 @@ public class SettingsController {
     public void setPublisher(EventService publisher) {
         this.publisher = publisher;
     }
-
 
     public void setMainApp(SzcoreClient mainApp) {
         this.mainApp = mainApp;
@@ -262,5 +292,40 @@ public class SettingsController {
         };
     }
 
+    private Service<Void> createRetrieveWebServerStatus() {
+        return new Service<Void>() {
+            @Override
+            protected Task<Void> createTask() {
+                return new Task<Void>() {
+                    @Override
+                    protected Void call() throws Exception {
+                        final boolean isWebServerRunning = scoreService.isWebServerRunning();
+                        final CountDownLatch latch = new CountDownLatch(1);
+                        Platform.runLater(() -> {
+                            try {
+                                if(isWebServerRunning) {
+                                    webServerOnTgl.setSelected(true);
+                                    webServerStatusLbl.setText("Running");
+                                    LOG.info("Web server running. Setting label green");
+                                    webServerStatusLbl.getStyleClass().remove("label-red");
+                                    webServerStatusLbl.getStyleClass().add("label-green");
+                                } else {
+                                    webServerOffTgl.setSelected(true);
+                                    webServerStatusLbl.setText("Stopped");
+                                    LOG.info("Web server stopped. Setting label red");
+                                    webServerStatusLbl.getStyleClass().remove("label-green");
+                                    webServerStatusLbl.getStyleClass().add("label-red");
+                                }
+                            } finally {
+                                latch.countDown();
+                            }
+                        });
+                        latch.await();
+                        return null;
+                    }
+                };
+            }
+        };
+    }
 }
 

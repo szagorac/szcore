@@ -39,6 +39,10 @@ public class ZsHttpRequest {
         return stringParams;
     }
 
+    public String getParam(String name) {
+        return stringParams.get(name);
+    }
+
     public List<Path> getFilePaths() {
         return filePaths;
     }

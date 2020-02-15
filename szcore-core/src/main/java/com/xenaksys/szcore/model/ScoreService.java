@@ -1,5 +1,6 @@
 package com.xenaksys.szcore.model;
 
+import com.xenaksys.szcore.event.WebEvent;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.web.ZsHttpRequest;
@@ -86,4 +87,12 @@ public interface ScoreService {
     List<NetUtil.NetworkDevice> getParallelConnectedNetworkClients();
 
     ZsHttpResponse onHttpRequest(ZsHttpRequest zsRequest);
+
+    void startWebServer();
+
+    void stopWebServer();
+
+    boolean isWebServerRunning();
+
+    void onWebEvent(WebEvent webEvent);
 }

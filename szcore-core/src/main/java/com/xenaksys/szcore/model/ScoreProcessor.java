@@ -1,5 +1,6 @@
 package com.xenaksys.szcore.model;
 
+import com.xenaksys.szcore.event.WebEvent;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 
 import java.io.File;
@@ -62,5 +63,7 @@ public interface ScoreProcessor extends Processor {
     void onUseContentOverlay(Boolean value, List<Id> instrumentIds) throws Exception;
 
     void onUseContentLine(Boolean value, List<Id> instrumentIds) throws Exception;
+
+    void onWebEvent(WebEvent webEvent) throws Exception;
 
 }

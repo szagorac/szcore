@@ -7,11 +7,11 @@ public class WebDataContainer {
 
     private final Map<String, String> dataBag = new ConcurrentHashMap<>();
 
-    public void addToDataBag(String name, String value) {
+    public void addParam(String name, String value) {
         dataBag.put(name, value);
     }
 
-    public String getFromDataBag(String name) {
+    public String getParam(String name) {
         return dataBag.get(name);
     }
 

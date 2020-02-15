@@ -6,6 +6,7 @@ import com.xenaksys.szcore.event.BeatScriptEvent;
 import com.xenaksys.szcore.event.DateTickEvent;
 import com.xenaksys.szcore.event.ElementAlphaEvent;
 import com.xenaksys.szcore.event.ElementColorEvent;
+import com.xenaksys.szcore.event.ElementSelectedEvent;
 import com.xenaksys.szcore.event.ElementYPositionEvent;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.EventType;
@@ -30,6 +31,8 @@ import com.xenaksys.szcore.event.TimeSigChangeEvent;
 import com.xenaksys.szcore.event.TransitionEvent;
 import com.xenaksys.szcore.event.TransportEvent;
 import com.xenaksys.szcore.event.TransportPositionEvent;
+import com.xenaksys.szcore.event.WebEvent;
+import com.xenaksys.szcore.event.WebEventType;
 import com.xenaksys.szcore.model.Bar;
 import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.Id;
@@ -61,6 +64,7 @@ import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
+import com.xenaksys.szcore.web.WebScore;
 import gnu.trove.map.TIntObjectMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,6 +113,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private BeatFollowerPositionStrategy beatFollowerPositionStrategy = new BeatFollowerPositionStrategy();
     private List<SzcoreEngineEventListener> scoreEventListeners = new CopyOnWriteArrayList<>();
     private Map<Id, TempoModifier> transportTempoModifiers = new ConcurrentHashMap<>();
+
     private ValueScaler dynamicsValueScaler = new ValueScaler(0.0, 100.0, 0.0, DYNAMICS_LINE_Y_MAX);
     private ValueScaler dynamicsForteColorValueScaler = new ValueScaler(50.0, 100.0, 255, 0);
     private ValueScaler dynamicsPianoColorValueScaler = new ValueScaler(0.0, 50.0, 0, 255);
@@ -120,6 +125,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private ValueScaler positionValueScaler = new ValueScaler(0.0, 100.0, POSITION_LINE_Y_MAX,0.0);
     private ValueScaler contentValueScaler = new ValueScaler(0.0, 100.0, 0.0, CONTENT_LINE_Y_MAX);
 
+    private WebScore webScore = null;
+
     public ScoreProcessorImpl(TransportFactory transportFactory, MutableClock clock, OscPublisher oscPublisher,
                               Scheduler scheduler, EventFactory eventFactory, TaskFactory taskFactory) {
         this.transportFactory = transportFactory;
@@ -128,6 +135,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         this.scheduler = scheduler;
         this.eventFactory = eventFactory;
         this.taskFactory = taskFactory;
+        loadWebScore();
     }
 
     @Override
@@ -159,6 +167,11 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         szcore = (BasicScore) score;
 
         return score;
+    }
+
+    private void loadWebScore() {
+        webScore = new WebScore();
+        webScore.init();
     }
 
     @Override
@@ -1782,6 +1795,25 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     public void onUseContentLine(Boolean value, List<Id> instrumentIds) throws Exception {
         LOG.debug("onUseContentLine: {} ", value);
         setContentLine(value, instrumentIds);
+    }
+
+    @Override
+    public void onWebEvent(WebEvent webEvent) throws Exception {
+
+        WebEventType type = webEvent.getWebEventType();
+        switch (type) {
+            case ELEMENT_SELECTED:
+                processElementSelected((ElementSelectedEvent)webEvent);
+                break;
+        }
+    }
+
+    private void processElementSelected(ElementSelectedEvent webEvent) {
+        LOG.info("processElementSelected: ");
+        String elementId = webEvent.getElementId();
+        boolean isSelected = webEvent.isSelected();
+
+        webScore.setSelectedElement(elementId, isSelected);
     }
 
     public boolean isReadyToPlay(){

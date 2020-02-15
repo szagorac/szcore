@@ -9,6 +9,8 @@ public interface EventService {
 
     void publish(SzcoreEvent event);
 
+    void receive(SzcoreEvent event);
+
     void stop();
 
     EventFactory getEventFactory();

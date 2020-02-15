@@ -1,22 +1,21 @@
 package com.xenaksys.szcore.server;
 
 
-import com.google.gson.Gson;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.ErrorEvent;
+import com.xenaksys.szcore.event.EventContainer;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.HelloEvent;
-import com.xenaksys.szcore.event.IncomingOscEvent;
 import com.xenaksys.szcore.event.OscEvent;
 import com.xenaksys.szcore.event.PingEvent;
 import com.xenaksys.szcore.event.ServerHelloEvent;
+import com.xenaksys.szcore.event.WebEvent;
 import com.xenaksys.szcore.model.BeatTimeStrategy;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.EventService;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.OscPublisher;
-import com.xenaksys.szcore.model.OscReceiver;
 import com.xenaksys.szcore.model.Scheduler;
 import com.xenaksys.szcore.model.Score;
 import com.xenaksys.szcore.model.ScoreProcessor;
@@ -25,7 +24,6 @@ import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.Timer;
 import com.xenaksys.szcore.model.WaitStrategy;
-import com.xenaksys.szcore.model.ZsResponseType;
 import com.xenaksys.szcore.model.id.OscListenerId;
 import com.xenaksys.szcore.net.ParticipantStats;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
@@ -38,7 +36,7 @@ import com.xenaksys.szcore.receive.OscReceiveProcessor;
 import com.xenaksys.szcore.receive.SzcoreIncomingEventListener;
 import com.xenaksys.szcore.score.ScoreProcessorImpl;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
-import com.xenaksys.szcore.server.processor.ServerEventDisruptorProcessor;
+import com.xenaksys.szcore.server.processor.InEventContainerDisruptorProcessor;
 import com.xenaksys.szcore.server.processor.ServerLogProcessor;
 import com.xenaksys.szcore.server.receive.ServerEventReceiver;
 import com.xenaksys.szcore.server.web.WebServer;
@@ -51,7 +49,7 @@ import com.xenaksys.szcore.time.clock.MutableNanoClock;
 import com.xenaksys.szcore.time.waitstrategy.BockingWaitStrategy;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
-import com.xenaksys.szcore.web.WebDataContainer;
+import com.xenaksys.szcore.web.WebProcessor;
 import com.xenaksys.szcore.web.ZsHttpRequest;
 import com.xenaksys.szcore.web.ZsHttpResponse;
 import org.apache.commons.net.util.SubnetUtils;
@@ -72,20 +70,24 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     private static final String PROP_APP_NAME = "appName";
 
     private static final AtomicInteger DEFAULT_POOL_NUMBER = new AtomicInteger(1);
-    private static final Gson GSON = new Gson();
+
 
     private OscReceiveProcessor eventReceiver;
     private OscPublisher eventPublisher;
     private ServerEventReceiver serverEventReceiver;
     private ScoreProcessor scoreProcessor;
+    private WebProcessor webProcessor;
     private ServerLogProcessor logProcessor;
-    private OscReceiver eventProcessor;
+//    private OscReceiver eventProcessor;
+    private InEventContainerDisruptorProcessor eventProcessor;
     private Scheduler scheduler;
     private EventFactory eventFactory;
     private TaskFactory taskFactory;
     private MutableNanoClock clock;
     private Disruptor<OscEvent> outDisruptor;
-    private Disruptor<IncomingOscEvent> inDisruptor;
+//    private Disruptor<IncomingOscEvent> inDisruptor;
+    private Disruptor<EventContainer> inDisruptor;
+    private WebServer webServer;
 
     private Map<String, InetAddress> participants = new ConcurrentHashMap<>();
     private Map<String, ParticipantStats> participantStats = new ConcurrentHashMap<>();
@@ -158,8 +160,11 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         clock = new MutableNanoClock();
         eventReceiver = new OscReceiveProcessor(new OscListenerId(Consts.DEFAULT_ALL_PORTS, getServerAddress().getHostAddress(), "OscReceiveProcessor"), clock);
 
-        inDisruptor = DisruptorFactory.createInDisruptor();
-        eventProcessor = new ServerEventDisruptorProcessor(this, clock, eventFactory, inDisruptor);
+//        inDisruptor = DisruptorFactory.createInDisruptor();
+//        eventProcessor = new InServerEventDisruptorProcessor(this, clock, eventFactory, inDisruptor);
+        inDisruptor = DisruptorFactory.createContainerInDisruptor();
+        eventProcessor = new InEventContainerDisruptorProcessor(this, clock, eventFactory, inDisruptor);
+
         serverEventReceiver = new ServerEventReceiver(eventProcessor, eventReceiver,
                 new OscListenerId(Consts.DEFAULT_ALL_PORTS, getServerAddress().getHostAddress(), "ServerEventReceiver"));
         serverEventReceiver.init();
@@ -182,7 +187,9 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
         logProcessor = new ServerLogProcessor(new SimpleLogger());
 
-        WebServer webServer = new WebServer("C:\\dev\\projects\\github\\scores\\ligetiq\\export\\web", 80, 1024, this);
+        webProcessor = new WebProcessor( this, this, clock, eventFactory);
+
+        webServer = new WebServer("C:\\dev\\projects\\github\\scores\\ligetiq\\export\\web", 80, 1024, this);
         webServer.start();
     }
 
@@ -226,6 +233,11 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
     public void publish(SzcoreEvent event){
         eventPublisher.process(event);
+    }
+
+    @Override
+    public void receive(SzcoreEvent event) {
+        serverEventReceiver.onEvent(event);
     }
 
     public void subscribe(SzcoreIncomingEventListener listener){
@@ -358,20 +370,61 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
     @Override
     public ZsHttpResponse onHttpRequest(ZsHttpRequest zsRequest) {
-        LOG.info("path: {}", zsRequest.getRequestPath());
-        LOG.info("sourceAddr: {}", zsRequest.getSourceAddr());
-        Map<String, String>  stringParams = zsRequest.getStringParams();
-        LOG.info("request params: ");
-        for(String name : stringParams.keySet()) {
-            LOG.info(" param {}: {}", name, stringParams.get(name));
+        LOG.info("onHttpRequest: path: {} sourceAddr: {}", zsRequest.getRequestPath(), zsRequest.getSourceAddr());
+        return webProcessor.onHttpRequest(zsRequest);
+    }
+
+    @Override
+    public void startWebServer() {
+        if(webServer == null) {
+            LOG.error("startWebServer: Invalid Web server");
+            return;
         }
 
-        WebDataContainer dataContainer = new WebDataContainer();
-        dataContainer.addToDataBag("message", "Hello from ZScore Server");
-        dataContainer.addToDataBag("time", "" + System.currentTimeMillis());
+        if(webServer.isRunning()) {
+            LOG.error("startWebServer: Web server is already running");
+            return;
+        }
 
-        String out = GSON.toJson(dataContainer);
-        return new ZsHttpResponse(ZsResponseType.JSON, out);
+        webServer.start();
+    }
+
+    @Override
+    public void stopWebServer() {
+        if(webServer == null) {
+            LOG.error("stopWebServer: Invalid Web server");
+            return;
+        }
+
+        if(!webServer.isRunning()) {
+            LOG.error("stopWebServer: Web server is not running");
+            return;
+        }
+
+        webServer.stop();
+    }
+
+    @Override
+    public boolean isWebServerRunning() {
+        if(webServer == null) {
+            return false;
+        }
+
+        return webServer.isRunning();
+    }
+
+    @Override
+    public void onWebEvent(WebEvent webEvent) {
+        try {
+            scoreProcessor.onWebEvent(webEvent);
+        } catch (Exception e) {
+            LOG.error("Failed to process web event: {}", webEvent, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to process web event.", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    public WebProcessor getWebProcessor() {
+        return webProcessor;
     }
 
     public void addInstrumentOutPort(InetAddress addr, String instrument){

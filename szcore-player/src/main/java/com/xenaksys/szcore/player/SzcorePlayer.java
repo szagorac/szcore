@@ -148,6 +148,11 @@ public class SzcorePlayer extends Server implements EventService {
         eventPublisher.process(event);
     }
 
+    @Override
+    public void receive(SzcoreEvent event) {
+//        serverEventReceiver.onEvent(event);
+    }
+
     public void subscribe(SzcoreIncomingEventListener listener){
         eventProcessor.addListener(listener);
     }

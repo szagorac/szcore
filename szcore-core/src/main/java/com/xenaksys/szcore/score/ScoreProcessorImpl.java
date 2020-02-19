@@ -10,6 +10,8 @@ import com.xenaksys.szcore.event.ElementSelectedEvent;
 import com.xenaksys.szcore.event.ElementYPositionEvent;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.EventType;
+import com.xenaksys.szcore.event.IncomingWebEvent;
+import com.xenaksys.szcore.event.IncomingWebEventType;
 import com.xenaksys.szcore.event.MusicEvent;
 import com.xenaksys.szcore.event.MusicEventType;
 import com.xenaksys.szcore.event.OscEvent;
@@ -17,6 +19,7 @@ import com.xenaksys.szcore.event.OscEventType;
 import com.xenaksys.szcore.event.OscStaveActivateEvent;
 import com.xenaksys.szcore.event.OscStaveTempoEvent;
 import com.xenaksys.szcore.event.OscStopEvent;
+import com.xenaksys.szcore.event.OutgoingWebEvent;
 import com.xenaksys.szcore.event.PrecountBeatSetupEvent;
 import com.xenaksys.szcore.event.PrepStaveChangeEvent;
 import com.xenaksys.szcore.event.StaveActiveChangeEvent;
@@ -31,8 +34,7 @@ import com.xenaksys.szcore.event.TimeSigChangeEvent;
 import com.xenaksys.szcore.event.TransitionEvent;
 import com.xenaksys.szcore.event.TransportEvent;
 import com.xenaksys.szcore.event.TransportPositionEvent;
-import com.xenaksys.szcore.event.WebEvent;
-import com.xenaksys.szcore.event.WebEventType;
+import com.xenaksys.szcore.event.WebScoreEvent;
 import com.xenaksys.szcore.model.Bar;
 import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.Id;
@@ -64,7 +66,8 @@ import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
-import com.xenaksys.szcore.web.WebScore;
+import com.xenaksys.szcore.web.WebScoreEventListener;
+import com.xenaksys.szcore.web.WebScoreState;
 import gnu.trove.map.TIntObjectMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +79,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -112,6 +116,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private Map<Id, InstrumentBeatTracker> instrumentBeatTrackers = new HashMap<>();
     private BeatFollowerPositionStrategy beatFollowerPositionStrategy = new BeatFollowerPositionStrategy();
     private List<SzcoreEngineEventListener> scoreEventListeners = new CopyOnWriteArrayList<>();
+    protected List<WebScoreEventListener> webScoreEventListeners = new CopyOnWriteArrayList<>();
     private Map<Id, TempoModifier> transportTempoModifiers = new ConcurrentHashMap<>();
 
     private ValueScaler dynamicsValueScaler = new ValueScaler(0.0, 100.0, 0.0, DYNAMICS_LINE_Y_MAX);
@@ -135,7 +140,6 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         this.scheduler = scheduler;
         this.eventFactory = eventFactory;
         this.taskFactory = taskFactory;
-        loadWebScore();
     }
 
     @Override
@@ -169,9 +173,11 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         return score;
     }
 
-    private void loadWebScore() {
-        webScore = new WebScore();
-        webScore.init();
+    public void loadWebScore(LinkedList<WebScoreEvent> events) {
+        webScore = new WebScore(this, eventFactory, clock);
+        webScore.init(events);
+
+        webScore.startTestScore();
     }
 
     @Override
@@ -1666,6 +1672,11 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     @Override
+    public void subscribe(WebScoreEventListener eventListener) {
+        webScoreEventListeners.add(eventListener);
+    }
+
+    @Override
     public void setTempoModifier(Id transportId, TempoModifier tempoModifier) {
         if(transportId == null || tempoModifier == null){
             return;
@@ -1798,14 +1809,23 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     @Override
-    public void onWebEvent(WebEvent webEvent) throws Exception {
+    public void onIncomingWebEvent(IncomingWebEvent webEvent) throws Exception {
 
-        WebEventType type = webEvent.getWebEventType();
+        IncomingWebEventType type = webEvent.getWebEventType();
         switch (type) {
             case ELEMENT_SELECTED:
                 processElementSelected((ElementSelectedEvent)webEvent);
                 break;
         }
+    }
+    @Override
+    public void onWebScoreEvent(WebScoreState webEvent) throws Exception {
+        notifyListeners(webEvent);
+    }
+
+    @Override
+    public void onOutgoingWebEvent(OutgoingWebEvent webEvent) throws Exception {
+        notifyListeners(webEvent);
     }
 
     private void processElementSelected(ElementSelectedEvent webEvent) {
@@ -1850,6 +1870,18 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private void notifyListeners(SzcoreEvent event, int beatNo, int tickNo) {
         for(SzcoreEngineEventListener listener : scoreEventListeners){
             listener.onEvent(event, beatNo, tickNo);
+        }
+    }
+
+    private void notifyListeners(WebScoreState webScoreState) {
+        for(WebScoreEventListener listener : webScoreEventListeners){
+            listener.onWebScoreEvent(webScoreState);
+        }
+    }
+
+    private void notifyListeners(OutgoingWebEvent webEvent) {
+        for(WebScoreEventListener listener : webScoreEventListeners){
+            listener.onOutgoingWebEvent(webEvent);
         }
     }
 

@@ -1,8 +1,9 @@
 package com.xenaksys.szcore.model;
 
-import com.xenaksys.szcore.event.WebEvent;
+import com.xenaksys.szcore.event.IncomingWebEvent;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.util.NetUtil;
+import com.xenaksys.szcore.web.WebScoreEventListener;
 import com.xenaksys.szcore.web.ZsHttpRequest;
 import com.xenaksys.szcore.web.ZsHttpResponse;
 
@@ -25,6 +26,8 @@ public interface ScoreService {
     void setPosition(long millis);
 
     void subscribe(SzcoreEngineEventListener eventListener);
+
+    void subscribe(WebScoreEventListener eventListener);
 
     void setTempoModifier(Id transportId, TempoModifier tempoModifier);
 
@@ -94,5 +97,7 @@ public interface ScoreService {
 
     boolean isWebServerRunning();
 
-    void onWebEvent(WebEvent webEvent);
+    void onIncomingWebEvent(IncomingWebEvent webEvent);
+
+    void pushToWebClients(String data);
 }

@@ -233,6 +233,7 @@ public interface Consts {
 
     public static final String WEB_RESPONSE_TYPE = "type";
     public static final String WEB_RESPONSE_MESSAGE = "msg";
+    public static final String WEB_RESPONSE_STATE = "st";
     public static final String WEB_RESPONSE_TIME = "t";
     public static final String WEB_RESPONSE_SUBMITTED = "Submitted";
 

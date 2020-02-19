@@ -4,7 +4,7 @@ package com.xenaksys.szcore.event;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.id.BeatId;
 
-abstract public class WebEvent implements SzcoreEvent {
+abstract public class IncomingWebEvent implements SzcoreEvent {
 
     private final String eventId;
     private final String sourceAddr;
@@ -13,7 +13,7 @@ abstract public class WebEvent implements SzcoreEvent {
     private final long clientEventCreatedTime;
     private final long clientEventSentTime;
 
-    public WebEvent(String eventId, String sourceAddr, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+    public IncomingWebEvent(String eventId, String sourceAddr, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
         this.eventId = eventId;
         this.sourceAddr = sourceAddr;
         this.requestPath = requestPath;
@@ -24,7 +24,7 @@ abstract public class WebEvent implements SzcoreEvent {
 
     @Override
     public EventType getEventType() {
-        return EventType.WEB;
+        return EventType.WEB_IN;
     }
 
     @Override
@@ -32,7 +32,7 @@ abstract public class WebEvent implements SzcoreEvent {
         return null;
     }
 
-    abstract public WebEventType getWebEventType();
+    abstract public IncomingWebEventType getWebEventType();
 
     public long getClientEventCreatedTime() {
         return clientEventCreatedTime;

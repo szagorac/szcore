@@ -1,7 +1,7 @@
 package com.xenaksys.szcore.event;
 
 
-public class ElementSelectedEvent extends WebEvent {
+public class ElementSelectedEvent extends IncomingWebEvent {
     private final String elementId;
     private final boolean isSelected;
 
@@ -21,8 +21,8 @@ public class ElementSelectedEvent extends WebEvent {
     }
 
     @Override
-    public WebEventType getWebEventType() {
-        return WebEventType.ELEMENT_SELECTED;
+    public IncomingWebEventType getWebEventType() {
+        return IncomingWebEventType.ELEMENT_SELECTED;
     }
 
 }

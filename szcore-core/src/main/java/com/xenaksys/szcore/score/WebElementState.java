@@ -5,6 +5,7 @@ public class WebElementState {
     private boolean isActive;
     private boolean isPlayed;
     private boolean isVisible;
+    private boolean isSelected;
     private int clickCount;
 
     public WebElementState(String id) {
@@ -49,6 +50,21 @@ public class WebElementState {
 
     public void setPlayed(boolean played) {
         isPlayed = played;
+    }
+
+    public boolean isSelected() {
+        return isSelected;
+    }
+
+    public void setSelected(boolean selected) {
+        isSelected = selected;
+    }
+
+    public void copyTo(WebElementState other) {
+        other.setClickCount(getClickCount());
+        other.setActive(isActive());
+        other.setVisible(isVisible());
+        other.setPlayed(isPlayed());
     }
 
     @Override

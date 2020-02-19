@@ -7,10 +7,12 @@ import com.xenaksys.szcore.event.ErrorEvent;
 import com.xenaksys.szcore.event.EventContainer;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.HelloEvent;
+import com.xenaksys.szcore.event.IncomingWebEvent;
 import com.xenaksys.szcore.event.OscEvent;
 import com.xenaksys.szcore.event.PingEvent;
 import com.xenaksys.szcore.event.ServerHelloEvent;
-import com.xenaksys.szcore.event.WebEvent;
+import com.xenaksys.szcore.event.WebScoreEvent;
+import com.xenaksys.szcore.event.WebScoreEventType;
 import com.xenaksys.szcore.model.BeatTimeStrategy;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.EventService;
@@ -50,6 +52,7 @@ import com.xenaksys.szcore.time.waitstrategy.BockingWaitStrategy;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
 import com.xenaksys.szcore.web.WebProcessor;
+import com.xenaksys.szcore.web.WebScoreEventListener;
 import com.xenaksys.szcore.web.ZsHttpRequest;
 import com.xenaksys.szcore.web.ZsHttpResponse;
 import org.apache.commons.net.util.SubnetUtils;
@@ -58,6 +61,7 @@ import java.io.File;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -188,9 +192,20 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         logProcessor = new ServerLogProcessor(new SimpleLogger());
 
         webProcessor = new WebProcessor( this, this, clock, eventFactory);
+        subscribe(webProcessor);
+
+        LinkedList<WebScoreEvent> events = loadWebScoreEvents();
+        scoreProcessor.loadWebScore(events);
 
         webServer = new WebServer("C:\\dev\\projects\\github\\scores\\ligetiq\\export\\web", 80, 1024, this);
         webServer.start();
+    }
+
+    private LinkedList<WebScoreEvent> loadWebScoreEvents() {
+        LinkedList<WebScoreEvent> events = new LinkedList<>();
+        String script = "var activeRows=[1]; webScore.onStart(activeRows)";
+        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, script, 0L));
+        return events;
     }
 
     protected void onStart() throws Exception {
@@ -414,13 +429,18 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
-    public void onWebEvent(WebEvent webEvent) {
+    public void onIncomingWebEvent(IncomingWebEvent webEvent) {
         try {
-            scoreProcessor.onWebEvent(webEvent);
+            scoreProcessor.onIncomingWebEvent(webEvent);
         } catch (Exception e) {
             LOG.error("Failed to process web event: {}", webEvent, e);
             eventProcessor.notifyListeners(new ErrorEvent("Failed to process web event.", "SzcoreServer", e, clock.getSystemTimeMillis()));
         }
+    }
+
+    @Override
+    public void pushToWebClients(String data) {
+        webServer.pushToAll(data);
     }
 
     public WebProcessor getWebProcessor() {
@@ -540,6 +560,11 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
     @Override
     public void subscribe(SzcoreEngineEventListener eventListener) {
+        scoreProcessor.subscribe(eventListener);
+    }
+
+    @Override
+    public void subscribe(WebScoreEventListener eventListener) {
         scoreProcessor.subscribe(eventListener);
     }
 

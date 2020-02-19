@@ -1,5 +1,5 @@
 package com.xenaksys.szcore.web;
 
 public enum WebActionType {
-    ROTATE,
+    ROTATE, DEACTIVATE, ACTIVATE, VISIBLE, INVISIBLE, ANIMATION
 }

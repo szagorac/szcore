@@ -6,11 +6,11 @@ import com.xenaksys.szcore.event.EventContainer;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.EventType;
 import com.xenaksys.szcore.event.IncomingOscEvent;
+import com.xenaksys.szcore.event.IncomingWebEvent;
 import com.xenaksys.szcore.event.InstrumentEvent;
 import com.xenaksys.szcore.event.OscEvent;
 import com.xenaksys.szcore.event.ParticipantEvent;
 import com.xenaksys.szcore.event.ParticipantStatsEvent;
-import com.xenaksys.szcore.event.WebEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.net.ParticipantStats;
@@ -57,11 +57,8 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
                 case OSC:
                     processOscEvent((OscEvent)event);
                     break;
-                case WEB:
-                    processWebEvent((WebEvent)event);
-                    break;
-                case GUI:
-                    processOscEvent((OscEvent)event);
+                case WEB_IN:
+                    processWebEvent((IncomingWebEvent)event);
                     break;
             }
 
@@ -70,7 +67,7 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
         }
     }
 
-    private void processWebEvent(WebEvent event) {
+    private void processWebEvent(IncomingWebEvent event) {
         LOG.info("processWebEvent: {}", event);
         server.getWebProcessor().process(event);
     }

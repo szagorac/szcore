@@ -249,6 +249,14 @@ public class EventFactory {
         return new ElementSelectedEvent(elementId, isSelected, sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
+    public WebScoreEvent createWebScoreEvent(WebScoreEventType eventType, BeatId beatId, String eventId, String script, long creationTime) {
+        return new WebScoreEvent(eventType, beatId, eventId, script, creationTime);
+    }
+
+    public OutgoingWebEvent createOutgoingWebEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, long creationTime) {
+        return new OutgoingWebEvent(beatId, eventId, eventType, creationTime);
+    }
+
     public List<Object> createJavaScriptArgs() {
         List<Object> jsArgs = new ArrayList<>();
         jsArgs.add(Consts.RUN);

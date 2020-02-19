@@ -1,14 +1,16 @@
 package com.xenaksys.szcore.web;
 
+import java.util.List;
+
 public class WebAction {
     private final String id;
     private final WebActionType actionType;
-    private final String elementId;
+    private final List<String> elementIds;
 
-    public WebAction(String id, WebActionType actionType, String elementId) {
+    public WebAction(String id, WebActionType actionType, List<String> elementIds) {
         this.id = id;
         this.actionType = actionType;
-        this.elementId = elementId;
+        this.elementIds = elementIds;
     }
 
     public String getId() {
@@ -19,7 +21,7 @@ public class WebAction {
         return actionType;
     }
 
-    public String getElementId() {
-        return elementId;
+    public List<String> getElementId() {
+        return elementIds;
     }
 }

@@ -2,30 +2,23 @@ package com.xenaksys.szcore.web;
 
 import com.xenaksys.szcore.score.WebScore;
 
+import java.util.List;
+
 public class WebScoreState {
     private final WebScore.Tile[][] tiles;
-    private final WebScore.Grid grid;
+    private List<WebAction> actions;
 
-    private WebAction action;
-
-    public WebScoreState(WebScore.Tile[][] tiles, WebScore.Grid grid) {
+    public WebScoreState(WebScore.Tile[][] tiles, List<WebAction> currentActions) {
         this.tiles = tiles;
-        this.grid = grid;
+        this.actions = currentActions;
     }
 
     public WebScore.Tile[][] getTiles() {
         return tiles;
     }
 
-    public WebScore.Grid getGrid() {
-        return grid;
+    public List<WebAction> getActions() {
+        return actions;
     }
 
-    public WebAction getAction() {
-        return action;
-    }
-
-    public void setAction(WebAction action) {
-        this.action = action;
-    }
 }

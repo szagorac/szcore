@@ -244,13 +244,19 @@ public class EventFactory {
         resetScoreEvent.addCommandArg();
         return resetScoreEvent;
     }
+
     public ElementSelectedEvent createElementSelectedEvent(String elementId, boolean isSelected, String eventId, String sourceAddr, String requestPath,
                                                            long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
         return new ElementSelectedEvent(elementId, isSelected, sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
-    public WebScoreEvent createWebScoreEvent(WebScoreEventType eventType, BeatId beatId, String eventId, String script, long creationTime) {
-        return new WebScoreEvent(eventType, beatId, eventId, script, creationTime);
+    public WebStartEvent createWebStartEvent(String eventId, String sourceAddr, String requestPath,
+                                                           long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new WebStartEvent(sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
+    }
+
+    public WebScoreEvent createWebScoreEvent(WebScoreEventType eventType, BeatId beatId, String eventId, List<String> scripts, long creationTime) {
+        return new WebScoreEvent(eventType, beatId, eventId, scripts, creationTime);
     }
 
     public OutgoingWebEvent createOutgoingWebEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, long creationTime) {

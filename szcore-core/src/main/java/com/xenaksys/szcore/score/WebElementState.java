@@ -4,6 +4,7 @@ public class WebElementState {
     private final String id;
     private boolean isActive;
     private boolean isPlayed;
+    private boolean isPlayedNext;
     private boolean isVisible;
     private boolean isSelected;
     private int clickCount;
@@ -60,11 +61,20 @@ public class WebElementState {
         isSelected = selected;
     }
 
+    public boolean isPlayedNext() {
+        return isPlayedNext;
+    }
+
+    public void setPlayedNext(boolean playedNext) {
+        isPlayedNext = playedNext;
+    }
+
     public void copyTo(WebElementState other) {
         other.setClickCount(getClickCount());
         other.setActive(isActive());
         other.setVisible(isVisible());
         other.setPlayed(isPlayed());
+        other.setPlayedNext(isPlayedNext());
     }
 
     @Override
@@ -73,6 +83,7 @@ public class WebElementState {
                 "id='" + id + '\'' +
                 ", isActive=" + isActive +
                 ", isPlayed=" + isPlayed +
+                ", isPlayedNext=" + isPlayedNext +
                 ", isVisible=" + isVisible +
                 ", clickCount=" + clickCount +
                 '}';

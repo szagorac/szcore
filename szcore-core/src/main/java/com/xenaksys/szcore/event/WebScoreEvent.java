@@ -4,20 +4,22 @@ package com.xenaksys.szcore.event;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.id.BeatId;
 
+import java.util.List;
+
 public class WebScoreEvent implements SzcoreEvent {
 
     private final BeatId beatId;
     private final String eventId;
     private final long creationTime;
     private final WebScoreEventType eventType;
-    private final String script;
+    private final List<String> scripts;
 
-    public WebScoreEvent(WebScoreEventType eventType, BeatId beatId, String eventId, String script, long creationTime) {
+    public WebScoreEvent(WebScoreEventType eventType, BeatId beatId, String eventId, List<String> scripts, long creationTime) {
         this.beatId = beatId;
         this.eventType = eventType;
         this.eventId = eventId;
         this.creationTime = creationTime;
-        this.script = script;
+        this.scripts = scripts;
     }
 
     @Override
@@ -38,8 +40,8 @@ public class WebScoreEvent implements SzcoreEvent {
         return eventId;
     }
 
-    public String getScript() {
-        return script;
+    public List<String> getScripts() {
+        return scripts;
     }
 
     @Override

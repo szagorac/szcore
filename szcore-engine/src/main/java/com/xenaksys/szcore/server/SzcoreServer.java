@@ -203,8 +203,11 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
     private LinkedList<WebScoreEvent> loadWebScoreEvents() {
         LinkedList<WebScoreEvent> events = new LinkedList<>();
-        String script = "var activeRows=[1]; webScore.onStart(activeRows)";
-        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, script, 0L));
+        List<String> scripts = new ArrayList<>();
+        scripts.add("webScore.resetActions();");
+        scripts.add("var activeRows=[1]; webScore.setActiveRows(activeRows);");
+        scripts.add("var targets=['centreShape']; webScore.setAction('startZoom', 'ZOOM', targets);");
+        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
         return events;
     }
 

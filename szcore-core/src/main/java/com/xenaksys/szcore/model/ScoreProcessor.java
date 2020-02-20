@@ -77,6 +77,6 @@ public interface  ScoreProcessor extends Processor {
 
     void onOutgoingWebEvent(OutgoingWebEvent webEvent) throws Exception;
 
-    public void loadWebScore(LinkedList<WebScoreEvent> events);
+    void loadWebScore(LinkedList<WebScoreEvent> events);
 
 }

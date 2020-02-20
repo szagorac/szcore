@@ -7,6 +7,7 @@ import com.xenaksys.szcore.event.IncomingWebEvent;
 import com.xenaksys.szcore.event.IncomingWebEventType;
 import com.xenaksys.szcore.event.OutgoingWebEvent;
 import com.xenaksys.szcore.event.OutgoingWebEventType;
+import com.xenaksys.szcore.event.WebStartEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.EventService;
 import com.xenaksys.szcore.model.Processor;
@@ -150,6 +151,11 @@ public class WebProcessor implements Processor, WebScoreEventListener {
                         sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
 
                 eventService.receive(selectedEvent);
+                return createOkWebString(WEB_RESPONSE_SUBMITTED);
+            case WEB_START:
+                WebStartEvent webStartEvent = eventFactory.createWebStartEvent(eventId,
+                        sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+                eventService.receive(webStartEvent);
                 return createOkWebString(WEB_RESPONSE_SUBMITTED);
             default:
                 return EMPTY;

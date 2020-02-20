@@ -37,8 +37,7 @@ public class WebScore {
     private final Clock clock;
 
     private Tile[][] tiles;
-    private Grid grid;
-    private WebAction lastAction;
+    private List<WebAction> currentActions = new ArrayList<>();
 
     private final List<WebAction> webActions = new ArrayList<>();
     private final List<Tile> tilesAll = new ArrayList<>(64);
@@ -83,15 +82,10 @@ public class WebScore {
                 tileIdPageIdMap.put(id, row);
             }
         }
-
-        grid = new Grid(Consts.WEB_ELEMENT_GRID);
-        WebElementState gs = grid.getState();
-        gs.setVisible(false);
-
         updateServerState();
     }
 
-    public void startTestScore() {
+    public void initTestScore() {
         testScoreRunner = new TestScoreRunner(events);
         testScoreRunner.init();
     }
@@ -102,14 +96,6 @@ public class WebScore {
 
     public void setTiles(Tile[][] tiles) {
         this.tiles = tiles;
-    }
-
-    public Grid getGrid() {
-        return grid;
-    }
-
-    public void setGrid(Grid grid) {
-        this.grid = grid;
     }
 
     public List<WebAction> getWebActions() {
@@ -135,10 +121,6 @@ public class WebScore {
     }
 
     public void setSelectedElement(String elementId, boolean isSelected) {
-        if(testScoreRunner != null) {
-            testScoreRunner.start();
-        }
-
         if (isTileId(elementId)) {
             Tile in = parseTileId(elementId);
             if (in == null) {
@@ -171,8 +153,6 @@ public class WebScore {
                 state.incrementClickCount();
                 tilesAll.sort(CLICK_COMPARATOR);
             }
-
-            checkState();
         }
     }
 
@@ -184,38 +164,24 @@ public class WebScore {
         return visibleRows[tile.getRow() - 1];
     }
 
-    private void checkState() {
-        int clickNo = 3;
-        List<String> toMakeInvisible = new ArrayList<>();
+    private List<String> getTopSelectedTiles(int quantity) {
+        List<String> topSelected = new ArrayList<>();
+        int count = 1;
         for (Tile t : tilesAll) {
-            if (t.getState().getClickCount() >= clickNo) {
-                toMakeInvisible.add(t.getId());
-                t.getState().setVisible(false);
+            if (count <= quantity) {
+                topSelected.add(t.getId());
+                count++;
             }
+//                t.getState().setVisible(false);
         }
-        if (toMakeInvisible.isEmpty()) {
-            return;
-        }
-
-        WebAction action = new WebAction("invisible", WebActionType.INVISIBLE, toMakeInvisible);
-        WebScoreState export = exportState();
-        export.setAction(action);
-
-        try {
-            scoreProcessor.onWebScoreEvent(export);
-        } catch (Exception e) {
-            LOG.error("Failed to process onWebScoreEvent", e);
-            //TODO repeat action.
-        }
-
-        lastAction = action;
+        return topSelected;
     }
 
-    public void onStart(int[] rows) {
-        LOG.info("onStart: active rows: {}", Arrays.toString(rows));
-        TIntList tintRows = new TIntArrayList(rows);
-        setActiveRows(tintRows);
-        updateServerStateAndPush();
+    public void startScore() {
+        LOG.info("startScore: ");
+        if(testScoreRunner != null) {
+            testScoreRunner.start();
+        }
     }
 
     public void updateServerStateAndPush() {
@@ -223,10 +189,11 @@ public class WebScore {
         pushServerState();
     }
 
-    public void setVisibleRows(TIntList rows) {
+    public void setVisibleRows(int[] rows) {
+        TIntList tintRows = new TIntArrayList(rows);
         for (int i = 0; i < 8; i++) {
             int row = i + 1;
-            visibleRows[i] = rows.contains(row);
+            visibleRows[i] = tintRows.contains(row);
             for (int j = 0; j < 8; j++) {
                 Tile t = tiles[i][j];
                 WebElementState ts = t.getState();
@@ -235,15 +202,31 @@ public class WebScore {
         }
     }
 
-    public void setActiveRows(TIntList rows) {
+    public void setActiveRows(int[] rows) {
+        LOG.info("setActiveRows: {}", Arrays.toString(rows));
+        TIntList tintRows = new TIntArrayList(rows);
         for (int i = 0; i < 8; i++) {
             int row = i + 1;
-            activeRows[i] = rows.contains(row);
+            activeRows[i] = tintRows.contains(row);
             for (int j = 0; j < 8; j++) {
                 Tile t = tiles[i][j];
                 WebElementState ts = t.getState();
                 ts.setActive(activeRows[i]);
             }
+        }
+    }
+
+    public void resetActions() {
+        currentActions.clear();
+    }
+    public void setAction(String actionId, String type, String[] targetIds) {
+        LOG.info("setAction: {} target: {}", actionId, Arrays.toString(targetIds));
+        try {
+            WebActionType t = WebActionType.valueOf(type.toUpperCase());
+            WebAction action = new WebAction(actionId, t, Arrays.asList(targetIds));
+            currentActions.add(action);
+        } catch (IllegalArgumentException e) {
+            LOG.error("Failed to setAction id: {} type: {}", actionId, type);
         }
     }
 
@@ -282,17 +265,12 @@ public class WebScore {
                 ts[i][j] = ot;
             }
         }
-        Grid g = new Grid(grid.getId());
-        grid.getState().copyTo(g.getState());
-        WebScoreState webScoreState = new WebScoreState(ts, g);
-
-        return webScoreState;
+        return new WebScoreState(ts, currentActions);
     }
 
     public void updateServerState() {
         try {
-            WebScoreState export = exportState();
-            scoreProcessor.onWebScoreEvent(export);
+            scoreProcessor.onWebScoreEvent(exportState());
         } catch (Exception e) {
             LOG.error("Failed to process pushServerState", e);
         }
@@ -314,12 +292,15 @@ public class WebScore {
     private void processWebScoreEvent(WebScoreEvent event) {
         LOG.info("processWebScoreEvent: execute event: {}", event);
         try {
-            String js = event.getScript();
-            if(js == null) {
+            List<String> jsScripts = event.getScripts();
+            if(jsScripts == null) {
                 return;
             }
-            Object out = jsEngine.eval(js);
-            LOG.info("processWebScoreEvent: script out: {}", out);
+            for(String js : jsScripts) {
+                Object out = jsEngine.eval(js);
+                LOG.info("processWebScoreEvent: script out: {}", out);
+            }
+            updateServerStateAndPush();
         } catch (Exception e) {
             LOG.error("Failed to evaluate script", e);
         }

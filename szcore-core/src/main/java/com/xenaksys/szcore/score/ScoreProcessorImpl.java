@@ -35,6 +35,7 @@ import com.xenaksys.szcore.event.TransitionEvent;
 import com.xenaksys.szcore.event.TransportEvent;
 import com.xenaksys.szcore.event.TransportPositionEvent;
 import com.xenaksys.szcore.event.WebScoreEvent;
+import com.xenaksys.szcore.event.WebStartEvent;
 import com.xenaksys.szcore.model.Bar;
 import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.Id;
@@ -176,8 +177,6 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     public void loadWebScore(LinkedList<WebScoreEvent> events) {
         webScore = new WebScore(this, eventFactory, clock);
         webScore.init(events);
-
-        webScore.startTestScore();
     }
 
     @Override
@@ -1816,6 +1815,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             case ELEMENT_SELECTED:
                 processElementSelected((ElementSelectedEvent)webEvent);
                 break;
+            case WEB_START:
+                processWebStart((WebStartEvent)webEvent);
+                break;
         }
     }
     @Override
@@ -1834,6 +1836,12 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         boolean isSelected = webEvent.isSelected();
 
         webScore.setSelectedElement(elementId, isSelected);
+    }
+
+    private void processWebStart(WebStartEvent webEvent) {
+        LOG.info("processWebStart: ");
+        webScore.initTestScore();
+        webScore.startScore();
     }
 
     public boolean isReadyToPlay(){

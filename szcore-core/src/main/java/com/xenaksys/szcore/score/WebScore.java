@@ -37,17 +37,20 @@ public class WebScore {
     private final Clock clock;
 
     private Tile[][] tiles;
-    private List<WebAction> currentActions = new ArrayList<>();
+    private LinkedList<WebScoreEvent> events;
+    private List<WebScoreEvent> playedEvents = new ArrayList<>();
+    private final Map<String, WebElementState> elementStates = new HashMap<>();
 
-    private final List<WebAction> webActions = new ArrayList<>();
+    private final List<WebAction> currentActions = new ArrayList<>();
     private final List<Tile> tilesAll = new ArrayList<>(64);
+    private final List<Tile> playingTiles = new ArrayList<>(4);
+    private final List<Tile> playingNextTiles = new ArrayList<>(4);
     private final boolean[] visibleRows = new boolean[8];
     private final boolean[] activeRows = new boolean[8];
     private final Map<String, Integer> tileIdPageIdMap = new HashMap<>();
 
     private ScriptEngineManager factory = new ScriptEngineManager();
     private ScriptEngine jsEngine = factory.getEngineByName("nashorn");
-    private LinkedList<WebScoreEvent> events;
 
     private TestScoreRunner testScoreRunner;
 
@@ -57,10 +60,15 @@ public class WebScore {
         this.clock = clock;
     }
 
-    public void init(LinkedList<WebScoreEvent> events) {
-        this.events = events;
-        jsEngine.put("webScore", this);
+    public void resetState() {
+        currentActions.clear();
+        tilesAll.clear();
+        playingTiles.clear();
+        playingNextTiles.clear();
+        tileIdPageIdMap.clear();
+        elementStates.clear();
         tiles = new Tile[8][8];
+
         for (int i = 0; i < 8; i++) {
             int row = i + 1;
             visibleRows[i] = true;
@@ -73,7 +81,7 @@ public class WebScore {
                 Tile t = new Tile(row, col, id);
                 WebElementState ts = t.getState();
                 ts.setVisible(visibleRows[i]);
-                ts.setPlayed(false);
+                ts.setPlaying(false);
                 ts.setActive(activeRows[i]);
                 ts.setClickCount(clickCount);
                 tiles[i][j] = t;
@@ -82,28 +90,27 @@ public class WebScore {
                 tileIdPageIdMap.put(id, row);
             }
         }
+
+        elementStates.put("centreShape", new WebElementState("centreShape"));
+        elementStates.put("innerCircle", new WebElementState("innerCircle"));
+        elementStates.put("outerCircle", new WebElementState("outerCircle"));
+
         updateServerState();
     }
 
+    public void init(LinkedList<WebScoreEvent> events) {
+        this.events = events;
+        jsEngine.put("webScore", this);
+        resetState();
+    }
+
     public void initTestScore() {
+        if(events.isEmpty()) {
+            events.addAll(playedEvents);
+            playedEvents.clear();
+        }
         testScoreRunner = new TestScoreRunner(events);
         testScoreRunner.init();
-    }
-
-    public Tile[][] getTiles() {
-        return tiles;
-    }
-
-    public void setTiles(Tile[][] tiles) {
-        this.tiles = tiles;
-    }
-
-    public List<WebAction> getWebActions() {
-        return webActions;
-    }
-
-    public void addWebAction(WebAction webAction) {
-        webActions.add(webAction);
     }
 
     public void deactivateTiles(int row) {
@@ -130,6 +137,11 @@ public class WebScore {
                 LOG.info("Selected tile {} is not in active row", in.getId());
                 return;
             }
+            WebElementState state = in.getState();
+            if(state.isPlaying() || state.isPlayingNext() || state.isPlayed() || !state.isVisible()) {
+                return;
+            }
+
             int i = in.getRow() - 1;
             int j = in.getColumn() - 1;
             if (i < 0 || i > tiles.length) {
@@ -147,7 +159,6 @@ public class WebScore {
                 return;
             }
 
-            WebElementState state = tile.getState();
             if (isSelected) {
                 state.setSelected(true);
                 state.incrementClickCount();
@@ -156,15 +167,15 @@ public class WebScore {
         }
     }
 
-    private boolean isInActiveRow(Tile tile) {
+    public boolean isInActiveRow(Tile tile) {
         return activeRows[tile.getRow() - 1];
     }
 
-    private boolean isInVisibleRow(Tile tile) {
+    public boolean isInVisibleRow(Tile tile) {
         return visibleRows[tile.getRow() - 1];
     }
 
-    private List<String> getTopSelectedTiles(int quantity) {
+    public List<String> getTopSelectedTiles(int quantity) {
         List<String> topSelected = new ArrayList<>();
         int count = 1;
         for (Tile t : tilesAll) {
@@ -172,9 +183,15 @@ public class WebScore {
                 topSelected.add(t.getId());
                 count++;
             }
-//                t.getState().setVisible(false);
         }
+        LOG.info("Selected tiles to play next: {}", Arrays.toString(topSelected.toArray()));
         return topSelected;
+    }
+
+    public void resetClickCounts() {
+        for (Tile t : tilesAll) {
+            t.getState().setClickCount(0);
+        }
     }
 
     public void startScore() {
@@ -202,6 +219,98 @@ public class WebScore {
         }
     }
 
+    public void setVisible(String[] elementIds) {
+        LOG.info("setVisible: {}", Arrays.toString(elementIds));
+        for(String elementId : elementIds) {
+            WebElementState state = elementStates.get(elementId);
+            if(state != null) {
+                state.setVisible(true);
+            }
+        }
+    }
+
+    public void resetPlayingTiles() {
+        for(Tile t : playingTiles) {
+            t.getState().setPlaying(false);
+            t.getState().setPlayed(true);
+            t.getState().setVisible(false);
+        }
+        playingTiles.clear();
+    }
+
+    public void setPlayingTiles(String[] tileIds) {
+        LOG.info("setPlayingTiles: {}", Arrays.toString(tileIds));
+        resetPlayingTiles();
+        for(String tileId : tileIds) {
+            setPlayingTile(tileId);
+        }
+    }
+
+    public void setPlayingTile(String tileId) {
+        Tile t = parseTileId(tileId);
+        if(t == null) {
+            LOG.error("setPlayedTile: invalid tileId: {}", tileId);
+            return;
+        }
+        setPlayingTile(t.getRow(), t.getColumn());
+    }
+
+    public void setPlayingTile(int row, int col) {
+        int i = row -1;
+        int j = col - 1;
+        if(i < 0 || i >= tiles.length) {
+            LOG.error("setPlayedTile: invalid row: {}", i);
+            return;
+        }
+        if(j < 0 || j >= tiles[0].length) {
+            LOG.error("setPlayedTile: invalid col: {}", i);
+            return;
+        }
+        Tile t = tiles[row - 1][col - 1];
+        t.getState().setPlaying(true);
+        playingTiles.add(t);
+    }
+
+    public void resetPlayingNextTiles() {
+        for(Tile t : playingNextTiles) {
+            t.getState().setPlayingNext(false);
+        }
+        playingNextTiles.clear();
+    }
+
+    public void setPlayingNextTiles(String[] tileIds) {
+        LOG.info("setPlayingNextTiles: {}", Arrays.toString(tileIds));
+        resetPlayingNextTiles();
+        for(String tileId : tileIds) {
+            setPlayingNextTile(tileId);
+        }
+    }
+
+    public void setPlayingNextTile(String tileId) {
+        Tile t = parseTileId(tileId);
+        if(t == null) {
+            LOG.error("setPlayedNextTile: invalid tileId: {}", tileId);
+            return;
+        }
+        setPlayingNextTile(t.getRow(), t.getColumn());
+    }
+
+    public void setPlayingNextTile(int row, int col) {
+        int i = row -1;
+        int j = col - 1;
+        if(i < 0 || i >= tiles.length) {
+            LOG.error("setPlayedNextTile: invalid row: {}", i);
+            return;
+        }
+        if(j < 0 || j >= tiles[0].length) {
+            LOG.error("setPlayedNextTile: invalid col: {}", i);
+            return;
+        }
+        Tile t = tiles[row - 1][col - 1];
+        t.getState().setPlayingNext(true);
+        playingNextTiles.add(t);
+    }
+
     public void setActiveRows(int[] rows) {
         LOG.info("setActiveRows: {}", Arrays.toString(rows));
         TIntList tintRows = new TIntArrayList(rows);
@@ -219,6 +328,7 @@ public class WebScore {
     public void resetActions() {
         currentActions.clear();
     }
+
     public void setAction(String actionId, String type, String[] targetIds) {
         LOG.info("setAction: {} target: {}", actionId, Arrays.toString(targetIds));
         try {
@@ -265,7 +375,11 @@ public class WebScore {
                 ts[i][j] = ot;
             }
         }
-        return new WebScoreState(ts, currentActions);
+        WebElementState centreShape = elementStates.get("centreShape");
+        WebElementState innerCircle = elementStates.get("innerCircle");
+        WebElementState outerCircle = elementStates.get("outerCircle");
+
+        return new WebScoreState(ts, currentActions, centreShape, innerCircle, outerCircle);
     }
 
     public void updateServerState() {
@@ -404,6 +518,7 @@ public class WebScore {
                     while (!events.isEmpty()) {
                         WebScoreEvent event = events.remove();
                         processWebScoreEvent(event);
+                        playedEvents.add(event);
                         Thread.sleep(3000);
                     }
 

@@ -3,8 +3,9 @@ package com.xenaksys.szcore.score;
 public class WebElementState {
     private final String id;
     private boolean isActive;
+    private boolean isPlaying;
+    private boolean isPlayingNext;
     private boolean isPlayed;
-    private boolean isPlayedNext;
     private boolean isVisible;
     private boolean isSelected;
     private int clickCount;
@@ -45,12 +46,12 @@ public class WebElementState {
         isVisible = visible;
     }
 
-    public boolean isPlayed() {
-        return isPlayed;
+    public boolean isPlaying() {
+        return isPlaying;
     }
 
-    public void setPlayed(boolean played) {
-        isPlayed = played;
+    public void setPlaying(boolean playing) {
+        isPlaying = playing;
     }
 
     public boolean isSelected() {
@@ -61,20 +62,29 @@ public class WebElementState {
         isSelected = selected;
     }
 
-    public boolean isPlayedNext() {
-        return isPlayedNext;
+    public boolean isPlayingNext() {
+        return isPlayingNext;
     }
 
-    public void setPlayedNext(boolean playedNext) {
-        isPlayedNext = playedNext;
+    public void setPlayingNext(boolean playingNext) {
+        isPlayingNext = playingNext;
+    }
+
+    public boolean isPlayed() {
+        return isPlayed;
+    }
+
+    public void setPlayed(boolean played) {
+        isPlayed = played;
     }
 
     public void copyTo(WebElementState other) {
         other.setClickCount(getClickCount());
         other.setActive(isActive());
         other.setVisible(isVisible());
+        other.setPlaying(isPlaying());
+        other.setPlayingNext(isPlayingNext());
         other.setPlayed(isPlayed());
-        other.setPlayedNext(isPlayedNext());
     }
 
     @Override
@@ -82,8 +92,9 @@ public class WebElementState {
         return "WebElementState{" +
                 "id='" + id + '\'' +
                 ", isActive=" + isActive +
+                ", isPlaying=" + isPlaying +
+                ", isPlayingNext=" + isPlayingNext +
                 ", isPlayed=" + isPlayed +
-                ", isPlayedNext=" + isPlayedNext +
                 ", isVisible=" + isVisible +
                 ", clickCount=" + clickCount +
                 '}';

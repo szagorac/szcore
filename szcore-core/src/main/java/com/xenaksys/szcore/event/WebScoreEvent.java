@@ -4,6 +4,7 @@ package com.xenaksys.szcore.event;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.id.BeatId;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class WebScoreEvent implements SzcoreEvent {
@@ -12,14 +13,14 @@ public class WebScoreEvent implements SzcoreEvent {
     private final String eventId;
     private final long creationTime;
     private final WebScoreEventType eventType;
-    private final List<String> scripts;
+    private final List<String> scripts = new ArrayList<>();
 
     public WebScoreEvent(WebScoreEventType eventType, BeatId beatId, String eventId, List<String> scripts, long creationTime) {
         this.beatId = beatId;
         this.eventType = eventType;
         this.eventId = eventId;
         this.creationTime = creationTime;
-        this.scripts = scripts;
+        this.scripts.addAll(scripts);
     }
 
     @Override

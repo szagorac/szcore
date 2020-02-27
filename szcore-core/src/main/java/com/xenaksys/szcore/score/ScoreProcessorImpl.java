@@ -1841,6 +1841,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private void processWebStart(WebStartEvent webEvent) {
         LOG.info("processWebStart: ");
         webScore.resetState();
+        webScore.pushServerState();
         webScore.initTestScore();
         webScore.startScore();
     }

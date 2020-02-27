@@ -219,22 +219,25 @@ public class WebScore {
         }
     }
 
-    public void setVisible(String[] elementIds) {
+    public void setVisible(String[] elementIds, boolean isVisible) {
         LOG.info("setVisible: {}", Arrays.toString(elementIds));
         for(String elementId : elementIds) {
             WebElementState state = elementStates.get(elementId);
             if(state != null) {
-                state.setVisible(true);
+                state.setVisible(isVisible);
             }
         }
     }
 
     public void resetPlayingTiles() {
+        List<String> targets = new ArrayList<>();
         for(Tile t : playingTiles) {
             t.getState().setPlaying(false);
             t.getState().setPlayed(true);
             t.getState().setVisible(false);
+            targets.add(t.getId());
         }
+        setAction("reset", "ROTATE", targets.toArray(new String[0]));
         playingTiles.clear();
     }
 
@@ -330,10 +333,14 @@ public class WebScore {
     }
 
     public void setAction(String actionId, String type, String[] targetIds) {
+        setAction(actionId, type, targetIds, new HashMap<>());
+    }
+
+    public void setAction(String actionId, String type, String[] targetIds, Map<String, String> params) {
         LOG.info("setAction: {} target: {}", actionId, Arrays.toString(targetIds));
         try {
             WebActionType t = WebActionType.valueOf(type.toUpperCase());
-            WebAction action = new WebAction(actionId, t, Arrays.asList(targetIds));
+            WebAction action = new WebAction(actionId, t, Arrays.asList(targetIds), params);
             currentActions.add(action);
         } catch (IllegalArgumentException e) {
             LOG.error("Failed to setAction id: {} type: {}", actionId, type);
@@ -406,6 +413,7 @@ public class WebScore {
     private void processWebScoreEvent(WebScoreEvent event) {
         LOG.info("processWebScoreEvent: execute event: {}", event);
         try {
+            resetActions();
             List<String> jsScripts = event.getScripts();
             if(jsScripts == null) {
                 return;

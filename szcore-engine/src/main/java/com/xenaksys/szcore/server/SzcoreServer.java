@@ -205,20 +205,49 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         LinkedList<WebScoreEvent> events = new LinkedList<>();
 
         List<String> scripts = new ArrayList<>();
-        scripts.add("webScore.resetActions();");
-        scripts.add("var activeRows=[1]; webScore.setActiveRows(activeRows);");
-        scripts.add("var tileIds=['t1-1']; webScore.setPlayingTiles(tileIds);");
-        scripts.add("var elementIds=['centreShape']; webScore.setVisible(elementIds);");
+        scripts.add("var activeRows=[1, 2]; webScore.setActiveRows(activeRows);");
         scripts.add("var targets=['centreShape']; webScore.setAction('startZoom', 'ZOOM', targets);");
+        scripts.add("var elementIds=['centreShape']; webScore.setVisible(elementIds, true);");
+        scripts.add("var targets=['centreShape']; webScore.setAction('start', 'TIMELINE', targets);");
+        scripts.add("var tileIds=['t1-1','t2-1']; webScore.setPlayingTiles(tileIds);");
+        scripts.add("var targets=['t1-1','t2-1']; var params={'angle': 45, 'duration' : 5}; webScore.setAction('start', 'ROTATE', targets, params);");
         events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
 
         scripts.clear();
         scripts.add("webScore.getTopSelectedTiles(1);");
-        scripts.add("var tileIds=['t1-6']; webScore.setPlayingNextTiles(tileIds);");
+        scripts.add("var tileIds=['t1-6','t2-6']; webScore.setPlayingNextTiles(tileIds);");
         events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
 
         scripts.clear();
-        scripts.add("var tileIds=['t1-6']; webScore.setPlayingTiles(tileIds);");
+        scripts.add("var tileIds=['t1-6','t2-6']; webScore.setPlayingTiles(tileIds);");
+        scripts.add("var targets=['t1-6','t2-6']; var params={'angle': 45, 'duration' : 5}; webScore.setAction('start', 'ROTATE', targets, params);");
+        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
+
+        scripts.clear();
+        scripts.add("var tileIds=['t1-5','t2-5']; webScore.setPlayingNextTiles(tileIds);");
+        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
+
+        scripts.clear();
+        scripts.add("var tileIds=['t1-5','t2-5']; webScore.setPlayingTiles(tileIds);");
+        scripts.add("var targets=['t1-5','t2-5']; var params={'angle': 45, 'duration' : 5}; webScore.setAction('start', 'ROTATE', targets, params);");
+        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
+
+        scripts.clear();
+        scripts.add("var tileIds=['t1-7','t2-7']; webScore.setPlayingNextTiles(tileIds);");
+        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
+
+        scripts.clear();
+        scripts.add("var tileIds=['t1-7','t2-7']; webScore.setPlayingTiles(tileIds);");
+        scripts.add("var targets=['t1-7','t2-7']; var params={'angle': 45, 'duration' : 5}; webScore.setAction('start', 'ROTATE', targets, params);");
+        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
+
+        scripts.clear();
+        scripts.add("var tileIds=['t1-4']; webScore.setPlayingNextTiles(tileIds);");
+        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
+
+        scripts.clear();
+        scripts.add("var tileIds=['t1-4']; webScore.setPlayingTiles(tileIds);");
+        scripts.add("var targets=['t1-4']; var params={'angle': 45, 'duration' : 5}; webScore.setAction('start', 'ROTATE', targets, params);");
         events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
 
         return events;

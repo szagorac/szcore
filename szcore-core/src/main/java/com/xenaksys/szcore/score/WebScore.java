@@ -27,6 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.Consts.WEB_ZOOM_DEFAULT;
+
 public class WebScore {
     static final Logger LOG = LoggerFactory.getLogger(WebScore.class);
 
@@ -48,6 +51,7 @@ public class WebScore {
     private final boolean[] visibleRows = new boolean[8];
     private final boolean[] activeRows = new boolean[8];
     private final Map<String, Integer> tileIdPageIdMap = new HashMap<>();
+    private String zoomLevel = WEB_ZOOM_DEFAULT;
 
     private ScriptEngineManager factory = new ScriptEngineManager();
     private ScriptEngine jsEngine = factory.getEngineByName("nashorn");
@@ -68,6 +72,7 @@ public class WebScore {
         tileIdPageIdMap.clear();
         elementStates.clear();
         tiles = new Tile[8][8];
+        zoomLevel = WEB_ZOOM_DEFAULT;
 
         for (int i = 0; i < 8; i++) {
             int row = i + 1;
@@ -84,6 +89,9 @@ public class WebScore {
                 ts.setPlaying(false);
                 ts.setActive(activeRows[i]);
                 ts.setClickCount(clickCount);
+                TileText txt = t.getTileText();
+                txt.setVisible(false);
+                txt.setValue(EMPTY);
                 tiles[i][j] = t;
                 tilesAll.add(t);
                 //TODO page mapping
@@ -123,6 +131,8 @@ public class WebScore {
             Tile t = tiles[i][j];
             WebElementState ts = t.getState();
             ts.setActive(false);
+            TileText txt = t.getTileText();
+            txt.setVisible(false);
             tilesAll.remove(t);
         }
     }
@@ -219,6 +229,10 @@ public class WebScore {
         }
     }
 
+    public void setZoomLevel(String zoomLevel) {
+        this.zoomLevel = zoomLevel;
+    }
+
     public void setVisible(String[] elementIds, boolean isVisible) {
         LOG.info("setVisible: {}", Arrays.toString(elementIds));
         for(String elementId : elementIds) {
@@ -229,12 +243,30 @@ public class WebScore {
         }
     }
 
+    public void setTileTexts(String[] tileIds, String[] values) {
+        LOG.info("setTileTexts: {}  {}", Arrays.toString(tileIds), Arrays.toString(values));
+
+        for(int i = 0; i < tileIds.length; i++) {
+            String tileId = tileIds[i];
+            String value;
+            if(values.length > i) {
+                value = values[i];
+            } else {
+                value = values[values.length - 1];
+                LOG.warn("setTileTexts: Invalid number of entries, using value {}", value);
+            }
+            setTileText(tileId, value);
+        }
+    }
+
     public void resetPlayingTiles() {
         List<String> targets = new ArrayList<>();
         for(Tile t : playingTiles) {
             t.getState().setPlaying(false);
             t.getState().setPlayed(true);
             t.getState().setVisible(false);
+            TileText txt = t.getTileText();
+            txt.setVisible(false);
             targets.add(t.getId());
         }
         setAction("reset", "ROTATE", targets.toArray(new String[0]));
@@ -272,6 +304,30 @@ public class WebScore {
         Tile t = tiles[row - 1][col - 1];
         t.getState().setPlaying(true);
         playingTiles.add(t);
+    }
+
+    public void setTileText(String tileId, String value) {
+        Tile t = parseTileId(tileId);
+        if(t == null) {
+            LOG.error("setTileText: invalid tileId: {}", tileId);
+            return;
+        }
+        setTileText(t.getRow(), t.getColumn(), value);
+    }
+
+    private void setTileText(int row, int col, String value) {
+        int i = row -1;
+        int j = col - 1;
+        if(i < 0 || i >= tiles.length) {
+            LOG.error("setTileText: invalid row: {}", i);
+            return;
+        }
+        if(j < 0 || j >= tiles[0].length) {
+            LOG.error("setTileText: invalid col: {}", i);
+            return;
+        }
+        Tile t = tiles[row - 1][col - 1];
+        t.setText(value);
     }
 
     public void resetPlayingNextTiles() {
@@ -386,7 +442,7 @@ public class WebScore {
         WebElementState innerCircle = elementStates.get("innerCircle");
         WebElementState outerCircle = elementStates.get("outerCircle");
 
-        return new WebScoreState(ts, currentActions, centreShape, innerCircle, outerCircle);
+        return new WebScoreState(ts, currentActions, centreShape, innerCircle, outerCircle, zoomLevel);
     }
 
     public void updateServerState() {
@@ -433,12 +489,14 @@ public class WebScore {
         private final int row;
         private final int column;
         private final WebElementState state;
+        private final TileText tileText;
 
         public Tile(int row, int column, String id) {
             this.id = id;
             this.row = row;
             this.column = column;
-            state = new WebElementState(id);
+            this.state = new WebElementState(id);
+            this.tileText = new TileText(EMPTY, false);
         }
 
         public WebElementState getState() {
@@ -447,6 +505,15 @@ public class WebScore {
 
         public void setState(WebElementState state) {
             state.copyTo(this.state);
+        }
+
+        public void setText(TileText txt) {
+            txt.copyTo(this.tileText);
+        }
+
+        public void setText(String txt) {
+            tileText.setValue(txt);
+            tileText.setVisible(true);
         }
 
         public String getId() {
@@ -461,8 +528,13 @@ public class WebScore {
             return column;
         }
 
+        public TileText getTileText() {
+            return tileText;
+        }
+
         public void copyTo(Tile other) {
             state.copyTo(other.getState());
+            tileText.copyTo(other.getTileText());
         }
 
         @Override
@@ -486,6 +558,37 @@ public class WebScore {
                     ", column=" + column +
                     ", state=" + state +
                     '}';
+        }
+    }
+
+    public class TileText {
+        private String value;
+        private boolean isVisible;
+
+        public TileText(String value, boolean isVisible) {
+            this.value = value;
+            this.isVisible = isVisible;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public boolean isVisible() {
+            return isVisible;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
+
+        public void setVisible(boolean visible) {
+            isVisible = visible;
+        }
+
+        public void copyTo(TileText other) {
+            other.setVisible(isVisible());
+            other.setValue(getValue());
         }
     }
 

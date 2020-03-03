@@ -240,6 +240,7 @@ public interface Consts {
     public static final String WEB_TILE_PREFIX = "t";
     public static final String WEB_ELEMENT_NAME_DELIMITER = "-";
     public static final String WEB_ELEMENT_GRID = "grid";
+    public static final String WEB_ZOOM_DEFAULT = "default";
 
     public static final String NAME_FULL_SCORE = "FullScore";
 

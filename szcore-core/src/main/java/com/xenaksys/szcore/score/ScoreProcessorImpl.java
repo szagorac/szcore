@@ -2,66 +2,9 @@ package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.ValueScaler;
-import com.xenaksys.szcore.event.BeatScriptEvent;
-import com.xenaksys.szcore.event.DateTickEvent;
-import com.xenaksys.szcore.event.ElementAlphaEvent;
-import com.xenaksys.szcore.event.ElementColorEvent;
-import com.xenaksys.szcore.event.ElementSelectedEvent;
-import com.xenaksys.szcore.event.ElementYPositionEvent;
-import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.EventType;
-import com.xenaksys.szcore.event.IncomingWebEvent;
-import com.xenaksys.szcore.event.IncomingWebEventType;
-import com.xenaksys.szcore.event.MusicEvent;
-import com.xenaksys.szcore.event.MusicEventType;
-import com.xenaksys.szcore.event.OscEvent;
-import com.xenaksys.szcore.event.OscEventType;
-import com.xenaksys.szcore.event.OscStaveActivateEvent;
-import com.xenaksys.szcore.event.OscStaveTempoEvent;
-import com.xenaksys.szcore.event.OscStopEvent;
-import com.xenaksys.szcore.event.OutgoingWebEvent;
-import com.xenaksys.szcore.event.PrecountBeatSetupEvent;
-import com.xenaksys.szcore.event.PrepStaveChangeEvent;
-import com.xenaksys.szcore.event.StaveActiveChangeEvent;
-import com.xenaksys.szcore.event.StaveClockTickEvent;
-import com.xenaksys.szcore.event.StaveDateTickEvent;
-import com.xenaksys.szcore.event.StaveDyTickEvent;
-import com.xenaksys.szcore.event.StaveStartMarkEvent;
-import com.xenaksys.szcore.event.StaveYPositionEvent;
-import com.xenaksys.szcore.event.StopEvent;
-import com.xenaksys.szcore.event.TempoChangeEvent;
-import com.xenaksys.szcore.event.TimeSigChangeEvent;
-import com.xenaksys.szcore.event.TransitionEvent;
-import com.xenaksys.szcore.event.TransportEvent;
-import com.xenaksys.szcore.event.TransportPositionEvent;
-import com.xenaksys.szcore.event.WebScoreEvent;
-import com.xenaksys.szcore.event.WebStartEvent;
-import com.xenaksys.szcore.model.Bar;
-import com.xenaksys.szcore.model.Beat;
-import com.xenaksys.szcore.model.Id;
-import com.xenaksys.szcore.model.Instrument;
-import com.xenaksys.szcore.model.MusicTask;
-import com.xenaksys.szcore.model.MutableClock;
-import com.xenaksys.szcore.model.OscPublisher;
-import com.xenaksys.szcore.model.Page;
-import com.xenaksys.szcore.model.Scheduler;
-import com.xenaksys.szcore.model.Score;
-import com.xenaksys.szcore.model.ScoreProcessor;
-import com.xenaksys.szcore.model.Script;
-import com.xenaksys.szcore.model.Stave;
-import com.xenaksys.szcore.model.SzcoreEvent;
-import com.xenaksys.szcore.model.Tempo;
-import com.xenaksys.szcore.model.TempoImpl;
-import com.xenaksys.szcore.model.TempoModifier;
-import com.xenaksys.szcore.model.TimeSignature;
-import com.xenaksys.szcore.model.Transition;
-import com.xenaksys.szcore.model.Transport;
-import com.xenaksys.szcore.model.TransportListener;
-import com.xenaksys.szcore.model.id.BarId;
-import com.xenaksys.szcore.model.id.BeatId;
-import com.xenaksys.szcore.model.id.PageId;
-import com.xenaksys.szcore.model.id.StaveId;
-import com.xenaksys.szcore.model.id.StrId;
+import com.xenaksys.szcore.event.*;
+import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.model.id.*;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
@@ -75,23 +18,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static com.xenaksys.szcore.Consts.CONTENT_LINE_Y_MAX;
-import static com.xenaksys.szcore.Consts.DYNAMICS_LINE_Y_MAX;
-import static com.xenaksys.szcore.Consts.POSITION_LINE_Y_MAX;
-import static com.xenaksys.szcore.Consts.PRESSURE_LINE_Y_MAX;
-import static com.xenaksys.szcore.Consts.SPEED_LINE_Y_MAX;
+import static com.xenaksys.szcore.Consts.*;
 
 public class ScoreProcessorImpl implements ScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(ScoreProcessorImpl.class);
@@ -217,16 +149,16 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             Page lastPage =  szcore.getLastInstrumentPage(instrumentId);
             szcore.setContinuousPage(instrumentId, lastPage);
 
-            if(szcore.isUseContinuousPage) {
+            if(szcore.isUseContinuousPage()) {
                 prepareContinuousPages(instrumentId, lastPage);
             }
         }
 
-        if(szcore.isRandomizeContinuousPageContent) {
+        if(szcore.isRandomizeContinuousPageContent()) {
             szcore.initRandomisation();
         }
 
-        if(!szcore.isUseContinuousPage) {
+        if(!szcore.isUseContinuousPage()) {
             addStopEvent(lastBeat, transport.getId());
         }
         int precountMillis = 5 * 1000;
@@ -409,11 +341,11 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             nextPage = szcore.getNextPage(pageId);
         }
 
-        if(nextPage == null && szcore.isUseContinuousPage) {
+        if(nextPage == null && szcore.isUseContinuousPage()) {
             nextPage = prepareContinuousPage(instrumentId, pageId);
         }
 
-        if(szcore.isUseContinuousPage && szcore.isRandomizeContinuousPageContent) {
+        if(szcore.isUseContinuousPage() && szcore.isRandomizeContinuousPageContent()) {
             Page continuousPage = szcore.getContinuousPage(instrumentId);
             int currentPageNo = pageId.getPageNo();
             int continuousPageNo = continuousPage.getPageNo();
@@ -1719,13 +1651,13 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     @Override
     public void usePageRandomisation(Boolean value) {
         LOG.debug("usePageRandomisation: {} ", value);
-        szcore.isRandomizeContinuousPageContent = value;
+        szcore.setRandomizeContinuousPageContent(value);
     }
 
     @Override
     public void useContinuousPageChange(Boolean value) {
         LOG.debug("useContinuousPageChange: {} ", value);
-        szcore.isUseContinuousPage = value;
+        szcore.setUseContinuousPage(value);
     }
 
     @Override

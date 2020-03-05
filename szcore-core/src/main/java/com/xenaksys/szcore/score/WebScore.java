@@ -18,14 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static com.xenaksys.szcore.Consts.EMPTY;
 import static com.xenaksys.szcore.Consts.WEB_ZOOM_DEFAULT;
@@ -94,8 +87,8 @@ public class WebScore {
                 txt.setValue(EMPTY);
                 tiles[i][j] = t;
                 tilesAll.add(t);
-                //TODO page mapping
-                tileIdPageIdMap.put(id, row);
+                int pageNo = getPageNo(row, col);
+                tileIdPageIdMap.put(id, pageNo);
             }
         }
 
@@ -104,6 +97,13 @@ public class WebScore {
         elementStates.put("outerCircle", new WebElementState("outerCircle"));
 
         updateServerState();
+    }
+
+    private int getPageNo(int row, int col) {
+        // row 1 : col - 1
+        // row 2 : the same
+        // row 3 :
+        return 0;
     }
 
     public void init(LinkedList<WebScoreEvent> events) {

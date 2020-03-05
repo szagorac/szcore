@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="0" height="0" version="1.1">
+  <szcore:glyphMeta xmlns:szcore="urn:xenaksys:szcore:glyph" isComposite="false" codePoint="U+E022" intCodePoint="U+57378" glyphName="legerLine" glyphDescription="Leger line" />
+
+  <path transform="scale(0.1, -0.1)"
+      d="M490  -20h-492v40h492v-40z" fill="red"/>
+  </svg>

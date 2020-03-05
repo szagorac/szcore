@@ -1,0 +1,15 @@
+<? javascript
+
+?>
+
+/ITL/scene/* del;
+/ITL/scene color 255 255 255 255;
+
+
+/ITL/scene/vlnstv1rct_1 set rect 3 0.75;
+/ITL/scene/vlnstv1rct_1 color 255 255 255 255; 
+/ITL/scene/vlnstv1rct_1 penWidth 2;
+/ITL/scene/vlnstv1rct_1 penColor 200 150 150 255; 
+/ITL/scene/vlnstv1rct_1 radius 5 20; 
+/ITL/scene/vlnstv1rct_1 y -0.4; 
+/ITL/scene/vlnstv1rct_1 z 5; 

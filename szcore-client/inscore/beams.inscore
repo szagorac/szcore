@@ -1,0 +1,242 @@
+<? javascript
+
+var SCALE_UP = 5;
+var SCALE_DOWN = 1;
+var STAVE_SPACE_Y = 0.025
+var STAVE_HALF_SPACE_Y = 0.0125;
+var LINE_WIDTH = 1.25;
+var NOTE_X = 0.1;
+
+// var STEM_X = -0.013; //DOWN
+// var STEM_Y = 0.0465; //DOWN
+var STEM_X = 0.013; //UP
+var STEM_Y = -0.0465; // UP
+//var STEM_Y = -0.009; //+ 0.0375
+var STEM_NOTE = 0.05;
+
+function isArray (obj) {
+    return Array.isArray(obj);
+}
+
+function postToInscore (inscoreCmdArr){
+    if(!inscoreCmdArr || !isArray(inscoreCmdArr)) {
+        logError("postToInscore: Invalid inputs");
+        return;
+    }
+    if(isArray(inscoreCmdArr[0])) {
+        for (var i = 0; i < inscoreCmdArr.length; i++) {
+            post.apply(this, inscoreCmdArr[i]);
+        }
+    } else {
+        post.apply(this, inscoreCmdArr); 
+    }
+}
+
+function scaleUp(){
+    var cmds = [];
+    var ntaCmds = ["/ITL/scene/nta*", "scale", SCALE_UP];
+    cmds.push(ntaCmds);
+
+    var ntaCmdsX = ["/ITL/scene/ntaSvgnhb*", "x", NOTE_X * SCALE_UP];
+    cmds.push(ntaCmdsX);
+    ntaCmdsX = ["/ITL/scene/ntaSvgGClef*", "x", -2* NOTE_X * SCALE_UP];
+    cmds.push(ntaCmdsX);
+    ntaCmdsX = ["/ITL/scene/ntaSvgTs*", "x", -1* NOTE_X * SCALE_UP];
+    cmds.push(ntaCmdsX);    
+    var ntaCmdsX = ["/ITL/scene/ntaStem*", "x", STEM_X * SCALE_UP];
+    cmds.push(ntaCmdsX);
+    // var ntaCmdsX = ["/ITL/scene/ntaSvgNqu*", "x", STEM_NOTE * SCALE_UP];
+    // cmds.push(ntaCmdsX);
+
+
+    var ntaCmdsY = ["/ITL/scene/ntaSvgnhb4", "y", -3 * STAVE_HALF_SPACE_Y  * SCALE_UP];
+    cmds.push(ntaCmdsY);
+    var ntaCmdsY2 = ["/ITL/scene/ntaSvgnhb5", "y", STAVE_SPACE_Y * SCALE_UP];
+    cmds.push(ntaCmdsY2);
+    ntaCmdsX = ["/ITL/scene/ntaSvgTs4Frame", "y", -1*STAVE_SPACE_Y* SCALE_UP];
+    cmds.push(ntaCmdsX);
+    var ntaCmdsX = ["/ITL/scene/ntaStem*", "y", STEM_Y * SCALE_UP];
+    cmds.push(ntaCmdsX);
+    // var ntaCmdsY = ["/ITL/scene/ntaSvgNs1", "y", -3 * STAVE_HALF_SPACE_Y  * SCALE_UP];
+    // cmds.push(ntaCmdsY);
+    
+    
+    var stavel2 = ["/ITL/scene/stavel2", "y", (STAVE_SPACE_Y * SCALE_UP)];
+    cmds.push(stavel2);
+    var stavel1 = ["/ITL/scene/stavel1", "y", (2 * STAVE_SPACE_Y * SCALE_UP)];
+    cmds.push(stavel1);
+    var stavel4 = ["/ITL/scene/stavel4", "y", (-1 * STAVE_SPACE_Y * SCALE_UP)];
+    cmds.push(stavel4);
+    var stavel5 = ["/ITL/scene/stavel5", "y", (-1 * 2 * STAVE_SPACE_Y * SCALE_UP)];
+    cmds.push(stavel5);
+
+    var stavelW = ["/ITL/scene/stavel*", "scale", SCALE_UP];
+    cmds.push(stavelW);
+
+    postToInscore(cmds);
+}
+
+function scaleDown(){
+    var cmds = [];
+    var ntaCmds = ["/ITL/scene/nta*", "scale", SCALE_DOWN];
+    cmds.push(ntaCmds);
+    
+    var ntaCmdsX = ["/ITL/scene/ntaSvgnhb*", "x", NOTE_X * SCALE_DOWN];
+    cmds.push(ntaCmdsX);
+    ntaCmdsX = ["/ITL/scene/ntaSvgGClef*", "x", -2* NOTE_X * SCALE_DOWN];
+    cmds.push(ntaCmdsX);
+    ntaCmdsX = ["/ITL/scene/ntaSvgTs*", "x", -1* NOTE_X * SCALE_DOWN];
+    cmds.push(ntaCmdsX);    
+    var ntaCmdsX = ["/ITL/scene/ntaStem*", "x", STEM_X * SCALE_DOWN];
+    cmds.push(ntaCmdsX);
+    // var ntaCmdsX = ["/ITL/scene/ntaSvgNqu*", "x", STEM_NOTE * SCALE_DOWN];
+    // cmds.push(ntaCmdsX);
+
+    var ntaCmdsY = ["/ITL/scene/ntaSvgnhb4", "y", -3 * STAVE_HALF_SPACE_Y  * SCALE_DOWN];
+    cmds.push(ntaCmdsY);
+    var ntaCmdsY2 = ["/ITL/scene/ntaSvgnhb5", "y", STAVE_SPACE_Y * SCALE_DOWN];
+    cmds.push(ntaCmdsY2);
+    ntaCmdsX = ["/ITL/scene/ntaSvgTs4Frame", "y", -1*STAVE_SPACE_Y* SCALE_DOWN];
+    cmds.push(ntaCmdsX);
+    var ntaCmdsX = ["/ITL/scene/ntaStem*", "y", STEM_Y * SCALE_DOWN];
+    cmds.push(ntaCmdsX);
+    // var ntaCmdsY = ["/ITL/scene/ntaSvgNs1", "y", -3 * STAVE_HALF_SPACE_Y  * SCALE_DOWN];
+    // cmds.push(ntaCmdsY);
+
+    var stavel2 = ["/ITL/scene/stavel2", "y", (STAVE_SPACE_Y * SCALE_DOWN)];
+    cmds.push(stavel2);
+    var stavel1 = ["/ITL/scene/stavel1", "y", (2 * STAVE_SPACE_Y * SCALE_DOWN)];
+    cmds.push(stavel1);
+    var stavel4 = ["/ITL/scene/stavel4", "y", (-1 * STAVE_SPACE_Y * SCALE_DOWN)];
+    cmds.push(stavel4);
+    var stavel5 = ["/ITL/scene/stavel5", "y", (-1 * 2 * STAVE_SPACE_Y * SCALE_DOWN)];
+    cmds.push(stavel5);
+
+    var stavelW = ["/ITL/scene/stavel*", "scale", SCALE_DOWN];
+    cmds.push(stavelW);
+
+    postToInscore(cmds);
+}
+?>
+
+/ITL/scene/* del;
+/ITL/scene color 255 255 255 255;
+
+/ITL/scene/canvas set rect 3.0 2.0;
+/ITL/scene/canvas scale 1.0;
+/ITL/scene/canvas x 0.0;
+/ITL/scene/canvas y 0.0;
+/ITL/scene/canvas color 255 255 255 255;
+/ITL/scene/canvas penWidth 2.0;
+/ITL/scene/canvas penColor 0 255 0 255;
+
+#stave
+/ITL/scene/stavel3 set line xy 1.0 0.0;
+/ITL/scene/stavel3 scale 1.0;
+/ITL/scene/stavel3 x -0.0;
+/ITL/scene/stavel3 y -0.0;
+/ITL/scene/stavel3 penWidth 1.25;
+/ITL/scene/stavel3 penColor 0 0 0 150;
+
+/ITL/scene/stavel2 set line xy 1.0 0.0;
+/ITL/scene/stavel2 scale 1.0;
+/ITL/scene/stavel2 x 0.0;
+/ITL/scene/stavel2 y 0.025;
+/ITL/scene/stavel2 penWidth 1.25;
+/ITL/scene/stavel2 penColor 0 0 0 150;
+
+/ITL/scene/stavel1 set line xy 1.0 0.0;
+/ITL/scene/stavel1 scale 1.0;
+/ITL/scene/stavel1 x 0.0;
+/ITL/scene/stavel1 y 0.05;
+/ITL/scene/stavel1 penWidth 1.25;
+/ITL/scene/stavel1 penColor 0 0 0 150;
+
+/ITL/scene/stavel4 set line xy 1.0 0.0;
+/ITL/scene/stavel4 scale 1.0;
+/ITL/scene/stavel4 x 0.0;
+/ITL/scene/stavel4 y -0.025;
+/ITL/scene/stavel4 penWidth 1.25;
+/ITL/scene/stavel4 penColor 0 0 0 150;
+
+/ITL/scene/stavel5 set line xy 1.0 0.0;
+/ITL/scene/stavel5 scale 1.0;
+/ITL/scene/stavel5 x 0.0;
+/ITL/scene/stavel5 y -0.05;
+/ITL/scene/stavel5 penWidth 1.25;
+/ITL/scene/stavel5 penColor 0 0 0 150;
+
+
+
+# halfspace -0.0125;
+/ITL/scene/ntaSvgNs1 set svgf symbols/noteheadBlackMy1.svg;
+/ITL/scene/ntaSvgNs1 scale 1.0;
+/ITL/scene/ntaSvgNs1 x  0.0;
+/ITL/scene/ntaSvgNs1 y  -0.0;
+
+/ITL/scene/ntaSvgNs2 set svgf symbols/noteheadBlackMy1.svg;
+/ITL/scene/ntaSvgNs2 scale 1.0;
+/ITL/scene/ntaSvgNs2 x  0.0625;
+/ITL/scene/ntaSvgNs2 y  -0.0;
+
+/ITL/scene/ntaSvgStemBeam set svgf symbols/textBlackNoteFrac8thLongStem.svg;
+/ITL/scene/ntaSvgStemBeam scale 1.0;
+/ITL/scene/ntaSvgStemBeam x  0.125;
+/ITL/scene/ntaSvgStemBeam y  -0.0;
+
+
+
+/ITL/scene/ntaStem set line xy 0.0 0.081;
+/ITL/scene/ntaStem scale 1.0;
+/ITL/scene/ntaStem x 0.013;
+/ITL/scene/ntaStem y -0.0465;
+/ITL/scene/ntaStem penWidth 1.25;
+/ITL/scene/ntaStem penColor 0 0 0 255;
+
+/ITL/scene/ntaStem2 set line xy 0.0 0.081;
+/ITL/scene/ntaStem2 scale 1.0;
+/ITL/scene/ntaStem2 x 0.0755;
+/ITL/scene/ntaStem2 y -0.0465;
+/ITL/scene/ntaStem2 penWidth 1.25;
+/ITL/scene/ntaStem2 penColor 0 0 0 255;
+
+/ITL/scene/ntaTieLine set line xy  0.0755 0.0;
+/ITL/scene/ntaTieLine scale 1.0;
+/ITL/scene/ntaTieLine x 0.045;
+/ITL/scene/ntaTieLine y -0.081;
+/ITL/scene/ntaTieLine penWidth 2.5;
+/ITL/scene/ntaTieLine penColor 0 0 0 255;
+
+/ITL/scene/hcl set line xy 3.0 0.0;
+/ITL/scene/hcl scale 1.0;
+/ITL/scene/hcl x -0.0;
+/ITL/scene/hcl y -0.0;
+/ITL/scene/hcl z 10.0;
+/ITL/scene/hcl penWidth 1.0;
+/ITL/scene/hcl penColor 255 0 0 125;
+/ITL/scene/hcl penStyle dot;
+
+/ITL/scene/vcl set line xy 0.0 2.0;
+/ITL/scene/vcl scale 1.0;
+/ITL/scene/vcl x -0.0;
+/ITL/scene/vcl y -0.0;
+/ITL/scene/vcl z 10.0;
+/ITL/scene/vcl penWidth 1.0;
+/ITL/scene/vcl penColor 255 0 0 125;
+/ITL/scene/vcl penStyle dot;
+
+/ITL/scene/scaleUp set txt "Scale UP";
+/ITL/scene/scaleUp x 0.5;
+/ITL/scene/scaleUp y 0.95;
+/ITL/scene/scaleUp scale 2.0;
+/ITL/scene/scaleUp watch mouseUp (/ITL/scene/javascript run "scaleUp()");
+
+/ITL/scene/scaleDown set txt "Scale Down";
+/ITL/scene/scaleDown x -0.5;
+/ITL/scene/scaleDown y 0.95;
+/ITL/scene/scaleDown scale 2.0;
+/ITL/scene/scaleDown watch mouseUp (/ITL/scene/javascript run "scaleDown()");
+
+<? javascript
+
+?>

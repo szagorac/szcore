@@ -1,0 +1,3094 @@
+<? javascript
+
+// GLobal Static Data initialiser
+var START_TIME = Date.now();
+var SPACE = " ";
+var UNDERSCORE = "_";
+var COMMA = ",";
+var SLASH = "/";
+var PIPE = "|";
+var SEMICOLON = ";";
+var EQUALS = "=";
+var EMPTY = "";
+var SINGLE_QUOTE = "'";
+var COLON = ":";
+var UNKNOWN = "UNKNOWN";
+
+var IS_LOGGING_ON = 1; //0 to switch off logging
+
+//### ZSCORE JS LIB ###
+var ZSCORE = function () {
+    // Static Data initialiser
+    var START_LOG = "START -------";
+    var END_LOG = "END -------";
+    var ERROR = "ERROR: ";
+    var ERROR_START = ERROR + START_LOG;
+    var ERROR_END = ERROR + END_LOG;
+    var NAME = "name: ";
+    var INSTANCE_OF = "Instance of: ";
+    var TYPE_STRING = "string";
+    var TYPE_BOOLEAN = "boolean";    
+    var CLASS_NOTEHEADS = "noteheads";
+    var CLASS_TIME_SIGS = "timeSigs";
+    var CLASS_TEMPO = "tempo";
+    var CLASS_CLEFS = "clefs";
+    var G_CLEF = "gClef";
+
+    //# ZScore elements
+    var ZS_STAFF = "stf";
+    var ZS_BAR = "bar";
+    var ZS_PART = "prt";
+    var ZS_STAVE = "stv";
+    var ZS_LINE = "ln";
+    var ZS_SVG = "svg";
+    var ZS_RECT = "rct";
+    var ZS_LAYER = "lyr";
+    var ZS_TEXT = "txt";
+    var ZS_ACTION = "act";
+    var ZS_ACTIVE = "actv";
+    var ZS_REPLACE = "rplc";
+    var ZS_APPEND = "apnd";
+    var ZS_TEMPO = "tmpo";
+    var ZS_NEXT = "nxt";
+    var ZS_CLEF = "clf";
+    var ZS_NUMBER = "no";
+    var ZS_DURATION = "dur";
+    var ZS_POSITION = "pos";
+    var ZS_STEM = "stm";
+    var ZS_UP = "up";
+    var ZS_DOWN = "down";
+    var ZS_ID = "id";
+    var ZS_X = "x";
+    var ZS_Y = "y";
+    var ZS_DX = "dx";
+    var ZS_DY = "dy";
+    var ZS_X_SIZE = "szx";
+    var ZS_TIME_SIGNATURE = "ts";
+    var ZS_SCORE_TITLE ="ScTtl";
+    var ZS_PART_TITLE ="PtTtl";
+    var ZS_TOP_STAVE ="TStv";
+    var ZS_BOTTOM_STAVE ="BStv";
+    var ZS_TOP_LINE ="Tln";
+    var ZS_BOTTOM_LINE ="Bln";
+    var ZS_START_LINE ="Sln";
+    var ZS_END_LINE ="Eln";
+    var ZS_NOTATION = "Nta";
+    var ZS_SYNC = "Snc";
+    var ZS_CURSOR = "Csr";
+    var ZS_TACKER = "Trk";
+    var D1_4 = "1_4";
+    var D1_8 = "1_8";
+    var D1_16 = "1_16";
+    var D1_32 = "1_32";
+    var D1_64 = "1_64";
+    var D1_2 = "1_2";
+    var D1_1 = "1_1";
+    //rest
+    var D_4T = "_4T";
+    //triplet
+    var D1_4T = "1_4T";
+    //dotted
+    var D1_4D = "1_4D";
+    //time signature
+    var TS4 = "ts4";
+    var NORMAL = "normal";
+    var BL = "bl";
+    var NOM = "nom";
+    var DENOM = "denom";
+    var BEAT_DURATION = "beatDuration";
+    var SL ="sl";
+    var EL ="el";
+    var N ="n";
+
+    var BASE_BEAT_DURATION = D1_8;
+    var BASE_BEAT_VALUE = 8;
+
+    //# Inscore commands 
+    var INSCORE_SCENE_ROOT_URL = "/ITL/scene/";
+    var INSCORE_SCENE_URL = "/ITL/scene";
+    var INSCORE_LOG_URL = "/ITL/log";
+    var INSCORE_JS_URL = "/ITL/scene/javascript";
+    var SCENE_LOGGER = "/ITL/scene/logger";
+    var SYNC_NODE = "/sync";
+    var LINE = "line";
+    var SVG = "svg";
+    var SCENE = "scene";
+    var TITLE = "title";
+    var DATE = "date";
+    var DDATE = "ddate";
+    var ITL = "ITL";
+    var INSCORE_URL_DELIMITER = "/";
+    var NL = "\n";
+    var INSCORE_CMD_END = ";";
+    var RECT = "rect";
+    var LAYER = "layer";
+    var TXT =  "txt";
+    var SET = "set";
+    var RUN = "run";
+    var WATCH = "watch";
+    var WRITE = "write";
+    var SAVE = "save";
+    var DEL = "del";
+    var MAP = "map";
+    var EXPORT = "export";
+    var EXPORT_ALL = "exportAll";
+    var CLEAR = "clear";
+    var SHOW = "show";
+    var X = "x";
+    var Y = "y";
+    var Z = "z";
+    var SCALE = "scale";
+    var XORIGIN = "xorigin";
+    var YORIGIN = "yorigin";
+    var COLOR = "color";
+    var PEN_COLOR = "penColor";
+    var PEN_WIDTH = "penWidth";
+    var PEN_STYLE = "penStyle";
+    var BRUSH_STYLE = "brushStyle";
+    var RADIUS = "radius";
+    var HEIGHT = "height";
+    var WIDTH = "width";
+    var SOLID = "solid";
+    var DASH = "dash";
+    var XY = "xy";
+    var SYNC_VERTICAL = "v";
+    
+    var DEFAULT_Z_BASE = 1.0;
+    var DEFAULT_Z_NOTATION_CONTAINER = DEFAULT_Z_BASE + 4.0;
+    var DEFAULT_Z_NOTATION = DEFAULT_Z_NOTATION_CONTAINER + 5.0;
+    var DEFAULT_DATE_DENOM = "/8";
+
+    var STAFF_SPACE = 0.025;
+    var STAFF_HALF_SPACE = 0.0125;
+    var STAFF_LINE_WIDTH = 1.25;
+    var STAFF_LINE_ALPHA = 150;
+    var STAFF_WIDTH = 3.0;
+    var BAR_LINE_WIDTH = 2.0;
+    var BAR_LINE_ALPHA = 255;
+    var STAVE_HIGHT = 0.75;
+    var STAVE_LINE_WIDTH = 1.0;
+    var STAVE_LINE_ALPHA = 70;
+    var STAVE_TOP_Y_OFFSET = -0.4;
+    var STAVE_BOTTOM_Y_OFFSET = 0.4;
+    var STAVE_NOTATION_Y_OFFSET = -0.12;
+    var STAVE_TOP_LINE_Y_OFFSET = -0.25;
+    var STAVE_BOTTOM_LINE_Y_OFFSET = 0.32;
+    var STAVE_START_LINE_X_OFFSET = -1.28;
+    var STAVE_END_LINE_X_OFFSET = 1.42;
+    var STAVE_POS_TRACKER_WIDTH = 0.01;
+    var COMPOUND_TIME_SIG_SPACE = 0.0125;
+    var NOTE_WIDTH = 0.03;
+    var TS_WIDTH = 0.05;
+    var CLEF_WIDTH = 0.068;
+    var STAVE_MAX_X_LEN = -1 * STAVE_START_LINE_X_OFFSET + STAVE_END_LINE_X_OFFSET;
+    var STEM_UP_DX = 0.013;
+    var STEM_UP_DY = -0.0465;
+    var STEM_Y = 0.081;
+    var STEM_PEN_WIDTH = 1.25;
+
+    var NOTE_UNIT_VALUE = {
+        "1_1": 1,
+        "1_2": 2,
+        "1_4": 4,
+        "1_8": 8,
+        "1_16": 16,
+        "1_32": 32,
+        "1_64": 64,
+    };
+    var UNIT_TO_DURATION = {
+        1 : D1_1,
+        2 : D1_2,
+        4 : D1_4,
+        8 : D1_8,
+        16 : D1_16,
+        32 : D1_32,
+        64 : D1_64,
+    };
+    var CLEF_ID_TO_NAME = {
+        "g" : G_CLEF,
+    };
+
+    //--------------------------------
+    // SVG Symbol Definitions
+    //--------------------------------
+    var SVG_DEF = {
+        noteheadBlack: '<svg width="0" height="0"><zscore:glyphMeta glyphName="noteheadBlack"/><path transform="scale(0.04, -0.04) translate(0, -122)" d="M97 -125q-42 0 -69.5 22.5t-27.5 60.5q0 66 58.5 116.5t139.5 50.5q43 0 70 -22.5t27 -60.5q0 -62 -64.5 -114.5t-133.5 -52.5z"/> </svg>',      
+        gClef: '<svg width="0" height="0"><zscore:glyphMeta glyphName="gClef"/><path transform="scale(0.04, -0.04) translate(0, -1140)" d="M470 943q-50 0 -91.5 -71t-41.5 -181q0 -53 6 -92q3 -17 13 -8q31 27 63 59q111 111 111 211q0 40 -17 61t-43 21zM430 103l49 -285q1 -9 4 -10t12 4q43 22 68.5 59t25.5 83q0 65 -43 111.5t-105 51.5q-9 1 -11 -2t0 -12zM361 262l-21 128q-2 8 -4 9t-10 -5 q-94 -76 -153 -142q-93 -105 -93 -232q0 -105 79 -170.5t209 -65.5q29 0 56 5q12 2 13.5 4t0.5 10l-50 298q-2 8 -5 9.5t-15 -1.5q-46 -13 -73 -44t-27 -73q0 -34 20 -63.5t52 -43.5q15 -6 15 -13q0 -11 -12 -11q-11 0 -27 6q-52 18 -83.5 64.5t-31.5 112.5q0 64 39.5 118 t105.5 76q14 5 15.5 7.5t-0.5 16.5zM376 415l25 -145q2 -14 5.5 -16t23.5 -2q107 0 174 -71t67 -170q0 -83 -45 -145t-123 -93q-1 -1 -4 -2q-10 -4 -10 -8q0 -2 1 -7q29 -163 29 -214q0 -48 -14.5 -85.5t-35.5 -58.5t-49 -34.5t-51.5 -17.5t-46.5 -4q-54 0 -93 16t-59 41.5 t-29 52t-9 53.5q0 48 29 81.5t78 33.5q44 0 70 -29.5t26 -72.5q0 -40 -19.5 -63t-47.5 -31q-32 -10 -32 -17q0 -11 21 -20t59 -9q27 0 50.5 5.5t50.5 21.5t42.5 51.5t15.5 87.5q0 50 -27 201q-1 8 -4 9.5t-11 -0.5q-30 -6 -69 -6q-89 0 -160 28.5t-114.5 76t-66.5 107.5 t-23 127q0 146 112 286q62 76 185 178q8 7 9.5 11t-0.5 13q-14 82 -14 164q0 202 98 311q44 48 65 48q8 0 24 -16t28 -34q65 -95 65 -233q0 -84 -35.5 -169.5t-98.5 -154.5q-27 -30 -56 -57q-8 -8 -6 -19z"/> </svg>',  
+        ts4nom: '<svg width="0" height="0"><zscore:glyphMeta glyphName="timeSig4"/><path transform="scale(0.04, -0.04) translate(0, 0)" d="M362 -74h73q15 0 15 -19t-15 -19h-73v-59q0 -21 10 -29.5t21 -8.5q22 0 22 -20q0 -21 -20 -21h-213q-19 0 -19 21q0 19 23 19q40 0 40 35v63h-186q-20 0 -20 17q0 5 3 11l1 1v2l6 8q128 179 128 305q0 19 23 19q3 0 32 -1t39 -1t37.5 1t30.5 1q15 0 15 -14 q0 -1 -0.5 -2.5t-0.5 -2.5q-2 -7 -44.5 -67t-102.5 -134t-96 -105h135v84q0 12 9 23l95 115q8 9 20 9t12 -17v-214z"/> </svg>',  
+        ts4denom: '<svg width="0" height="0"><zscore:glyphMeta glyphName="timeSigDenom4"/><path transform="scale(0.04, -0.04) translate(0, -510)" d="M362 -74h73q15 0 15 -19t-15 -19h-73v-59q0 -21 10 -29.5t21 -8.5q22 0 22 -20q0 -21 -20 -21h-213q-19 0 -19 21q0 19 23 19q40 0 40 35v63h-186q-20 0 -20 17q0 5 3 11l1 1v2l6 8q128 179 128 305q0 19 23 19q3 0 32 -1t39 -1t37.5 1t30.5 1q15 0 15 -14 q0 -1 -0.5 -2.5t-0.5 -2.5q-2 -7 -44.5 -67t-102.5 -134t-96 -105h135v84q0 12 9 23l95 115q8 9 20 9t12 -17v-214z"/> </svg>',  
+        noteheads: {
+            normal: {
+                "1_4": "noteheadBlack",
+                "1_8": "noteheadBlack",
+                "1_16": "noteheadBlack",
+                "1_32": "noteheadBlack",
+                "1_64": "noteheadBlack",
+            },  
+        },
+        clefs: {
+            normal: {
+                "gClef" : G_CLEF,
+            },
+        },
+        timeSigs: {
+            nom: {
+                "ts4" : "ts4nom",
+            },
+            denom: {
+                "ts4" : "ts4denom",
+            },
+        },
+        tempo: {
+            beatDuration: {
+                "1_4" : "noteheadBlack",
+            },
+        },
+        xSpaceMultiplier: {
+            "1_32": 1.5,
+            "1_16": 2.0,
+            "1_8": 2.5,
+            "1_4": 3.5,
+            "1_2": 5.0,
+            "1_1": 7.0,
+        },
+        width: {
+            "1_32": NOTE_WIDTH,
+            "1_16": NOTE_WIDTH,
+            "1_8": NOTE_WIDTH,
+            "1_4": NOTE_WIDTH,
+            "1_2": NOTE_WIDTH,
+            "1_1": NOTE_WIDTH,
+            "gClef": CLEF_WIDTH,
+            "ts4nom": TS_WIDTH,
+        },
+        additionalXSpace: {
+            "gClef": 1 * STAFF_SPACE,
+            "ts4nom": 0.5 * STAFF_SPACE,
+        },
+    };
+
+    //--------------------------------
+    // Inscore Default Params
+    //--------------------------------
+    var DEFAULT_TEXT_PARAMS = {
+        x: 0.0,
+        y: 0.0,
+        z: DEFAULT_Z_BASE,
+        scale: 2,
+        colR: 0,
+        colG: 0,
+        colB: 0,
+        alpha: 255
+    };
+    var DEFAULT_LAYER_PARAMS = {
+        x: 0.0,
+        y: 0.0,
+        z: DEFAULT_Z_NOTATION,
+        sizeX: 2.0,
+        sizeY: 2.0,
+        colR: 0,
+        colG: 0,
+        colB: 0,
+        scale: 1,
+        isVisible: false
+    };
+    var DEFAULT_LINE_PARAMS = {
+        x: 0.0,
+        y: 0.0,
+        z: DEFAULT_Z_NOTATION,
+        lineEndX: 1.0,
+        lineEndY: 0.0,
+        scale: 1,
+        penColR: 0,
+        penColG: 0, 
+        penColB: 0,
+        penColAlpha: 255,
+        penWidth: 1,
+        penStyle: SOLID,
+    };
+    var DEFAULT_RECT_PARAMS = {
+        x: 0.0,
+        y: 0.0,
+        z: DEFAULT_Z_NOTATION,
+        sizeX: 1.0,
+        sizeY: 1.0,
+        scale: 1,
+        colR: 0,
+        colG: 0,
+        colB: 0,
+        alpha: 0,
+        penColR: 0,
+        penColG: 0, 
+        penColB: 0,
+        penColAlpha: 255,
+        penWidth: 1.0,
+        penStyle: SOLID,
+        radX: 0,
+        radY: 0
+    };       
+    var DEFAULT_SVG_SYMBOL_PARAMS = {
+        x: 0.0,
+        y: 0.0,
+        z: DEFAULT_Z_NOTATION,
+        sizeX: 1.0,
+        sizeY: 0.0,
+        scale: 1,
+    };
+    var DEFAULT_NOTE_PARAMS = {
+        x: 0.0,
+        y: 0.0,
+        xOffset : 0.0,
+        svgParams: DEFAULT_SVG_SYMBOL_PARAMS,
+        durationName: D1_4,
+        symbolName: D1_4,
+        verticalStaffPos: 0,
+        staffNo: 0,
+        class: CLASS_NOTEHEADS,
+        type: NORMAL,
+    };  
+    var DEFAULT_STEM_PARAMS = {
+        x: 0.0,
+        y: 0.0,
+        direction: ZS_UP,
+        xOffsetUp : STEM_UP_DX,
+        yOffsetUp : STEM_UP_DY,
+        xOffsetDown : (-1.0 * STEM_UP_DX),
+        yOffsetDown : (-1.0 * STEM_UP_DY),
+        lineParams: {
+            lineEndX: 0.0,
+            lineEndY: STEM_Y,
+            penWidth: STEM_PEN_WIDTH,
+        },
+    };  
+    var DEFAULT_TIME_SIG_PARAMS = {
+        x: 0.0,
+        y: 0.0,
+        nomSvgParams: DEFAULT_SVG_SYMBOL_PARAMS,
+        denomSvgParams: DEFAULT_SVG_SYMBOL_PARAMS,
+        class: CLASS_TIME_SIGS,
+        nomType: NOM,
+        denomType: DENOM,
+        nomVals: [TS4],
+        denomVal: TS4,
+        xOffset: (-1 * TS_WIDTH/2.0),
+        yOffset: STAVE_TOP_LINE_Y_OFFSET - TS_WIDTH,
+    };
+    var DEFAULT_TEMPO_PARAMS = {
+        x: 0.0,
+        y: 0.0,
+        noteSvgParams: DEFAULT_SVG_SYMBOL_PARAMS,
+        txtParams: {           
+            scale: 1.5,
+        },
+        class: CLASS_TEMPO,
+        beatDurationType: BEAT_DURATION,
+        noteVal: D1_4,
+        xOffset: (2 * NOTE_WIDTH),
+        yOffset: STAVE_TOP_LINE_Y_OFFSET - 2 * NOTE_WIDTH,
+    };  
+    var DEFAULT_BEAT_PARAMS = {
+        x: 0.0,
+        y: 0.0,
+        baseBeatsMultiple: 1,
+        beatLineParams: {
+            x: 0.0,
+            y: 0.0,
+            z: DEFAULT_Z_NOTATION,
+            lineEndX: 0.0,
+            lineEndY: STAVE_HIGHT,
+            scale: 1,
+            penColR: 0,
+            penColG: 0, 
+            penColB: 0,
+            penColAlpha: 125,
+            penWidth: 0.5,
+            penStyle: DASH,
+        },
+    };
+    var DEFAULT_STAFF_PARAMS = {
+        x: 0.0,
+        y: 0.0,       
+        z: DEFAULT_Z_NOTATION,
+        sizeX: STAFF_WIDTH,
+        sizeY: 1.0, 
+        lineNo: 5,
+        yLineDist: STAFF_SPACE,
+        lineParams: {
+            x: 0.0,
+            y: 0.0,
+            z: DEFAULT_Z_NOTATION,
+            lineEndX: 1.0,
+            lineEndY: 0.0,
+            scale: 1,
+            penColR: 0,
+            penColG: 0, 
+            penColB: 0,
+            penColAlpha: STAFF_LINE_ALPHA,
+            penWidth: STAFF_LINE_WIDTH,
+            penStyle: SOLID,
+        },
+        frameParams:  {
+            x: 0.0,
+            y: 0.0,
+            z: DEFAULT_Z_NOTATION,
+            sizeX: 1.0,
+            sizeY: 1.0,
+            scale: 1,
+            colR: 0,
+            colG: 0,
+            colB: 0,
+            alpha: 0,
+            penColR: 255,
+            penColG: 0, 
+            penColB: 0,
+            penColAlpha: 255,
+            penWidth: 0.0,
+            penStyle: SOLID,
+            radX: 0,
+            radY: 0
+        },
+    };
+    var DEFAULT_BAR_PARAMS = {
+        x: 0.0,
+        y: 0.0,       
+        z: DEFAULT_Z_NOTATION,  
+        startLineXd: STAVE_START_LINE_X_OFFSET, 
+        endLineXd: STAVE_END_LINE_X_OFFSET,    
+        lineParams: {
+            x: 0.0,
+            y: 0.0,
+            z: DEFAULT_Z_NOTATION,
+            lineEndX: 0.0,
+            lineEndY: STAVE_HIGHT,
+            scale: 1,
+            penColR: 0,
+            penColG: 0, 
+            penColB: 0,
+            penColAlpha: BAR_LINE_ALPHA,
+            penWidth: BAR_LINE_WIDTH,
+            penStyle: SOLID,
+        }, 
+        beatParams: DEFAULT_BEAT_PARAMS,
+        tempoParams: DEFAULT_TEMPO_PARAMS,
+        timeSigParams: DEFAULT_TIME_SIG_PARAMS,
+    };
+    var DEFAULT_STAVE_PARAMS = {
+        x: 0.0,
+        y: 0.0,
+        notationYd: STAVE_NOTATION_Y_OFFSET,
+        notationXd: 0.0,
+        notationScale: 1.0,
+        topLineYd: STAVE_TOP_LINE_Y_OFFSET,
+        bottomLineYd: STAVE_BOTTOM_LINE_Y_OFFSET, 
+        startLineXd: STAVE_START_LINE_X_OFFSET, 
+        endLineXd: STAVE_END_LINE_X_OFFSET, 
+        isCreatePane: true,
+        isCreateSyncPane: true,
+        isCreatePosTracker: true,
+        paneParams: {
+            x: 0.0,
+            y: 0.0,
+            z: DEFAULT_Z_NOTATION_CONTAINER,
+            sizeX: 3.0,
+            sizeY: STAVE_HIGHT,
+            scale: 1,
+            colR: 255,
+            colG: 255,
+            colB: 255,
+            alpha: 255,
+            penColR: 200,
+            penColG: 150, 
+            penColB: 150,
+            penColAlpha: 255,
+            penWidth: 2.0,
+            penStyle: SOLID,
+            radX: 5,
+            radY: 20
+        },    
+        notationLayerParams: DEFAULT_LAYER_PARAMS,
+        staffParams: DEFAULT_STAFF_PARAMS,
+        barParams: DEFAULT_BAR_PARAMS,
+        beatParams: DEFAULT_BEAT_PARAMS,
+        syncPaneParams : {
+            x: 0.0,
+            y: 0.0,
+            z: DEFAULT_Z_NOTATION - 2,
+            sizeX: 2.0,
+            sizeY: STAVE_HIGHT,
+            scale: 1,
+            colR: 255,
+            colG: 255,
+            colB: 255,
+            alpha: 0,
+            penColR: 200,
+            penColG: 150, 
+            penColB: 150,
+            penColAlpha: 255,
+            penWidth: 0.0,
+        },
+        positionCursorParams : {
+            x: 0.0,
+            y: 0.0,
+            z: DEFAULT_Z_NOTATION - 1,
+            sizeX: STAVE_POS_TRACKER_WIDTH,
+            sizeY: 1.0,
+            scale: 1,
+            colR: 0,
+            colG: 255,
+            colB: 0,
+            alpha: 255,
+            penColR: 200,
+            penColG: 150, 
+            penColB: 150,
+            penColAlpha: 255,
+            penWidth: 0.0,
+        },   
+        lineParams: {
+            x: 0.0,
+            y: 0.0,
+            z: DEFAULT_Z_NOTATION,
+            lineEndX: 1.0,
+            lineEndY: 0.0,
+            scale: 1,
+            penColR: 0,
+            penColG: 0, 
+            penColB: 0,
+            penColAlpha: STAVE_LINE_ALPHA,
+            penWidth: STAVE_LINE_WIDTH,
+            penStyle: SOLID,
+        }, 
+    };
+    var DEFAULT_SCORE_PARAMS = {
+        titleParams: {
+            x: 0.0,
+            y: -0.9,
+            z: DEFAULT_Z_BASE,
+            scale: 3,
+        },
+        subtitleParams: {
+            x: 0.0,
+            y: -0.8,
+            z: DEFAULT_Z_BASE,
+            scale: 1.5,
+        },
+        topStaveParams: {
+            x: 0.0,
+            y: STAVE_TOP_Y_OFFSET,
+        },
+        bottomStaveParams: {
+            x: 0.0,
+            y: STAVE_BOTTOM_Y_OFFSET,
+        }
+    };
+
+    var isLoggingOn = false;
+    var isLogTime = false;
+    var componentCount = 0;
+    var currentScore = null;
+    var currentDate = 0;
+    var tmpStave = null;
+
+    // Helper functions 
+    var merge = function(destination, source) {
+        if(!destination) {
+            return;
+        }
+        if(!source) {
+            return destination;
+        }
+        for (var property in source) {
+            if (source[property] instanceof Object) {
+                destination[property] = merge(destination[property], source[property]);
+            } else {
+                destination[property] = source[property];
+            }
+        }
+        return destination;
+    };
+    var clone = function(obj) {
+        var copy;    
+        if (null == obj || "object" != typeof obj) return obj;    
+        if (obj instanceof Date) {
+            copy = new Date();
+            copy.setTime(obj.getTime());
+            return copy;
+        }
+        if (obj instanceof Array) {
+            copy = [];
+            for (var i = 0, len = obj.length; i < len; i++) {
+                copy[i] = clone(obj[i]);
+            }
+            return copy;
+        }
+        if (obj instanceof Object) {
+            copy = {};
+            for (var attr in obj) {
+                if (obj.hasOwnProperty(attr)) copy[attr] = clone(obj[attr]);
+            }
+            return copy;
+        }
+        logError("Unable to copy obj! Its type isn't supported.");
+    };
+    var isArray = function(obj) {
+        return Array.isArray(obj);
+    };
+    var isObject = function(obj) {
+        return Object.prototype.toString.call(obj) === '[object Object]';
+    };    
+    var isFunction = function(functionToCheck) {
+        var getType = {};
+        return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
+    };
+    var isNumber = function (n) {
+        return !isNaN(parseFloat(n)) && isFinite(n);
+    };
+    var isString = function (str) {
+        return str && (typeof(str) == TYPE_STRING || str instanceof String);
+    };
+    var isBoolean = function (value) {
+        return (typeof value) === TYPE_BOOLEAN;
+    };
+    var isEven = function (n) {
+        if(!isNumber(n)) {
+            return;
+        }
+        return n % 2 == 0;
+    };
+    var isOdd = function (n) {
+        if(!isNumber(n)) {
+            return;
+        }
+        return Math.abs(n % 2) == 1;
+    };
+    var stringToBoolean = function (value) {
+        if (isBoolean(value)) {
+            return value;
+        }
+        if (isString(value)) {
+            var isTrueSet = (value === "true");
+            return isTrueSet;
+        }
+
+        return value;
+    };
+    var contains = function (strvalue, substr) {
+        if (!strvalue || !isString(strvalue) || !isString(substr)) {
+            return false;
+        }
+
+        return strvalue.indexOf(substr) > 0;
+    };
+    var startsWith = function (strvalue, substr) {
+        if (!strvalue || !isString(strvalue) || !isString(substr)) {
+            return false;
+        }
+
+        return strvalue.lastIndexOf(substr, 0) === 0;
+    };    
+    var endsWith = function (str, suffix) {
+        if (!isString(str) || !suffix || suffix.length > str.length) {
+            return false;
+        }
+
+        var ss = "" + str;
+        return ss.slice(-1 * suffix.length) === suffix;
+    };
+    var addToArr = function(containerArr, element) {
+        if(!containerArr || !element) {
+            logError("addToArr: Invalid inputs");
+            return;
+        }
+        containerArr.push(element);
+    };
+    var isEmptyArr = function(arr) {
+        return !isArray(arr) || !arr.length;
+    };    
+    var mergeArrays = function(arr1, arr2) {
+        if(!arr1 || !arr2) {
+            logError("mergeArrays: Invalid inputs");
+            return;
+        }
+        return arr1.concat(arr2);
+    };    
+    var clearLog = function(){
+        post(INSCORE_LOG_URL, CLEAR);
+    };
+    var showLog = function(onOff){
+        if(onOff === 1) {
+            isLoggingOn = true;
+        }
+        post(INSCORE_LOG_URL, SHOW, onOff);
+    };
+    var log = function(value){
+        if(!value){
+            return;
+        }
+        if(isArray(value)){
+            return logArray(value);
+        }
+        if(isObject(value)){
+            return logObject(value);
+        }
+        if(isLoggingOn) {
+            if(isLogTime) {
+                var time = new Date();
+                var timePrefix = time.toLocaleTimeString() + " ";
+                value = timePrefix + value;
+            }
+            post(INSCORE_LOG_URL, WRITE, value);
+        }
+    };
+    var logEmptyLine = function(){
+        log('-');
+    };
+    var logError = function(value){
+        if(isArray(value)) {
+            log(ERROR_START);
+            log(value);    
+            return log(ERROR_END);
+        }
+        log(ERROR + value);
+    };
+    var logArray = function(arr){
+        if(!arr || !isArray(arr)){
+            return;
+        }
+        for (var i = 0; i < arr.length; i++) {
+            var out = arr[i];
+            if(isArray(out)) {
+                out = out.join();
+            }
+            log(out);
+        }
+    };
+    var logObject = function (obj){
+        if(!obj || !isObject(obj)) {
+            logError("logObject: Not an Object");
+            return;
+        }
+         
+        for (var property in obj) {
+            if(!property) {
+                continue;
+            }
+            if (obj.hasOwnProperty(property)) {
+                var val = obj[property];
+                if(!val) {
+                    // val = "";
+                    log(SPACE + property + COLON + SPACE + val);     
+                } else if(isArray(val)) {
+                    val = val.join();
+                    log(SPACE + property + COLON + SPACE + val);     
+                } else if(isObject(val)) {
+                    log(SPACE + property + COLON + SPACE + START_LOG);
+                    logObject(val);                         
+                    log(SPACE + property + COLON + SPACE + END_LOG);
+                } else {
+                    log(SPACE + property + COLON + SPACE + val);  
+                }                           
+            }
+        }
+    };
+    var sceneLog = function(value){
+        if(!value){
+            return;
+        }
+        if(isArray(value)) {
+            return sceneLogArray(value);
+        }
+        post(SCENE_LOGGER, SET, TXT, value);
+    };
+    var sceneLogArray = function(arr){
+        if(!arr || !isArray(arr)){
+            return;
+        }
+        var out = "";
+        for (var i = 0; i < arr.length; i++) {
+            out += arr[i] + NL;
+        }
+        sceneLog(out);
+    };
+    var postToInscore = function(inscoreCmdArr){
+        if(!inscoreCmdArr || !isArray(inscoreCmdArr)) {
+            logError("postToInscore: Invalid inputs");
+            return;
+        }
+        if(isArray(inscoreCmdArr[0])) {
+            for (var i = 0; i < inscoreCmdArr.length; i++) {
+                post.apply(this, inscoreCmdArr[i]);
+            }
+        } else {
+            post.apply(this, inscoreCmdArr); 
+        }
+    };
+    var saveInscoreFile = function(fileName, layer, attribArr){
+        if(!fileName){
+            fileName = UNKNOWN;
+        }
+        if(!layer) {
+            layer = INSCORE_SCENE_URL;
+        }
+        var cmdArr = [];
+        cmdArr.push(layer);
+        cmdArr.push(SAVE);
+        if(isArray(attribArr)) {
+            for (var i = 0; i < attribArr.length; i++) {
+                cmdArr.push(this, attribArr[i]);
+            }
+        }
+        cmdArr.push(fileName);
+        log("Saving InScore layer: " + layer + " to file: " + fileName)
+        postToInscore(cmdArr);
+    };
+    var exportInscoreScene = function(fileName, layer, isExportAll){
+        if(!fileName){
+            fileName = EXPORT + ".pdf";
+        }
+        if(!layer) {
+            layer = INSCORE_SCENE_URL;
+        }
+        var cmd = EXPORT;
+        if(isExportAll) {
+            cmd = EXPORT_ALL;
+        }
+        var cmdArr = [];
+        cmdArr.push(layer);
+        cmdArr.push(cmd);
+        cmdArr.push(fileName);
+        log("Exporting InScore layer: " + layer + " to file: " + fileName + " cmd: " + cmd);
+        postToInscore(cmdArr);
+    };
+    var convertToArr = function(str, delimiter) {
+        if (!str || !isString(str)) {
+            logError("convertToArr: invalid String");
+            log(str);
+            return [];
+        }
+    
+        return str.split(delimiter);
+    };
+    var convertArrToString = function(arr, delimiter) {
+        var out = EMPTY; 
+        if (!arr) {
+            return out;
+        }
+        
+        if(!delimiter) {
+            return arr.join();
+        }
+
+        return arr.join(delimiter);
+    };
+    var convertArgListToArr = function(){
+        var out = [];
+        for(var arg = 0; arg < arguments.length; ++ arg) {
+            var val = arguments[arg];
+            out.push(val);
+        }
+        return out;
+    };
+    var getUrl = function(component){
+        if(!component) {
+            logError("getUrl: Invalid inputs");
+            return;
+        }
+        return component.componentUrl; 
+    };    
+    var getUrlComponents = function(url) {
+        if (!url) {
+            logError("getUrlComponents: Invalid inputs");
+            return;
+        }
+
+        var urlParts = convertToArr(url, INSCORE_URL_DELIMITER);
+
+        if(urlParts.length < 3 || ITL !== urlParts[0] || SCENE !== urlParts[1]) {
+            logError("getUrlComponents: Invalid URL " + url);
+            return;
+        }
+
+        var out = [];
+        for (var i = 2; i < urlParts.length; i++) {
+            out.push(urlParts[i]);    
+        }
+
+        return out;
+    };
+    var getAndIncrementComponentCount = function() {
+        return ++componentCount;
+    };
+    var getComponentCount = function() {
+        return componentCount;
+    };
+    var validateParent = function(parent) {
+        var parentUrl = null;
+        if(parent && isObject(parent)) {
+            parentUrl = parent.componentUrl;        
+        }
+
+        var out = parentUrl;
+        if(!parentUrl) {
+            out = INSCORE_SCENE_ROOT_URL;
+        }
+        if(!endsWith(out, INSCORE_URL_DELIMITER)) {
+            out += INSCORE_URL_DELIMITER;
+        }
+        return out;
+    };
+    var validateParentUrl = function(parentUrl) {
+        var out = INSCORE_SCENE_ROOT_URL;
+        if(parentUrl) {
+            out = parentUrl;
+        }
+        if(!endsWith(out, INSCORE_URL_DELIMITER)) {
+            out += INSCORE_URL_DELIMITER;
+        }
+        return out;
+    };
+    var submitToInscore = function(component) {
+        if(!component || !isObject(component)) {
+            logError("submitToInscore: Invalid Component");
+            return;
+        }
+
+        var inscoreCmdArr = component.inscoreDef;
+        if(inscoreCmdArr && isArray(inscoreCmdArr) && !isEmptyArr(inscoreCmdArr)) {
+            postToInscore(inscoreCmdArr);        
+        }
+
+        if(component.children && isArray(component.children)) {
+            for (var i = 0; i < component.children.length; i++) {
+                submitToInscore(component.children[i]);                
+            }
+        }
+    };
+    var submitCommandToInscore = function(componentUrlList, cmdName, cmdParams){
+        if(!componentUrlList || !cmdName) {
+            logError("setComponentsDate: invalid inputs");
+            return;
+        }
+        
+        var componentUrlArr = componentUrlList;
+        if(!isArray(componentUrlList)) {
+            componentUrlArr = convertToArr(componentUrlList, COMMA);        
+        }
+
+        var cmdParamsArr = cmdParams;
+        if(cmdParams && !isArray(cmdParams)) {
+            cmdParamsArr = convertToArr(cmdParams, COMMA);        
+        }
+        log("submitCommandToInscore: ----");
+        log(componentUrlArr);
+        log(cmdName);
+        log(cmdParamsArr);
+        logEmptyLine();
+        
+        //TODO delete internal
+        var cmds = [];
+        if(isArray(componentUrlArr)) {
+            for (var i = 0; i < componentUrlArr.length; i++) {
+                var cmdArr = [];
+                cmdArr.push(componentUrlArr[i]);
+                cmdArr.push(cmdName);
+                if(isArray(cmdParams)){
+                    for (var j = 0; j < cmdParams.length; j++) {
+                        cmdArr.push(cmdParams[j]);
+                    }
+                } else {
+                    if(cmdParams) {
+                        cmdArr.push(cmdParams);
+                    }
+                }
+                cmds.push(cmdArr);
+            }
+        } else {
+            var cmdArr = [];
+            cmdArr.push(componentUrlArr);
+            cmdArr.push(cmdName);
+            if(isArray(cmdParams)){
+                for (var j = 0; j < cmdParams.length; j++) {
+                    cmdArr.push(cmdParams[j]);
+                }
+            } else {
+                if(cmdParams) {
+                    cmdArr.push(cmdParams);
+                }
+            }
+            cmds.push(cmdArr);
+        }       
+        postToInscore(cmds);
+    };
+    var deleteComponents = function(componentUrlList){
+        submitCommandToInscore(componentUrlList, DEL);
+    };
+    var mapComponent = function(componentUrlList, map){
+        if(!componentUrlList || !map) {
+            logError("mapComponent: invalid inputs");
+            return;
+        }
+        submitCommandToInscore(componentUrlList, MAP, map);
+    };
+    var setComponentsDate = function(componentUrlList, dateStr, isDeltaDate){
+        if(!componentUrlList || !dateStr) {
+            logError("setComponentsDate: invalid inputs");
+            return;
+        }
+        var dateCmd = DATE;
+        if(isDeltaDate) {
+            dateCmd = DDATE;
+        }
+        submitCommandToInscore(componentUrlList, dateCmd, dateStr);
+    };
+    var setComponentsDDate = function(componentUrlList, dateStr){
+        setComponentsDate(componentUrlList, dateStr, true);
+    };
+    var findSvgDef = function(symbolName) {
+        if(!symbolName) {
+            return;
+        }
+        return SVG_DEF[symbolName];
+    };
+    var findNotationClass = function(notationClass) {
+        if(!notationClass) {
+            return;
+        }
+        return SVG_DEF[notationClass];
+    };
+    var findNotationDef = function(notationClass, notationType) {
+        if(!notationClass || !notationType) {
+            return;
+        }
+        nClass = findNotationClass(notationClass);
+        if(!nClass || !isObject(nClass)) {
+            return;
+        }
+
+        return nClass[notationType];
+    };
+    var findXSpaceMultiplier = function(symName) {
+        if(!symName) {
+            return;
+        }
+        return SVG_DEF.xSpaceMultiplier[symName];
+    }; 
+    var findAdditionalSpace = function(symName) {
+        if(!symName) {
+            return;
+        }
+        return SVG_DEF.additionalXSpace[symName];
+    };
+    var findWidth = function(symName) {
+        if(!symName) {
+            return;
+        }
+        return SVG_DEF.width[symName];
+    };   
+    var getSymbolXSpace = function(symName) {
+        if(!symName) {
+            logError("getNoteXSpace: invalid notation symbol name");
+            return;
+        }
+        var width = findWidth(symName);
+        if(!width) {
+            logError("getNoteXSpace: invalid width for: " + symName);
+            return;
+        }
+        var xMultiplier = findXSpaceMultiplier(symName);
+        if(!xMultiplier) {
+            xMultiplier = 1;
+        }
+        var xTra = findAdditionalSpace(symName);
+        if(!xTra) {
+            xTra = 0.0;
+        }
+
+        return xMultiplier * width + xTra; 
+    };    
+    var incrementComponentDate = function(componentUrl, incrementVal){
+        if(!componentUrl) {
+            return;
+        }
+        var dt = "" + incrementVal + DEFAULT_DATE_DENOM;
+        setComponentsDDate(componentUrl, dt);
+    };
+    var incrementActiveStaveDate = function(incrementVal){        
+        if(!currentScore) {
+            return;
+        }
+        currentScore.incrementActiveStaveDate(incrementVal);
+    };
+    var scaleActiveStaveNotation = function(factor){
+        if(!score) {
+            return;
+        }
+        score.scaleActiveStaveNotation(factor);
+    };
+    var getNextStave = function(){
+        if(!score) {
+            return;
+        }
+        score.getNextStave();
+    };
+    var getNumberOfBaseBeatsInUnit = function(durationUnit){
+        var bbd = NOTE_UNIT_VALUE[BASE_BEAT_DURATION];
+        if(!bbd) {
+            logError("getNumberOfBaseBeatsInUnit: could not find duration for: " + BASE_BEAT_DURATION);
+            return 0;
+        }
+
+        var ud = NOTE_UNIT_VALUE[durationUnit];
+        if(!ud) {
+            logError("getNumberOfBaseBeatsInUnit: could not find duration for: " + durationUnit);
+            return 0;
+        }
+
+        return Math.round(bbd / ud);
+    };
+    var setCurrentScore = function(score){
+        if(!score) {
+            return;
+        }
+        currentScore = score;
+    };
+    var getCurrentScore = function(){
+        return currentScore;
+    };
+    var parseInput = function(notation) {
+        if(!notation || !isString(notation)) {
+            logError("parse: Invalid notation");
+            return;
+        }
+
+        var score = getCurrentScore();
+        if(!score) {
+            logError("parse: Can not find score for notation");
+            return;
+        }
+
+        tmpStave = null;
+        var notationElements = convertToArr(notation, COMMA);
+        for (var i = 0; i < notationElements.length; i++) {
+            var element = notationElements[i];
+            var nameValPairs = convertToArr(element, COLON);
+            if(!nameValPairs) {
+                logError("parse: Can not parse name - value pair in notation: " + element);
+                continue;
+            }
+            for (var j = 0; j < nameValPairs.length; j += 2) {
+                var name = nameValPairs[j];
+                var val = nameValPairs[j + 1];
+                processInput(name, val, score);
+            }
+        } 
+        
+        if(tmpStave) {
+            tmpStave.onNotationUpdateComplete();            
+        }
+    };
+    var processInput = function(name, value, score) {
+        if(!name || !isString(name)) {
+            return;
+        }
+        log("processInput: name " + name + " value: " + value);
+        // "prt:no|1,stv:actv,act:rplc,stf:no|1,bar:no|1|ts|4;4|tmpo|120|sl|0.0|bl|1;0.03;2|bl|2;0.135;2|bl|3;0.24;2|bl|4;0.345;2|el|0.45|n|stf;1;dur;4;pos;2;x.0.03"
+        switch(name) {
+            case ZS_PART: 
+                isOk = processPart(value, score);
+                if(!isOk) {
+                    logError("Invalid inputs, will not process");
+                    return;
+                }
+                break;                
+            case ZS_STAVE: 
+                tmpStave = getStave(value, score);
+                break;
+            case ZS_ACTION: 
+                processAction(tmpStave, value);
+                break;
+            case ZS_STAFF: 
+                processStaff(tmpStave, value);
+                break;                
+            case ZS_BAR: 
+                processBar(tmpStave, value);
+                break;        
+            default:
+                log("processInput: unknown command name: " + name);
+        }
+
+    };
+    var processPart = function(partString, score) {
+        if(!score || !partString) {
+            logError("processPart: invalid inputs");
+            return;
+        }
+        var partElements = convertToArr(partString, PIPE);
+        for (var i = 0; i < partElements.length; i += 2) {
+            var name = partElements[i];
+            var value = partElements[i + 1];
+            if(!value) {
+                logError("processPart: Invalid Part param value, ignoring");
+                continue;
+            }
+            switch(name) {
+                case ZS_NUMBER: 
+                    partNo = value;
+                    if(parseInt(score.partNo) !== parseInt(partNo)) {
+                        logError("Received Invalid part: " + partNo + " score.partNo: " + score.partNo);
+                        return false;
+                    }
+                    break;                                 
+                default: 
+                    logError("processPart: Unknown param: " + name);
+            }
+        }
+        return true;
+    };
+    var getStave = function(type, score) {
+        switch(type) {
+            case ZS_ACTIVE:
+                return score.getActiveStave();
+            case ZS_NEXT:
+                return score.getNextStave();
+        }
+        log("Cound not find stave: " + type + ", returning active.");
+        return score.getActiveStave();
+    };
+    var processAction = function(stave, action) {
+        if(!stave) {
+            logError("processAction: invalid stave");
+            return;
+        }
+        switch(action) {
+            case ZS_REPLACE: 
+                stave.recreateNotationContainer();
+                break;
+            case ZS_APPEND:
+             // Do nothing?
+                break;
+            default:
+                logError("processAction: Invalid Action: " + action);
+
+        }
+    };
+    var processStaff = function(stave, staffString) {
+        if(!stave || !staffString) {
+            logError("processStaff: invalid inputs");
+            return;
+        }
+
+        // stf:no|1|dx|0.0|dy|0.0|szx|1.4|
+        var staffElements = convertToArr(staffString, PIPE);
+
+        var staffNo = 1;
+        var dx = 0.0;
+        var dy = STAVE_NOTATION_Y_OFFSET;
+        var xSize = STAFF_WIDTH;
+        for (var i = 0; i < staffElements.length; i += 2) {
+            var name = staffElements[i];
+            var value = staffElements[i + 1];
+            if(!value) {
+                logError("processStaff: Invalid Part param value, ignoring");
+                continue;
+            }
+            switch(name) {
+                case ZS_NUMBER: 
+                    staffNo = value;
+                    break;
+                case ZS_DX:
+                    dx = parseFloat(value);                    
+                    break;
+                case ZS_DY:
+                    dy = parseFloat(value);
+                    break;
+                case ZS_X_SIZE:
+                    xSize = parseFloat(value);
+                    break;
+                default:
+                    logError("processStaff: Unknown param: " + name);
+            }
+        }
+
+        var staff = stave.createStaff(staffNo, dx, dy, xSize);
+
+        stave.addStaff(staff);
+    };
+    var processBar = function(stave, barString) {
+        if(!stave || !barString) {
+            logError("processBar: invalid inputs");
+            return;
+        }
+
+        var barElements = convertToArr(barString, PIPE);
+        if(!barElements || barElements.length < 2) {
+            logError("processBar: invalid command stream");
+            return;
+        }
+
+        var barNo = null;
+        var timeSigNom = null;
+        var timeSigDenom = null;
+        var tempo = null;
+        var slXOffset = null;
+        var elXOffset = null;
+        var blNos= [];
+        var blXOffsets = [];
+        var blBBDurations = [];
+        var notes = [];
+
+        // bar:no|1|ts|4;4|tmpo|120|sl|0.0|bl|1;0.03;2|bl|2;0.135;2|bl|3;0.24;2|bl|4;0.345;2|el|0.45|n|stf;1;dur;4;pos;2;x.0.03"
+        for (var i = 0; i < barElements.length; i += 2) {
+            var name = barElements[i];
+            var value = barElements[i + 1];
+            if(!value) {
+                logError("processBar: Invalid Bar param value, ignoring");
+                continue;
+            }
+            switch(name) {
+                case ZS_NUMBER: 
+                    barNo = value;
+                    break;
+                case ZS_TIME_SIGNATURE:
+                    var tsElements = convertToArr(value, SEMICOLON);
+                    if(tsElements.length != 2) {
+                        logError("processBar: Invalid time signature config");
+                        break;
+                    }
+                    timeSigNom = ZS_TIME_SIGNATURE + tsElements[0]; 
+                    timeSigDenom = ZS_TIME_SIGNATURE + tsElements[1];
+                    break;      
+                case ZS_TEMPO: 
+                    tempo = value;
+                    break;
+                case SL:
+                    slXOffset = value;
+                    break;              
+                case BL:        
+                    var blElements = convertToArr(value, SEMICOLON);            
+                    if(blElements.length != 3) {
+                        logError("processBar: Invalid beat line config");
+                        break;
+                    }
+                    blNos.push(blElements[0])
+                    blXOffsets.push(blElements[1]);
+                    blBBDurations.push(blElements[2]);
+                    break;  
+                case EL:
+                    elXOffset = value;
+                    break; 
+                case N:
+                    var note = processNote(value, stave);
+                    notes.push(note);
+                    break;
+                case ZS_CLEF:
+                    var clef = processClef(value, stave);
+                    notes.push(clef);
+                    break;                              
+                default: 
+                    logError("processBar: Unknown param: " + name);
+            }
+        }
+
+        var bar = stave.createBar(barNo);
+        bar.addTimeSignature(timeSigNom,timeSigDenom);
+        bar.addTempo(tempo);
+        bar.addStartLine(slXOffset);
+        for (var i = 0; i < blXOffsets.length; i++) {
+            bar.addBeatLine(blXOffsets[i], blBBDurations[i], blNos[i]);
+        }
+        bar.addEndLine(elXOffset);
+        for (var i = 0; i < notes.length; i++) {
+            bar.addNota(notes[i], stave);
+        }
+        
+        stave.addBar(bar);
+    };
+    var processNote = function(noteString, stave) {
+        // |n|stf;1;dur;4;pos;2;x;0.03
+        var noteElements = convertToArr(noteString, SEMICOLON);
+
+        var staffNo = 1;
+        var duration = 0;
+        var position = 0;
+        var xOffset = 0;
+        var stem = ZS_UP;
+        for (var i = 0; i < noteElements.length; i += 2) {
+            var name = noteElements[i];
+            var value = noteElements[i + 1];
+            if(!value) {
+                logError("processNote: Invalid Part param value, ignoring: " + value);
+                return;
+            }
+            switch(name) {
+                case ZS_STAFF: 
+                    staffNo = value;                    
+                    break;    
+                case ZS_DURATION:
+                    duration = value;
+                    break;    
+                case ZS_POSITION:
+                    position = value;
+                    break; 
+                case ZS_DX:
+                    xOffset = value;
+                    break;
+                case ZS_STEM:
+                    stem = value;
+                    break;                            
+                default: 
+                    logError("processStaff: Unknown param: " + name);
+            }
+        }            
+
+        return stave.createNote(duration, position, xOffset, staffNo, stem);
+    };
+    var processClef = function(clefString, stave) {
+        // clf|stf;1;id:g;dx;0.03
+        var clefElements = convertToArr(clefString, SEMICOLON);
+
+        var staffNo = 1;
+        var xOffset = 0;
+        var clefId = "g";
+        for (var i = 0; i < clefElements.length; i += 2) {
+            var name = clefElements[i];
+            var value = clefElements[i + 1];
+            log("processNote: Processing name " + name + " value: " + value);
+            if(!value) {
+                logError("processClef: Invalid Part param value, ignoring: " + value);
+                return;
+            }
+            switch(name) {
+                case ZS_STAFF: 
+                    staffNo = value;                    
+                    break;    
+                case ZS_ID:
+                    clefId = value;
+                    break; 
+                case ZS_DX:
+                    xOffset = value;
+                    break;                        
+                default: 
+                    logError("processStaff: Unknown param: " + name);
+            }
+        }            
+
+        return stave.createClef(clefId, xOffset, staffNo);
+    };
+
+
+    
+
+
+
+
+    //--------------------------------
+    // ZSCORE JS Object Model
+    //--------------------------------
+    // ---- Text ----
+    var Text = function(txt, name, params, parentUrl) {
+        this.id = getAndIncrementComponentCount();
+        this.txtValue = txt;        
+        this.inscoreDef = [];
+        this.params = clone(DEFAULT_TEXT_PARAMS);
+        this.isDrawn = false;
+        this.txtName = UNKNOWN;
+        if(name) {
+            this.txtName = name;
+        }        
+        this.componentName = ZS_TEXT + this.txtName + this.id;
+        this.componentUrl = validateParentUrl(parentUrl) + this.componentName;
+
+        merge(this.params, params);
+    };
+    Text.prototype.createInscoreDef = function() {
+        this.inscoreDef.length = 0;
+       
+        addToArr(this.inscoreDef, convertArgListToArr(this.componentUrl, SET, TXT, this.txtValue));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, X, this.params.x));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, Y, this.params.y));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, Z, this.params.z));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, SCALE, this.params.scale));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, COLOR, 
+            this.params.colR, this.params.colG, this.params.colB, this.params.alpha));
+        return this.inscoreDef;
+    };
+    Text.prototype.draw = function() {
+        if(this.isDrawn) {
+            deleteComponents(this.componentUrl);
+        }        
+        submitToInscore(this);
+        this.isDrawn = true;
+    }
+
+    // ---- Layer ----
+    var Layer = function (name, params, parentUrl) {
+        this.id = getAndIncrementComponentCount();
+        this.inscoreDef = [];
+        this.children = [];
+        this.params = clone(DEFAULT_LAYER_PARAMS);
+        this.isDrawn = false;
+        if(!name) {
+            name = UNKNOWN;
+        }
+        this.layerName = name;
+
+        this.componentName = ZS_LAYER + this.layerName + this.id;
+        this.componentUrl = validateParentUrl(parentUrl) + this.componentName;
+
+        merge(this.params, params);        
+    };
+    Layer.prototype.createInscoreDef = function() {
+        this.inscoreDef.length = 0;
+
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, SET, LAYER));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, Z, this.params.z));
+        if(this.params.isVisible) {
+            addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, X, this.params.x));
+            addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, Y, this.params.y));            
+            addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, WIDTH, this.params.sizeX));
+            addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, HEIGHT, this.params.sizeY));
+            addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, COLOR, 
+                this.params.colR, this.params.colG, this.params.colB, this.params.alpha));            
+            addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, BRUSH_STYLE, SOLID));       
+        }
+    };
+    Layer.prototype.draw = function() {
+        if(this.isDrawn) {
+            deleteComponents(this.componentUrl);
+        }        
+        submitToInscore(this);
+        this.isDrawn = true;
+    }
+
+    // ---- Line ----
+    var Line = function (name, params, parentUrl) {
+        this.id = getAndIncrementComponentCount();
+        this.lineName = name;
+        this.inscoreDef = [];
+        this.children = [];
+        this.params = clone(DEFAULT_LINE_PARAMS);
+        this.isDrawn = false;
+        this.componentName = ZS_LINE + this.lineName + this.id;
+        this.componentUrl = validateParentUrl(parentUrl) + this.componentName;
+        merge(this.params, params);      
+    };
+    Line.prototype.createInscoreDef = function() {
+        this.inscoreDef.length = 0;
+        
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, SET, LINE, XY, this.params.lineEndX, this.params.lineEndY));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, X, this.params.x));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, Y, this.params.y));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, Z, this.params.z));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, SCALE, this.params.scale));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, PEN_WIDTH, this.params.penWidth));    
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, PEN_STYLE, this.params.penStyle));    
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, PEN_COLOR, 
+            this.params.penColR, this.params.penColG, this.params.penColB, this.params.penColAlpha));  
+
+        return this.inscoreDef;
+    };
+    Line.prototype.draw = function() {
+        if(this.isDrawn) {
+            deleteComponents(this.componentUrl);
+        }        
+        submitToInscore(this);
+        this.isDrawn = true;
+    }
+
+    // ---- Rectangle    ----
+    var Rect = function (name, params, parentUrl) {
+        this.id = getAndIncrementComponentCount();
+        this.rectName = name;
+        this.inscoreDef = [];
+        this.children = [];
+        this.params = clone(DEFAULT_RECT_PARAMS);
+        this.isDrawn = false;
+        this.componentName = ZS_RECT + this.rectName + this.id;
+        this.componentUrl = validateParentUrl(parentUrl) + this.componentName;
+        merge(this.params, params);    
+    };
+    Rect.prototype.createInscoreDef = function() {
+        this.inscoreDef.length = 0;
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, SET, RECT, this.params.sizeX, this.params.sizeY));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, X, this.params.x));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, Y, this.params.y));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, Z, this.params.z));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, SCALE, this.params.scale));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, COLOR, 
+            this.params.colR, this.params.colG, this.params.colB, this.params.alpha));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, PEN_WIDTH, this.params.penWidth));    
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, PEN_STYLE, this.params.penStyle));    
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, PEN_COLOR, 
+                this.params.penColR, this.params.penColG, this.params.penColB, this.params.penColAlpha));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, RADIUS, this.params.radX, this.params.radY));
+        
+        if(this.params.map) {
+            addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, MAP, this.params.map));
+        }
+        
+        return this.inscoreDef;
+    };
+    Rect.prototype.draw = function() {
+        if(this.isDrawn) {
+            deleteComponents(this.componentUrl);
+        }        
+        submitToInscore(this);
+        this.isDrawn = true;
+    }
+
+    // ---- SVG Symbol ----
+    var SvgSymbol = function (name, params, parentUrl) {
+        this.id = getAndIncrementComponentCount();
+        this.symbolName = name;
+        this.inscoreDef = [];
+        this.children = [];
+        this.params = clone(DEFAULT_SVG_SYMBOL_PARAMS);
+        this.isDrawn = false;
+        this.componentName = ZS_SVG + this.symbolName + this.id;
+        this.componentUrl = validateParentUrl(parentUrl) + this.componentName;
+        this.xSpace = 0.0;
+        merge(this.params, params);        
+    };
+    SvgSymbol.prototype.createInscoreDef = function() {
+        this.inscoreDef.length = 0;
+
+        var svgDef = findSvgDef(this.symbolName);
+        if(!svgDef) {
+            logError("SvgSymbol.prototype.createInscoreDef: Could not find SVG definition for name: " + this.symbolName);
+            return;
+        }
+
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, SET, SVG, svgDef));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, X, this.params.x));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, Y, this.params.y));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, Z, this.params.z));
+        addToArr(this.inscoreDef,convertArgListToArr(this.componentUrl, SCALE, this.params.scale)); 
+        
+        return this.inscoreDef;
+    };
+    SvgSymbol.prototype.draw = function() {
+        if(this.isDrawn) {
+            deleteComponents(this.componentUrl);
+        }        
+        submitToInscore(this);
+        this.isDrawn = true;
+    };
+    SvgSymbol.prototype.setXSpace = function(xsp) {
+        this.xSpace = xsp;
+    };
+    SvgSymbol.prototype.getXSpace = function() {
+        return this.xSpace;
+    };
+
+    // ---- Event ----
+    var Event = function (name, watchUrl, actions) {
+        this.id = getAndIncrementComponentCount();
+        this.inscoreDef = [];
+        this.eventName = name;
+        this.componentName = name;
+        this.componentUrl = watchUrl;
+        this.actions = actions;
+    };
+    Event.prototype.createInscoreDef = function() {
+        this.inscoreDef.length = 0;
+        var parts = convertArgListToArr(this.componentUrl, WATCH, this.eventName);
+        if(isArray(this.actions)) {
+            for (var i = 0; i < this.actions.length; i++) {
+                parts.push(this.actions[i]);                
+            }
+        } else {
+            parts.push(actions);
+        }
+
+        addToArr(this.inscoreDef, parts);
+        return this.inscoreDef;
+    };
+
+    // ---- Beat ----
+    var Beat = function (params, parentUrl, beatNo) {
+        this.id = getAndIncrementComponentCount();
+        this.params = clone(DEFAULT_BEAT_PARAMS);
+        this.beatLine = null;
+        this.containerUrl = parentUrl;        
+        this.isDrawn = false;
+        this.beatNo = beatNo;
+        if (!beatNo) {
+            beatNo = 0;
+        }
+        this.beatName = BL + beatNo;
+        merge(this.params, params);
+    }
+    Beat.prototype.createInscoreDef = function() {
+        this.setPosition(this.params.x, this.params.y);
+
+        this.beatLine = new Line(this.beatName, this.params.beatLineParams, this.containerUrl);
+        this.beatLine.createInscoreDef();   
+    };
+    Beat.prototype.setPosition = function(x, y) {
+        this.params.x = x;
+        this.params.y = y;
+        this.params.beatLineParams.x = x;
+        this.params.beatLineParams.y = y;
+    };
+    Beat.prototype.draw = function() {
+        if(this.isDrawn) {
+            // if(this.beatLine) {
+            //     deleteComponents(this.beatLine.componentUrl);
+            // }
+        }
+        if(this.beatLine) {
+            this.beatLine.draw();    
+        }
+        this.isDrawn = true;
+    };
+
+    // ---- Beat Map ----
+    var BeatMap = function () {
+        this.xStart = 0.0;
+        this.xEnd = 1.0;
+        this.yStart = -1.0;
+        this.yEnd = 1.0;
+        this.bbStart = "0/4";
+        this.bbEnd = "1/4";
+    };
+    BeatMap.prototype.toInscoreString = function() {
+        return "( [" + this.xStart + ", " + this.xEnd + "[ [" + this.yStart + ", " + this.yEnd + "[ ) ( [" + this.bbStart + ", " + this.bbEnd + "[ )";
+    };
+
+
+    // ---- Stem ----
+    var Stem = function (params, parentUrl, noteId) {
+        this.id = getAndIncrementComponentCount();
+        this.name = "" + noteId + ZS_STEM;
+        this.params = clone(DEFAULT_STEM_PARAMS);
+        this.containerUrl = parentUrl;        
+        this.isDrawn = false;
+        this.line = null;
+        merge(this.params, params);
+    };
+    Stem.prototype.createInscoreDef = function() {
+        var params = clone(this.params.lineParams);
+        this.line = new Line(this.name, params, this.containerUrl);
+        this.line.createInscoreDef(); 
+    };
+    Stem.prototype.setPosition = function(x, y) {
+        this.params.x = x;
+        this.params.y = y;
+        if(!this.line) {
+            return;
+        }
+
+        var lx = x;
+        var ly = y;
+        switch(this.params.direction) {
+            case ZS_UP:
+                lx += this.params.xOffsetUp;
+                ly += this.params.yOffsetUp;
+                break;
+            case ZS_DOWN:
+                lx += this.params.xOffsetDown;
+                ly += this.params.yOffsetDown;
+                log("Stem.prototype.setPosition: lx: " + lx + " ly: " + ly);
+                break;
+            default:
+                logError("Stem.prototype.setPosition: Invalid Stem direction: " + this.params.direction);
+        }
+
+        this.line.params.x = lx;
+        this.line.params.y = ly;
+        this.line.createInscoreDef();
+    };
+    Stem.prototype.draw = function() {
+        if(this.isDrawn) {
+        }
+        if(this.line) {
+            this.line.draw();    
+        }
+        this.isDrawn = true;
+    };
+
+    // ---- Notation Symbol ----
+    var Nota = function (params, parentUrl) {
+        this.id = getAndIncrementComponentCount();
+        this.params = clone(DEFAULT_NOTE_PARAMS);
+        this.containerUrl = parentUrl;        
+        this.isDrawn = false;
+        this.xSpace = 0.0;
+        this.svgSymbol = null;
+        this.children = [];
+        merge(this.params, params);
+    };
+    Nota.prototype.createInscoreDef = function() {
+        var notationDef = findNotationDef(this.params.class, this.params.type);
+        if(!notationDef || !isObject(notationDef)) {
+            logError("Nota.prototype.createInscoreDef: Invalid Notation Def");
+            return;
+        }        
+        var svgSybmolName = notationDef[this.params.symbolName];
+        if(!svgSybmolName) {
+            logError("Nota.prototype.createInscoreDef: Invalid SVG symbol name");
+            return;
+        }
+        var xsp = getSymbolXSpace(this.params.symbolName);
+        if(!xsp) {
+            log("Nota.prototype.createInscoreDef: WARN invalid xSpace");
+            xsp = 0.0;
+        }
+        this.xSpace = xsp;
+    
+        this.svgSymbol = new SvgSymbol(svgSybmolName, this.params.svgParams, this.containerUrl);
+        this.svgSymbol.createInscoreDef();   
+    };
+    Nota.prototype.setPosition = function(x, y) {
+        this.params.x = x;
+        this.params.y = y;
+        this.params.svgParams.x = x;
+        this.params.svgParams.y = y;
+
+        if(this.svgSymbol) {
+            this.svgSymbol.params.x = x;
+            this.svgSymbol.params.y = y;
+            this.svgSymbol.createInscoreDef();
+        }
+        for (var i = 0; i < this.children.length; i++) {
+            this.children[i].setPosition(x, y);
+        }
+    };
+    Nota.prototype.draw = function() {
+        if(this.isDrawn) {
+            // if(this.svgSymbol) {
+            //     deleteComponents(this.svgSymbol.componentUrl);
+            // }
+        }
+        if(this.svgSymbol) {
+            this.svgSymbol.draw();    
+        }
+        for (var i = 0; i < this.children.length; i++) {
+            this.children[i].draw();
+        }
+        this.isDrawn = true;
+    };
+    Nota.prototype.getDuration = function() {
+        return this.params.durationName;
+    };
+    Nota.prototype.getXSpace = function() {
+        return this.xSpace;
+    };  
+    Nota.prototype.getXPosition = function() {
+        if(!this.params.svgParams) {
+            return 0.0;
+        }
+        return this.params.svgParams.x;
+    };   
+    Nota.prototype.getYPosition = function() {
+        return this.params.verticalStaffPos;
+    };
+    Nota.prototype.getXOffset = function() {
+        return this.params.xOffset;
+    };
+    Nota.prototype.addChild = function(child) {
+        if(!child || !isObject(child)){
+            logError("Nota.prototype.addChild invalid child");
+            return;
+        }
+
+        this.children.push(child);
+    };
+
+    // ---- Tempo ----
+    var Tempo = function (params, parentUrl, bpm) {
+        this.id = getAndIncrementComponentCount();
+        this.params = clone(DEFAULT_TEMPO_PARAMS);
+        this.containerUrl = parentUrl;        
+        this.isDrawn = false;
+        this.svgBeatDuration = null;
+        this.bmpTxt = null;
+        this.bpm = bpm;
+        merge(this.params, params);
+    };
+    Tempo.prototype.createInscoreDef = function() {
+        var beatDurationDef = findNotationDef(this.params.class, this.params.beatDurationType);
+        if(!beatDurationDef || !isObject(beatDurationDef)) {
+            logError("Tempo.prototype.createInscoreDef: Invalid Beat Duration Def");
+            return;
+        }    
+        var beatDurationSvgSybmolName = beatDurationDef[this.params.noteVal];
+        if(!beatDurationSvgSybmolName) {
+            logError("Tempo.prototype.createInscoreDef: Invalid beat duration SVG symbol name");
+            return;
+        }
+       
+        this.svgBeatDuration = new SvgSymbol(beatDurationSvgSybmolName, this.params.noteSvgParams, this.containerUrl);      
+        var xsp = getSymbolXSpace(this.params.noteVal);
+        if(!xsp) {
+            log("Tempo.prototype.createInscoreDef: WARN invalid xSpace");
+        }
+        this.svgBeatDuration.setXSpace(xsp);
+        this.svgBeatDuration.createInscoreDef();
+
+        var txtValue = SPACE + EQUALS + SPACE + this.bpm;
+        this.bmpTxt = new Text(txtValue, ZS_TEMPO, this.params.txtParams, this.containerUrl);
+        this.bmpTxt.createInscoreDef();
+    };
+    Tempo.prototype.setPosition = function(x, y) {
+        this.params.x = x;
+        this.params.y = y;
+        this.svgBeatDuration.params.x = x;
+        this.svgBeatDuration.params.y = y;
+        this.svgBeatDuration.createInscoreDef();
+        this.bmpTxt.params.x = x + this.svgBeatDuration.getXSpace(); //TODO calculate txt xSpace
+        this.bmpTxt.params.y = y;
+        this.bmpTxt.createInscoreDef();
+    };
+    Tempo.prototype.draw = function() {
+        if(this.isDrawn) {
+           //delete components
+        }
+        if(this.svgBeatDuration) {
+            this.svgBeatDuration.draw();    
+        }
+        if(this.bmpTxt) {
+            this.bmpTxt.draw();    
+        }
+
+        this.isDrawn = true;
+    };
+    
+
+    // ---- Time Signature ----
+    var TimeSig = function (params, parentUrl) {
+        this.id = getAndIncrementComponentCount();
+        this.params = clone(DEFAULT_TIME_SIG_PARAMS);
+        this.containerUrl = parentUrl;        
+        this.isDrawn = false;
+        this.svgNomSymbols = [];
+        this.svgDenomSymbol = null;
+        this.xSpace = 0.0;
+        merge(this.params, params);
+    };
+    TimeSig.prototype.createInscoreDef = function() {
+        var nomNotationDef = findNotationDef(this.params.class, this.params.nomType);
+        if(!nomNotationDef || !isObject(nomNotationDef)) {
+            logError("TimeSig.prototype.createInscoreDef: Invalid Nominator Notation Def");
+            return;
+        }    
+        var denomNotationDef = findNotationDef(this.params.class, this.params.denomType);
+        if(!denomNotationDef || !isObject(denomNotationDef)) {
+            logError("TimeSig.prototype.createInscoreDef: Invalid Denominator Notation Def");
+            return;
+        }      
+                
+        var noms = this.params.nomVals;
+        if(!noms) {
+            logError("TimeSig.prototype.createInscoreDef: Invalid Nominators");
+        } else if(!isArray(noms)) {
+            this.params.nomVals = [];
+            this.params.nomVals.push(noms);
+            noms = this.params.nomVals;
+        }
+
+        for (var i = 0; i < noms.length; i++) {
+            var nomSvgSybmolName = nomNotationDef[noms[i]];
+            if(!nomSvgSybmolName) {
+                logError("TimeSig.prototype.createInscoreDef: Invalid Nominator SVG symbol name");
+                return;
+            }
+
+            var nomSvgParams = clone(this.params.nomSvgParams);
+            var svgSymbol = new SvgSymbol(nomSvgSybmolName, nomSvgParams, this.containerUrl);      
+            svgSymbol.createInscoreDef();   
+            this.svgNomSymbols.push(svgSymbol);
+
+            var xsp = getSymbolXSpace(nomSvgSybmolName);
+            if(!xsp) {
+                log("TimeSig.prototype.createInscoreDef: WARN invalid xSpace");
+            }
+            svgSymbol.setXSpace(xsp);
+            this.xSpace += xsp;
+            if(noms.length > (i + 1)) {
+                //for each nom value add a bit of space
+                this.xSpace += COMPOUND_TIME_SIG_SPACE;
+            }
+        }
+        //Add 1 staff space at the end of time sig
+        this.xSpace += STAFF_SPACE;
+        var denomSvgSybmolName = denomNotationDef[this.params.denomVal];
+        if(!denomSvgSybmolName) {
+            logError("TimeSig.prototype.createInscoreDef: Invalid Denominator SVG symbol name");
+            return;
+        }
+       
+        this.svgDenomSymbol = new SvgSymbol(denomSvgSybmolName, this.params.denomSvgParams, this.containerUrl);      
+        this.svgDenomSymbol.createInscoreDef();           
+    };
+    TimeSig.prototype.setPosition = function(x, y) {
+        this.params.x = x;
+        this.params.y = y;
+        this.params.nomSvgParams.x = x;
+        this.params.nomSvgParams.y = y;
+        this.params.denomSvgParams.x = x;
+        this.params.denomSvgParams.y = y;
+
+        var nomX = x;
+        var isAddDelta = false;
+        for (var i = 0; i < this.svgNomSymbols.length; i++) {
+            this.svgNomSymbols[i].params.x = nomX;            
+            this.svgNomSymbols[i].params.y = y;            
+            var xsp = this.svgNomSymbols[i].getXSpace();
+            if(xsp) {
+                nomX += xsp;
+            }
+            if(this.svgNomSymbols.length > (i + 1)){
+                nomX += COMPOUND_TIME_SIG_SPACE;
+                isAddDelta = true;
+            }
+            this.svgNomSymbols[i].createInscoreDef();
+        }
+
+        var delta = (nomX - x) / 2.0;
+        var denomX = x;
+        if(isAddDelta) {
+            denomX += delta;
+        }
+        if(this.svgDenomSymbol) {
+            this.svgDenomSymbol.params.x = denomX;
+            this.svgDenomSymbol.params.y = y;
+            this.svgDenomSymbol.createInscoreDef();
+        }
+    };
+    TimeSig.prototype.draw = function() {
+        if(this.isDrawn) {
+           //delete components
+        }
+        if(this.svgSymbol) {
+            this.svgSymbol.draw();    
+        }
+        for (var i = 0; i < this.svgNomSymbols.length; i++) {
+            this.svgNomSymbols[i].draw();
+        }
+        if(this.svgDenomSymbol) {
+            this.svgDenomSymbol.draw();
+        }
+        this.isDrawn = true;
+    };
+    TimeSig.prototype.getDuration = function() {
+        return null;
+    };
+    TimeSig.prototype.getXSpace = function() {
+        return this.xSpace;
+    };  
+    TimeSig.prototype.getXPosition = function() {      
+        return this.params.x;
+    };   
+    TimeSig.prototype.getYPosition = function() {
+        return 0.0;
+    };    
+
+    // ---- Staff ----
+    var Staff = function (name, staffNo, params, parentUrl) {
+        this.id = getAndIncrementComponentCount();
+        this.staffName = name;
+        this.staffNo = staffNo;
+        this.children = [];
+        this.lineYOffsets = [];
+        this.parentUrl = parentUrl;
+        this.params = clone(DEFAULT_STAFF_PARAMS);        
+        this.componentName = ZS_STAFF + this.staffName + this.id;
+        this.componentUrl = validateParentUrl(parentUrl) + this.componentName;
+        this.staffFrame;
+        this.lines = [];
+        this.notes = [];
+        this.isDrawn = false;
+        merge(this.params, params);        
+    };
+    Staff.prototype.createInscoreDef = function() {
+        var xSize = this.params.sizeX;
+        var ySize = this.params.sizeY;
+        //propagate position
+        this.params.lineParams.lineEndX = xSize;
+        this.params.frameParams.x = this.params.x;
+        this.params.frameParams.y = this.params.y;
+
+        ySize = (this.params.lineNo - 1) * STAFF_SPACE;
+
+        //make frame larger by staff space
+        this.params.frameParams.sizeX = xSize + 2 * STAFF_SPACE;
+        this.params.frameParams.sizeY = ySize + 2 * STAFF_SPACE;
+
+        this.staffFrame = new Rect(this.staffName, this.params.frameParams, this.parentUrl);         
+        this.staffFrame.createInscoreDef();    
+        this.children.push(this.staffFrame);       
+        this.createLines();    
+    };
+    Staff.prototype.createLines = function() {
+        this.lineYOffsets.length = 0;
+
+        var linesNo = this.params.lineNo;
+        var bottomYOffset = 0.0;
+        if(linesNo > 1) {
+            var half = Math.floor(linesNo/2);
+            var yDist = this.params.yLineDist;
+            var halfYDist = yDist/2.0;
+            if(isEven(linesNo)) {
+                bottomYOffset = halfYDist + ((half - 1) * yDist);                
+            } else {
+                bottomYOffset = half * yDist;
+            }
+          
+            for (var i = 0; i < linesNo; i++) {
+                var yOffset = bottomYOffset - (i * yDist);
+                this.lineYOffsets[i] = yOffset;
+            }
+        } else {
+            this.lineYOffsets[0] = 0.0;            
+        }      
+        
+        for (var i = 0; i < linesNo; i++) {
+            var yPos = this.params.y + this.lineYOffsets[i];
+            var lineParams = clone(this.params.lineParams);
+            lineParams.y = yPos;
+            lineParams.x = this.params.x;
+            var name = i + UNDERSCORE;
+            var line = new Line(name, lineParams, this.parentUrl); 
+            this.lines.push(line);        
+            line.createInscoreDef();   
+            this.children.push(line);
+        }         
+    };
+    // Staff.prototype.addNota = function(nota) {
+    //     if(!nota) {
+    //         logError("Staff.prototype.addNota: Invalid notation symbol");
+    //         return;
+    //     }
+
+    //     var vPos = nota.getYPosition();
+    //     if(!vPos) {
+    //         vPos = 0;
+    //     }
+
+    //     var yPos = this.params.y + -1.0 * vPos * STAFF_HALF_SPACE;
+    //     var xPos = (-1.0 * this.params.sizeX/2.0) + 5 * STAFF_SPACE;
+    //     var prevNote = null;
+    //     if(this.notes && !isEmptyArr(this.notes)) {
+    //         var prevIdx = this.notes.length - 1;
+    //         prevNote = this.notes[prevIdx];
+    //         var xSpace = prevNote.getXSpace();
+    //         var prevXPos = prevNote.getXPosition();
+    //         xPos = prevXPos + xSpace;                
+    //     }
+    //     nota.setPosition(xPos, yPos);
+
+    //     this.notes.push(nota);       
+    //     this.children.push(nota);
+    // };
+    Staff.prototype.draw = function() {
+        if(this.isDrawn) {
+            //deleteComponents(this.componentUrl);
+        }        
+       
+        for (var i = 0; i < this.children.length; i++) {
+            this.children[i].draw();                
+        }
+        this.isDrawn = true;
+    };
+
+    // ---- Bar ----
+    var Bar = function (name, params, parentUrl, barNo) {
+        this.id = getAndIncrementComponentCount();
+        this.barName = name;
+        this.barNo = barNo;
+        this.containerUrl = parentUrl;
+        this.params = clone(DEFAULT_BAR_PARAMS);        
+        this.componentName = ZS_BAR + this.barName + this.id;
+        this.componentUrl = validateParentUrl(parentUrl) + this.componentName;
+        this.startLine = null;
+        this.endLine = null;
+        this.inscoreDef = [];
+        this.notes = [];
+        this.beats = [];
+        this.children = [];
+        this.lines = [];
+        this.timeSignature = null;
+        this.tempo = null;
+        this.isDrawn = false;
+        merge(this.params, params); 
+    };
+    Bar.prototype.createInscoreDef = function() {
+        log("Bar.prototype.createInscoreDef ------ BAR ---- ")    
+
+        if(this.startLine) {
+            this.startLine.createInscoreDef();        
+        }
+        if(this.endLine) {
+            this.endLine.createInscoreDef();        
+        }
+        for (var i = 0; i < this.beats.length; i++) {
+            this.beats[i].createInscoreDef();            
+        }
+        if(this.timeSignature) {
+            this.timeSignature.createInscoreDef();
+            this.timeSignature.setPosition(this.timeSignature.params.x, this.timeSignature.params.y);
+        }
+        if(this.tempo) {
+            this.tempo.createInscoreDef();
+            this.tempo.setPosition(this.tempo.params.x, this.tempo.params.y);
+        }
+        
+    };
+    Bar.prototype.draw = function() {
+        if(this.isDrawn) {
+            //deleteComponents(toDelete);
+        }
+        for (var i = 0; i < this.lines.length; i++) {
+            this.lines[i].draw();            
+        }
+        for (var i = 0; i < this.beats.length; i++) {
+            this.beats[i].draw();            
+        }
+        if(this.timeSignature) {
+            this.timeSignature.draw();
+        }
+        if(this.tempo) {
+            this.tempo.draw();
+        }
+        for (var i = 0; i < this.notes.length; i++) {
+            this.notes[i].draw();            
+        }
+
+        this.isDrawn = true;
+
+    };
+    Bar.prototype.addTimeSignature = function(tsNom, tsDenom) {
+        var timeSigParams = clone(this.params.timeSigParams);
+        timeSigParams.nomVals = tsNom;
+        timeSigParams.denomVal = tsDenom;
+        timeSigParams.x = this.params.x + parseFloat(this.params.startLineXd) + timeSigParams.xOffset;
+        timeSigParams.y = this.params.y + timeSigParams.yOffset;
+        this.timeSignature = new TimeSig(timeSigParams, this.containerUrl);
+    };
+    Bar.prototype.addTempo = function(tempo) {
+        var tempoParams = clone(this.params.tempoParams);
+        tempoParams.x = this.params.x + parseFloat(this.params.startLineXd) + tempoParams.xOffset;
+        tempoParams.y = this.params.y + tempoParams.yOffset;
+        this.tempo = new Tempo(tempoParams, this.containerUrl, tempo);
+    };
+    Bar.prototype.addStartLine = function(xOffset) {
+        var slParams = clone(this.params.lineParams);
+        slParams.x = parseFloat(this.params.x) + parseFloat(this.params.startLineXd) + parseFloat(xOffset);
+        slParams.y = this.params.y;
+        this.startLine = new Line(this.barName + ZS_START_LINE, slParams, this.containerUrl); 
+        this.lines.push(this.startLine);
+    };
+    Bar.prototype.addBeatLine = function(xOffset, bbDuration, beatNo) {
+        var bParams = clone(this.params.beatParams);
+        bParams.x = parseFloat(this.params.x) + parseFloat(this.params.startLineXd) + parseFloat(xOffset);
+        bParams.y = this.params.y;
+        bParams.baseBeatsMultiple = bbDuration;
+        var beat = new Beat(bParams, this.containerUrl, beatNo);
+        this.beats.push(beat);
+    };
+    Bar.prototype.addEndLine = function(xOffset) {
+        var elParams = clone(this.params.lineParams);
+        elParams.x = parseFloat(this.params.x) + parseFloat(this.params.startLineXd) + parseFloat(xOffset);
+        elParams.y = this.params.y;
+        this.endLine = new Line(this.barName + ZS_END_LINE, elParams, this.containerUrl); 
+        this.lines.push(this.endLine);
+    };
+    Bar.prototype.addNota = function(nota, stave) {
+        if(!nota) {
+            logError("Bar.prototype.addNota: Invalid notation symbol");
+            return;
+        }
+
+        var staff = stave.getStaff(nota.params.staffNo);
+        var xPos = stave.params.x;
+        var yPos = stave.params.y;
+        var vPos = nota.getYPosition();
+        var xOffset = nota.getXOffset();
+
+        if(!vPos) {
+            vPos = 0;
+        }
+
+        if(this.startLine) {            
+            xPos = parseFloat(this.startLine.params.x) + parseFloat(xOffset);
+        }
+
+        if(staff) {
+            yPos = parseFloat(staff.params.y) + -1.0 * parseFloat(vPos) * STAFF_HALF_SPACE;            
+        }
+        
+        nota.setPosition(xPos, yPos);
+
+        this.notes.push(nota);       
+        this.children.push(nota);
+    };
+    Bar.prototype.deleteNotation = function() {
+        this.barName = null;
+        this.barNo =  null;
+        this.containerUrl =  null;
+        this.params =  null;        
+        this.componentName =  null;
+        this.componentUrl =  null;
+        this.startLine = null;
+        this.endLine = null;
+        this.inscoreDef =  null;
+        this.notes =  null;
+        this.beats =  null;
+        this.children =  null;
+        this.lines =  null;
+        this.timeSignature = null;
+        this.tempo = null;
+    };
+
+    // ---- Stave ----
+    var Stave = function (name, params, parentUrl) {
+        this.id = getAndIncrementComponentCount();
+        this.staveName = name;
+        this.inscoreDef = [];
+        this.children = [];
+        this.staffs = [];
+        this.bars = [];
+        this.lineYOffsets = [];
+        this.containerUrl = parentUrl;
+        this.params = clone(DEFAULT_STAVE_PARAMS);
+        this.stavePane = null;
+        this.syncPane = null;
+        this.cursors = [];
+        this.lines = [];
+        this.notationLayer = null;
+        this.componentName = ZS_STAVE + this.staveName + this.id;
+        this.componentUrl = validateParentUrl(parentUrl) + this.componentName;
+        this.activeStaff = null;
+        this.activeStaffIdx = -1;
+        this.isDrawn = false;
+        this.inscoreBeatMap = null;
+        merge(this.params, params);
+    };
+    Stave.prototype.createInscoreDef = function() {
+        this.setPosition(this.params.x, this.params.y);
+
+        var xSize = this.params.paneParams.sizeX;
+        var ySize = this.params.paneParams.sizeY;
+
+        if(this.params.isCreatePane){
+            this.stavePane = new Rect(this.staveName, this.params.paneParams, this.containerUrl);         
+            this.stavePane.createInscoreDef();   
+        }
+
+        var tlParams = clone(this.params.lineParams);
+        tlParams.y = this.params.y + this.params.topLineYd;
+        tlParams.lineEndX = xSize;
+        var topLine = new Line(this.staveName + ZS_TOP_LINE, tlParams, this.containerUrl); 
+        this.lines.push(topLine);        
+        topLine.createInscoreDef();
+
+        var blParams = clone(this.params.lineParams);
+        blParams.y = this.params.y + this.params.bottomLineYd;
+        blParams.lineEndX = xSize;
+        var bottomLine = new Line(this.staveName + ZS_BOTTOM_LINE, blParams, this.containerUrl); 
+        this.lines.push(bottomLine);        
+        bottomLine.createInscoreDef();
+
+        var slParams = clone(this.params.lineParams);
+        slParams.lineEndY = STAVE_HIGHT;
+        slParams.lineEndX = 0.0;
+        slParams.x = this.params.x + this.params.startLineXd;
+        slParams.y = this.params.y
+        var startLine = new Line(this.staveName + ZS_START_LINE, slParams, this.containerUrl); 
+        this.lines.push(startLine);        
+        startLine.createInscoreDef();
+
+        var elParams = clone(this.params.lineParams);
+        elParams.lineEndY = STAVE_HIGHT;
+        elParams.lineEndX = 0.0;
+        elParams.x = this.params.x + this.params.endLineXd;
+        elParams.y = this.params.y
+        var endLine = new Line(this.staveName + ZS_END_LINE, elParams, this.containerUrl); 
+        this.lines.push(endLine);        
+        endLine.createInscoreDef();
+    };
+    Stave.prototype.createNotationInscoreDef = function() {
+        this.notationLayer = new Layer(this.staveName + ZS_NOTATION, this.params.notationLayerParams, this.containerUrl);
+        this.notationLayer.createInscoreDef();
+        
+        if(this.params.isCreateSyncPane){
+            this.syncPane = new Rect(this.staveName + ZS_SYNC, this.params.syncPaneParams, this.notationLayer.componentUrl);         
+            this.syncPane.createInscoreDef();   
+        }
+
+        if(this.params.isCreatePosTracker){
+            var posTracker = new Rect(this.staveName + ZS_TACKER, this.params.positionCursorParams, this.notationLayer.componentUrl);         
+            this.cursors.push(posTracker);
+            posTracker.createInscoreDef();               
+        }
+    }
+    Stave.prototype.draw = function() {
+        if(this.isDrawn) {
+            //deleteComponents(toDelete);
+        }
+        
+        if(this.stavePane){
+            this.stavePane.draw();            
+        }  
+        
+        for (var i = 0; i < this.lines.length; i++) {
+            this.lines[i].draw();            
+        }
+        for (var i = 0; i < this.bars.length; i++) {
+            this.bars[i].draw();            
+        }
+
+        this.isDrawn = true;
+
+    };
+    Stave.prototype.drawNotationContainer = function() {
+        if(this.notationLayer) {
+            this.notationLayer.draw();    
+        }
+        if(this.syncPane){
+            this.syncPane.draw();            
+        }  
+        if(!isEmptyArr(this.cursors)){
+            for (var i = 0; i < this.cursors.length; i++) {
+                this.cursors[i].draw();                
+            }
+        }
+        
+        this.mapCursors();
+    };
+    Stave.prototype.drawNotation = function() {
+        for (var i = 0; i < this.bars.length; i++) {
+            this.bars[i].draw();            
+        }
+
+        for (var i = 0; i < this.staffs.length; i++) {
+            this.staffs[i].draw();            
+        }
+
+        this.mapCursors();
+    };
+    Stave.prototype.onNotationUpdateComplete = function () {
+        this.drawNotation();
+        // this.createBeats();
+        this.createMap();   
+        this.sendMap();    
+    };
+    Stave.prototype.createStaff = function(staffNo, dx, dy, xSize) {
+        var parentUrl = this.containerUrl;
+        if(this.notationLayer) {
+            parentUrl = this.notationLayer.componentUrl;
+        }
+
+        var params = clone(this.params.staffParams);
+    
+        params.x = this.params.x + dx;
+        params.y = this.params.y + dy;
+        params.sizeX = xSize;
+
+        log("Stave.prototype.createStaff: staffNo: " + staffNo);
+        return new Staff(this.staveName + staffNo + UNDERSCORE, staffNo, params, parentUrl);
+    };
+    Stave.prototype.getStaff = function(staffNo) {
+        for (var i = 0; i < this.staffs.length; i++) {
+            var staff = this.staffs[i];
+            if(parseInt(staff.staffNo) === parseInt(staffNo)) {
+                return staff;
+            }
+        }
+        return null;
+    };
+    Stave.prototype.addStaff = function(stf) {
+        if(!stf || !(stf instanceof Staff)) {
+            return logEror("Invalid staff: " + stf);
+        }
+        stf.createInscoreDef();
+        this.staffs.push(stf);
+        this.children.push(stf);
+        this.setActiveStaff(stf);
+    };
+    Stave.prototype.createBar = function(barNo) {
+        var parentUrl = this.containerUrl;
+        if(this.notationLayer) {
+            parentUrl = this.notationLayer.componentUrl;
+        }
+        var barParams = clone(this.params.barParams);
+        barParams.y = this.params.y;
+        barParams.x = this.params.x;
+        if(!barNo) {
+            barNo = 0;
+        }
+        
+        if(this.bars.length > 0) {
+            log("===== ====== ===  Stave.prototype.createBar have previous bars no: " + this.bars.length);
+            var prevBar = this.bars[this.bars.length - 1];            
+            barParams.startLineXd = prevBar.params.endLineXd;
+        }
+
+        var name = this.staveName + ZS_BAR + barNo + UNDERSCORE;
+        return new Bar(name, barParams, parentUrl, barNo);
+    };
+    Stave.prototype.addBar = function(bar) {
+        if(!bar || !(bar instanceof Bar)) {
+            return logEror("Invalid staff: " + bar);
+        }
+
+        bar.createInscoreDef();
+        this.bars.push(bar);
+        this.children.push(bar);
+    };
+    Stave.prototype.setActiveStaff = function(stf) {
+        if(!stf || !(stf instanceof Staff)) {
+            return logEror("Stave.prototype.setActiveStaff: Invalid staff: " + stf);
+        }
+        this.activeStaff = stf;
+        var idx = -1;
+        for (var i = 0; i < this.staffs.length; i++) {
+            if(this.staffs[i].staffNo === stf.staffNo){
+                idx = i;
+                break;
+            }
+        }
+        if(idx < 0) {
+            idx = this.staffs.length;
+            this.staffs.push(stave);
+        }
+        this.activeStaffIdx = idx;
+    };
+    Stave.prototype.createNote = function(duration, vpos, xOffset, staffNo, stemDirection) { 
+        var dName = UNIT_TO_DURATION[duration];
+        if(!dName) {
+            logError("Stave.prototype.createNote: invalid duration: " + duration);
+            dName = D1_4;
+        }
+        var params= {
+            durationName: dName,
+            symbolName: dName,
+            verticalStaffPos: vpos,
+            staffNo: staffNo,
+            xOffset: xOffset,
+        };
+        var note = new Nota(params, this.notationLayer.componentUrl);
+        note.createInscoreDef();    
+        
+        if(stemDirection) {
+            log("Stave.prototype.createNote stem direction: " + stemDirection);
+            var params = {
+                direction: stemDirection,
+            }
+            var stem = new Stem(params, this.notationLayer.componentUrl, note.id);
+            stem.createInscoreDef();
+            note.addChild(stem);
+        }
+
+        return note;
+    };
+    Stave.prototype.createClef = function(clefId, xOffset, staffNo) { 
+        var clefName = CLEF_ID_TO_NAME[clefId];
+        if(!clefName) {
+            logError("Stave.prototype.createClef: invalid clef id: " + clefId);
+            clefName = G_CLEF;
+        }
+        var params= {
+            durationName: null,
+            symbolName: clefName,
+            class: CLASS_CLEFS,
+            staffNo: staffNo,
+            xOffset: xOffset,
+        };
+        var clef = new Nota(params, this.notationLayer.componentUrl);
+        clef.createInscoreDef();
+        return clef;
+    };
+    Stave.prototype.scaleNotation = function(factor) {
+        if(!this.notationLayer) {
+            return;
+        }
+        var cmdArr = [];
+        cmdArr.push(this.notationLayer.componentUrl);
+        cmdArr.push(SCALE);
+        cmdArr.push(factor);
+        postToInscore(cmdArr);    
+    };
+    Stave.prototype.setPosition = function(x, y) {
+        this.params.x = x;
+        this.params.y = y;
+        this.params.paneParams.x = x;
+        this.params.paneParams.y = y;
+
+        this.params.staffParams.x = x;
+        this.params.staffParams.y = y + this.params.notationYd;
+        this.params.syncPaneParams.x = x;
+        this.params.syncPaneParams.y = y;
+        this.params.positionCursorParams.x = x;
+        this.params.positionCursorParams.y = y;
+    };
+    Stave.prototype.mapCursors = function() {
+        if(this.syncPane && !isEmptyArr(this.cursors)){
+            for (var i = 0; i < this.cursors.length; i++) {
+                var cursor = this.cursors[i];                
+                var syncNode = this.notationLayer.componentUrl + SYNC_NODE;
+                var cmdParams = [this.syncPane.componentName, SYNC_VERTICAL];
+                submitCommandToInscore(syncNode, cursor.componentName, cmdParams);    
+            }
+        }    
+    };
+    Stave.prototype.incrementDate = function(incrementVal) {
+        for (var i = 0; i < this.cursors.length; i++) {
+            var cursor = this.cursors[i];  
+            incrementComponentDate(cursor.componentUrl, incrementVal);              
+        }
+    };
+    // Stave.prototype.createBeats = function() {
+    //     if(!this.activeStaff) {
+    //         logError("Stave.prototype.createBeats: active staff is not set");
+    //         return;
+    //     }
+
+    //     var notes = this.activeStaff.notes;
+    //     if(!notes || isEmptyArr(notes)) {
+    //         logError("Stave.prototype.createBeats: no notes added");
+    //         return;
+    //     }
+        
+    //     if(!isEmptyArr(this.beats)) {
+    //         log("Stave.prototype.createBeats: Beats array is not empty, will reset");
+    //     }
+
+    //     this.beats.length = 0;
+    //     var prevBeat = null;
+    //     var beatNo = 1;   
+    //     var beatRemider = 0;  
+    //     for (var i = 0; i < notes.length; i++) {
+    //         var nota = notes[i];
+    //         var ndName = nota.getDuration();
+    //         if(!ndName) {
+    //             continue;
+    //         }
+    //         var startX = nota.params.x;
+    //         var noUnitBB = getNumberOfBaseBeatsInUnit(ndName);
+    //         var nXSpace = nota.getXSpace();
+    //         var bbXSpace = nXSpace/noUnitBB;
+    //         for (var j = 0; j < noUnitBB; j++) {
+    //             var bParams = clone(this.params.beatParams);
+    //             bParams.x = startX + (j * bbXSpace);
+    //             bParams.y = this.params.positionCursorParams.y;
+    //             bParams.durationName = BASE_BEAT_DURATION;
+    //             var beat = new Beat(bParams, this.notationLayer.componentUrl, beatNo);
+    //             this.beats.push(beat);
+    //             beatNo++;
+    //         }
+    //     }
+    //     for (var i = 0; i < this.beats.length; i++) {
+    //         var beat = this.beats[i];
+    //         beat.createInscoreDef();
+    //         beat.draw();
+    //     }
+    // };
+    Stave.prototype.getBeats = function() {
+        var beats = [];
+        for (var i = 0; i < this.bars.length; i++) {
+            var bar = this.bars[i];
+            for (var j = 0; j < bar.beats.length; j++) {
+                beats.push(bar.beats[j]);
+            }
+        }
+        return beats;
+    };
+    Stave.prototype.createMap = function() {
+        if(!this.activeStaff) {
+            logError("Stave.prototype.createMap: Can not create map, active staff is not set");
+            return;
+        }
+        var beats = this.getBeats();
+        if(!beats || !isArray(beats) || beats.length < 2) {
+            logError("Stave.prototype.createMap: Can not create map, no beats added");
+            return;
+        }
+
+        var inscoreMap = "";
+        for (var i = 1; i < beats.length; i++) {
+            var beat = beats[i];
+            var prevBeat = beats[i-1];
+            log("Stave.prototype.createMap: beat: " + beat.beatNo + " prevBeat: " + prevBeat.beatNo);
+            var xStart = prevBeat.params.x;
+            var xEnd = beat.params.x;
+            var baseBeatMultiple = parseFloat(prevBeat.params.baseBeatsMultiple);
+            var beatValue = BASE_BEAT_VALUE;
+            if(baseBeatMultiple !== 0.0) {
+                beatValue = BASE_BEAT_VALUE / baseBeatMultiple;
+            }
+            var dName = UNIT_TO_DURATION[beatValue];
+            var unitVal = NOTE_UNIT_VALUE[dName];
+            log("Stave.prototype.createMap: found beat unitVal: " + unitVal + " dName: " + dName + " beatValue: " + beatValue + " baseBeatMultiple: " + baseBeatMultiple);
+
+            var startBeatNo = prevBeat.beatNo;
+            var endBeatNo = beat.beatNo;
+            if(endBeatNo <= startBeatNo) {
+                logError("Stave.prototype.createMap: unexpected beatNo sequence startBeatNo: " + startBeatNo + " endBeatNo: " + endBeatNo);
+            }
+            var beatMap = new BeatMap();
+            beatMap.xStart =xStart;
+            beatMap.xEnd = xEnd;
+            beatMap.yStart = beatMap.yStart.toFixed(1);
+            beatMap.yEnd = beatMap.yEnd.toFixed(1);
+            beatMap.bbStart = "" + startBeatNo + SLASH + unitVal;
+            beatMap.bbEnd =  "" + endBeatNo + SLASH + unitVal;
+
+            inscoreMap += beatMap.toInscoreString() + SPACE;
+        }
+        this.inscoreBeatMap = inscoreMap;
+      
+    };
+    Stave.prototype.sendMap = function() {
+        if(!this.syncPane || !this.inscoreBeatMap) {
+            logError("Stave.prototype.sendMap: invalid map");
+        }
+        mapComponent(this.syncPane.componentUrl, this.inscoreBeatMap);        
+    };
+    Stave.prototype.deleteNotation = function(){
+        for (var i = 0; i < this.bars.length; i++) {
+            log("Stave.prototype.deleteNotation: deleting bar: " + this.bars[i].barNo);
+            this.bars[i].deleteNotation();            
+        }
+        this.children = [];
+        this.staffs = [];
+        this.bars = [];
+        this.cursors = [];
+
+        if(this.syncPane){
+            this.syncPane = null;            
+        }  
+
+        if(this.notationLayer && this.notationLayer.componentUrl) {
+            log("Stave.prototype.deleteNotation: deleting: " + this.notationLayer.componentUrl);
+            deleteComponents(this.notationLayer.componentUrl);
+        }
+    };
+    Stave.prototype.recreateNotationContainer = function(){
+        if(this.bars.length < 1) {
+            return;
+        }
+
+        this.deleteNotation();
+        this.createNotationInscoreDef();
+        this.drawNotationContainer();
+    };
+
+
+    // ---- Score ----
+    var Score = function (name, part, partNo, params, parentUrl) {        
+        this.id = getAndIncrementComponentCount();
+        this.scoreName = name;
+        this.partName = part;
+        this.partNo = partNo;
+        this.inscoreDef = [];
+        this.children = [];
+        this.containerUrl = parentUrl;
+        this.params = clone(DEFAULT_SCORE_PARAMS);
+        this.isDrawn = false;
+        this.title = null;
+        this.subtitle = null;
+        this.staves = [];
+        this.activeStave = null;
+        this.activeStaveIdx = -1;    
+        merge(this.params, params);
+    }    
+    Score.prototype.createInscoreDef = function() {        
+        this.title = new Text(this.scoreName, ZS_SCORE_TITLE, this.params.titleParams, this.containerUrl);
+        this.title.createInscoreDef();
+
+        this.subtitle = new Text(this.partName, ZS_PART_TITLE, this.params.subtitleParams, this.containerUrl);
+        this.subtitle.createInscoreDef();
+
+        var topStave = new Stave(ZS_TOP_STAVE, this.params.topStaveParams, this.containerUrl);
+        topStave.createInscoreDef();   
+        topStave.createNotationInscoreDef();
+        this.staves.push(topStave);
+        this.setActiveStave(topStave);
+
+        var bottomStave = new Stave(ZS_BOTTOM_STAVE, this.params.bottomStaveParams, this.containerUrl);
+        bottomStave.createInscoreDef();   
+        bottomStave.createNotationInscoreDef();
+        this.staves.push(bottomStave);
+    };
+    Score.prototype.draw = function() {
+        if(this.isDrawn) {
+            // var toDelete =[];
+            // deleteComponents(toDelete);
+        }
+    
+        if(this.title) {
+            this.title.draw();
+        }
+        if(this.subtitle) {
+            this.subtitle.draw();
+        }  
+        for (var i = 0; i < this.staves.length; i++) {
+            this.staves[i].draw();     
+            this.staves[i].drawNotationContainer();            
+        }
+        
+        this.isDrawn = true;
+
+    };
+    Score.prototype.setActiveStave = function(stave) {
+        if(!(stave instanceof Stave)) {
+            logError("setActiveStave: Invalid Stave instance");        
+            return;
+        }
+        this.activeStave = stave;
+        var idx = -1;
+        for (var i = 0; i < this.staves.length; i++) {
+            if(this.staves[i].name === stave.name){
+                idx = i;
+                break;
+            }
+        }
+        if(idx < 0) {
+            idx = this.staves.length;
+            staves.push(this.stave);
+        }
+        this.activeStaveIdx = idx;
+        log("setActiveStave: Active stave index set to: " + this.activeStaveIdx);
+    };
+    Score.prototype.getActiveStave = function() {
+        return this.activeStave;
+    };
+    Score.prototype.incrementActiveStaveDate = function(incrementVal){
+        var activeStave = this.getActiveStave();
+        if(!activeStave) {
+            return;
+        }
+        activeStave.incrementDate(incrementVal);
+    };
+    Score.prototype.scaleActiveStaveNotation = function(factor){
+        var activeStave = this.getActiveStave();
+        if(!activeStave) {
+            return;
+        }
+        activeStave.scaleNotation(factor);
+    };
+    Score.prototype.getNextStave = function(){        
+        var nextIdx = this.activeStaveIdx + 1;
+        if(nextIdx >= this.staves.length) {
+            nextIdx = 0;
+        }
+        return this.staves[nextIdx];
+    };
+    Score.prototype.getStave = function(name){
+        if(!name){
+            logError("getStave: Invalid name");
+            return;
+        }
+
+        if(name === this.activeStave.staveName) {
+            return this.activeStave;
+        }
+
+        for (var i = 0; i < this.staves.length; i++) {
+            if(name === this.staves[i].staveName){
+                return this.staves[i];
+            }
+        }
+    };
+
+
+
+
+    //--------------------------------
+    // ZSCORE JS public API
+    //--------------------------------
+    return {
+        // Initialise here
+        init: function () {
+            showLog(IS_LOGGING_ON);
+            //clearLog();
+            log("---------------------------");
+            log("--- Initialising ZSCORE ---");
+            log("---------------------------");
+            var v = version();
+            log("Javascript version: " + v);
+        },
+        createJsDeleteEvent: function (name, watchUrl, delUrlArr) {
+            var delUrls = delUrlArr;
+            if(isArray(delUrlArr)) {
+                delUrls = convertArrToString(delUrlArr);
+            }
+            var delAction = "ZSCORE.delete('" + delUrls + "')"
+            var actions = [INSCORE_JS_URL,RUN, delAction];    
+
+            var event = new Event(name, watchUrl, actions);  
+            event.createInscoreDef();   
+            return event;
+        },
+        createScore: function (scoreName, partName, partNo, params, parentUrl) {
+            var score = new Score(scoreName, partName, partNo, params, parentUrl);
+            score.createInscoreDef();   
+            score.draw();
+            setCurrentScore(score);
+            return score;    
+        },
+        inscoreLog: function (value) {
+            log(value);
+        },
+        inscoreLogEmptyLine: function () {
+            logEmptyLine();
+        },
+        inscoreSceneLog: function (value) {
+            sceneLog(value);
+        },
+        inscoreSaveFile: function (fileName, layer, attribArr) {
+            saveInscoreFile(fileName, layer, attribArr);
+        },
+        inscoreExport: function (fileName, layer, isExportAll) {
+            exportInscoreScene(fileName, layer, isExportAll);
+        }, 
+        inscoreExport: function (fileName, layer, isExportAll) {
+            exportInscoreScene(fileName, layer, isExportAll);
+        },   
+        getZScoreComponentCount: function () {
+            return getComponentCount();
+        },                           
+        sendToInscore: function (component) {
+            submitToInscore(component);
+        },
+        delete: function (componentList) {
+            deleteComponents(componentList);
+        },
+        getRootSceneUrl: function () {
+            return INSCORE_SCENE_ROOT_URL;
+        },
+        setupDeleteEvent: function (eventName, watchUrl, compToDeleteUrls) {
+            var event = this.createJsDeleteEvent(eventName, watchUrl, compToDeleteUrls);
+            submitToInscore(event);
+        },
+        incrementStaveDate: function () {
+            incrementActiveStaveDate(1);
+        },
+        decrementStaveDate: function () {
+            incrementActiveStaveDate(-1);
+        },
+        addNotation: function (notation) {
+            parseInput(notation);
+        },
+    };
+}();
+
+//--------------------------------
+//### END ZSCORE JS LIB ###
+//--------------------------------
+
+function initScene(){
+    ZSCORE.init();
+    
+    var rootUrl = ZSCORE.getRootSceneUrl();
+    ZSCORE.inscoreLog("Root URL: " + rootUrl)
+    
+    ZSCORE.inscoreLogEmptyLine();
+    ZSCORE.inscoreLog("createScore");
+    var score = ZSCORE.createScore("ZScore", "Part", 1, null, rootUrl);
+    ZSCORE.inscoreLog("createScore END");
+
+    ZSCORE.addNotation("prt:no|1,stv:actv,act:rplc,stf:no|1|dx|-1.1|dy|-0.1|szx|0.6,bar:no|1|ts|4;4|tmpo|120|sl|0.0|bl|1;0.03;2|bl|2;0.135;2|bl|3;0.24;2|bl|4;0.345;2|el|0.45|clf|stf;1;id;g;dx;-0.038|n|stf;1;dur;4;pos;2;dx;0.03;stm;down|n|stf;1;dur;4;pos;-1;dx;0.135|n|stf;1;dur;8;pos;0;dx;0.24;stm;down|n|stf;1;dur;8;pos;-1;dx;0.2925;stm;down");
+
+    ZSCORE.inscoreLog("createEvent");
+    var name = "mouseUp";
+    var watchUrl = "/ITL/scene/delete";
+    // var delUrls = [score.getActiveStave().notationLayer.componentUrl, "/ITL/scene/logger"];
+    var delUrls = "/ITL/scene/logger";
+    // var delUrls = score.getActiveStave().notationLayer.componentUrl;
+    var event = ZSCORE.createJsDeleteEvent(name, watchUrl, delUrls);
+    //ZSCORE.inscoreLog(event);
+    ZSCORE.sendToInscore(event);
+    ZSCORE.inscoreLog("createEvent END");
+    ZSCORE.inscoreLogEmptyLine();
+
+    ZSCORE.inscoreSaveFile("testSave.inscore");
+
+    ZSCORE.inscoreLog("Created ZScore component No: " + ZSCORE.getZScoreComponentCount());
+    var end = Date.now();
+    var duration = end - START_TIME;
+    ZSCORE.inscoreLog("Startup time: " + duration + "ms");
+    ZSCORE.inscoreLog("---   ZSCORE Started    ---");
+};
+
+function n(content){
+    var start = Date.now();
+
+    ZSCORE.addNotation(content);
+    
+    var end = Date.now();
+    var duration = end - start;
+    ZSCORE.inscoreLog("Notation update took: " + duration + "ms");
+};
+
+?>
+
+/ITL/scene/* del;
+/ITL/scene color 255 255 255 255;
+
+/ITL/scene/canvas set rect 3.0 2.0;
+/ITL/scene/canvas scale 1.0;
+/ITL/scene/canvas x -0.0;
+/ITL/scene/canvas y -0.0;
+/ITL/scene/canvas color 0 0 0 5;
+/ITL/scene/canvas penColor 0 255 0 255;
+/ITL/scene/canvas penWidth 1.0;
+
+#/ITL/scene/bottomStave set rect 3.0 0.75;
+#/ITL/scene/bottomStave scale 1.0;
+#/ITL/scene/bottomStave x -0.0;
+#/ITL/scene/bottomStave y 0.4;
+#/ITL/scene/bottomStave color 0 0 255 5;
+#/ITL/scene/bottomStave penColor 200 150 150 255;
+#/ITL/scene/bottomStave penWidth 2.0;
+
+/ITL/scene/hcl set line xy 3.0 0.0;
+/ITL/scene/hcl scale 1.0;
+/ITL/scene/hcl x -0.0;
+/ITL/scene/hcl y -0.0;
+/ITL/scene/hcl z 10.0;
+/ITL/scene/hcl penWidth 1.0;
+/ITL/scene/hcl penColor 255 0 0 125;
+/ITL/scene/hcl penStyle dot;
+
+/ITL/scene/vcl set line xy 0.0 2.0;
+/ITL/scene/vcl scale 1.0;
+/ITL/scene/vcl x -0.0;
+/ITL/scene/vcl y -0.0;
+/ITL/scene/vcl z 10.0;
+/ITL/scene/vcl penWidth 1.0;
+/ITL/scene/vcl penColor 255 0 0 125;
+/ITL/scene/vcl penStyle dot;
+
+/ITL/scene/logger set txt "logger";
+/ITL/scene/logger x 0.0;
+/ITL/scene/logger y 0.95;
+/ITL/scene/logger scale 1.0;
+
+/ITL/scene/export set txt "export";
+/ITL/scene/export x 1.0;
+/ITL/scene/export y 0.95;
+/ITL/scene/export scale 1.0;
+/ITL/scene/export watch mouseUp (/ITL/scene/javascript run "ZSCORE.inscoreSaveFile('testSave.inscore')");
+
+/ITL/scene/dateInc set txt "date>>>";
+/ITL/scene/dateInc x 0.5;
+/ITL/scene/dateInc y 0.95;
+/ITL/scene/dateInc scale 1.0;
+/ITL/scene/dateInc watch mouseUp (/ITL/scene/javascript run "ZSCORE.incrementStaveDate()");
+
+/ITL/scene/dateDec set txt "<<<date";
+/ITL/scene/dateDec x -0.5;
+/ITL/scene/dateDec y 0.95;
+/ITL/scene/dateDec scale 1.0;
+/ITL/scene/dateDec watch mouseUp (/ITL/scene/javascript run "ZSCORE.decrementStaveDate()");
+
+/ITL/scene/delete set txt "delete";
+/ITL/scene/delete x -1.0;
+/ITL/scene/delete y 0.95;
+/ITL/scene/delete scale 1.0;
+
+<? javascript
+    initScene();
+?>

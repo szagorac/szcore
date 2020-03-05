@@ -38,6 +38,7 @@ import com.xenaksys.szcore.receive.OscReceiveProcessor;
 import com.xenaksys.szcore.receive.SzcoreIncomingEventListener;
 import com.xenaksys.szcore.score.ScoreProcessorImpl;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
+import com.xenaksys.szcore.score.WebScore;
 import com.xenaksys.szcore.server.processor.InEventContainerDisruptorProcessor;
 import com.xenaksys.szcore.server.processor.ServerLogProcessor;
 import com.xenaksys.szcore.server.receive.ServerEventReceiver;
@@ -562,6 +563,17 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         } catch (Exception e) {
             LOG.error("Failed to load score: " + file, e);
             eventProcessor.notifyListeners(new ErrorEvent("Failed to load score: " + file, "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+        return null;
+    }
+
+    @Override
+    public WebScore loadWebScore(File file) {
+        try {
+            return scoreProcessor.loadWebScore(file);
+        } catch (Exception e) {
+            LOG.error("Failed to load score: " + file, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to load WebScore: " + file, "SzcoreServer", e, clock.getSystemTimeMillis()));
         }
         return null;
     }

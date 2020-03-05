@@ -180,6 +180,17 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     @Override
+    public WebScore loadWebScore(File file) throws Exception {
+        if(scheduler.isActive()){
+            LOG.warn("Scheduler is active, can not perform load web score");
+            throw new Exception("Scheduler is active, can not perform load web score");
+        }
+        LOG.info("LOADING WEB SCORE: " + file.getCanonicalPath());
+        WebScore score = WebScoreLoader.load(file);
+        return null;
+    }
+
+    @Override
     public void  prepare(Score score) {
         this.szcore = (BasicScore) score;
 

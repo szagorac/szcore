@@ -21,6 +21,7 @@ import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.id.BarId;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
+import com.xenaksys.szcore.score.WebScore;
 import com.xenaksys.szcore.util.Util;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -65,6 +66,7 @@ public class ScoreController {
     private ScoreService scoreService;
 
     private Score score;
+    private WebScore webScore;
 
     @FXML
     private Label scoreNameLbl;
@@ -541,6 +543,7 @@ public class ScoreController {
         File file = fileChooser.showOpenDialog(mainApp.getPrimaryStage());
         if (file != null) {
             openFile(file);
+            openWebScore(file);
         }
     }
 
@@ -945,6 +948,22 @@ public class ScoreController {
         }
     }
 
+
+    private void openWebScore(File file) {
+        try {
+            String dir = file.getParent();
+            String name = file.getName();
+            int end = name.indexOf(Consts.DOT);
+            String webName = name.substring(0, end) + Consts.WEB_SCORE_SUFFIX +  Consts.CSV_EXT;
+            String webPath = dir + File.separator + webName;
+            File webFile = new File(webPath);
+            this.webScore = scoreService.loadWebScore(webFile);
+            viewWebScore();
+        } catch (Exception e) {
+            LOG.error("Failed to open score", e);
+        }
+    }
+
     private void reset() {
         if (!scoreService.reset()) {
             LOG.warn("Sever failed to reset");
@@ -963,6 +982,10 @@ public class ScoreController {
         for (Participant participant : participants) {
             participant.setInstrument(Consts.NAME_NA);
         }
+
+    }
+
+    public void viewWebScore() {
 
     }
 

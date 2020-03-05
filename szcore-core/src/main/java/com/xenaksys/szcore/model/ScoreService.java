@@ -2,6 +2,7 @@ package com.xenaksys.szcore.model;
 
 import com.xenaksys.szcore.event.IncomingWebEvent;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
+import com.xenaksys.szcore.score.WebScore;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.web.WebScoreEventListener;
 import com.xenaksys.szcore.web.ZsHttpRequest;
@@ -16,6 +17,8 @@ public interface ScoreService {
     void loadScoreAndPrepare(String filePath);
 
     Score loadScore(File file);
+
+    WebScore loadWebScore(File file);
 
     boolean reset();
 

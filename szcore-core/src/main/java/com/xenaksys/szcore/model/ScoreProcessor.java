@@ -4,6 +4,7 @@ import com.xenaksys.szcore.event.IncomingWebEvent;
 import com.xenaksys.szcore.event.OutgoingWebEvent;
 import com.xenaksys.szcore.event.WebScoreEvent;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
+import com.xenaksys.szcore.score.WebScore;
 import com.xenaksys.szcore.web.WebScoreEventListener;
 import com.xenaksys.szcore.web.WebScoreState;
 
@@ -79,4 +80,5 @@ public interface  ScoreProcessor extends Processor {
 
     void loadWebScore(LinkedList<WebScoreEvent> events);
 
+    WebScore loadWebScore(File file) throws Exception;
 }

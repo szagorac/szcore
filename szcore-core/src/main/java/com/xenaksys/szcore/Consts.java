@@ -47,6 +47,7 @@ public interface Consts {
     public static final String BLANK_PAGE_FILE = "blankStave";
     public static final String DEFAULT_FILE_NAME = "part" + INSCORE_FILE_EXTENSION;
     public static final String INDEX_HTML = "index.html";
+    public static final String CSV_EXT = ".csv";
 
     public static final String OSC_ADDRESS_SCORE_FOLLOW_LINE_STAVE1 = "/ITL/scene/slaveFollow";
     public static final String OSC_ADDRESS_SCORE_FOLLOW_LINE_STAVE2 = "/ITL/scene/slaveFollow2";
@@ -241,6 +242,8 @@ public interface Consts {
     public static final String WEB_ELEMENT_NAME_DELIMITER = "-";
     public static final String WEB_ELEMENT_GRID = "grid";
     public static final String WEB_ZOOM_DEFAULT = "default";
+
+    public static final String WEB_SCORE_SUFFIX = "_webscore";
 
     public static final String NAME_FULL_SCORE = "FullScore";
 

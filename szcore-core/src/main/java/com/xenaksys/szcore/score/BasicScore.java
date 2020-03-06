@@ -367,17 +367,9 @@ public class BasicScore implements Score {
         Long time = beat.getStartTimeMillis();
         Id beatId = beat.getBeatId();
         beatToTimeMap.put(beatId, time);
-        List<Id> timeBeats = timeToBeatMap.get(time);
-        if(timeBeats == null){
-            timeBeats = new ArrayList<>();
-            timeToBeatMap.put(time, timeBeats);
-        }
+        List<Id> timeBeats = timeToBeatMap.computeIfAbsent(time, k -> new ArrayList<>());
         timeBeats.add(beatId);
-        List<BeatId> iBeats = instrumentBeats.get(beat.getInstrumentId());
-        if (iBeats == null) {
-            iBeats = new ArrayList<>();
-            instrumentBeats.put(beat.getInstrumentId(), iBeats);
-        }
+        List<BeatId> iBeats = instrumentBeats.computeIfAbsent(beat.getInstrumentId(), k -> new ArrayList<>());
         iBeats.add(beat.getBeatId());
         Collections.sort(iBeats);
     }
@@ -388,12 +380,7 @@ public class BasicScore implements Score {
             return;
         }
 
-        List<Script> bScripts = beatScripts.get(script.getBeatId());
-        if (bScripts == null) {
-            bScripts = new ArrayList<>();
-            beatScripts.put(script.getBeatId(), bScripts);
-        }
-
+        List<Script> bScripts = beatScripts.computeIfAbsent(script.getBeatId(), k -> new ArrayList<>());
         bScripts.add(script);
     }
 
@@ -405,11 +392,7 @@ public class BasicScore implements Score {
         StaveId id = (StaveId) stave.getId();
         Id instrumentId = id.getInstrumentId();
         staves.put(id, stave);
-        List<Stave> iStaves = instrumentStaves.get(instrumentId);
-        if (iStaves == null) {
-            iStaves = new ArrayList<>();
-            instrumentStaves.put(instrumentId, iStaves);
-        }
+        List<Stave> iStaves = instrumentStaves.computeIfAbsent(instrumentId, k -> new ArrayList<>());
         iStaves.add(stave);
     }
 

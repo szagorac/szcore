@@ -30,12 +30,14 @@ import java.util.List;
 import static com.xenaksys.szcore.score.ResourceType.FILE;
 import static com.xenaksys.szcore.score.ResourceType.JAVASCRIPT;
 import static com.xenaksys.szcore.score.ResourceType.TRANSITION;
+import static com.xenaksys.szcore.score.ResourceType.WEB;
 
 
 public class ScoreLoader {
     static final Logger LOG = LoggerFactory.getLogger(ScoreLoader.class);
 
     static final String RECOURCE_JAVASCRIPT = "javascript";
+    static final String RECOURCE_WEB = "web";
     static final String RECOURCE_TRANSITION = "transition";
     static final String SCRIPT_DELIMITER = ":";
     static final String SCRIPT_COMMA_REPLACE_CHAR = "|";
@@ -165,6 +167,9 @@ public class ScoreLoader {
             case TRANSITION:
                 processTransitionScoreElement(scoreElement, score, resource, scoreId);
                 break;
+            case WEB:
+                processWebScoreElement(scoreElement, score, resource, scoreId);
+                break;
             case FILE:
             default:
                 processFileScoreElement(scoreElement, score, resource, scoreId);
@@ -182,6 +187,9 @@ public class ScoreLoader {
         }
         if(resource.startsWith(RECOURCE_TRANSITION)){
             return TRANSITION;
+        }
+        if(resource.startsWith(RECOURCE_WEB)){
+            return WEB;
         }
         return FILE;
     }
@@ -279,6 +287,10 @@ public class ScoreLoader {
         }
 
         return inscorePageMap;
+    }
+
+    private static void processWebScoreElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) throws Exception {
+
     }
 
     private static void processJavascriptScoreElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) throws Exception {

@@ -543,7 +543,7 @@ public class ScoreController {
         File file = fileChooser.showOpenDialog(mainApp.getPrimaryStage());
         if (file != null) {
             openFile(file);
-            openWebScore(file);
+//            openWebScore(file);
         }
     }
 

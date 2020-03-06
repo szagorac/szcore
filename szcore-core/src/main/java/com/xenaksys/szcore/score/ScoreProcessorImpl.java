@@ -144,12 +144,14 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         BeatId lastBeat = null;
         for (Instrument instrument : instruments) {
             Id instrumentId = instrument.getId();
+            boolean isAudioVideoInstrument = instrument.isAv();
+            boolean isScoreInstrument = !isAudioVideoInstrument;
             instrumentBeatTrackers.put(instrumentId, new InstrumentBeatTracker(transport, instrumentId));
             lastBeat = prepareInstrument(instrument, transport);
             Page lastPage =  szcore.getLastInstrumentPage(instrumentId);
             szcore.setContinuousPage(instrumentId, lastPage);
 
-            if(szcore.isUseContinuousPage()) {
+            if(szcore.isUseContinuousPage() && isScoreInstrument) {
                 prepareContinuousPages(instrumentId, lastPage);
             }
         }

@@ -52,7 +52,9 @@ var ZSCORE = function (Window) {
     var NAME_PAGE = "page";
     var NAME_START = "start";
     var NAME_END = "end";
+    var NAME_END_LINE = "endline";
     var NAME_BARNUM = "barnum";
+    var NAME_PAGENUM = "pageNo";
     var NAME_BEATLINE = "bl";
     var NAME_BEATLINES = "beatlines";
     var NAME_EVENTS = "events";
@@ -77,6 +79,7 @@ var ZSCORE = function (Window) {
     var NAME_FULL_SCORE = "FullScore";
     var NAME_RIM = "rim";
     var NAME_TEXT_TRAME_SCRIPT = "[TextFrame script]"
+    var NAME_PAGENUM_PREFIX = "P";
     
     var NAME_INSCORE_MAP_FILE_SUFFIX = "_InScoreMap.txt";
     var NAME_BEAT_INFO_FILE_SUFFIX = "_BeatInfo.csv";
@@ -99,6 +102,7 @@ var ZSCORE = function (Window) {
     var BT_CALL_COPY_BAR = "btCopyBar";
     var BT_CALL_DELETE_BAR = "btDeleteBar";
     var BT_CALL_DELETE_PAGE = "btDeletePage";
+    var BT_CALL_UPDATE_PAGE = "btUpdatePage";
     var BT_CALL_INSERT_MODEL_XML = "btInsertModelXML";
     var BT_CALL_EXPORT_FILES = "btExportFiles";
     var BT_CALL_UNKNOWN = "btUnknown";
@@ -159,6 +163,8 @@ var ZSCORE = function (Window) {
     var TEMPO_NOTEVAL_Y_OFFSET = 10;
     var TEMPO_BPM_X_OFFSET = 20;
     var TEMPO_BPM_Y_OFFSET = 6;
+    var PAGE_NO_TXT_X_OFFSET = 28;
+    var PAGE_NO_TXT_Y_OFFSET = 5;
 
     var BARS_REGEX = /^bar\d+/;
     var PAGES_REGEX = /^page\d+/;
@@ -175,6 +181,9 @@ var ZSCORE = function (Window) {
     var DEFAULT_BPM_TXT_STYLE = availableFonts.getByName(DEFAULT_BPM_FONT);
     var DEFAULT_BPM_TXT_SIZE = 14;
     var DEFAULT_TEMPO_NOTE_VAL = "q=";
+    var DEFAULT_PAGE_NO_FONT = "Verdana-Italic";
+    var DEFAULT_PAGE_NO_STYLE = availableFonts.getByName(DEFAULT_PAGE_NO_FONT);
+    var DEFAULT_PAGE_NO_SIZE = 10;
     var DEFAULT_Y_POSITION = 100;
 
     var defaultPath = "~/Desktop";
@@ -189,7 +198,10 @@ var ZSCORE = function (Window) {
 
     var startLineName = NAME_START;
     var endLineName = NAME_END;
+    var pageEndLineName = NAME_END_LINE;
     var barnumName = NAME_BARNUM;
+    var pagenumName = NAME_PAGENUM;
+    var pagenumPrefix = NAME_PAGENUM_PREFIX;
     var beatlineName = NAME_BEATLINE;
     var beatlineZeroName = NAME_BEATLINE + "0";
     var isUseBeatline = IS_USE_BEATLINE;
@@ -204,8 +216,12 @@ var ZSCORE = function (Window) {
     var timeSigTxtSize = DEFAULT_TIMESIG_TXT_SIZE;
     var bpmTxtStyle = DEFAULT_BPM_TXT_STYLE;
     var bpmTxtSize = DEFAULT_BPM_TXT_SIZE;
+    var pageNoTxtStyle = DEFAULT_PAGE_NO_STYLE;
+    var pageNoTxtSize = DEFAULT_PAGE_NO_SIZE;
     var barnumXOffset = BAR_NO_TXT_X_OFFSET;
     var barnumYOffset = BAR_NO_TXT_Y_OFFSET;
+    var pagenumXOffset = PAGE_NO_TXT_X_OFFSET;
+    var pagenumYOffset = PAGE_NO_TXT_Y_OFFSET;
     var timesigNumXOffset = TIMESIG_NUM_X_OFFSET;
     var timesigNumYOffset = TIMESIG_NUM_Y_OFFSET;
     var timesigDenomXOffset = TIMESIG_DENOM_X_OFFSET;
@@ -1185,7 +1201,7 @@ var ZSCORE = function (Window) {
         var barNoStr = barName.substring(barNamePrefix.length);
         return parseInt(barNoStr);        
     };
-    
+
     var createBarNameFromNo = function (barNo){
         return barNamePrefix + barNo;    
     };
@@ -1399,6 +1415,7 @@ var ZSCORE = function (Window) {
             startLineName: NAME_START,
             endLineName: NAME_END,
             barnumName: NAME_BARNUM,
+            pagenumName: NAME_PAGENUM,
             barName: NAME_BAR,
             beatlineName: NAME_BEATLINE,
             beatlineZeroName: NAME_BEATLINE + "0",
@@ -1431,6 +1448,7 @@ var ZSCORE = function (Window) {
             btCopyBarCall: BT_CALL_COPY_BAR,
             btDeleteBarCall: BT_CALL_DELETE_BAR,
             btDeletePageCall: BT_CALL_DELETE_PAGE,
+            btUpdatePageCall: BT_CALL_UPDATE_PAGE,
             btExportFilesCall: BT_CALL_EXPORT_FILES
         },
         btProps: {
@@ -2022,11 +2040,17 @@ var ZSCORE = function (Window) {
         findEndLine: function (barLayer) {
             return this.findNamedPathItem(barLayer, endLineName);
         },
+        findPageEndLine: function (staveLayer) {
+            return this.findNamedPathItem(staveLayer, pageEndLineName);
+        },
         findZeroBeatLine: function (barLayer) {
             return this.findNamedPathItem(barLayer, beatlineZeroName);
         },
         findBarnum: function (barLayer) {
             return this.findNamedPathItem(barLayer, barnumName);
+        },
+        findPagenum: function (staveLayer) {
+            return this.findNamedPathItem(staveLayer, pagenumName);
         },
         findTimesigNum: function (barLayer) {
             return this.findNamedPathItem(barLayer, timeSigNum);
@@ -2110,9 +2134,12 @@ var ZSCORE = function (Window) {
 
             return false;
         },
-        findStaveRim: function (barLayer, doc){
-            var staveLayer = this.getStaveLayer(barLayer, doc);
+        findStaveRim: function (instLayer, doc){
+            var staveLayer = this.getStaveLayer(instLayer, doc);
             return this.findNamedPathItem(staveLayer, rim);
+        },
+        findStaveLayer: function (instLayer, doc){
+            return this.getStaveLayer(instLayer, doc);
         },
         findStavePosition: function (barLayer, doc){
             var rim = this.findStaveRim(barLayer, doc);
@@ -2213,6 +2240,44 @@ var ZSCORE = function (Window) {
 
             var artboard = this.findArtboard(artboardName, doc);
             removeArtboard(artboard);
+        },
+        updatePage: function (propPageName, artboardName, doc) {
+
+            var pageLayer = this.findLayer(propPageName, doc);
+            var instruments = pageLayer.layers;
+            if (!instruments || instruments.length < 1) {
+                this.showAlert("Could not find any staves on page");
+                return;
+            }
+            for (var i = 0; i < instruments.length; i++) {
+                var instrument = instruments[i];
+                var staveLayer = this.findStaveLayer(instrument, doc);
+                this.updatePagenum(staveLayer, propPageName, doc);
+                
+            }
+            
+        },
+        setPageNum: function (pageName, staveLayer, doc) {
+            if (!pageName || !staveLayer || !doc) {
+                return;
+            }
+            var pageNo = getPageNoFromName(pageName);
+            if(!pageNo) {
+                pageno = "N/A";
+            }
+
+            var pageNoStr = pagenumPrefix + pageNo;
+
+            var pagenum = this.findPagenum(staveLayer);
+            if (!pagenum) {
+                var endLine = this.findPageEndLine(staveLayer);
+                if(!endLine) {
+                    return;
+                }
+                this.createPagenum(pageNoStr, endLine, staveLayer, doc);
+            } else {
+                this.setItemContents(pagenum, pageNoStr);
+            }
         },
         createBarFromPrevious: function (barName, previousBar, filter, doc) {
             if (!barName || !previousBar || !doc) {
@@ -2331,8 +2396,8 @@ var ZSCORE = function (Window) {
         getTimesigLayer: function (barLayer, doc) {
             return this.getOrCreateBarLayerChild(NAME_TIMESIG, barLayer, doc);
         },
-        getStaveLayer: function (barLayer, doc) {
-            return this.getOrCreateBarLayerChild(NAME_STAVE, barLayer, doc);
+        getStaveLayer: function (instLayer, doc) {
+            return this.getOrCreateBarLayerChild(NAME_STAVE, instLayer, doc);
         },
         getBeatlineName: function (beatNo) {
             var beatStr = "";
@@ -2366,6 +2431,14 @@ var ZSCORE = function (Window) {
             var position = [x, y];
 
             this.createTextInLayer(barNoStr, barInfoLayer, barnumName, position, txtStyle, txtSize, doc);
+        },
+        createPagenum: function (pageNoStr, endLine, staveLayer, doc) {
+            var startPosition = this.getPosition(endLine);
+            var x = startPosition[0] - pagenumXOffset;
+            var y = startPosition[1] + pagenumYOffset;
+            var position = [x, y];
+
+            this.createTextInLayer(pageNoStr, staveLayer, pagenumName, position, pageNoTxtStyle, pageNoTxtSize, doc);
         },
         adjustTimeSigPosition: function (startLine, textItem) {
             var startPosition = this.getPosition(startLine);
@@ -2624,6 +2697,9 @@ var ZSCORE = function (Window) {
                 this.setItemContents(barnum, barNoStr);
             }
         },
+        updatePagenum: function (staveLayer, pageName, doc) {            
+            this.setPageNum(pageName, staveLayer, doc);
+        },
         removeTimeSig: function (barLayer, doc) {
             var timesigLayer = this.getTimesigLayer(barLayer, doc);
 
@@ -2863,6 +2939,17 @@ var ZSCORE = function (Window) {
                 var newPageLayer = createLayerInParent(newPageName, pageLayer.parent, doc);
 
                 deepCopyLayer(pageLayer, newPageLayer, xOffset, yOffset, doc, filter);
+
+                var instruments = newPageLayer.layers;
+                if (!instruments || instruments.length < 1) {
+                    return;
+                }
+                for (var i = 0; i < instruments.length; i++) {
+                    var instrument = instruments[i];
+                    var staveLayer = this.findStaveLayer(instrument, doc);
+                    this.updatePagenum(staveLayer, newPageName, doc);
+                    
+                }
 
             } catch (e) {
                 this.log(e, ERROR);
@@ -3519,6 +3606,23 @@ var ZSCORE = function (Window) {
             var doc = getBtDocument();
 
             var ret = this.deletePage(propPageName, artboardName, doc);
+            ret = appendBtMsgHeader(BT_HEADER_CALLER, BT_CALL_CREATE_PAGE_FROM_PAGE, ret);
+            return ret;
+        },
+        btUpdatePage: function () {
+            var propPageName = getBtCallProp(BT_PROP_ITEM_NAME);
+            if (!propPageName) {
+                return BT_RESP_ERROR;
+            }
+
+            var artboardName = getBtCallProp(BT_PROP_ARTB_NAME);
+            if (!artboardName) {
+                artboardName = propPageName;
+            }
+
+            var doc = getBtDocument();
+
+            var ret = this.updatePage(propPageName, artboardName, doc);
             ret = appendBtMsgHeader(BT_HEADER_CALLER, BT_CALL_CREATE_PAGE_FROM_PAGE, ret);
             return ret;
         },
@@ -4216,6 +4320,35 @@ var ZSVIEW = function (zscorelib) {
         executeCall(btCalls.btDeletePageCall);
     };
 
+    var updatePage = function () {
+        var callProps = scorelib.createBtCallProperties();
+
+        var pagePrefix = getValueFromTxtBox(pagePrefixTxt, NAME_PAGE);
+        var pageNo = parseInt(getValueFromTxtBox(delPageNoTxt, ""));
+
+        if (!pagePrefix || !pageNo) {
+            scorelib.showAlert("Invalid page name");
+            return;
+        }
+
+        var pageName = pagePrefix + pageNo;
+        callProps[btProps.btPropItemName] = pageName;
+
+        var artbPrefix = getValueFromTxtBox(artboardPrefixTxt, NAME_PAGE);
+
+        if (!artbPrefix || !pageNo) {
+            scorelib.showAlert("Invalid artboard name");
+            return;
+        }
+        var artbName = artbPrefix + pageNo;
+        callProps[btProps.btPropArtbName] = artbName;
+
+        scorelib.setBtCallProperties(callProps);
+
+        executeCall(btCalls.btUpdatePageCall);
+    };
+
+
     var setBarModelData = function () {
 
         var start = getValueFromTxtBox(startTxt, NAME_START);
@@ -4730,12 +4863,13 @@ var ZSVIEW = function (zscorelib) {
                     srcPageNoEdtTxt: EditText { characters:3, justify:'right'}, \
                 }, \
                 delete: Group { orientation:'row', alignChildren:['right', 'center'], \
-                    pageNoTxt: StaticText { text: 'Delete page No: ' }, \
+                    pageNoTxt: StaticText { text: 'Delete/Update page No: ' }, \
                     pageNoEdtTxt: EditText { characters:3, justify:'right'}, \
                 }, \
                 btns: Group { orientation:'row', alignChildren:['right', 'center'], \
                     createBtn: Button { text:'Create', properties:{name:'createPage'} }, \
                     deleteBtn: Button { text:'Delete', properties:{name:'deletePage'} }, \
+                    updateBtn: Button { text:'Update', properties:{name:'updatePage'} }, \
                     cancelBtn: Button { text:'Cancel', properties:{name:'cancel'} }, \
                 }, \
             }, \
@@ -5034,6 +5168,10 @@ var ZSVIEW = function (zscorelib) {
 
         btns.createBtn.onClick = function () {
             createPageFromPage();
+        };
+
+        btns.updateBtn.onClick = function () {
+            updatePage();
         };
 
         winRefPageTools.center();

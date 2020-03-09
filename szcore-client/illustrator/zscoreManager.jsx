@@ -99,6 +99,7 @@ var ZSCORE = function (Window) {
     var BT_CALL_DELETE_LAYER = "btDeleteLayer";
     var BT_CALL_COPY_LAYER = "btCopyLayer";
     var BT_CALL_CREATE_PAGE_FROM_PAGE = "btCreatePageFromPage";
+    var BT_CALL_COPY_PAGE_FROM_PAGE = "btCopyPageFromPage";
     var BT_CALL_CREATE_BAR = "btCreateBar";
     var BT_CALL_COPY_BAR = "btCopyBar";
     var BT_CALL_DELETE_BAR = "btDeleteBar";
@@ -132,6 +133,10 @@ var ZSCORE = function (Window) {
     var BT_PROP_EXPORT_SCORE = "propExportScore";
     var BT_PROP_EXPORT_PARTS = "propExportParts";
     var BT_PROP_EXPORT_BEATLINES = "propExportBeatlines";
+    var BT_PROP_USE_FROM_PAGE_POSITION = "propUseFromPagePosition";
+    var BT_PROP_SRC_DOC = "propSrcDoc";
+    var BT_PROP_DEST_DOC = "propDestDoc";
+    var BT_PROP_FROM_PAGE_NAME = "propFromPageName";
 
     var BT_RESP_ERROR = NAME_ERROR;
     var BT_RESP_OK = NAME_OK;
@@ -169,6 +174,7 @@ var ZSCORE = function (Window) {
 
     var BARS_REGEX = /^bar\d+/;
     var PAGES_REGEX = /^page\d+/;
+    var SCORE_REGEX = /^Score/;
 
     var DEFAULT_FONT = "Helvetica";
     var DEFAULT_TXT_STYLE = availableFonts.getByName(DEFAULT_FONT);
@@ -1459,6 +1465,7 @@ var ZSCORE = function (Window) {
             btInsertModelXmlCall: BT_CALL_INSERT_MODEL_XML,
             btLoadLayerXmlCall: BT_CALL_LOAD_LAYER_XML,
             btCreatePageFromPageCall: BT_CALL_CREATE_PAGE_FROM_PAGE,
+            btCopyPageFromPageCall: BT_CALL_COPY_PAGE_FROM_PAGE,
             btCreateBarCall: BT_CALL_CREATE_BAR,
             btCopyBarCall: BT_CALL_COPY_BAR,
             btDeleteBarCall: BT_CALL_DELETE_BAR,
@@ -1490,7 +1497,11 @@ var ZSCORE = function (Window) {
             btPropFormat: BT_PROP_FORMAT,
             btPropExportScore: BT_PROP_EXPORT_SCORE,
             btPropExportParts: BT_PROP_EXPORT_PARTS,
-            btPropExportBeatlines: BT_PROP_EXPORT_BEATLINES
+            btPropExportBeatlines: BT_PROP_EXPORT_BEATLINES,
+            btPropUseFromPagePosition: BT_PROP_USE_FROM_PAGE_POSITION,
+            btPropSrcDoc: BT_PROP_SRC_DOC,
+            btPropPageDestDoc: BT_PROP_DEST_DOC,
+            btPropFromPageName: BT_PROP_FROM_PAGE_NAME,
         },
         btPrintUiInfo: function (uiObj) {
             printUIProps(uiObj);
@@ -2129,6 +2140,9 @@ var ZSCORE = function (Window) {
         },
         findAllPages: function (doc) {
             return this.findLayersByRegex(PAGES_REGEX, doc);
+        },
+        findScoreLayer: function (doc) {
+            return this.findLayersByRegex(SCORE_REGEX, doc);
         },
         findInstrumentBar: function (instrument, destBarName, doc) {
             var reBar = new RegExp(destBarName);
@@ -3005,8 +3019,103 @@ var ZSCORE = function (Window) {
                 }
 
             } catch (e) {
-                this.log(e, ERROR);
+                log(e, ERROR);
             }
+        },
+        copyNewPageFromPage: function (pageNames, artboardNames, srcDocName, destDocName, isUseFromPagePosition, fromPageName, spacer, relativePosition, doc) {
+
+            log("Copy pages: " + pageNames);
+
+            if (!pageNames) {
+                return;
+            }
+
+            if(!srcDocName) {
+                srcDocName = doc;
+            }
+
+            if(!destDocName) {
+                destDocName = doc;
+            }
+        
+            try {
+                var srcDoc = getDocument(srcDocName);
+                var destDoc = getDocument(destDocName);
+
+                var pagePrefix = NAME_PAGE;
+                var pageNos = "";
+                if(contains(pageNames, COLUMN)) {
+                    var items = pageNames.split(COLUMN);
+                    if(items.length === 2) {
+                        pagePrefix = items[0];
+                        pageNos = items[1];
+                    }
+                }
+
+                var filter = new NumbersFilter();
+                filter.init(pageNos);
+                var pages = filter.getValues();
+                if(isArray(pages)) {
+                    for(var i = 0; i < pages.length; i++) {
+                        var pName = pagePrefix + pages[i];
+                        this.copyPageFromPage(pName, pName, srcDoc, destDoc, isUseFromPagePosition, fromPageName, spacer, relativePosition, doc);
+                    }
+                }
+                
+            } catch (e) {
+                log("copyNewPageFromPage: " +  e, ERROR);
+            }
+        },
+        copyPageFromPage: function (pageName, artboardName, srcDoc, destDoc, isUseFromPagePosition, fromPageName, spacer, relativePosition, doc) {
+            var pageArtboard = this.findArtboard(artboardName, srcDoc);
+
+            var newPageArtboard;
+            var xOffset = 0;
+            var yOffset = 0;
+
+            var pageLayer = this.findLayer(pageName, srcDoc);
+            if (!pageLayer) {
+                log("Could not find Layer for page: " + existingPageName, ERROR);
+                return;
+            }
+
+            if (!pageArtboard) {
+                log("Could not find artboard for page: " + existingPageName, ERROR);
+                return;
+            }
+
+            var rect = pageArtboard.artboardRect;
+            var xOffset = 0;
+            var yOffset = 0;
+            
+            if(isUseFromPagePosition) {
+                var fromPageArtboard = this.findArtboard(fromPageName, destDoc);
+                if(fromPageArtboard) {
+                    var frect = fromPageArtboard.artboardRect;
+                    var xstart = frect[0];
+                    var xend = frect[2];
+                    var ystart = frect[1];
+                    var yend = frect[3];
+                    if (NAME_BELOW === relativePosition) {
+                        yOffset = (yend - ystart) - spacer;
+                    } else {
+                        xOffset = (xend - xstart) + spacer;
+                    }
+                    rect = [frect[0] + xOffset, frect[1] + yOffset, frect[2] + xOffset, frect[3] + yOffset];
+                }
+            }
+
+            var scoreLayer = this.findScoreLayer(destDoc);
+            if(!scoreLayer) {
+                log("Could not find score layer is dest doc", ERROR);
+                return;
+            }
+
+            newPageArtboard = destDoc.artboards.add(rect);
+            newPageArtboard.name = artboardName;
+
+            var newPageLayer = createLayerInParent(pageName, scoreLayer, destDoc);
+            deepCopyLayer(pageLayer, newPageLayer, xOffset, yOffset, destDoc);
         },
         initIntrumentMetric: function(bar, metricTracker, doc){
             var timesigLayer = this.getTimesigLayer(bar, doc);
@@ -3645,6 +3754,37 @@ var ZSCORE = function (Window) {
             ret = appendBtMsgHeader(BT_HEADER_CALLER, BT_CALL_CREATE_PAGE_FROM_PAGE, ret);
             return ret;
         },
+        btCopyPageFromPage: function () {
+            var propPageName = getBtCallProp(BT_PROP_ITEM_NAME);
+            if (!propPageName) {
+                return BT_RESP_ERROR;
+            }
+            
+            var artboardName = getBtCallProp(BT_PROP_ARTB_NAME);
+            if (!artboardName) {
+                artboardName = propPageName;
+            }
+
+            var srcDoc = getBtCallProp(BT_PROP_SRC_DOC);
+            var destDoc = getBtCallProp(BT_PROP_DEST_DOC);
+            var isUseFromPagePosition = getBtCallProp(BT_PROP_USE_FROM_PAGE_POSITION);
+            var fromPageName = getBtCallProp(BT_PROP_FROM_PAGE_NAME);
+
+            var spacer = this.btModel.pageOffset;
+            if (!spacer) {
+                spacer = ARTBOARD_SPACER;
+            }
+
+            var relativePosition = getBtCallProp(BT_PROP_POSITION);
+            if (!relativePosition) {
+                relativePosition = NAME_RIGHT;
+            }
+            
+            var doc = getBtDocument();
+            var ret = this.copyNewPageFromPage(propPageName, artboardName, srcDoc, destDoc, isUseFromPagePosition, fromPageName, spacer, relativePosition, doc);
+            ret = appendBtMsgHeader(BT_HEADER_CALLER, BT_CALL_COPY_PAGE_FROM_PAGE, ret);
+            return ret;
+        },
         btDeletePage: function () {
             var propPageName = getBtCallProp(BT_PROP_ITEM_NAME);
             if (!propPageName) {
@@ -3875,7 +4015,7 @@ var ZSVIEW = function (zscorelib) {
     var modelTreeView;
     var activeLayerTxt;
     var copyToLyrNameTxt;
-    var copyDocTxt;
+    var copyDocTxt;    
     var activeDocTxt;
     var xOffsetTxt;
     var yOffsetTxt;
@@ -3884,6 +4024,8 @@ var ZSVIEW = function (zscorelib) {
     var filterTxt;
     var barFilterTxt;
     var openDocsSel;
+    var pageSrcDocsSel;
+    var pageDestDocsSel;
     var docTxt;
     var layerTxt;
     var pagePrefixTxt;
@@ -3922,6 +4064,7 @@ var ZSVIEW = function (zscorelib) {
     var exportDirTxt;
     var exportScoreNameTxt;
     var exportBeatlinesCb;
+    var useFromPagePositionCb;
 
     var winRefLayerTools;
     var winRefPageTools;
@@ -4638,6 +4781,66 @@ var ZSVIEW = function (zscorelib) {
         executeCall(btCalls.btCreatePageFromPageCall);
     };
 
+    var copyPageFromPage = function () {
+
+        var callProps = scorelib.createBtCallProperties();
+
+        var pagePrefix = getValueFromTxtBox(pagePrefixTxt, NAME_PAGE);
+        var pageNos = getValueFromTxtBox(delPageNoTxt, "");
+
+        if (!pagePrefix || !pageNos) {
+            scorelib.showAlert("Invalid page name");
+            return;
+        }
+
+        var pageName = pagePrefix + COLUMN + pageNos;
+        callProps[btProps.btPropItemName] = pageName;
+
+        var artbPrefix = getValueFromTxtBox(artboardPrefixTxt, NAME_PAGE);
+
+        if (!artbPrefix || !pageNos) {
+            scorelib.showAlert("Invalid artboard name");
+            return;
+        }
+        var artbName = artbPrefix + COLUMN + pageNos;
+        callProps[btProps.btPropArtbName] = artbName;
+
+        var pageSrcDoc = getSelectedDocName(pageSrcDocsSel);
+        if(pageSrcDoc) {            
+            callProps[btProps.btPropSrcDoc] = pageSrcDoc;
+        }
+
+        var pageDestDoc = getSelectedDocName(pageDestDocsSel);
+        if(pageDestDoc) {            
+            callProps[btProps.btPropPageDestDoc] = pageDestDoc;
+        }
+
+        callProps[btProps.btPropUseFromPagePosition] = useFromPagePositionCb.value;
+
+        var fromPageNo = "";
+        if (srcPageNoTxt && srcPageNoTxt.text) {
+            fromPageNo = parseInt(srcPageNoTxt.text);
+        }
+        var fromPageName = pagePrefix + fromPageNo;
+        callProps[btProps.btPropFromPageName] = fromPageName;        
+
+        var artbOffset;
+        if (artboardOffsetTxt && artboardOffsetTxt.text) {
+            artbOffset = parseInt(artboardOffsetTxt.text);
+        }
+        if (artbOffset) {
+            scorelib.btModel.pageOffset = artbOffset;
+        }
+
+        if (artboardPosSel || artboardPosSel.selection || artboardPosSel.selection.text) {
+            var artbPosition = artboardPosSel.selection.text;
+            callProps[btProps.btPropPosition] = artbPosition;
+        }
+
+        scorelib.setBtCallProperties(callProps);
+        executeCall(btCalls.btCopyPageFromPageCall);
+    };
+
     var processActiveDocName = function (name) {
         activeDocName = name;
     };
@@ -4685,9 +4888,14 @@ var ZSVIEW = function (zscorelib) {
         var docs = docNames.split(',');
 
         populateDocSel(openDocsSel, docs);
+        populateDocSel(pageSrcDocsSel, docs);
+        populateDocSel(pageDestDocsSel, docs);
     };
 
     var populateDocSel = function (docSel, docs) {
+        if(!docSel) {
+            return;
+        }
         docSel.removeAll();
         var activeDoc = docSel.add(NAME_ITEM, NAME_ACTIVE_DOC);
         for (var i = 0; i < docs.length; i++) {
@@ -4711,10 +4919,6 @@ var ZSVIEW = function (zscorelib) {
     };
 
     var populateOpenDocs = function () {
-        if (!openDocsSel) {
-            return;
-        }
-
         executeCall(btCalls.btGetOpenDocsCall);
     };
 
@@ -4741,14 +4945,14 @@ var ZSVIEW = function (zscorelib) {
         }
 
         if (docTxt) {
-            docTxt.text = getSelectedDocName();
+            docTxt.text = getSelectedDocName(openDocsSel);
         }
 
     };
 
-    var getSelectedDocName = function () {
-        if (openDocsSel && openDocsSel.selection && openDocsSel.selection.text) {
-            return openDocsSel.selection.text;
+    var getSelectedDocName = function (selObj) {
+        if (selObj && selObj.selection && selObj.selection.text) {
+            return selObj.selection.text;
         }
         return NAME_EMPTY;
     };
@@ -4917,13 +5121,26 @@ var ZSVIEW = function (zscorelib) {
                     srcPageNoEdtTxt: EditText { characters:3, justify:'right'}, \
                 }, \
                 delete: Group { orientation:'row', alignChildren:['right', 'center'], \
-                    pageNoTxt: StaticText { text: 'Delete/Update page No: ' }, \
-                    pageNoEdtTxt: EditText { characters:3, justify:'right'}, \
+                    pageNoTxt: StaticText { text: 'Delete/Update/Copy pages No: ' }, \
+                    pageNoEdtTxt: EditText { characters:10, justify:'right'}, \
+                }, \
+                copyPos: Group { orientation:'row', alignChildren:['right', 'top'], \
+                    docTxt: StaticText { text: 'Use From Page Position in Copy: ' }, \
+                    useFromPagePositionCb: Checkbox {preferredSize:[20,20]}, \
+                }, \
+                copySrc: Group { orientation:'row', alignChildren:['right', 'top'], \
+                    docTxt: StaticText { text: 'Copy From: ' }, \
+                    pageSrcDocsSel: DropDownList { title: '', preferredSize:[250,40], alignment:’right’ }, \
+                }, \
+                copyDest: Group { orientation:'row', alignChildren:['right', 'top'], \
+                    docTxt: StaticText { text: 'Copy To: ' }, \
+                    pageDestDocsSel: DropDownList { title: '', preferredSize:[250,40], alignment:’right’ }, \
                 }, \
                 btns: Group { orientation:'row', alignChildren:['right', 'center'], \
                     createBtn: Button { text:'Create', properties:{name:'createPage'} }, \
                     deleteBtn: Button { text:'Delete', properties:{name:'deletePage'} }, \
                     updateBtn: Button { text:'Update', properties:{name:'updatePage'} }, \
+                    copyBtn: Button { text:'Copy', properties:{name:'copyPage'} }, \
                     cancelBtn: Button { text:'Cancel', properties:{name:'cancel'} }, \
                 }, \
             }, \
@@ -5199,6 +5416,9 @@ var ZSVIEW = function (zscorelib) {
         pageNoTxt = pt.create.pageNoEdtTxt;
         srcPageNoTxt = pt.create.srcPageNoEdtTxt;
         delPageNoTxt = pt.delete.pageNoEdtTxt;
+        pageSrcDocsSel = pt.copySrc.pageSrcDocsSel;
+        pageDestDocsSel = pt.copyDest.pageDestDocsSel;        
+        useFromPagePositionCb = pt.copyPos.useFromPagePositionCb;
 
         pagePrefixTxt.text = NAME_PAGE;
         artboardPrefixTxt.text = NAME_PAGE;
@@ -5224,9 +5444,15 @@ var ZSVIEW = function (zscorelib) {
             createPageFromPage();
         };
 
+        btns.copyBtn.onClick = function () {
+            copyPageFromPage();
+        };
+
         btns.updateBtn.onClick = function () {
             updatePage();
         };
+
+        populateOpenDocs();
 
         winRefPageTools.center();
 
@@ -5389,7 +5615,7 @@ var ZSVIEW = function (zscorelib) {
         };
 
         browser.btns.exportBtn.onClick = function () {
-            var docName = getSelectedDocName();
+            var docName = getSelectedDocName(openDocsSel);
             if (docName.length < 1) {
                 docName = NAME_ACTIVE_DOC;
             }
@@ -5400,7 +5626,6 @@ var ZSVIEW = function (zscorelib) {
 
         return true;
     };
-
 
     var createLayersView = function () {
 

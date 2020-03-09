@@ -28,6 +28,7 @@ var ZSCORE = function (Window) {
     var LOG_PREFIX = "LOG: ";
     var SLASH = "/";
     var DASH = "-";
+    var COLUMN = ":";
     var UNDERSCORE = "_";
     var PLUS = "+";
     var COMMA = ",";
@@ -1413,6 +1414,9 @@ var ZSCORE = function (Window) {
 
             return isValueInList(this.values, value);
         };
+        this.getValues = function () {
+            return this.values;
+        };
     };
 
     return {
@@ -2248,12 +2252,47 @@ var ZSCORE = function (Window) {
             return sXml;
         },
         deletePage: function (propPageName, artboardName, doc) {
+            var pagePrefix = NAME_PAGE;
+            var pageNos = "";
+            if(contains(propPageName, COLUMN)) {
+                var items = propPageName.split(COLUMN);
+                if(items.length === 2) {
+                    pagePrefix = items[0];
+                    pageNos = items[1];
+                }
+            }
 
-            var layer = this.findLayer(propPageName, doc);
-            removeLayer(layer);
+            var artboardPrefix = NAME_PAGE;
+            var artboardNos = "";
+            if(contains(artboardName, COLUMN)) {
+                var items = artboardName.split(COLUMN);
+                if(items.length === 2) {
+                    artboardPrefix = items[0];
+                    artboardNos = items[1];
+                }
+            }
 
-            var artboard = this.findArtboard(artboardName, doc);
-            removeArtboard(artboard);
+            var filter = new NumbersFilter();
+            filter.init(pageNos);
+            var pages = filter.getValues();
+            if(isArray(pages)) {
+                for(var i = 0; i < pages.length; i++) {
+                    var artbName = pagePrefix + pages[i];
+                    var layer = this.findLayer(artbName, doc);
+                    removeLayer(layer);
+                }
+            }
+
+            var afilter = new NumbersFilter();
+            afilter.init(artboardNos);
+            var artboards = afilter.getValues();
+            if(isArray(artboards)) {
+                for(var i = 0; i < artboards.length; i++) {
+                    var artboardName = artboardPrefix + artboards[i];
+                    var artboard = this.findArtboard(artboardName, doc);
+                    removeArtboard(artboard);
+                }
+            }
         },
         updatePage: function (propPageName, artboardName, doc) {
 
@@ -3798,6 +3837,7 @@ var ZSVIEW = function (zscorelib) {
 
     var COMMA = ",";
     var DOT = ".";
+    var COLUMN = ":";
     var SLASH = "/";
     var NAME_NODE = "node";
     var NAME_ITEM = "item";
@@ -4310,23 +4350,23 @@ var ZSVIEW = function (zscorelib) {
         var callProps = scorelib.createBtCallProperties();
 
         var pagePrefix = getValueFromTxtBox(pagePrefixTxt, NAME_PAGE);
-        var pageNo = parseInt(getValueFromTxtBox(delPageNoTxt, ""));
+        var pageNos = getValueFromTxtBox(delPageNoTxt, "");
 
-        if (!pagePrefix || !pageNo) {
+        if (!pagePrefix || !pageNos) {
             scorelib.showAlert("Invalid page name");
             return;
         }
 
-        var pageName = pagePrefix + pageNo;
+        var pageName = pagePrefix + COLUMN + pageNos;
         callProps[btProps.btPropItemName] = pageName;
 
         var artbPrefix = getValueFromTxtBox(artboardPrefixTxt, NAME_PAGE);
 
-        if (!artbPrefix || !pageNo) {
+        if (!artbPrefix || !pageNos) {
             scorelib.showAlert("Invalid artboard name");
             return;
         }
-        var artbName = artbPrefix + pageNo;
+        var artbName = artbPrefix + COLUMN + pageNos;
         callProps[btProps.btPropArtbName] = artbName;
 
         scorelib.setBtCallProperties(callProps);

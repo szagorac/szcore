@@ -1371,6 +1371,18 @@ var ZSCORE = function (Window) {
         }
     };
 
+    var printFonts = function () {
+        if(!availableFonts) {
+            return;
+        }
+        var count = availableFonts.length;
+        for(var i = 0; i< count; i++) {
+            var font = availableFonts[i];
+            log("Font: " + font.name + " style: " + font.style  + " family: " + font.family + " typename: " + font.typename);
+        }
+
+    };
+
     function NumbersFilter() {
         var propValues = false;
         var isAllValues = false;
@@ -1401,8 +1413,7 @@ var ZSCORE = function (Window) {
 
             return isValueInList(this.values, value);
         };
-    }
-    ;
+    };
 
     return {
         btHeaderCaller: BT_HEADER_CALLER,
@@ -1507,6 +1518,9 @@ var ZSCORE = function (Window) {
         },
         logit: function (value) {
             log(value);
+        },
+        logFonts: function () {
+            printFonts();
         },
         logError: function (value) {
             logErr(value);
@@ -5471,6 +5485,7 @@ var ZSVIEW = function (zscorelib) {
                 return;
             }
             getActiveDoc();
+            // scorelib.logFonts();
 
             if (!winRefLayerTools) {
                 createLayersView();

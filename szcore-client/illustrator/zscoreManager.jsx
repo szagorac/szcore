@@ -1249,6 +1249,7 @@ var ZSCORE = function (Window) {
             return;
         }
 
+        log("deepCopyLayer layer: " + layer.name + " to targetLayer: " + targetLayer.name);
         if (layer.layers && layer.layers.length > 0) {
             var layerLen = layer.layers.length;
 
@@ -1736,8 +1737,16 @@ var ZSCORE = function (Window) {
             if (!name || !doc) {
                 return false;
             }
-
-            return doc.artboards.getByName(name);
+            var prev = theApp.activeDocument;
+            theApp.activeDocument = doc;
+            var artb;
+            try {
+                artb = doc.artboards.getByName(name);
+            } catch (e) {
+                log("findArtboard: " + e, ERROR);
+            }
+            theApp.activeDocument = prev;
+            return artb;
         },
         findLayer: function (name, doc) {
             if (!name) {
@@ -3067,6 +3076,11 @@ var ZSCORE = function (Window) {
             }
         },
         copyPageFromPage: function (pageName, artboardName, srcDoc, destDoc, isUseFromPagePosition, fromPageName, spacer, relativePosition, doc) {
+            var start = new Date().getTime();
+            var prevActive = theApp.activeDocument;
+
+            // Source DOC logic
+            theApp.activeDocument = srcDoc; 
             var pageArtboard = this.findArtboard(artboardName, srcDoc);
 
             var newPageArtboard;
@@ -3084,10 +3098,13 @@ var ZSCORE = function (Window) {
                 return;
             }
 
-            var rect = pageArtboard.artboardRect;
+            var rect = [pageArtboard.artboardRect[0], pageArtboard.artboardRect[1], pageArtboard.artboardRect[2], pageArtboard.artboardRect[3]];
             var xOffset = 0;
             var yOffset = 0;
-            
+
+            // Destination DOC logic
+            theApp.activeDocument = destDoc; 
+
             if(isUseFromPagePosition) {
                 var fromPageArtboard = this.findArtboard(fromPageName, destDoc);
                 if(fromPageArtboard) {
@@ -3110,12 +3127,30 @@ var ZSCORE = function (Window) {
                 log("Could not find score layer is dest doc", ERROR);
                 return;
             }
+            if(isArray(scoreLayer)) {
+                scoreLayer = scoreLayer[0];
+            }
 
-            newPageArtboard = destDoc.artboards.add(rect);
-            newPageArtboard.name = artboardName;
+            var destArtboard = this.findArtboard(artboardName, destDoc);
+            if(!destArtboard) {
+                destArtboard = destDoc.artboards.add(rect);
+                destArtboard.name = artboardName;
+            } else {
+                destArtboard.artboardRect = rect;
+            }
 
-            var newPageLayer = createLayerInParent(pageName, scoreLayer, destDoc);
-            deepCopyLayer(pageLayer, newPageLayer, xOffset, yOffset, destDoc);
+            var destLayer = this.findLayer(pageName, destDoc);
+            if(destLayer) {
+                this.deleteLayers(pageName, destDoc);
+            }
+
+            var destLayer = createLayerInParent(pageName, scoreLayer, destDoc);
+            deepCopyLayer(pageLayer, destLayer, xOffset, yOffset, destDoc);
+
+            theApp.activeDocument = prevActive; 
+            var end = new Date().getTime();
+            var diff = end - start;
+            log("copy page took: " + diff/1000 + " seconds");
         },
         initIntrumentMetric: function(bar, metricTracker, doc){
             var timesigLayer = this.getTimesigLayer(bar, doc);

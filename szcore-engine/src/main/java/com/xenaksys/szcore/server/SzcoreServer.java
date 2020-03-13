@@ -12,7 +12,6 @@ import com.xenaksys.szcore.event.OscEvent;
 import com.xenaksys.szcore.event.PingEvent;
 import com.xenaksys.szcore.event.ServerHelloEvent;
 import com.xenaksys.szcore.event.WebScoreEvent;
-import com.xenaksys.szcore.event.WebScoreEventType;
 import com.xenaksys.szcore.model.BeatTimeStrategy;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.EventService;
@@ -204,57 +203,57 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
     private LinkedList<WebScoreEvent> loadWebScoreEvents() {
         LinkedList<WebScoreEvent> events = new LinkedList<>();
-
-        List<String> scripts = new ArrayList<>();
-        scripts.add("var activeRows=[1, 2]; webScore.setActiveRows(activeRows);");
-        scripts.add("var targets=['centreShape']; webScore.setAction('startZoom', 'ZOOM', targets);");
-        scripts.add("webScore.setZoomLevel('centreShape');");
-        scripts.add("var tileIds=['t2-1','t2-2','t2-3','t2-4']; var values=['text1','bigtext2','biggertext3','space text4']; webScore.setTileTexts(tileIds, values);");
-        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
-
-        scripts.clear();
-        scripts.add("var elementIds=['centreShape']; webScore.setVisible(elementIds, true);");
-        scripts.add("var targets=['centreShape']; webScore.setAction('start', 'TIMELINE', targets);");
-        scripts.add("var tileIds=['t1-1','t2-1']; webScore.setPlayingTiles(tileIds);");
-        scripts.add("var targets=['t1-1','t2-1']; var params={'angle': 45, 'duration' : 5}; webScore.setAction('start', 'ROTATE', targets, params);");
-        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
-
-        scripts.clear();
-        scripts.add("webScore.getTopSelectedTiles(1);");
-        scripts.add("var tileIds=['t1-6','t2-6']; webScore.setPlayingNextTiles(tileIds);");
-        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
-
-        scripts.clear();
-        scripts.add("var tileIds=['t1-6','t2-6']; webScore.setPlayingTiles(tileIds);");
-        scripts.add("var targets=['t1-6','t2-6']; var params={'angle': 45, 'duration' : 5}; webScore.setAction('start', 'ROTATE', targets, params);");
-        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
-
-        scripts.clear();
-        scripts.add("var tileIds=['t1-5','t2-5']; webScore.setPlayingNextTiles(tileIds);");
-        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
-
-        scripts.clear();
-        scripts.add("var tileIds=['t1-5','t2-5']; webScore.setPlayingTiles(tileIds);");
-        scripts.add("var targets=['t1-5','t2-5']; var params={'angle': 45, 'duration' : 5}; webScore.setAction('start', 'ROTATE', targets, params);");
-        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
-
-        scripts.clear();
-        scripts.add("var tileIds=['t1-7','t2-7']; webScore.setPlayingNextTiles(tileIds);");
-        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
-
-        scripts.clear();
-        scripts.add("var tileIds=['t1-7','t2-7']; webScore.setPlayingTiles(tileIds);");
-        scripts.add("var targets=['t1-7','t2-7']; var params={'angle': 45, 'duration' : 5}; webScore.setAction('start', 'ROTATE', targets, params);");
-        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
-
-        scripts.clear();
-        scripts.add("var tileIds=['t1-4']; webScore.setPlayingNextTiles(tileIds);");
-        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
-
-        scripts.clear();
-        scripts.add("var tileIds=['t1-4']; webScore.setPlayingTiles(tileIds);");
-        scripts.add("var targets=['t1-4']; var params={'angle': 45, 'duration' : 5}; webScore.setAction('start', 'ROTATE', targets, params);");
-        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
+//
+//        List<String> scripts = new ArrayList<>();
+//        scripts.add("var activeRows=[1, 2]; webScore.setActiveRows(activeRows);");
+//        scripts.add("var targets=['centreShape']; webScore.setAction('startZoom', 'ZOOM', targets);");
+//        scripts.add("webScore.setZoomLevel('centreShape');");
+//        scripts.add("var tileIds=['t2-1','t2-2','t2-3','t2-4']; var values=['text1','bigtext2','biggertext3','space text4']; webScore.setTileTexts(tileIds, values);");
+//        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
+//
+//        scripts.clear();
+//        scripts.add("var elementIds=['centreShape']; webScore.setVisible(elementIds, true);");
+//        scripts.add("var targets=['centreShape']; webScore.setAction('start', 'TIMELINE', targets);");
+//        scripts.add("var tileIds=['t1-1','t2-1']; webScore.setPlayingTiles(tileIds);");
+//        scripts.add("var targets=['t1-1','t2-1']; var params={'angle': 45, 'duration' : 5}; webScore.setAction('start', 'ROTATE', targets, params);");
+//        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
+//
+//        scripts.clear();
+//        scripts.add("webScore.getTopSelectedTiles(1);");
+//        scripts.add("var tileIds=['t1-6','t2-6']; webScore.setPlayingNextTiles(tileIds);");
+//        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
+//
+//        scripts.clear();
+//        scripts.add("var tileIds=['t1-6','t2-6']; webScore.setPlayingTiles(tileIds);");
+//        scripts.add("var targets=['t1-6','t2-6']; var params={'angle': 45, 'duration' : 5}; webScore.setAction('start', 'ROTATE', targets, params);");
+//        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
+//
+//        scripts.clear();
+//        scripts.add("var tileIds=['t1-5','t2-5']; webScore.setPlayingNextTiles(tileIds);");
+//        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
+//
+//        scripts.clear();
+//        scripts.add("var tileIds=['t1-5','t2-5']; webScore.setPlayingTiles(tileIds);");
+//        scripts.add("var targets=['t1-5','t2-5']; var params={'angle': 45, 'duration' : 5}; webScore.setAction('start', 'ROTATE', targets, params);");
+//        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
+//
+//        scripts.clear();
+//        scripts.add("var tileIds=['t1-7','t2-7']; webScore.setPlayingNextTiles(tileIds);");
+//        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
+//
+//        scripts.clear();
+//        scripts.add("var tileIds=['t1-7','t2-7']; webScore.setPlayingTiles(tileIds);");
+//        scripts.add("var targets=['t1-7','t2-7']; var params={'angle': 45, 'duration' : 5}; webScore.setAction('start', 'ROTATE', targets, params);");
+//        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
+//
+//        scripts.clear();
+//        scripts.add("var tileIds=['t1-4']; webScore.setPlayingNextTiles(tileIds);");
+//        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
+//
+//        scripts.clear();
+//        scripts.add("var tileIds=['t1-4']; webScore.setPlayingTiles(tileIds);");
+//        scripts.add("var targets=['t1-4']; var params={'angle': 45, 'duration' : 5}; webScore.setAction('start', 'ROTATE', targets, params);");
+//        events.add(eventFactory.createWebScoreEvent(WebScoreEventType.START, null, null, scripts, 0L));
 
         return events;
     }
@@ -363,12 +362,12 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     public void sendHello(String remoteAddr){
-        HelloEvent helloEvent = eventFactory.createHelloEvent(remoteAddr, 0l);
+        HelloEvent helloEvent = eventFactory.createHelloEvent(remoteAddr, 0L);
         eventPublisher.process(helloEvent);
     }
 
     public void sendServerHelloEvent(String remoteAddr){
-        ServerHelloEvent pingEvent = eventFactory.createServerHelloEvent(getServerAddress().getHostAddress(), remoteAddr, 0l);
+        ServerHelloEvent pingEvent = eventFactory.createServerHelloEvent(getServerAddress().getHostAddress(), remoteAddr, 0L);
         eventPublisher.process(pingEvent);
     }
 

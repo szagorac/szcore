@@ -255,8 +255,8 @@ public class EventFactory {
         return new WebStartEvent(sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
-    public WebScoreEvent createWebScoreEvent(WebScoreEventType eventType, BeatId beatId, String eventId, List<String> scripts, long creationTime) {
-        return new WebScoreEvent(eventType, beatId, eventId, scripts, creationTime);
+    public WebScoreEvent createWebScoreEvent(BeatId beatId, String script, long creationTime) {
+        return new WebScoreEvent(beatId, script, creationTime);
     }
 
     public OutgoingWebEvent createOutgoingWebEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, long creationTime) {

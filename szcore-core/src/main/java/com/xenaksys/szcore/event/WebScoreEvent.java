@@ -4,23 +4,16 @@ package com.xenaksys.szcore.event;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.id.BeatId;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class WebScoreEvent implements SzcoreEvent {
 
     private final BeatId beatId;
-    private final String eventId;
     private final long creationTime;
-    private final WebScoreEventType eventType;
-    private final List<String> scripts = new ArrayList<>();
+    private final String script;
 
-    public WebScoreEvent(WebScoreEventType eventType, BeatId beatId, String eventId, List<String> scripts, long creationTime) {
+    public WebScoreEvent(BeatId beatId, String script, long creationTime) {
         this.beatId = beatId;
-        this.eventType = eventType;
-        this.eventId = eventId;
         this.creationTime = creationTime;
-        this.scripts.addAll(scripts);
+        this.script = script;
     }
 
     @Override
@@ -33,26 +26,24 @@ public class WebScoreEvent implements SzcoreEvent {
         return beatId;
     }
 
-    public WebScoreEventType getWebEventType() {
-        return eventType;
+    public BeatId getBeatId() {
+        return beatId;
     }
 
-    public String getEventId() {
-        return eventId;
-    }
-
-    public List<String> getScripts() {
-        return scripts;
-    }
-
-    @Override
-    public String toString() {
-        return "ScoreWebEvent{" +
-                "type=" + getWebEventType() +
-                '}';
+    public String getScript() {
+        return script;
     }
 
     public long getCreationTime() {
         return creationTime;
-    };
+    }
+
+    @Override
+    public String toString() {
+        return "WebScoreEvent{" +
+                "beatId=" + beatId +
+                ", creationTime=" + creationTime +
+                ", script='" + script + '\'' +
+                '}';
+    }
 }

@@ -115,9 +115,7 @@ public class ScoreLoader {
             scoreElements.add(scoreElement);
         }
 
-        BasicScore score = createScoreFromElements(scoreElements);
-
-        return score;
+        return createScoreFromElements(scoreElements);
     }
 
     private static BasicScore createScoreFromElements(List<ScoreElement> scoreElements) throws Exception {
@@ -290,7 +288,42 @@ public class ScoreLoader {
     }
 
     private static void processWebScoreElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) throws Exception {
+        String instrumentName = scoreElement.getInstrumentName();
+        StrId instrumentId = new StrId(instrumentName);
 
+        int pageNo = scoreElement.getPageNo();
+        PageId pageId = new PageId(pageNo, instrumentId, scoreId);
+
+        int barNo = scoreElement.getBarNo();
+        BarId barId = new BarId(barNo, instrumentId, pageId, scoreId);
+
+        int beatNo = scoreElement.getBeatNo();
+        int baseBeatUnitsNoAtStart = scoreElement.getStartBaseBeatUnits();
+
+        BeatId beatId = new BeatId(beatNo, instrumentId, pageId, scoreId, barId, baseBeatUnitsNoAtStart);
+
+        IntId id = new IntId(Consts.ID_SOURCE.incrementAndGet());
+
+        String script = resource;
+        if(script.startsWith(RECOURCE_WEB)){
+            script = script.substring(RECOURCE_WEB.length());
+        }
+
+        if(script.startsWith(SCRIPT_DELIMITER)){
+            script = script.substring(SCRIPT_DELIMITER.length());
+        }
+
+        if(script.contains(SCRIPT_COMMA_REPLACE_CHAR)){
+            script = script.replace(SCRIPT_COMMA_REPLACE_CHAR, COMMA);
+        }
+
+        if(script.contains(CURLY_QUOTE)){
+            script = script.replace(CURLY_QUOTE, SINGLE_QUOTE);
+        }
+
+        Script scriptObj = new WebScoreScript(id, beatId, script);
+        LOG.info("Created script: {}", scriptObj);
+        score.addScript(scriptObj);
     }
 
     private static void processJavascriptScoreElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) throws Exception {
@@ -474,7 +507,6 @@ public class ScoreLoader {
         if (line == null) {
             return null;
         }
-        String[] headers = line.split(Consts.COMMA);
-        return headers;
+        return line.split(Consts.COMMA);
     }
 }

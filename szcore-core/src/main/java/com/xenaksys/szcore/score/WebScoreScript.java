@@ -6,15 +6,15 @@ import com.xenaksys.szcore.model.ScriptType;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.IntId;
 
-public class BasicScript implements Script {
+public class WebScoreScript implements Script {
     private IntId id;
     private BeatId beatId;
-    private String script;
+    private String content;
 
-    public BasicScript(IntId id, BeatId beatId, String script) {
+    public WebScoreScript(IntId id, BeatId beatId, String content) {
         this.id = id;
         this.beatId = beatId;
-        this.script = script;
+        this.content = content;
     }
 
     @Override
@@ -24,13 +24,14 @@ public class BasicScript implements Script {
 
     @Override
     public String getContent() {
-        return script;
+        return content;
     }
 
     @Override
     public ScriptType getType() {
-        return ScriptType.JAVASCRIPT;
+        return ScriptType.WEB_SCORE;
     }
+
 
     @Override
     public Id getId() {
@@ -47,7 +48,7 @@ public class BasicScript implements Script {
         return "BasicScript{" +
                 "id=" + id +
                 ", beatId=" + beatId +
-                ", script='" + script + '\'' +
+                ", script='" + content + '\'' +
                 '}';
     }
 }

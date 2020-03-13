@@ -2446,6 +2446,7 @@ var ZSCORE = function (Window) {
 
             var file = new File(path);
             doc.exportFile(file,type,options); 
+            file.close();
         },
         getOrCreateBarLayerChild: function (name, barLayer, doc) {
             var childLayer = this.findLayer(name, barLayer);
@@ -3647,6 +3648,9 @@ var ZSCORE = function (Window) {
             }
             
             showLayers(pages);
+
+            $.gc();             
+            $.gc(); 
         },
 //################# BridgeTalk functions ####################################################
         btExportLayerXML: function () {

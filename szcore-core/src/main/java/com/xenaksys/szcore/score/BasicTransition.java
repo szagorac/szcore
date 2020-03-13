@@ -32,7 +32,7 @@ public class BasicTransition implements Transition {
     }
 
     @Override
-    public String getScript() {
+    public String getContent() {
         return null;
     }
 

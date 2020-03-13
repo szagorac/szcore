@@ -2,15 +2,37 @@ package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
-import com.xenaksys.szcore.model.*;
-import com.xenaksys.szcore.model.id.*;
+import com.xenaksys.szcore.model.Bar;
+import com.xenaksys.szcore.model.Beat;
+import com.xenaksys.szcore.model.Id;
+import com.xenaksys.szcore.model.Instrument;
+import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.Score;
+import com.xenaksys.szcore.model.Script;
+import com.xenaksys.szcore.model.Stave;
+import com.xenaksys.szcore.model.SzcoreEvent;
+import com.xenaksys.szcore.model.Transport;
+import com.xenaksys.szcore.model.id.BeatId;
+import com.xenaksys.szcore.model.id.MutableBeatId;
+import com.xenaksys.szcore.model.id.MutablePageId;
+import com.xenaksys.szcore.model.id.PageId;
+import com.xenaksys.szcore.model.id.StaveId;
+import com.xenaksys.szcore.model.id.StrId;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.time.BasicTransport;
 import gnu.trove.map.TIntObjectMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.LinkedBlockingQueue;
 
 
@@ -115,11 +137,7 @@ public class BasicScore implements Score {
         addTransportId(transportId);
         transports.put(transportId, transport);
         instrumentTransports.put(instrumentId, transportId);
-        List<Id> instrumentIds = transportInstruments.get(transportId);
-        if(instrumentIds == null){
-            instrumentIds = new ArrayList<>();
-            transportInstruments.put(transportId, instrumentIds);
-        }
+        List<Id> instrumentIds = transportInstruments.computeIfAbsent(transportId, k -> new ArrayList<>());
         if(!instrumentIds.contains(instrumentId)){
             instrumentIds.add(instrumentId);
         }
@@ -161,9 +179,7 @@ public class BasicScore implements Score {
     }
 
     public void addTransportId(Id transportId) {
-        if (!transportIds.contains(transportId)) {
-            transportIds.add(transportId);
-        }
+        transportIds.add(transportId);
     }
 
     public void addScoreBaseBeatEvent(Id transportId, SzcoreEvent scoreBaseBeatEvent) {
@@ -513,14 +529,14 @@ public class BasicScore implements Score {
     @Override
     public long getBeatTime(BeatId beatId) {
         if (beatId == null) {
-            return 0l;
+            return 0L;
         }
         return beatToTimeMap.get(beatId);
     }
 
     @Override
     public BeatId getBeatForTime(long time, Id transportId) {
-        BeatId beatId = null;
+        BeatId beatId;
 
         while (time >= 0) {
             List<Id> timeBeats = timeToBeatMap.get(time);
@@ -541,8 +557,6 @@ public class BasicScore implements Score {
                     return beatId;
                 }
             }
-
-            beatId = null;
             time--;
         }
 

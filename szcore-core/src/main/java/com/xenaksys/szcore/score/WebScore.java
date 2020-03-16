@@ -13,11 +13,13 @@ import com.xenaksys.szcore.web.WebActionType;
 import com.xenaksys.szcore.web.WebScoreState;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.map.hash.TIntObjectHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import java.util.*;
 
 import static com.xenaksys.szcore.Consts.EMPTY;
@@ -44,10 +46,13 @@ public class WebScore {
     private final boolean[] visibleRows = new boolean[8];
     private final boolean[] activeRows = new boolean[8];
     private final Map<String, Integer> tileIdPageIdMap = new HashMap<>();
+    private final Map<BeatId, List<WebScoreScript>> beatScripts = new HashMap<>();
+    private final Map<BeatId, List<WebScoreScript>> beatResetScripts = new HashMap<>();
     private String zoomLevel = WEB_ZOOM_DEFAULT;
 
     private ScriptEngineManager factory = new ScriptEngineManager();
     private ScriptEngine jsEngine = factory.getEngineByName("nashorn");
+    private TIntObjectHashMap<Preset> presets = new TIntObjectHashMap<>();
 
     private TestScoreRunner testScoreRunner;
 
@@ -99,6 +104,46 @@ public class WebScore {
         updateServerState();
     }
 
+    public void reset(int presetNo) {
+        try {
+            Preset preset = presets.get(presetNo);
+            if(preset == null) {
+                LOG.info("resetState: Unknown preset: {}", presetNo);
+                return;
+            }
+
+            runScripts(preset.getScripts());
+            updateServerStateAndPush();
+        } catch (Exception e) {
+            LOG.error("resetState: Failed to run preset: {}", presetNo, e);
+        }
+    }
+
+    public void runScripts(List<String> scripts) {
+        for(String js : scripts) {
+            runScript(js);
+        }
+    }
+
+    public void runWebScoreScripts(List<WebScoreScript> scripts) {
+        for(WebScoreScript js : scripts) {
+            runScript(js.getContent());
+        }
+    }
+
+    private void runScript(String script) {
+        if(jsEngine == null) {
+            return;
+        }
+
+        try {
+            LOG.debug("runScript: {}", script);
+            jsEngine.eval(script);
+        } catch (ScriptException e) {
+            LOG.error("Failed to execute script: {}", script, e);
+        }
+    }
+
     private int getPageNo(int row, int col) {
         // row 1 : col - 1
         // row 2 : the same
@@ -106,10 +151,25 @@ public class WebScore {
         return 0;
     }
 
-    public void init(LinkedList<WebScoreEvent> events) {
-        this.events = events;
+    public void init() {
+        loadPresets();
         jsEngine.put("webScore", this);
         resetState();
+    }
+
+    public void init(LinkedList<WebScoreEvent> events) {
+        this.events = events;
+        init();
+    }
+
+    private void loadPresets() {
+        String resetAll = "webScore.setAction('all', 'RESET', ['elements']);";
+        ArrayList<String> r0 = new ArrayList<>(Collections.singletonList(resetAll));
+        addPreset(1, r0);
+    }
+    private void addPreset(int presetNo, List<String> scripts) {
+        Preset preset = new Preset(scripts);
+        presets.put(presetNo, preset);
     }
 
     public void initTestScore() {
@@ -466,22 +526,67 @@ public class WebScore {
         }
     }
 
-    private void processWebScoreEvent(WebScoreEvent event) {
+    public void processWebScoreEvent(WebScoreEvent event) {
         LOG.info("processWebScoreEvent: execute event: {}", event);
         try {
             resetActions();
-            List<String> jsScripts = event.getScripts();
+            List<WebScoreScript> jsScripts = event.getScripts();
             if(jsScripts == null) {
                 return;
             }
-            for(String js : jsScripts) {
-                Object out = jsEngine.eval(js);
-                LOG.info("processWebScoreEvent: script out: {}", out);
-            }
+            runWebScoreScripts(jsScripts);
             updateServerStateAndPush();
         } catch (Exception e) {
             LOG.error("Failed to evaluate script", e);
         }
+    }
+
+    public void addBeatScript(BeatId beatId, WebScoreScript webScoreScript) {
+        if(beatId == null || webScoreScript == null) {
+            return;
+        }
+
+        List<WebScoreScript> scripts = beatScripts.computeIfAbsent(beatId, k -> new ArrayList<>());
+
+        if(webScoreScript.isResetPoint()) {
+            addResetScript(beatId, webScoreScript);
+            if(!webScoreScript.isResetOnly()) {
+                scripts.add(webScoreScript);
+            }
+        } else {
+            scripts.add(webScoreScript);
+        }
+    }
+
+    public void addResetScript(BeatId beatId, WebScoreScript webScoreScript) {
+        if(beatId == null || webScoreScript == null) {
+            return;
+        }
+
+        List<WebScoreScript> scripts = beatResetScripts.computeIfAbsent(beatId, k -> new ArrayList<>());
+        scripts.add(webScoreScript);
+    }
+
+    public List<WebScoreScript> getBeatScripts(BeatId beatId) {
+        return beatScripts.get(beatId);
+    }
+
+    public List<WebScoreScript> getBeatResetScripts(BeatId beatId) {
+        if(beatResetScripts.containsKey(beatId)) {
+            return beatResetScripts.get(beatId);
+        }
+
+        ArrayList<BeatId> beats = new ArrayList<>(beatResetScripts.keySet());
+        Collections.sort(beats);
+        int outIndex = Collections.binarySearch(beats, beatId);
+        int idx = outIndex;
+        if(outIndex < 0) {
+            idx += 1;
+            idx *= (-1);
+            idx -= 1;
+        }
+        BeatId outId = beats.get(idx);
+        return beatResetScripts.get(outId);
     }
 
     public class Tile {
@@ -650,4 +755,15 @@ public class WebScore {
 
     }
 
+    public class Preset {
+        private final List<String> scripts;
+
+        public Preset(List<String> scripts) {
+            this.scripts = scripts;
+        }
+
+        public List<String> getScripts() {
+            return scripts;
+        }
+    }
 }

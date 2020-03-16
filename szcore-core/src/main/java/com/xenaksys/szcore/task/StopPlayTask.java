@@ -15,7 +15,7 @@ public class StopPlayTask extends EventMusicTask {
     @Override
     public void play() {
         SzcoreEvent event = getEvent();
-        if (event == null || !(event instanceof StopEvent)) {
+        if (!(event instanceof StopEvent)) {
             return;
         }
 

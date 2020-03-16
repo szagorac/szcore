@@ -2,21 +2,8 @@ package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.instrument.BasicInstrument;
-import com.xenaksys.szcore.model.Id;
-import com.xenaksys.szcore.model.Instrument;
-import com.xenaksys.szcore.model.NoteDuration;
-import com.xenaksys.szcore.model.Score;
-import com.xenaksys.szcore.model.Script;
-import com.xenaksys.szcore.model.Tempo;
-import com.xenaksys.szcore.model.TempoImpl;
-import com.xenaksys.szcore.model.TimeSignature;
-import com.xenaksys.szcore.model.TimeSignatureImpl;
-import com.xenaksys.szcore.model.Transition;
-import com.xenaksys.szcore.model.id.BarId;
-import com.xenaksys.szcore.model.id.BeatId;
-import com.xenaksys.szcore.model.id.IntId;
-import com.xenaksys.szcore.model.id.PageId;
-import com.xenaksys.szcore.model.id.StrId;
+import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.model.id.*;
 import com.xenaksys.szcore.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,10 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import static com.xenaksys.szcore.score.ResourceType.FILE;
-import static com.xenaksys.szcore.score.ResourceType.JAVASCRIPT;
-import static com.xenaksys.szcore.score.ResourceType.TRANSITION;
-import static com.xenaksys.szcore.score.ResourceType.WEB;
+import static com.xenaksys.szcore.score.ResourceType.*;
 
 
 public class ScoreLoader {
@@ -39,6 +23,12 @@ public class ScoreLoader {
     static final String RECOURCE_JAVASCRIPT = "javascript";
     static final String RECOURCE_WEB = "web";
     static final String RECOURCE_TRANSITION = "transition";
+    static final String BEAT = "beat";
+    static final String IS_RESET_POINT = "reset";
+    static final String ONLY = "only";
+    static final String BOTH = "both";
+    static final String EQUALS = "=";
+    static final String NAME_VAL_DELIMITER = "=";
     static final String SCRIPT_DELIMITER = ":";
     static final String SCRIPT_COMMA_REPLACE_CHAR = "|";
     static final String COMMA = ",";
@@ -76,7 +66,7 @@ public class ScoreLoader {
     };
 
     static Score load(String path) throws Exception {
-        if(path != null) {
+        if (path != null) {
             File file = FileUtil.getFileFromClassPath(path);
             return load(file);
         }
@@ -84,8 +74,8 @@ public class ScoreLoader {
     }
 
     static Score load(File file) throws Exception {
-        if(file == null) {
-           return null;
+        if (file == null) {
+            return null;
         }
 
         workingDir = file.getParent();
@@ -158,7 +148,7 @@ public class ScoreLoader {
 
         String resource = scoreElement.getResource();
         ResourceType resouceType = getResourceType(resource);
-        switch(resouceType) {
+        switch (resouceType) {
             case JAVASCRIPT:
                 processJavascriptScoreElement(scoreElement, score, resource, scoreId);
                 break;
@@ -176,17 +166,17 @@ public class ScoreLoader {
     }
 
     private static ResourceType getResourceType(String resource) {
-        if(resource == null) {
+        if (resource == null) {
             return FILE;
 
         }
-        if(resource.startsWith(RECOURCE_JAVASCRIPT)){
+        if (resource.startsWith(RECOURCE_JAVASCRIPT)) {
             return JAVASCRIPT;
         }
-        if(resource.startsWith(RECOURCE_TRANSITION)){
+        if (resource.startsWith(RECOURCE_TRANSITION)) {
             return TRANSITION;
         }
-        if(resource.startsWith(RECOURCE_WEB)){
+        if (resource.startsWith(RECOURCE_WEB)) {
             return WEB;
         }
         return FILE;
@@ -196,7 +186,7 @@ public class ScoreLoader {
         //instrument
         String instrumentName = scoreElement.getInstrumentName();
         boolean isAudioVideo = false;
-        if(instrumentName.startsWith(AV)) {
+        if (instrumentName.startsWith(AV)) {
             isAudioVideo = true;
         }
         StrId instrumentId = new StrId(instrumentName);
@@ -276,7 +266,7 @@ public class ScoreLoader {
             File file = FileUtil.getFileFromPath(path);
             List<String> lines = FileUtil.loadFile(file);
 
-            for(String line : lines) {
+            for (String line : lines) {
                 InscoreMapElement inscoreMapElement = InscoreMapElement.parseLine(line);
                 inscorePageMap.addElement(inscoreMapElement);
             }
@@ -305,23 +295,79 @@ public class ScoreLoader {
         IntId id = new IntId(Consts.ID_SOURCE.incrementAndGet());
 
         String script = resource;
-        if(script.startsWith(RECOURCE_WEB)){
+        boolean isResetPoint = false;
+        boolean isResetOnly = false;
+
+        if (script.startsWith(RECOURCE_WEB)) {
             script = script.substring(RECOURCE_WEB.length());
         }
 
-        if(script.startsWith(SCRIPT_DELIMITER)){
+        if (script.startsWith(SCRIPT_DELIMITER)) {
             script = script.substring(SCRIPT_DELIMITER.length());
         }
 
-        if(script.contains(SCRIPT_COMMA_REPLACE_CHAR)){
+        if (script.startsWith(BEAT)) {
+            script = script.substring(BEAT.length());
+            if (script.startsWith(NAME_VAL_DELIMITER)) {
+                script = script.substring(NAME_VAL_DELIMITER.length());
+            }
+
+            int end = script.indexOf(SCRIPT_DELIMITER);
+            String beatNoStr = script.substring(0, end);
+            script = script.substring(end);
+            int scriptBeatNo = Integer.parseInt(beatNoStr);
+            if (scriptBeatNo != beatNo) {
+                if(scriptBeatNo < 0) {
+                    scriptBeatNo = beatNo + scriptBeatNo;
+                }
+                BeatId instrumentBeatId = score.getInstrumentBeat(instrumentId, scriptBeatNo);
+                if (instrumentBeatId == null) {
+                    LOG.warn("processWebScoreElement: Could not find instrument beat: {}", scriptBeatNo);
+                } else {
+                    beatId = instrumentBeatId;
+                }
+            }
+
+            if (script.startsWith(SCRIPT_DELIMITER)) {
+                script = script.substring(SCRIPT_DELIMITER.length());
+            }
+        }
+
+        if (script.startsWith(IS_RESET_POINT)) {
+            script = script.substring(IS_RESET_POINT.length());
+            if (script.startsWith(NAME_VAL_DELIMITER)) {
+                script = script.substring(NAME_VAL_DELIMITER.length());
+            }
+
+            int end = script.indexOf(SCRIPT_DELIMITER);
+            String resetPointType = script.substring(0, end);
+            script = script.substring(end);
+
+            isResetPoint = true;
+            switch (resetPointType) {
+                case ONLY:
+                    isResetOnly = true;
+                    break;
+                case BOTH:
+                    isResetOnly = false;
+                    break;
+            }
+
+            if (script.startsWith(SCRIPT_DELIMITER)) {
+                script = script.substring(SCRIPT_DELIMITER.length());
+            }
+
+        }
+
+        if (script.contains(SCRIPT_COMMA_REPLACE_CHAR)) {
             script = script.replace(SCRIPT_COMMA_REPLACE_CHAR, COMMA);
         }
 
-        if(script.contains(CURLY_QUOTE)){
+        if (script.contains(CURLY_QUOTE)) {
             script = script.replace(CURLY_QUOTE, SINGLE_QUOTE);
         }
 
-        Script scriptObj = new WebScoreScript(id, beatId, script);
+        Script scriptObj = new WebScoreScript(id, beatId, script, isResetPoint, isResetOnly);
         LOG.info("Created script: {}", scriptObj);
         score.addScript(scriptObj);
     }
@@ -345,19 +391,19 @@ public class ScoreLoader {
         IntId id = new IntId(Consts.ID_SOURCE.incrementAndGet());
 
         String script = resource;
-        if(script.startsWith(RECOURCE_JAVASCRIPT)){
+        if (script.startsWith(RECOURCE_JAVASCRIPT)) {
             script = script.substring(RECOURCE_JAVASCRIPT.length());
         }
 
-        if(script.startsWith(SCRIPT_DELIMITER)){
+        if (script.startsWith(SCRIPT_DELIMITER)) {
             script = script.substring(SCRIPT_DELIMITER.length());
         }
-        
-        if(script.contains(SCRIPT_COMMA_REPLACE_CHAR)){
+
+        if (script.contains(SCRIPT_COMMA_REPLACE_CHAR)) {
             script = script.replace(SCRIPT_COMMA_REPLACE_CHAR, COMMA);
         }
 
-        if(script.contains(CURLY_QUOTE)){
+        if (script.contains(CURLY_QUOTE)) {
             script = script.replace(CURLY_QUOTE, SINGLE_QUOTE);
         }
 
@@ -385,26 +431,26 @@ public class ScoreLoader {
         IntId id = new IntId(Consts.ID_SOURCE.incrementAndGet());
 
         String script = resource;
-        if(script.startsWith(RECOURCE_TRANSITION)){
+        if (script.startsWith(RECOURCE_TRANSITION)) {
             script = script.substring(RECOURCE_TRANSITION.length());
         }
 
-        if(script.startsWith(SCRIPT_DELIMITER)){
+        if (script.startsWith(SCRIPT_DELIMITER)) {
             script = script.substring(SCRIPT_DELIMITER.length());
         }
 
-        if(script.contains(SCRIPT_COMMA_REPLACE_CHAR)){
+        if (script.contains(SCRIPT_COMMA_REPLACE_CHAR)) {
             script = script.replace(SCRIPT_COMMA_REPLACE_CHAR, COMMA);
         }
 
-        if(script.contains(CURLY_QUOTE)){
+        if (script.contains(CURLY_QUOTE)) {
             script = script.replace(CURLY_QUOTE, SINGLE_QUOTE);
         }
 
-        if(script.isEmpty()) {
+        if (script.isEmpty()) {
             return;
         }
-        
+
         long duration = 0L;
         long frequency = 0L;
         long startValue = 0L;
@@ -412,14 +458,14 @@ public class ScoreLoader {
         String component = null;
 
         try {
-            String [] params = script.split(COMMA);
-            for(int i = 0; i < params.length; i++) {
+            String[] params = script.split(COMMA);
+            for (int i = 0; i < params.length; i++) {
                 String val = params[i];
-                if(val == null || val.isEmpty()) {
+                if (val == null || val.isEmpty()) {
                     continue;
                 }
 
-                switch (i){
+                switch (i) {
                     case 0:
                         duration = Long.parseLong(val);
                         break;
@@ -439,7 +485,7 @@ public class ScoreLoader {
                 }
             }
         } catch (Exception e) {
-            LOG.error("Failed to process Transition configuration {}",script, e);
+            LOG.error("Failed to process Transition configuration {}", script, e);
             return;
         }
 

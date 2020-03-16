@@ -5,11 +5,7 @@ import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.PrecountBeatOffEvent;
 import com.xenaksys.szcore.event.PrecountBeatOnEvent;
 import com.xenaksys.szcore.event.PrecountBeatSetupEvent;
-import com.xenaksys.szcore.model.Clock;
-import com.xenaksys.szcore.model.OscPublisher;
-import com.xenaksys.szcore.model.Scheduler;
-import com.xenaksys.szcore.model.SzcoreEvent;
-import com.xenaksys.szcore.model.Transport;
+import com.xenaksys.szcore.model.*;
 
 public class PrecountBeatSetupTask extends EventMusicTask {
     private final Transport transport;
@@ -33,7 +29,7 @@ public class PrecountBeatSetupTask extends EventMusicTask {
     @Override
     public void play() {
         SzcoreEvent event = getEvent();
-        if (event == null || !(event instanceof PrecountBeatSetupEvent)) {
+        if (!(event instanceof PrecountBeatSetupEvent)) {
             return;
         }
 

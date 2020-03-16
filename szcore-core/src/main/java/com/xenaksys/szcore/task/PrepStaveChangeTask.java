@@ -21,7 +21,7 @@ public class PrepStaveChangeTask extends EventMusicTask {
     @Override
     public void play() {
         SzcoreEvent event = getEvent();
-        if (event == null || !(event instanceof PrepStaveChangeEvent)) {
+        if (!(event instanceof PrepStaveChangeEvent)) {
             return;
         }
 

@@ -1,21 +1,7 @@
 package com.xenaksys.szcore.gui.processor;
 
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.event.ClientEvent;
-import com.xenaksys.szcore.event.ClientEventType;
-import com.xenaksys.szcore.event.ErrorEvent;
-import com.xenaksys.szcore.event.EventType;
-import com.xenaksys.szcore.event.IncomingOscEvent;
-import com.xenaksys.szcore.event.InstrumentEvent;
-import com.xenaksys.szcore.event.MusicEvent;
-import com.xenaksys.szcore.event.MusicEventType;
-import com.xenaksys.szcore.event.OscEvent;
-import com.xenaksys.szcore.event.OscEventType;
-import com.xenaksys.szcore.event.ParticipantEvent;
-import com.xenaksys.szcore.event.ParticipantStatsEvent;
-import com.xenaksys.szcore.event.StopEvent;
-import com.xenaksys.szcore.event.TempoChangeEvent;
-import com.xenaksys.szcore.event.TimeSigChangeEvent;
+import com.xenaksys.szcore.event.*;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Participant;
 import com.xenaksys.szcore.model.Id;
@@ -72,11 +58,15 @@ public class ClientEventProcessor implements Processor {
                     processMusicEvent((MusicEvent)event);
                 }
                 break;
+            case WEB_SCORE:
+                if((event instanceof WebScoreEvent)){
+                    processWebScoreEvent((WebScoreEvent)event);
+                }
+                break;
             default:
-                LOG.error("Unknown event type: " + type);
+                LOG.error("process event: Unknown event type: " + type);
         }
     }
-
 
     public void process(SzcoreEvent event, int beatNo, int tickNo) {
         if(event == null){
@@ -97,8 +87,11 @@ public class ClientEventProcessor implements Processor {
             case MUSIC:
                 processMusicEvent((MusicEvent)event, beatNo, tickNo);
                 break;
+            case WEB_SCORE:
+                processWebScoreEvent((WebScoreEvent)event, beatNo, tickNo);
+                break;
             default:
-                LOG.error("Unknown event type: " + type);
+                LOG.error("process beat event: Unknown event type: " + type);
         }
     }
 
@@ -119,6 +112,10 @@ public class ClientEventProcessor implements Processor {
                 //
 
         }
+    }
+
+    private void processWebScoreEvent(WebScoreEvent event, int beatNo, int tickNo) {
+
     }
 
     private void processScoreOscEvent(OscEvent event, int beatNo, int tickNo) {
@@ -151,6 +148,11 @@ public class ClientEventProcessor implements Processor {
         LOG.debug("Received score MUSIC event: " + event);
     }
 
+    private void processWebScoreEvent(WebScoreEvent event) {
+        LOG.debug("Received WebScore MUSIC event: " + event);
+    }
+
+
     private void processScoreOscEvent(OscEvent event) {
         LOG.debug("Received score OSC event: " + event);
     }
@@ -171,7 +173,7 @@ public class ClientEventProcessor implements Processor {
                 processErrorEvent((ErrorEvent) event);
                 break;
             default:
-                LOG.error("Unknown event type: " + type);
+                LOG.error("processClientEvent: Unknown event type: " + type);
         }
     }
 

@@ -8,6 +8,7 @@ import com.xenaksys.szcore.model.Transition;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
+import com.xenaksys.szcore.score.WebScoreScript;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -255,8 +256,12 @@ public class EventFactory {
         return new WebStartEvent(sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
-    public WebScoreEvent createWebScoreEvent(BeatId beatId, String script, long creationTime) {
-        return new WebScoreEvent(beatId, script, creationTime);
+    public WebScoreEvent createWebScoreEvent(BeatId beatId, List<WebScoreScript> scripts, long creationTime) {
+        return new WebScoreEvent(beatId, scripts, creationTime);
+    }
+
+    public WebScoreResetEvent createWebScoreResetEvent(BeatId beatId, List<WebScoreScript> scripts, long creationTime) {
+        return new WebScoreResetEvent(beatId, scripts, creationTime);
     }
 
     public OutgoingWebEvent createOutgoingWebEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, long creationTime) {

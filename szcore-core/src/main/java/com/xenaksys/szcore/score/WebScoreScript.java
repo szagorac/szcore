@@ -10,11 +10,15 @@ public class WebScoreScript implements Script {
     private IntId id;
     private BeatId beatId;
     private String content;
+    private boolean isResetPoint;
+    private boolean isResetOnly;
 
-    public WebScoreScript(IntId id, BeatId beatId, String content) {
+    public WebScoreScript(IntId id, BeatId beatId, String content, boolean isResetPoint, boolean isResetOnly) {
         this.id = id;
         this.beatId = beatId;
         this.content = content;
+        this.isResetPoint = isResetPoint;
+        this.isResetOnly = isResetOnly;
     }
 
     @Override
@@ -32,6 +36,13 @@ public class WebScoreScript implements Script {
         return ScriptType.WEB_SCORE;
     }
 
+    public boolean isResetPoint() {
+        return isResetPoint;
+    }
+
+    public boolean isResetOnly() {
+        return isResetOnly;
+    }
 
     @Override
     public Id getId() {
@@ -45,10 +56,12 @@ public class WebScoreScript implements Script {
 
     @Override
     public String toString() {
-        return "BasicScript{" +
+        return "WebScoreScript{" +
                 "id=" + id +
                 ", beatId=" + beatId +
                 ", script='" + content + '\'' +
+                ", isResetPoint='" + isResetPoint + '\'' +
+                ", isResetOnly='" + isResetOnly + '\'' +
                 '}';
     }
 }

@@ -4,10 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InterfaceAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -16,6 +13,24 @@ import java.util.stream.Collectors;
 
 public class NetUtil {
     static final Logger LOG = LoggerFactory.getLogger(NetUtil.class);
+
+    public static InetAddress getHostAddress() throws SocketException  {
+        Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+        while (interfaces.hasMoreElements()) {
+            NetworkInterface networkInterface = interfaces.nextElement();
+            if (networkInterface.isLoopback() || !networkInterface.isUp()) {
+                continue;
+            }
+            List<InterfaceAddress> addrs = networkInterface.getInterfaceAddresses();
+            for(InterfaceAddress ia : addrs) {
+                InetAddress inetAddress = ia.getAddress();
+                if(inetAddress instanceof Inet4Address) {
+                    return inetAddress;
+                }
+            }
+        }
+        return null;
+    }
 
     public static List<InetAddress> listAllBroadcastAddresses() throws SocketException {
         List<InetAddress> broadcastAddrs = new ArrayList<>();

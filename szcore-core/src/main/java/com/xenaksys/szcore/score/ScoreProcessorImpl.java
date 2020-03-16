@@ -2,69 +2,12 @@ package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.ValueScaler;
-import com.xenaksys.szcore.event.BeatScriptEvent;
-import com.xenaksys.szcore.event.DateTickEvent;
-import com.xenaksys.szcore.event.ElementAlphaEvent;
-import com.xenaksys.szcore.event.ElementColorEvent;
-import com.xenaksys.szcore.event.ElementSelectedEvent;
-import com.xenaksys.szcore.event.ElementYPositionEvent;
-import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.EventType;
-import com.xenaksys.szcore.event.IncomingWebEvent;
-import com.xenaksys.szcore.event.IncomingWebEventType;
-import com.xenaksys.szcore.event.MusicEvent;
-import com.xenaksys.szcore.event.MusicEventType;
-import com.xenaksys.szcore.event.OscEvent;
-import com.xenaksys.szcore.event.OscEventType;
-import com.xenaksys.szcore.event.OscStaveActivateEvent;
-import com.xenaksys.szcore.event.OscStaveTempoEvent;
-import com.xenaksys.szcore.event.OscStopEvent;
-import com.xenaksys.szcore.event.OutgoingWebEvent;
-import com.xenaksys.szcore.event.PrecountBeatSetupEvent;
-import com.xenaksys.szcore.event.PrepStaveChangeEvent;
-import com.xenaksys.szcore.event.StaveActiveChangeEvent;
-import com.xenaksys.szcore.event.StaveClockTickEvent;
-import com.xenaksys.szcore.event.StaveDateTickEvent;
-import com.xenaksys.szcore.event.StaveDyTickEvent;
-import com.xenaksys.szcore.event.StaveStartMarkEvent;
-import com.xenaksys.szcore.event.StaveYPositionEvent;
-import com.xenaksys.szcore.event.StopEvent;
-import com.xenaksys.szcore.event.TempoChangeEvent;
-import com.xenaksys.szcore.event.TimeSigChangeEvent;
-import com.xenaksys.szcore.event.TransitionEvent;
-import com.xenaksys.szcore.event.TransportEvent;
-import com.xenaksys.szcore.event.TransportPositionEvent;
-import com.xenaksys.szcore.event.WebScoreEvent;
-import com.xenaksys.szcore.event.WebStartEvent;
-import com.xenaksys.szcore.model.Bar;
-import com.xenaksys.szcore.model.Beat;
-import com.xenaksys.szcore.model.Id;
-import com.xenaksys.szcore.model.Instrument;
-import com.xenaksys.szcore.model.MusicTask;
-import com.xenaksys.szcore.model.MutableClock;
-import com.xenaksys.szcore.model.OscPublisher;
-import com.xenaksys.szcore.model.Page;
-import com.xenaksys.szcore.model.Scheduler;
-import com.xenaksys.szcore.model.Score;
-import com.xenaksys.szcore.model.ScoreProcessor;
-import com.xenaksys.szcore.model.Script;
-import com.xenaksys.szcore.model.ScriptType;
-import com.xenaksys.szcore.model.Stave;
-import com.xenaksys.szcore.model.SzcoreEvent;
-import com.xenaksys.szcore.model.Tempo;
-import com.xenaksys.szcore.model.TempoImpl;
-import com.xenaksys.szcore.model.TempoModifier;
-import com.xenaksys.szcore.model.TimeSignature;
-import com.xenaksys.szcore.model.Transition;
-import com.xenaksys.szcore.model.Transport;
-import com.xenaksys.szcore.model.TransportListener;
-import com.xenaksys.szcore.model.id.BarId;
-import com.xenaksys.szcore.model.id.BeatId;
-import com.xenaksys.szcore.model.id.PageId;
-import com.xenaksys.szcore.model.id.StaveId;
-import com.xenaksys.szcore.model.id.StrId;
+import com.xenaksys.szcore.event.*;
+import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.model.id.*;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.task.TaskFactory;
+import com.xenaksys.szcore.task.WebScoreEventTask;
 import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
@@ -76,23 +19,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static com.xenaksys.szcore.Consts.CONTENT_LINE_Y_MAX;
-import static com.xenaksys.szcore.Consts.DYNAMICS_LINE_Y_MAX;
-import static com.xenaksys.szcore.Consts.POSITION_LINE_Y_MAX;
-import static com.xenaksys.szcore.Consts.PRESSURE_LINE_Y_MAX;
-import static com.xenaksys.szcore.Consts.SPEED_LINE_Y_MAX;
+import static com.xenaksys.szcore.Consts.*;
 
 public class ScoreProcessorImpl implements ScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(ScoreProcessorImpl.class);
@@ -171,12 +103,13 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         reset();
         Score score = ScoreLoader.load(file);
         szcore = (BasicScore) score;
+        webScore = new WebScore(this, eventFactory, clock);
+        webScore.init();
 
         return score;
     }
 
     public void loadWebScore(LinkedList<WebScoreEvent> events) {
-        webScore = new WebScore(this, eventFactory, clock);
         webScore.init(events);
     }
 
@@ -342,9 +275,17 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                      addScript(beatId, script, transportId);
                  }
             }
+            addWebScoreBeatScripts(beatId, transportId);
         }
 
         return lastBeat;
+    }
+
+    private void addWebScoreBeatScripts(BeatId beatId, Id transportId) {
+        List<WebScoreScript> scripts = webScore.getBeatScripts(beatId);
+        if(scripts != null  && !scripts.isEmpty()) {
+            addWebScoreEvent(beatId, scripts, transportId);
+        }
     }
 
     private void addScript(BeatId beatId, Script script, Id transportId) {
@@ -357,7 +298,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 addBeatTransitionEvent(beatId, (BasicTransition)script, transportId);
                 break;
             case WEB_SCORE:
-                addWebScoreEvent(beatId, (WebScoreScript)script, transportId);
+                webScore.addBeatScript(beatId, (WebScoreScript)script);
                 break;
         }
     }
@@ -372,8 +313,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         szcore.addScoreBaseBeatEvent(transportId, transitionEvent);
     }
 
-    private void addWebScoreEvent(BeatId beatId, WebScoreScript script, Id transportId) {
-        WebScoreEvent webScoreEvent = createWebScoreEvent(script, beatId);
+    private void addWebScoreEvent(BeatId beatId, List<WebScoreScript> scripts, Id transportId) {
+        WebScoreEvent webScoreEvent = createWebScoreEvent(scripts, beatId);
         szcore.addScoreBaseBeatEvent(transportId, webScoreEvent);
     }
 
@@ -404,6 +345,16 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             szcore.addScoreBaseBeatEvent(transport.getId(), resetInstrumentEvent);
         } else {
             initEvents.add(resetInstrumentEvent);
+        }
+    }
+
+
+    private void addInitWebScoreEvent(Transport transport, List<SzcoreEvent> initEvents, BeatId startBeatId) {
+        WebScoreResetEvent webScoreResetEvent = createWebScoreResetEvent(startBeatId);
+        if (initEvents == null) {
+            szcore.addScoreBaseBeatEvent(transport.getId(), webScoreResetEvent);
+        } else {
+            initEvents.add(webScoreResetEvent);
         }
     }
 
@@ -1446,12 +1397,12 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         return  eventFactory.createTransitionEvent(destination, eventBeatId, transition, clock.getSystemTimeMillis());
     }
 
-    private WebScoreEvent createWebScoreEvent(WebScoreScript script, BeatId eventBeatId){
-        if (script == null || eventBeatId == null) {
+    private WebScoreEvent createWebScoreEvent(List<WebScoreScript> scripts, BeatId eventBeatId){
+        if (scripts == null || eventBeatId == null) {
             return null;
         }
 
-        return eventFactory.createWebScoreEvent(eventBeatId, script.getContent(), clock.getSystemTimeMillis());
+        return eventFactory.createWebScoreEvent(eventBeatId, scripts, clock.getSystemTimeMillis());
     }
 
     private OscEvent createResetScoreEvent(String instrument){
@@ -1468,6 +1419,16 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
 
         return eventFactory.createResetInstrumentEvent(instrument, clock.getSystemTimeMillis());
+    }
+
+    private WebScoreResetEvent createWebScoreResetEvent(BeatId beatId){
+        if (beatId == null) {
+            return null;
+        }
+
+        List<WebScoreScript> scripts = webScore.getBeatResetScripts(beatId);
+        LOG.info("createWebScoreResetEvent: beat: {} scripts {}", beatId.getBeatNo(), scripts);
+        return eventFactory.createWebScoreResetEvent(beatId, scripts, clock.getSystemTimeMillis());
     }
 
     private OscEvent createPageMapFileEvent(String pageName, String address, String destination, BeatId eventBeatId){
@@ -1577,14 +1538,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             boolean isScoreInstrument = !isAudioOrVideo;
             Transport transport = szcore.getInstrumentTransport(instrumentId);
             Id transportId = transport.getId();
-            List<BeatId> beatIds = szcore.getBeatIds(transport.getId(), beatNo);
-            BeatId instrumentBeatId = null;
-            for(BeatId beatId : beatIds){
-                if(beatId.getInstrumentId().equals(instrumentId)){
-                    instrumentBeatId = beatId;
-                    break;
-                }
-            }
+            BeatId instrumentBeatId = szcore.getInstrumentBeatIds(transport.getId(), instrumentId, beatNo);
             if(instrumentBeatId == null){
                 continue;
             }
@@ -1666,6 +1620,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 addInitStaveDyEvent(currentStave, initEvents);
             } else {
                 addInitAvEvent(transport, instrument, initEvents);
+                addInitWebScoreEvent(transport, initEvents, startBeatId);
             }
         }
 
@@ -1908,6 +1863,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             case MUSIC:
                 processMusicEvent((MusicEvent) event, beatNo, tickNo);
                 break;
+            case WEB_SCORE:
+                processWebScoreEvent((WebScoreEvent) event, beatNo, tickNo);
+                break;
             default:
                 LOG.error("Unknown event type " + type);
         }
@@ -1961,6 +1919,24 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         for(SzcoreEngineEventListener listener : scoreEventListeners){
             listener.onTransportTickEvent(transportId, beatNo, baseBeatNo, tickNo);
         }
+    }
+
+
+    private void processWebScoreEvent(WebScoreEvent event, int beatNo, int tickNo) {
+        WebScoreEventType eventType = event.getWebScoreEventType();
+
+        switch (eventType) {
+            case RESET:
+                webScore.processWebScoreEvent(event);
+                break;
+            case SCRIPT:
+            default:
+                WebScoreEventTask task = taskFactory.createWebScoreEventTask(0, event, webScore);
+                if (task != null) {
+                    scheduler.add(task);
+                }
+        }
+
     }
 
     private void processMusicEvent(MusicEvent event, int beatNo, int tickNo) {

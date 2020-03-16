@@ -3,28 +3,9 @@ package com.xenaksys.szcore.server;
 
 import com.lmax.disruptor.dsl.Disruptor;
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.event.ErrorEvent;
-import com.xenaksys.szcore.event.EventContainer;
-import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.HelloEvent;
-import com.xenaksys.szcore.event.IncomingWebEvent;
-import com.xenaksys.szcore.event.OscEvent;
-import com.xenaksys.szcore.event.PingEvent;
-import com.xenaksys.szcore.event.ServerHelloEvent;
-import com.xenaksys.szcore.event.WebScoreEvent;
-import com.xenaksys.szcore.model.BeatTimeStrategy;
-import com.xenaksys.szcore.model.Clock;
-import com.xenaksys.szcore.model.EventService;
-import com.xenaksys.szcore.model.Id;
-import com.xenaksys.szcore.model.OscPublisher;
-import com.xenaksys.szcore.model.Scheduler;
-import com.xenaksys.szcore.model.Score;
-import com.xenaksys.szcore.model.ScoreProcessor;
-import com.xenaksys.szcore.model.ScoreService;
-import com.xenaksys.szcore.model.SzcoreEvent;
-import com.xenaksys.szcore.model.TempoModifier;
+import com.xenaksys.szcore.event.*;
 import com.xenaksys.szcore.model.Timer;
-import com.xenaksys.szcore.model.WaitStrategy;
+import com.xenaksys.szcore.model.*;
 import com.xenaksys.szcore.model.id.OscListenerId;
 import com.xenaksys.szcore.net.ParticipantStats;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
@@ -59,11 +40,7 @@ import org.apache.commons.net.util.SubnetUtils;
 
 import java.io.File;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -194,10 +171,12 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         webProcessor = new WebProcessor( this, this, clock, eventFactory);
         subscribe(webProcessor);
 
-        LinkedList<WebScoreEvent> events = loadWebScoreEvents();
-        scoreProcessor.loadWebScore(events);
+//        LinkedList<WebScoreEvent> events = loadWebScoreEvents();
+//        scoreProcessor.loadWebScore(events);
 
-        webServer = new WebServer("C:\\dev\\projects\\github\\scores\\ligetiq\\export\\web", 80, 1024, this);
+//        webServer = new WebServer("C:\\dev\\projects\\github\\scores\\ligetiq\\export\\web", 80, 1024, this);
+        webServer = new WebServer("/Users/slavko/MyHome/Dev/projects/github/scores/ligetiq/export/web", 80, 1024, this);
+
         webServer.start();
     }
 

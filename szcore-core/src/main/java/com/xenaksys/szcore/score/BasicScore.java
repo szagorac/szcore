@@ -2,37 +2,15 @@ package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
-import com.xenaksys.szcore.model.Bar;
-import com.xenaksys.szcore.model.Beat;
-import com.xenaksys.szcore.model.Id;
-import com.xenaksys.szcore.model.Instrument;
-import com.xenaksys.szcore.model.Page;
-import com.xenaksys.szcore.model.Score;
-import com.xenaksys.szcore.model.Script;
-import com.xenaksys.szcore.model.Stave;
-import com.xenaksys.szcore.model.SzcoreEvent;
-import com.xenaksys.szcore.model.Transport;
-import com.xenaksys.szcore.model.id.BeatId;
-import com.xenaksys.szcore.model.id.MutableBeatId;
-import com.xenaksys.szcore.model.id.MutablePageId;
-import com.xenaksys.szcore.model.id.PageId;
-import com.xenaksys.szcore.model.id.StaveId;
-import com.xenaksys.szcore.model.id.StrId;
+import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.model.id.*;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.time.BasicTransport;
 import gnu.trove.map.TIntObjectMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
 
@@ -672,6 +650,25 @@ public class BasicScore implements Score {
             return null;
         }
         return transportContext.getBeatIds(beatNo);
+    }
+
+    public BeatId getInstrumentBeatIds(Id transportId, Id instrumentId , int beatNo) {
+        for(BeatId beatId : getBeatIds(transportId, beatNo)){
+            if(beatId.getInstrumentId().equals(instrumentId)){
+                return beatId;
+            }
+        }
+        return null;
+    }
+
+    public BeatId getInstrumentBeat(Id instrumentId, int beatNo) {
+        Collection<BeatId> instBeats = getInstrumentBeatIds(instrumentId);
+        for(BeatId beatId : instBeats) {
+            if(beatId.getBeatNo() == beatNo) {
+                return beatId;
+            }
+        }
+        return null;
     }
 
     @Override

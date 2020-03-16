@@ -16,7 +16,7 @@ public class TimeSigChangeTask extends EventMusicTask {
     @Override
     public void play() {
         SzcoreEvent event = getEvent();
-        if (event == null || !(event instanceof TimeSigChangeEvent)) {
+        if (!(event instanceof TimeSigChangeEvent)) {
             return;
         }
 

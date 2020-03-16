@@ -15,7 +15,7 @@ public class TransportPositionTask extends EventMusicTask {
     @Override
     public void play() {
         SzcoreEvent event = getEvent();
-        if (event == null || !(event instanceof TransportPositionEvent)) {
+        if (!(event instanceof TransportPositionEvent)) {
             return;
         }
 

@@ -163,9 +163,26 @@ public class WebScore {
     }
 
     private void loadPresets() {
-        String resetAll = "webScore.setAction('all', 'RESET', ['elements']);";
-        ArrayList<String> r0 = new ArrayList<>(Collections.singletonList(resetAll));
-        addPreset(1, r0);
+        String resetServer = "webScore.resetState()";
+        String resetClient = "webScore.setAction('all', 'RESET', ['elements']);";
+        ArrayList<String> resetAll = new ArrayList<>(Arrays.asList(resetServer, resetClient));
+        addPreset(1, resetAll);
+
+
+        String zoomCentre = "webScore.setZoomLevel('centreShape'); webScore.setAction('startZoom', 'ZOOM', ['centreShape']);";
+        String visibleCentreShape = "webScore.setVisible(['centreShape'], true)";
+        String invisibleInner = "webScore.setVisible(['innerCircle'], false)";
+        String invisibleOuter = "webScore.setVisible(['outerCircle'], false)";
+        String visibleAllRows = "webScore.setVisibleRows([1, 2, 3, 4, 5, 6, 7, 8]);";
+        String activateCentre = "webScore.setActiveRows([1, 2]);";
+        ArrayList<String> r2= new ArrayList<>(Arrays.asList(resetServer, invisibleInner, invisibleOuter, visibleCentreShape, visibleAllRows, zoomCentre, activateCentre));
+        addPreset(2, r2);
+
+        String zoomInner = "webScore.setZoomLevel('innerCircle'); webScore.setAction('startZoom', 'ZOOM', ['innerCircle']);";
+        String endTimeline = "webScore.setAction('end', 'TIMELINE', ['centreShape']);";
+        String deactivateCentre = "webScore.deactivateRows([1,2,3])";
+        ArrayList<String> r3= new ArrayList<>(Arrays.asList(zoomInner, invisibleInner, invisibleOuter, visibleCentreShape, endTimeline, deactivateCentre));
+        addPreset(3, r3);
     }
     private void addPreset(int presetNo, List<String> scripts) {
         Preset preset = new Preset(scripts);
@@ -181,7 +198,12 @@ public class WebScore {
         testScoreRunner.init();
     }
 
-    public void deactivateTiles(int row) {
+    public void deactivateRows(int[] rows) {
+        for (int row : rows) {
+            deactivateRow(row);
+        }
+    }
+    public void deactivateRow(int row) {
         if (row < 1 || row > tiles.length) {
             LOG.warn("deactivateTiles: invalid row: " + row);
         }
@@ -191,8 +213,17 @@ public class WebScore {
             Tile t = tiles[i][j];
             WebElementState ts = t.getState();
             ts.setActive(false);
+            ts.setPlaying(false);
+            ts.setPlayingNext(false);
+            ts.setPlayed(true);
+            ts.setVisible(false);
+
+            visibleRows[i]= false;
+            activeRows[i] = false;
+
             TileText txt = t.getTileText();
             txt.setVisible(false);
+
             tilesAll.remove(t);
         }
     }

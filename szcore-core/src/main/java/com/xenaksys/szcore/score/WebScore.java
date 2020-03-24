@@ -22,8 +22,7 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.util.*;
 
-import static com.xenaksys.szcore.Consts.EMPTY;
-import static com.xenaksys.szcore.Consts.WEB_ZOOM_DEFAULT;
+import static com.xenaksys.szcore.Consts.*;
 
 public class WebScore {
     static final Logger LOG = LoggerFactory.getLogger(WebScore.class);
@@ -38,6 +37,7 @@ public class WebScore {
     private LinkedList<WebScoreEvent> events;
     private List<WebScoreEvent> playedEvents = new ArrayList<>();
     private final Map<String, WebElementState> elementStates = new HashMap<>();
+    private WebTextState instructions;
 
     private final List<WebAction> currentActions = new ArrayList<>();
     private final List<Tile> tilesAll = new ArrayList<>(64);
@@ -100,6 +100,8 @@ public class WebScore {
         elementStates.put("centreShape", new WebElementState("centreShape"));
         elementStates.put("innerCircle", new WebElementState("innerCircle"));
         elementStates.put("outerCircle", new WebElementState("outerCircle"));
+
+        instructions = new WebTextState("instructions");
 
         updateServerState();
     }
@@ -165,7 +167,8 @@ public class WebScore {
     private void loadPresets() {
         String resetServer = "webScore.resetState()";
         String resetClient = "webScore.setAction('all', 'RESET', ['elements']);";
-        ArrayList<String> resetAll = new ArrayList<>(Arrays.asList(resetServer, resetClient));
+        String startText = "webScore.setInstructions('rose afhasdf sdflkaj', 'union', 'test');";
+        ArrayList<String> resetAll = new ArrayList<>(Arrays.asList(resetServer, resetClient, startText));
         addPreset(1, resetAll);
 
 
@@ -322,6 +325,26 @@ public class WebScore {
 
     public void setZoomLevel(String zoomLevel) {
         this.zoomLevel = zoomLevel;
+    }
+
+    public void setInstructions(String l1, String l2, String l3) {
+        setInstructions(l1, l2, l3, WEB_TEXT_BACKGROUND_COLOUR, true);
+    }
+
+    public void setInstructions(String l1, String l2, String l3, boolean isVisible) {
+        setInstructions(l1, l2, l3, WEB_TEXT_BACKGROUND_COLOUR, isVisible);
+    }
+
+    public void setInstructions(boolean isVisible) {
+        setInstructions(EMPTY, EMPTY, EMPTY, WEB_TEXT_BACKGROUND_COLOUR, isVisible);
+    }
+
+    public void setInstructions(String l1, String l2, String l3, String colour, boolean isVisible) {
+        this.instructions.setLine1(l1);
+        this.instructions.setLine2(l2);
+        this.instructions.setLine3(l3);
+        this.instructions.setColour(colour);
+        this.instructions.setVisible(isVisible);
     }
 
     public void setVisible(String[] elementIds, boolean isVisible) {
@@ -533,7 +556,7 @@ public class WebScore {
         WebElementState innerCircle = elementStates.get("innerCircle");
         WebElementState outerCircle = elementStates.get("outerCircle");
 
-        return new WebScoreState(ts, currentActions, centreShape, innerCircle, outerCircle, zoomLevel);
+        return new WebScoreState(ts, currentActions, centreShape, innerCircle, outerCircle, zoomLevel, instructions);
     }
 
     public void updateServerState() {

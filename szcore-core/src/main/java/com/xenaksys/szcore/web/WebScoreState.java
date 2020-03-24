@@ -2,6 +2,7 @@ package com.xenaksys.szcore.web;
 
 import com.xenaksys.szcore.score.WebElementState;
 import com.xenaksys.szcore.score.WebScore;
+import com.xenaksys.szcore.score.WebTextState;
 
 import java.util.List;
 
@@ -12,15 +13,17 @@ public class WebScoreState {
     private final WebElementState centreShape;
     private final WebElementState innerCircle;
     private final WebElementState outerCircle;
+    private final WebTextState instructions;
 
     public WebScoreState(WebScore.Tile[][] tiles, List<WebAction> currentActions, WebElementState centreShape,
-                         WebElementState innerCircle, WebElementState outerCircle, String zoomLevel) {
+                         WebElementState innerCircle, WebElementState outerCircle, String zoomLevel, WebTextState instructions) {
         this.tiles = tiles;
         this.actions = currentActions;
         this.centreShape = centreShape;
         this.innerCircle = innerCircle;
         this.outerCircle = outerCircle;
         this.zoomLevel = zoomLevel;
+        this.instructions = instructions;
     }
 
     public WebScore.Tile[][] getTiles() {
@@ -45,5 +48,9 @@ public class WebScoreState {
 
     public String getZoomLevel() {
         return zoomLevel;
+    }
+
+    public WebTextState getInstructions() {
+        return instructions;
     }
 }

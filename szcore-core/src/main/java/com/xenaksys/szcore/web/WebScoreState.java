@@ -1,5 +1,6 @@
 package com.xenaksys.szcore.web;
 
+import com.xenaksys.szcore.score.GranulatorConfig;
 import com.xenaksys.szcore.score.WebElementState;
 import com.xenaksys.szcore.score.WebScore;
 import com.xenaksys.szcore.score.WebTextState;
@@ -14,9 +15,11 @@ public class WebScoreState {
     private final WebElementState innerCircle;
     private final WebElementState outerCircle;
     private final WebTextState instructions;
+    private final GranulatorConfig granulatorConfig;
 
     public WebScoreState(WebScore.Tile[][] tiles, List<WebAction> currentActions, WebElementState centreShape,
-                         WebElementState innerCircle, WebElementState outerCircle, String zoomLevel, WebTextState instructions) {
+                         WebElementState innerCircle, WebElementState outerCircle, String zoomLevel,
+                         WebTextState instructions, GranulatorConfig granulatorConfig) {
         this.tiles = tiles;
         this.actions = currentActions;
         this.centreShape = centreShape;
@@ -24,6 +27,7 @@ public class WebScoreState {
         this.outerCircle = outerCircle;
         this.zoomLevel = zoomLevel;
         this.instructions = instructions;
+        this.granulatorConfig = granulatorConfig;
     }
 
     public WebScore.Tile[][] getTiles() {
@@ -52,5 +56,9 @@ public class WebScoreState {
 
     public WebTextState getInstructions() {
         return instructions;
+    }
+
+    public GranulatorConfig getGranulatorConfig() {
+        return granulatorConfig;
     }
 }

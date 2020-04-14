@@ -35,9 +35,10 @@ public class WebScore {
 
     private Tile[][] tiles;
     private LinkedList<WebScoreEvent> events;
-    private List<WebScoreEvent> playedEvents = new ArrayList<>();
+    private final List<WebScoreEvent> playedEvents = new ArrayList<>();
     private final Map<String, WebElementState> elementStates = new HashMap<>();
     private WebTextState instructions;
+    private GranulatorConfig granulatorConfig;
 
     private final List<WebAction> currentActions = new ArrayList<>();
     private final List<Tile> tilesAll = new ArrayList<>(64);
@@ -50,9 +51,9 @@ public class WebScore {
     private final Map<BeatId, List<WebScoreScript>> beatResetScripts = new HashMap<>();
     private String zoomLevel = WEB_ZOOM_DEFAULT;
 
-    private ScriptEngineManager factory = new ScriptEngineManager();
-    private ScriptEngine jsEngine = factory.getEngineByName("nashorn");
-    private TIntObjectHashMap<Preset> presets = new TIntObjectHashMap<>();
+    private final ScriptEngineManager factory = new ScriptEngineManager();
+    private final ScriptEngine jsEngine = factory.getEngineByName("nashorn");
+    private final TIntObjectHashMap<Preset> presets = new TIntObjectHashMap<>();
 
     private TestScoreRunner testScoreRunner;
 
@@ -103,13 +104,15 @@ public class WebScore {
 
         instructions = new WebTextState("instructions");
 
+        granulatorConfig = createDefaultGranulatorConfig();
+
         updateServerState();
     }
 
     public void reset(int presetNo) {
         try {
             Preset preset = presets.get(presetNo);
-            if(preset == null) {
+            if (preset == null) {
                 LOG.info("resetState: Unknown preset: {}", presetNo);
                 return;
             }
@@ -122,19 +125,19 @@ public class WebScore {
     }
 
     public void runScripts(List<String> scripts) {
-        for(String js : scripts) {
+        for (String js : scripts) {
             runScript(js);
         }
     }
 
     public void runWebScoreScripts(List<WebScoreScript> scripts) {
-        for(WebScoreScript js : scripts) {
+        for (WebScoreScript js : scripts) {
             runScript(js.getContent());
         }
     }
 
     private void runScript(String script) {
-        if(jsEngine == null) {
+        if (jsEngine == null) {
             return;
         }
 
@@ -167,7 +170,7 @@ public class WebScore {
     private void loadPresets() {
         String resetServer = "webScore.resetState()";
         String resetClient = "webScore.setAction('all', 'RESET', ['elements']);";
-        String startText = "webScore.setInstructions('rose afhasdf sdflkaj', 'union', 'test');";
+        String startText = "webScore.setInstructions('Union Rose', 'performance', 'test');";
         ArrayList<String> resetAll = new ArrayList<>(Arrays.asList(resetServer, resetClient, startText));
         addPreset(1, resetAll);
 
@@ -178,22 +181,23 @@ public class WebScore {
         String invisibleOuter = "webScore.setVisible(['outerCircle'], false)";
         String visibleAllRows = "webScore.setVisibleRows([1, 2, 3, 4, 5, 6, 7, 8]);";
         String activateCentre = "webScore.setActiveRows([1, 2]);";
-        ArrayList<String> r2= new ArrayList<>(Arrays.asList(resetServer, invisibleInner, invisibleOuter, visibleCentreShape, visibleAllRows, zoomCentre, activateCentre));
+        ArrayList<String> r2 = new ArrayList<>(Arrays.asList(resetServer, invisibleInner, invisibleOuter, visibleCentreShape, visibleAllRows, zoomCentre, activateCentre));
         addPreset(2, r2);
 
         String zoomInner = "webScore.setZoomLevel('innerCircle'); webScore.setAction('startZoom', 'ZOOM', ['innerCircle']);";
         String endTimeline = "webScore.setAction('end', 'TIMELINE', ['centreShape']);";
         String deactivateCentre = "webScore.deactivateRows([1,2,3])";
-        ArrayList<String> r3= new ArrayList<>(Arrays.asList(zoomInner, invisibleInner, invisibleOuter, visibleCentreShape, endTimeline, deactivateCentre));
+        ArrayList<String> r3 = new ArrayList<>(Arrays.asList(zoomInner, invisibleInner, invisibleOuter, visibleCentreShape, endTimeline, deactivateCentre));
         addPreset(3, r3);
     }
+
     private void addPreset(int presetNo, List<String> scripts) {
         Preset preset = new Preset(scripts);
         presets.put(presetNo, preset);
     }
 
     public void initTestScore() {
-        if(events.isEmpty()) {
+        if (events.isEmpty()) {
             events.addAll(playedEvents);
             playedEvents.clear();
         }
@@ -206,6 +210,7 @@ public class WebScore {
             deactivateRow(row);
         }
     }
+
     public void deactivateRow(int row) {
         if (row < 1 || row > tiles.length) {
             LOG.warn("deactivateTiles: invalid row: " + row);
@@ -221,7 +226,7 @@ public class WebScore {
             ts.setPlayed(true);
             ts.setVisible(false);
 
-            visibleRows[i]= false;
+            visibleRows[i] = false;
             activeRows[i] = false;
 
             TileText txt = t.getTileText();
@@ -242,7 +247,7 @@ public class WebScore {
                 return;
             }
             WebElementState state = in.getState();
-            if(state.isPlaying() || state.isPlayingNext() || state.isPlayed() || !state.isVisible()) {
+            if (state.isPlaying() || state.isPlayingNext() || state.isPlayed() || !state.isVisible()) {
                 return;
             }
 
@@ -300,7 +305,7 @@ public class WebScore {
 
     public void startScore() {
         LOG.info("startScore: ");
-        if(testScoreRunner != null) {
+        if (testScoreRunner != null) {
             testScoreRunner.start();
         }
     }
@@ -349,9 +354,9 @@ public class WebScore {
 
     public void setVisible(String[] elementIds, boolean isVisible) {
         LOG.info("setVisible: {}", Arrays.toString(elementIds));
-        for(String elementId : elementIds) {
+        for (String elementId : elementIds) {
             WebElementState state = elementStates.get(elementId);
-            if(state != null) {
+            if (state != null) {
                 state.setVisible(isVisible);
             }
         }
@@ -360,10 +365,10 @@ public class WebScore {
     public void setTileTexts(String[] tileIds, String[] values) {
         LOG.info("setTileTexts: {}  {}", Arrays.toString(tileIds), Arrays.toString(values));
 
-        for(int i = 0; i < tileIds.length; i++) {
+        for (int i = 0; i < tileIds.length; i++) {
             String tileId = tileIds[i];
             String value;
-            if(values.length > i) {
+            if (values.length > i) {
                 value = values[i];
             } else {
                 value = values[values.length - 1];
@@ -375,7 +380,7 @@ public class WebScore {
 
     public void resetPlayingTiles() {
         List<String> targets = new ArrayList<>();
-        for(Tile t : playingTiles) {
+        for (Tile t : playingTiles) {
             t.getState().setPlaying(false);
             t.getState().setPlayed(true);
             t.getState().setVisible(false);
@@ -390,14 +395,14 @@ public class WebScore {
     public void setPlayingTiles(String[] tileIds) {
         LOG.info("setPlayingTiles: {}", Arrays.toString(tileIds));
         resetPlayingTiles();
-        for(String tileId : tileIds) {
+        for (String tileId : tileIds) {
             setPlayingTile(tileId);
         }
     }
 
     public void setPlayingTile(String tileId) {
         Tile t = parseTileId(tileId);
-        if(t == null) {
+        if (t == null) {
             LOG.error("setPlayedTile: invalid tileId: {}", tileId);
             return;
         }
@@ -405,13 +410,13 @@ public class WebScore {
     }
 
     public void setPlayingTile(int row, int col) {
-        int i = row -1;
+        int i = row - 1;
         int j = col - 1;
-        if(i < 0 || i >= tiles.length) {
+        if (i < 0 || i >= tiles.length) {
             LOG.error("setPlayedTile: invalid row: {}", i);
             return;
         }
-        if(j < 0 || j >= tiles[0].length) {
+        if (j < 0 || j >= tiles[0].length) {
             LOG.error("setPlayedTile: invalid col: {}", i);
             return;
         }
@@ -422,7 +427,7 @@ public class WebScore {
 
     public void setTileText(String tileId, String value) {
         Tile t = parseTileId(tileId);
-        if(t == null) {
+        if (t == null) {
             LOG.error("setTileText: invalid tileId: {}", tileId);
             return;
         }
@@ -430,13 +435,13 @@ public class WebScore {
     }
 
     private void setTileText(int row, int col, String value) {
-        int i = row -1;
+        int i = row - 1;
         int j = col - 1;
-        if(i < 0 || i >= tiles.length) {
+        if (i < 0 || i >= tiles.length) {
             LOG.error("setTileText: invalid row: {}", i);
             return;
         }
-        if(j < 0 || j >= tiles[0].length) {
+        if (j < 0 || j >= tiles[0].length) {
             LOG.error("setTileText: invalid col: {}", i);
             return;
         }
@@ -445,7 +450,7 @@ public class WebScore {
     }
 
     public void resetPlayingNextTiles() {
-        for(Tile t : playingNextTiles) {
+        for (Tile t : playingNextTiles) {
             t.getState().setPlayingNext(false);
         }
         playingNextTiles.clear();
@@ -454,14 +459,14 @@ public class WebScore {
     public void setPlayingNextTiles(String[] tileIds) {
         LOG.info("setPlayingNextTiles: {}", Arrays.toString(tileIds));
         resetPlayingNextTiles();
-        for(String tileId : tileIds) {
+        for (String tileId : tileIds) {
             setPlayingNextTile(tileId);
         }
     }
 
     public void setPlayingNextTile(String tileId) {
         Tile t = parseTileId(tileId);
-        if(t == null) {
+        if (t == null) {
             LOG.error("setPlayedNextTile: invalid tileId: {}", tileId);
             return;
         }
@@ -469,13 +474,13 @@ public class WebScore {
     }
 
     public void setPlayingNextTile(int row, int col) {
-        int i = row -1;
+        int i = row - 1;
         int j = col - 1;
-        if(i < 0 || i >= tiles.length) {
+        if (i < 0 || i >= tiles.length) {
             LOG.error("setPlayedNextTile: invalid row: {}", i);
             return;
         }
-        if(j < 0 || j >= tiles[0].length) {
+        if (j < 0 || j >= tiles[0].length) {
             LOG.error("setPlayedNextTile: invalid col: {}", i);
             return;
         }
@@ -514,6 +519,171 @@ public class WebScore {
             currentActions.add(action);
         } catch (IllegalArgumentException e) {
             LOG.error("Failed to setAction id: {} type: {}", actionId, type);
+        }
+    }
+
+    public void setGranulatorConfig(Map<String, String> params) {
+        if (params == null) {
+            LOG.error("setGranulatorConfig: invalid params");
+            return;
+        }
+
+        for (String param : params.keySet()) {
+            String value = params.get(param);
+            String[] names = param.split("\\.");
+            if(names.length != 2) {
+                LOG.error("setGranulatorConfig: invalid param names {}, will not use", Arrays.toString(names));
+                continue;
+            }
+            String l1 = names[0];
+            String l2 = names[1];
+            switch (l1) {
+                case "grain":
+                    setGrainConfig(l2, value);
+                    break;
+                case "envelope":
+                    setGranulatorEnvelopeConfig(l2, value);
+                    break;
+                case "panner":
+                    setGranulatorPannerConfig(l2, value);
+                    break;
+            }
+        }
+    }
+
+    private void setGranulatorPannerConfig(String name, String value) {
+        PannerConfig pannerConfig = granulatorConfig.getPanner();
+        switch (name) {
+            case "isUsePanner" :
+                try {
+                    boolean v = Boolean.parseBoolean(value);
+                    pannerConfig.setUsePanner(v);
+                } catch (Exception e) {
+                    LOG.error("setGranulatorPannerConfig: Failed to set isUsePanner", e);
+                }
+                break;
+            case "panningModel" :
+                try {
+                    String v = PanningModel.fromName(value).getName();
+                    pannerConfig.setPanningModel(v);
+                } catch (Exception e) {
+                    LOG.error("setGranulatorPannerConfig: Failed to set panningModel", e);
+                }
+                break;
+            case "distanceModel" :
+                try {
+                    String v = PannerDistanceModel.fromName(value).getName();
+                    pannerConfig.setDistanceModel(v);
+                } catch (Exception e) {
+                    LOG.error("setGranulatorPannerConfig: Failed to set distanceModel", e);
+                }
+                break;
+            case "maxPanAngle" :
+                try {
+                    int v = Integer.parseInt(value);
+                    pannerConfig.setMaxPanAngle(v);
+                } catch (Exception e) {
+                    LOG.error("setGranulatorPannerConfig: Failed to set maxPanAngle", e);
+                }
+                break;
+            default:
+                LOG.error("setGranulatorPannerConfig: Invalid Granulator Panner param: {}", name);
+        }
+    }
+
+    private void setGrainConfig(String name, String value) {
+        GrainConfig grainConfig = granulatorConfig.getGrain();
+        switch (name) {
+            case "sizeMs" :
+                try {
+                    int v = Integer.parseInt(value);
+                    grainConfig.setSizeMs(v);
+                } catch (Exception e) {
+                    LOG.error("setGrainConfig: Failed to set grain size", e);
+                }
+                break;
+            case "pitchRate" :
+                try {
+                    double v = Double.parseDouble(value);
+                    grainConfig.setPitchRate(v);
+                } catch (Exception e) {
+                    LOG.error("setGrainConfig: Failed to set pitchRate", e);
+                }
+                break;
+            case "maxPositionOffsetRangeMs" :
+                try {
+                    int v = Integer.parseInt(value);
+                    grainConfig.setMaxPositionOffsetRangeMs(v);
+                } catch (Exception e) {
+                    LOG.error("setGrainConfig: Failed to set maxPositionOffsetRangeMs", e);
+                }
+                break;
+            case "maxPitchRateRange" :
+                try {
+                    double v = Double.parseDouble(value);
+                    grainConfig.setMaxPitchRateRange(v);
+                } catch (Exception e) {
+                    LOG.error("setGrainConfig: Failed to set maxPitchRateRange", e);
+                }
+                break;
+            case "timeOffsetStepMs" :
+                try {
+                    int v = Integer.parseInt(value);
+                    grainConfig.setTimeOffsetStepMs(v);
+                } catch (Exception e) {
+                    LOG.error("setGrainConfig: Failed to set timeOffsetStepMs", e);
+                }
+                break;
+            default:
+                LOG.error("setGrainConfig: Invalid Grain Config Param: {}", name);
+        }
+    }
+
+    private void setGranulatorEnvelopeConfig(String name, String value) {
+        EnvelopeConfig envelopeConfig = granulatorConfig.getEnvelope();
+        switch (name) {
+            case "attackTime" :
+                try {
+                    double v = Double.parseDouble(value);
+                    envelopeConfig.setAttackTime(v);
+                } catch (Exception e) {
+                    LOG.error("setGranulatorEnvelopeConfig: Failed to set attackTime", e);
+                }
+                break;
+            case "decayTime" :
+                try {
+                    double v = Double.parseDouble(value);
+                    envelopeConfig.setDecayTime(v);
+                } catch (Exception e) {
+                    LOG.error("setGranulatorEnvelopeConfig: Failed to set decayTime", e);
+                }
+                break;
+            case "sustainTime" :
+                try {
+                    double v = Double.parseDouble(value);
+                    envelopeConfig.setSustainTime(v);
+                } catch (Exception e) {
+                    LOG.error("setGranulatorEnvelopeConfig: Failed to set sustainTime", e);
+                }
+                break;
+            case "releaseTime" :
+                try {
+                    double v = Double.parseDouble(value);
+                    envelopeConfig.setReleaseTime(v);
+                } catch (Exception e) {
+                    LOG.error("setGranulatorEnvelopeConfig: Failed to set releaseTime", e);
+                }
+                break;
+            case "sustainLevel" :
+                try {
+                    double v = Double.parseDouble(value);
+                    envelopeConfig.setSustainLevel(v);
+                } catch (Exception e) {
+                    LOG.error("setGranulatorEnvelopeConfig: Failed to set sustainLevel", e);
+                }
+                break;
+            default:
+                LOG.error("setGranulatorEnvelopeConfig: Invalid Grain Config Param: {}", name);
         }
     }
 
@@ -556,7 +726,7 @@ public class WebScore {
         WebElementState innerCircle = elementStates.get("innerCircle");
         WebElementState outerCircle = elementStates.get("outerCircle");
 
-        return new WebScoreState(ts, currentActions, centreShape, innerCircle, outerCircle, zoomLevel, instructions);
+        return new WebScoreState(ts, currentActions, centreShape, innerCircle, outerCircle, zoomLevel, instructions, granulatorConfig);
     }
 
     public void updateServerState() {
@@ -585,7 +755,7 @@ public class WebScore {
         try {
             resetActions();
             List<WebScoreScript> jsScripts = event.getScripts();
-            if(jsScripts == null) {
+            if (jsScripts == null) {
                 return;
             }
             runWebScoreScripts(jsScripts);
@@ -596,15 +766,15 @@ public class WebScore {
     }
 
     public void addBeatScript(BeatId beatId, WebScoreScript webScoreScript) {
-        if(beatId == null || webScoreScript == null) {
+        if (beatId == null || webScoreScript == null) {
             return;
         }
 
         List<WebScoreScript> scripts = beatScripts.computeIfAbsent(beatId, k -> new ArrayList<>());
 
-        if(webScoreScript.isResetPoint()) {
+        if (webScoreScript.isResetPoint()) {
             addResetScript(beatId, webScoreScript);
-            if(!webScoreScript.isResetOnly()) {
+            if (!webScoreScript.isResetOnly()) {
                 scripts.add(webScoreScript);
             }
         } else {
@@ -613,7 +783,7 @@ public class WebScore {
     }
 
     public void addResetScript(BeatId beatId, WebScoreScript webScoreScript) {
-        if(beatId == null || webScoreScript == null) {
+        if (beatId == null || webScoreScript == null) {
             return;
         }
 
@@ -626,7 +796,7 @@ public class WebScore {
     }
 
     public List<WebScoreScript> getBeatResetScripts(BeatId beatId) {
-        if(beatResetScripts.containsKey(beatId)) {
+        if (beatResetScripts.containsKey(beatId)) {
             return beatResetScripts.get(beatId);
         }
 
@@ -634,13 +804,42 @@ public class WebScore {
         Collections.sort(beats);
         int outIndex = Collections.binarySearch(beats, beatId);
         int idx = outIndex;
-        if(outIndex < 0) {
+        if (outIndex < 0) {
             idx += 1;
             idx *= (-1);
             idx -= 1;
         }
         BeatId outId = beats.get(idx);
         return beatResetScripts.get(outId);
+    }
+
+    private GranulatorConfig createDefaultGranulatorConfig() {
+        GranulatorConfig granulatorConfig = new GranulatorConfig();
+
+        GrainConfig grainConfig = new GrainConfig();
+        grainConfig.setMaxPitchRateRange(0.0);
+        grainConfig.setMaxPositionOffsetRangeMs(10);
+        grainConfig.setPitchRate(1.0);
+        grainConfig.setSizeMs(100);
+        grainConfig.setTimeOffsetStepMs(10);
+        granulatorConfig.setGrain(grainConfig);
+
+        EnvelopeConfig envelopeConfig = new EnvelopeConfig();
+        envelopeConfig.setAttackTime(0.4);
+        envelopeConfig.setDecayTime(0.0);
+        envelopeConfig.setSustainTime(0.2);
+        envelopeConfig.setReleaseTime(0.4);
+        envelopeConfig.setSustainLevel(1.0);
+        granulatorConfig.setEnvelope(envelopeConfig);
+
+        PannerConfig pannerConfig = new PannerConfig();
+        pannerConfig.setUsePanner(false);
+        pannerConfig.setPanningModel(PanningModel.EQUAL_POWER.getName());
+        pannerConfig.setDistanceModel(PannerDistanceModel.LINEAR.getName());
+        pannerConfig.setMaxPanAngle(45);
+        granulatorConfig.setPanner(pannerConfig);
+
+        return granulatorConfig;
     }
 
     public class Tile {
@@ -801,7 +1000,7 @@ public class WebScore {
         }
 
         public void start() {
-            if(isRunning) {
+            if (isRunning) {
                 return;
             }
             runner.start();

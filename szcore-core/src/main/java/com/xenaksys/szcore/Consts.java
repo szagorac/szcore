@@ -244,7 +244,7 @@ public interface Consts {
     public static final String WEB_ZOOM_DEFAULT = "default";
 
     public static final String WEB_SCORE_SUFFIX = "_webscore";
-    static final String WEB_TEXT_BACKGROUND_COLOUR = "rgba(255, 255, 255, 0.5)";
+    static final String WEB_TEXT_BACKGROUND_COLOUR = "rgba(225, 225, 225, 0.65)";
 
     public static final String NAME_FULL_SCORE = "FullScore";
 

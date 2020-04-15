@@ -103,6 +103,10 @@ public class WebScore {
         elementStates.put("outerCircle", new WebElementState("outerCircle"));
 
         instructions = new WebTextState("instructions");
+        instructions.setLine1("Welcome to");
+        instructions.setLine2("<span style='color:blueviolet;'>ZScore</span>");
+        instructions.setLine3("awaiting performance start ...");
+        instructions.setVisible(true);
 
         granulatorConfig = createDefaultGranulatorConfig();
 
@@ -170,7 +174,7 @@ public class WebScore {
     private void loadPresets() {
         String resetServer = "webScore.resetState()";
         String resetClient = "webScore.setAction('all', 'RESET', ['elements']);";
-        String startText = "webScore.setInstructions('Union Rose', 'performance', 'test');";
+        String startText = "webScore.setInstructions('awaiting','<span style=\\'color:blueviolet;\\'>Union Rose</span>', 'performance');";
         ArrayList<String> resetAll = new ArrayList<>(Arrays.asList(resetServer, resetClient, startText));
         addPreset(1, resetAll);
 

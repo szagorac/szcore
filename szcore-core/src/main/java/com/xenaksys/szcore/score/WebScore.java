@@ -522,66 +522,76 @@ public class WebScore {
         }
     }
 
-    public void setGranulatorConfig(Map<String, String> params) {
+    public void setGranulatorConfig(Map<String, Object> params) {
         if (params == null) {
             LOG.error("setGranulatorConfig: invalid params");
             return;
         }
 
-        for (String param : params.keySet()) {
-            String value = params.get(param);
-            String[] names = param.split("\\.");
-            if(names.length != 2) {
-                LOG.error("setGranulatorConfig: invalid param names {}, will not use", Arrays.toString(names));
-                continue;
+        try {
+            for (String param : params.keySet()) {
+                Object value = params.get(param);
+                LOG.info("setGranulatorConfig: setting config param: {} value: {}", param, value);
+
+                String[] names = param.split("\\.");
+                if (names.length != 2) {
+                    LOG.error("setGranulatorConfig: invalid param names {}, will not use", Arrays.toString(names));
+                    continue;
+                }
+                String l1 = names[0];
+                String l2 = names[1];
+                switch (l1) {
+                    case "grain":
+                        setGrainConfig(l2, value);
+                        break;
+                    case "envelope":
+                        setGranulatorEnvelopeConfig(l2, value);
+                        break;
+                    case "panner":
+                        setGranulatorPannerConfig(l2, value);
+                        break;
+                }
             }
-            String l1 = names[0];
-            String l2 = names[1];
-            switch (l1) {
-                case "grain":
-                    setGrainConfig(l2, value);
-                    break;
-                case "envelope":
-                    setGranulatorEnvelopeConfig(l2, value);
-                    break;
-                case "panner":
-                    setGranulatorPannerConfig(l2, value);
-                    break;
-            }
+        } catch (Exception e) {
+            LOG.error("setGranulatorConfig: failed to set granulator config", e);
         }
+
+        LOG.info("setGranulatorConfig: new config: {}", granulatorConfig);
     }
 
-    private void setGranulatorPannerConfig(String name, String value) {
+    public GranulatorConfig getGranulatorConfig() {
+        return granulatorConfig;
+    }
+
+    private void setGranulatorPannerConfig(String name, Object value) {
         PannerConfig pannerConfig = granulatorConfig.getPanner();
         switch (name) {
-            case "isUsePanner" :
+            case "isUsePanner":
                 try {
-                    boolean v = Boolean.parseBoolean(value);
-                    pannerConfig.setUsePanner(v);
+                    pannerConfig.setUsePanner(getBoolean(value));
                 } catch (Exception e) {
                     LOG.error("setGranulatorPannerConfig: Failed to set isUsePanner", e);
                 }
                 break;
-            case "panningModel" :
+            case "panningModel":
                 try {
-                    String v = PanningModel.fromName(value).getName();
+                    String v = PanningModel.fromName(getString(value)).getName();
                     pannerConfig.setPanningModel(v);
                 } catch (Exception e) {
                     LOG.error("setGranulatorPannerConfig: Failed to set panningModel", e);
                 }
                 break;
-            case "distanceModel" :
+            case "distanceModel":
                 try {
-                    String v = PannerDistanceModel.fromName(value).getName();
+                    String v = PannerDistanceModel.fromName(getString(value)).getName();
                     pannerConfig.setDistanceModel(v);
                 } catch (Exception e) {
                     LOG.error("setGranulatorPannerConfig: Failed to set distanceModel", e);
                 }
                 break;
-            case "maxPanAngle" :
+            case "maxPanAngle":
                 try {
-                    int v = Integer.parseInt(value);
-                    pannerConfig.setMaxPanAngle(v);
+                    pannerConfig.setMaxPanAngle(getInt(value));
                 } catch (Exception e) {
                     LOG.error("setGranulatorPannerConfig: Failed to set maxPanAngle", e);
                 }
@@ -591,45 +601,40 @@ public class WebScore {
         }
     }
 
-    private void setGrainConfig(String name, String value) {
+    private void setGrainConfig(String name, Object value) {
         GrainConfig grainConfig = granulatorConfig.getGrain();
         switch (name) {
-            case "sizeMs" :
+            case "sizeMs":
                 try {
-                    int v = Integer.parseInt(value);
-                    grainConfig.setSizeMs(v);
+                    grainConfig.setSizeMs(getInt(value));
                 } catch (Exception e) {
                     LOG.error("setGrainConfig: Failed to set grain size", e);
                 }
                 break;
-            case "pitchRate" :
+            case "pitchRate":
                 try {
-                    double v = Double.parseDouble(value);
-                    grainConfig.setPitchRate(v);
+                    grainConfig.setPitchRate(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGrainConfig: Failed to set pitchRate", e);
                 }
                 break;
-            case "maxPositionOffsetRangeMs" :
+            case "maxPositionOffsetRangeMs":
                 try {
-                    int v = Integer.parseInt(value);
-                    grainConfig.setMaxPositionOffsetRangeMs(v);
+                    grainConfig.setMaxPositionOffsetRangeMs(getInt(value));
                 } catch (Exception e) {
                     LOG.error("setGrainConfig: Failed to set maxPositionOffsetRangeMs", e);
                 }
                 break;
-            case "maxPitchRateRange" :
+            case "maxPitchRateRange":
                 try {
-                    double v = Double.parseDouble(value);
-                    grainConfig.setMaxPitchRateRange(v);
+                    grainConfig.setMaxPitchRateRange(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGrainConfig: Failed to set maxPitchRateRange", e);
                 }
                 break;
-            case "timeOffsetStepMs" :
+            case "timeOffsetStepMs":
                 try {
-                    int v = Integer.parseInt(value);
-                    grainConfig.setTimeOffsetStepMs(v);
+                    grainConfig.setTimeOffsetStepMs(getInt(value));
                 } catch (Exception e) {
                     LOG.error("setGrainConfig: Failed to set timeOffsetStepMs", e);
                 }
@@ -639,45 +644,80 @@ public class WebScore {
         }
     }
 
-    private void setGranulatorEnvelopeConfig(String name, String value) {
+    private double getDouble(Object value) {
+        double v;
+        if (value instanceof String) {
+            v = Double.parseDouble((String) value);
+        } else {
+            v = (Double) value;
+        }
+        return v;
+    }
+
+    private int getInt(Object value) {
+        int v;
+        if (value instanceof String) {
+            v = Integer.parseInt((String) value);
+        } else {
+            v = (Integer) value;
+        }
+        return v;
+    }
+
+    private String getString(Object value) {
+        String v;
+        if (value instanceof String) {
+            v = (String) value;
+        } else {
+            v = value.toString();
+        }
+        return v;
+    }
+
+    private boolean getBoolean(Object value) {
+        boolean v;
+        if (value instanceof String) {
+            v = Boolean.parseBoolean((String) value);
+        } else {
+            v = (Boolean) value;
+        }
+        return v;
+    }
+
+    private void setGranulatorEnvelopeConfig(String name, Object value) {
         EnvelopeConfig envelopeConfig = granulatorConfig.getEnvelope();
         switch (name) {
-            case "attackTime" :
+            case "attackTime":
                 try {
-                    double v = Double.parseDouble(value);
-                    envelopeConfig.setAttackTime(v);
+                    envelopeConfig.setAttackTime(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGranulatorEnvelopeConfig: Failed to set attackTime", e);
                 }
                 break;
-            case "decayTime" :
+            case "decayTime":
                 try {
-                    double v = Double.parseDouble(value);
-                    envelopeConfig.setDecayTime(v);
+                    envelopeConfig.setDecayTime(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGranulatorEnvelopeConfig: Failed to set decayTime", e);
                 }
                 break;
-            case "sustainTime" :
+            case "sustainTime":
                 try {
-                    double v = Double.parseDouble(value);
-                    envelopeConfig.setSustainTime(v);
+                    envelopeConfig.setSustainTime(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGranulatorEnvelopeConfig: Failed to set sustainTime", e);
                 }
                 break;
-            case "releaseTime" :
+            case "releaseTime":
                 try {
-                    double v = Double.parseDouble(value);
-                    envelopeConfig.setReleaseTime(v);
+                    envelopeConfig.setReleaseTime(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGranulatorEnvelopeConfig: Failed to set releaseTime", e);
                 }
                 break;
-            case "sustainLevel" :
+            case "sustainLevel":
                 try {
-                    double v = Double.parseDouble(value);
-                    envelopeConfig.setSustainLevel(v);
+                    envelopeConfig.setSustainLevel(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGranulatorEnvelopeConfig: Failed to set sustainLevel", e);
                 }
@@ -726,7 +766,7 @@ public class WebScore {
         WebElementState innerCircle = elementStates.get("innerCircle");
         WebElementState outerCircle = elementStates.get("outerCircle");
 
-        return new WebScoreState(ts, currentActions, centreShape, innerCircle, outerCircle, zoomLevel, instructions, granulatorConfig);
+        return new WebScoreState(ts, currentActions, centreShape, innerCircle, outerCircle, zoomLevel, instructions);
     }
 
     public void updateServerState() {

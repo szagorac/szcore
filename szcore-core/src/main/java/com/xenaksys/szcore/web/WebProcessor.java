@@ -1,36 +1,16 @@
 package com.xenaksys.szcore.web;
 
 import com.google.gson.Gson;
-import com.xenaksys.szcore.event.ElementSelectedEvent;
-import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.IncomingWebEvent;
-import com.xenaksys.szcore.event.IncomingWebEventType;
-import com.xenaksys.szcore.event.OutgoingWebEvent;
-import com.xenaksys.szcore.event.OutgoingWebEventType;
-import com.xenaksys.szcore.event.WebStartEvent;
-import com.xenaksys.szcore.model.Clock;
-import com.xenaksys.szcore.model.EventService;
-import com.xenaksys.szcore.model.Processor;
-import com.xenaksys.szcore.model.ScoreService;
-import com.xenaksys.szcore.model.SzcoreEvent;
-import com.xenaksys.szcore.model.ZsResponseType;
+import com.xenaksys.szcore.event.*;
+import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.xenaksys.szcore.Consts.EMPTY;
-import static com.xenaksys.szcore.Consts.WEB_EVENT_ELEMENT_ID;
-import static com.xenaksys.szcore.Consts.WEB_EVENT_IS_SELECTED;
-import static com.xenaksys.szcore.Consts.WEB_EVENT_NAME;
-import static com.xenaksys.szcore.Consts.WEB_EVENT_SENT_TIME_NAME;
-import static com.xenaksys.szcore.Consts.WEB_EVENT_TIME_NAME;
-import static com.xenaksys.szcore.Consts.WEB_RESPONSE_MESSAGE;
-import static com.xenaksys.szcore.Consts.WEB_RESPONSE_STATE;
-import static com.xenaksys.szcore.Consts.WEB_RESPONSE_SUBMITTED;
-import static com.xenaksys.szcore.Consts.WEB_RESPONSE_TIME;
-import static com.xenaksys.szcore.Consts.WEB_RESPONSE_TYPE;
+import static com.xenaksys.szcore.Consts.*;
 import static com.xenaksys.szcore.event.EventType.WEB_IN;
 
 public class WebProcessor implements Processor, WebScoreEventListener {
@@ -43,7 +23,7 @@ public class WebProcessor implements Processor, WebScoreEventListener {
     private final EventFactory eventFactory;
     private final Clock clock;
 
-    private Map<String, WebClientState> clientStates = new HashMap<>();
+    private final Map<String, WebClientState> clientStates = new HashMap<>();
 
     private volatile String currentWebScoreState;
 
@@ -56,11 +36,11 @@ public class WebProcessor implements Processor, WebScoreEventListener {
 
     @Override
     public void process(SzcoreEvent event) {
-        if(WEB_IN != event.getEventType()) {
+        if (WEB_IN != event.getEventType()) {
             return;
         }
 
-        IncomingWebEvent webEvent = (IncomingWebEvent)event;
+        IncomingWebEvent webEvent = (IncomingWebEvent) event;
         String sourceAddr = webEvent.getSourceAddr();
         long sendTime = webEvent.getClientEventSentTime();
         long receiveTime = webEvent.getCreationTime();
@@ -79,7 +59,7 @@ public class WebProcessor implements Processor, WebScoreEventListener {
         try {
             Map<String, String> stringParams = zsRequest.getStringParams();
             String eventName = stringParams.get(WEB_EVENT_NAME);
-            if(eventName != null) {
+            if (eventName != null) {
                 out = processIncomingWebEvent(eventName, zsRequest);
             } else {
                 out = createErrorWebString("UnknownEvent");
@@ -116,7 +96,7 @@ public class WebProcessor implements Processor, WebScoreEventListener {
     }
 
     private String processIncomingWebEvent(String eventName, ZsHttpRequest zsRequest) throws Exception {
-        if(eventName == null) {
+        if (eventName == null) {
             return createErrorWebString("InvalidEventName");
         }
         IncomingWebEventType type = null;
@@ -126,7 +106,7 @@ public class WebProcessor implements Processor, WebScoreEventListener {
             LOG.error("Invalid WebEventType: {}", eventName);
         }
 
-        if(type == null) {
+        if (type == null) {
             return createErrorWebString("InvalidEventType:" + eventName);
         }
 
@@ -139,7 +119,7 @@ public class WebProcessor implements Processor, WebScoreEventListener {
 
         switch (type) {
             case GET_SERVER_STATE:
-                if(currentWebScoreState != null) {
+                if (currentWebScoreState != null) {
                     return createStateWebString(currentWebScoreState);
                 } else {
                     return createErrorWebString("Score state not available");
@@ -164,17 +144,22 @@ public class WebProcessor implements Processor, WebScoreEventListener {
 
     @Override
     public void onWebScoreEvent(WebScoreState webScoreState) {
-        if(webScoreState == null) {
+        if (webScoreState == null) {
             return;
         }
         String out = GSON.toJson(webScoreState);
-        LOG.info("onWebScoreEvent: json: {}", out);
+        int stringLenBytes = Util.getStringLengthUtf8(out);
+        long stringLenKb = stringLenBytes / 1024;
+        LOG.info("onWebScoreEvent: WebState size: {}Kb json: {}", stringLenKb, out);
+        if (stringLenKb > 64) {
+            LOG.error("onWebScoreEvent: ### WARNING ### WebState size {}Kb larger than 64Kb", stringLenKb);
+        }
         this.currentWebScoreState = out;
     }
 
     @Override
     public void onOutgoingWebEvent(OutgoingWebEvent webEvent) {
-        if(webEvent == null) {
+        if (webEvent == null) {
             return;
         }
 

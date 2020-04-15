@@ -1,6 +1,5 @@
 package com.xenaksys.szcore.web;
 
-import com.xenaksys.szcore.score.GranulatorConfig;
 import com.xenaksys.szcore.score.WebElementState;
 import com.xenaksys.szcore.score.WebScore;
 import com.xenaksys.szcore.score.WebTextState;
@@ -9,17 +8,16 @@ import java.util.List;
 
 public class WebScoreState {
     private final WebScore.Tile[][] tiles;
-    private List<WebAction> actions;
-    private String zoomLevel;
+    private final List<WebAction> actions;
+    private final String zoomLevel;
     private final WebElementState centreShape;
     private final WebElementState innerCircle;
     private final WebElementState outerCircle;
     private final WebTextState instructions;
-    private final GranulatorConfig granulatorConfig;
 
     public WebScoreState(WebScore.Tile[][] tiles, List<WebAction> currentActions, WebElementState centreShape,
                          WebElementState innerCircle, WebElementState outerCircle, String zoomLevel,
-                         WebTextState instructions, GranulatorConfig granulatorConfig) {
+                         WebTextState instructions) {
         this.tiles = tiles;
         this.actions = currentActions;
         this.centreShape = centreShape;
@@ -27,7 +25,6 @@ public class WebScoreState {
         this.outerCircle = outerCircle;
         this.zoomLevel = zoomLevel;
         this.instructions = instructions;
-        this.granulatorConfig = granulatorConfig;
     }
 
     public WebScore.Tile[][] getTiles() {
@@ -56,9 +53,5 @@ public class WebScoreState {
 
     public WebTextState getInstructions() {
         return instructions;
-    }
-
-    public GranulatorConfig getGranulatorConfig() {
-        return granulatorConfig;
     }
 }

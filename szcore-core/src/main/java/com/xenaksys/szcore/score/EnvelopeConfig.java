@@ -3,6 +3,9 @@ package com.xenaksys.szcore.score;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class EnvelopeConfig {
     static final Logger LOG = LoggerFactory.getLogger(EnvelopeConfig.class);
 
@@ -84,6 +87,16 @@ public class EnvelopeConfig {
             return MAX_VALUE;
         }
         return value;
+    }
+
+    public Map<String, Object> toJsMap() {
+        Map<String, Object> config = new HashMap<>();
+        config.put("envelope.attackTime", getAttackTime());
+        config.put("envelope.decayTime", getDecayTime());
+        config.put("envelope.sustainTime", getSustainTime());
+        config.put("envelope.releaseTime", getReleaseTime());
+        config.put("envelope.sustainLevel", getSustainLevel());
+        return config;
     }
 
     @Override

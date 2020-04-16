@@ -8,13 +8,13 @@ public class WebAction {
     private final String id;
     private final WebActionType actionType;
     private final List<String> elementIds;
-    private final Map<String, String> params;
+    private final Map<String, Object> params;
 
     public WebAction(String id, WebActionType actionType, List<String> elementIds) {
         this(id, actionType, elementIds, new HashMap<>());
     }
 
-    public WebAction(String id, WebActionType actionType, List<String> elementIds, Map<String, String> params) {
+    public WebAction(String id, WebActionType actionType, List<String> elementIds, Map<String, Object> params) {
         this.id = id;
         this.actionType = actionType;
         this.elementIds = elementIds;
@@ -33,7 +33,7 @@ public class WebAction {
         return elementIds;
     }
 
-    public Map<String, String> getParams() {
+    public Map<String, Object> getParams() {
         return params;
     }
 }

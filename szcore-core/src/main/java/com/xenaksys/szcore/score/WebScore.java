@@ -38,7 +38,7 @@ public class WebScore {
     private final List<WebScoreEvent> playedEvents = new ArrayList<>();
     private final Map<String, WebElementState> elementStates = new HashMap<>();
     private WebTextState instructions;
-    private GranulatorConfig granulatorConfig;
+    private GranulatorConfig defaultGranulatorConfig;
 
     private final List<WebAction> currentActions = new ArrayList<>();
     private final List<Tile> tilesAll = new ArrayList<>(64);
@@ -108,7 +108,7 @@ public class WebScore {
         instructions.setLine3("awaiting performance start ...");
         instructions.setVisible(true);
 
-        granulatorConfig = createDefaultGranulatorConfig();
+        defaultGranulatorConfig = createDefaultGranulatorConfig();
 
         updateServerState();
     }
@@ -122,7 +122,6 @@ public class WebScore {
             }
 
             runScripts(preset.getScripts());
-            updateServerStateAndPush();
         } catch (Exception e) {
             LOG.error("resetState: Failed to run preset: {}", presetNo, e);
         }
@@ -173,9 +172,10 @@ public class WebScore {
 
     private void loadPresets() {
         String resetServer = "webScore.resetState()";
+        String resetWebGranulator = "webScore.resetGranulator()";
         String resetClient = "webScore.setAction('all', 'RESET', ['elements']);";
-        String startText = "webScore.setInstructions('awaiting','<span style=\\'color:blueviolet;\\'>Union Rose</span>', 'performance');";
-        ArrayList<String> resetAll = new ArrayList<>(Arrays.asList(resetServer, resetClient, startText));
+        String startText = "webScore.setInstructions('get ready for','<span style=\\'color:blueviolet;\\'>Union Rose</span>', 'performance');";
+        ArrayList<String> resetAll = new ArrayList<>(Arrays.asList(resetServer, resetClient, startText, resetWebGranulator));
         addPreset(1, resetAll);
 
 
@@ -515,7 +515,7 @@ public class WebScore {
         setAction(actionId, type, targetIds, new HashMap<>());
     }
 
-    public void setAction(String actionId, String type, String[] targetIds, Map<String, String> params) {
+    public void setAction(String actionId, String type, String[] targetIds, Map<String, Object> params) {
         LOG.info("setAction: {} target: {}", actionId, Arrays.toString(targetIds));
         try {
             WebActionType t = WebActionType.valueOf(type.toUpperCase());
@@ -524,6 +524,12 @@ public class WebScore {
         } catch (IllegalArgumentException e) {
             LOG.error("Failed to setAction id: {} type: {}", actionId, type);
         }
+    }
+
+    public void resetGranulator() {
+        String[] target = {"granulator"};
+        Map<String, Object> params = defaultGranulatorConfig.toJsMap();
+        setAction("config", "AUDIO", target, params);
     }
 
     public void setGranulatorConfig(Map<String, Object> params) {
@@ -560,15 +566,15 @@ public class WebScore {
             LOG.error("setGranulatorConfig: failed to set granulator config", e);
         }
 
-        LOG.info("setGranulatorConfig: new config: {}", granulatorConfig);
+        LOG.info("setGranulatorConfig: new config: {}", defaultGranulatorConfig);
     }
 
     public GranulatorConfig getGranulatorConfig() {
-        return granulatorConfig;
+        return defaultGranulatorConfig;
     }
 
     private void setGranulatorPannerConfig(String name, Object value) {
-        PannerConfig pannerConfig = granulatorConfig.getPanner();
+        PannerConfig pannerConfig = defaultGranulatorConfig.getPanner();
         switch (name) {
             case "isUsePanner":
                 try {
@@ -606,7 +612,7 @@ public class WebScore {
     }
 
     private void setGrainConfig(String name, Object value) {
-        GrainConfig grainConfig = granulatorConfig.getGrain();
+        GrainConfig grainConfig = defaultGranulatorConfig.getGrain();
         switch (name) {
             case "sizeMs":
                 try {
@@ -689,7 +695,7 @@ public class WebScore {
     }
 
     private void setGranulatorEnvelopeConfig(String name, Object value) {
-        EnvelopeConfig envelopeConfig = granulatorConfig.getEnvelope();
+        EnvelopeConfig envelopeConfig = defaultGranulatorConfig.getEnvelope();
         switch (name) {
             case "attackTime":
                 try {
@@ -859,6 +865,13 @@ public class WebScore {
 
     private GranulatorConfig createDefaultGranulatorConfig() {
         GranulatorConfig granulatorConfig = new GranulatorConfig();
+
+        granulatorConfig.setMasterGainVal(1.0);
+        granulatorConfig.setMaxGrains(12);
+        granulatorConfig.setPlayDurationSec(10);
+        granulatorConfig.setPlayStartOffsetSec(0.0);
+        granulatorConfig.setBufferPositionPlayRate(1.0);
+        granulatorConfig.setAudioStopToleranceMs(5);
 
         GrainConfig grainConfig = new GrainConfig();
         grainConfig.setMaxPitchRateRange(0.0);

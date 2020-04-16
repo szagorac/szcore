@@ -3,6 +3,9 @@ package com.xenaksys.szcore.score;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class PannerConfig {
     static final Logger LOG = LoggerFactory.getLogger(PannerConfig.class);
 
@@ -55,6 +58,15 @@ public class PannerConfig {
         panningModel = PanningModel.fromName(getPanningModel()).getName();
 
         return true;
+    }
+
+    public Map<String, Object> toJsMap() {
+        Map<String, Object> config = new HashMap<>();
+        config.put("panner.isUsePanner", isUsePanner());
+        config.put("panner.panningModel", getPanningModel());
+        config.put("panner.distanceModel", getDistanceModel());
+        config.put("panner.maxPanAngle", getMaxPanAngle());
+        return config;
     }
 
     @Override

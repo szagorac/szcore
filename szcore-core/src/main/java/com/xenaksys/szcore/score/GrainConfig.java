@@ -3,6 +3,9 @@ package com.xenaksys.szcore.score;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class GrainConfig {
     static final Logger LOG = LoggerFactory.getLogger(GrainConfig.class);
 
@@ -87,6 +90,16 @@ public class GrainConfig {
         }
 
         return true;
+    }
+
+    public Map<String, Object> toJsMap() {
+        Map<String, Object> config = new HashMap<>();
+        config.put("grain.sizeMs", getSizeMs());
+        config.put("grain.pitchRate", getPitchRate());
+        config.put("grain.maxPositionOffsetRangeMs", getMaxPositionOffsetRangeMs());
+        config.put("grain.maxPitchRateRange", getMaxPitchRateRange());
+        config.put("grain.timeOffsetStepMs", getTimeOffsetStepMs());
+        return config;
     }
 
     @Override

@@ -43,6 +43,10 @@ public class ZsHttpRequest {
         return stringParams.get(name);
     }
 
+    public boolean containsParam(String name) {
+        return stringParams.containsKey(name);
+    }
+
     public List<Path> getFilePaths() {
         return filePaths;
     }

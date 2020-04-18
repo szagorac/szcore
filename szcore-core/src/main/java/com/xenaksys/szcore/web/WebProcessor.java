@@ -26,6 +26,7 @@ public class WebProcessor implements Processor, WebScoreEventListener {
     private final Map<String, WebClientState> clientStates = new HashMap<>();
 
     private volatile String currentWebScoreState;
+    private volatile long stateUpdateTime = 0;
 
     public WebProcessor(ScoreService scoreService, EventService eventService, Clock clock, EventFactory eventFactory) {
         this.scoreService = scoreService;
@@ -113,6 +114,15 @@ public class WebProcessor implements Processor, WebScoreEventListener {
         String sourceAddr = zsRequest.getSourceAddr();
         String requestPath = zsRequest.getRequestPath();
         String eventId = zsRequest.getParam(WEB_EVENT_NAME);
+        long lastClientStateUpdateTime = 0;
+        if(zsRequest.containsParam(WEB_EVENT_LAST_STATE_UPDATE_TIME)) {
+            String lastStateUpdateStr = zsRequest.getParam(WEB_EVENT_LAST_STATE_UPDATE_TIME);
+            try {
+                lastClientStateUpdateTime = Long.parseLong(lastStateUpdateStr);
+            } catch (NumberFormatException e) {
+                LOG.error("Failed to parse lastStateUpdateTime", e);
+            }
+        }
         long creationTime = getClock().getSystemTimeMillis();
         long clientEventCreatedTime = Long.parseLong(zsRequest.getParam(WEB_EVENT_TIME_NAME));
         long clientEventSentTime = Long.parseLong(zsRequest.getParam(WEB_EVENT_SENT_TIME_NAME));
@@ -120,7 +130,11 @@ public class WebProcessor implements Processor, WebScoreEventListener {
         switch (type) {
             case GET_SERVER_STATE:
                 if (currentWebScoreState != null) {
-                    return createStateWebString(currentWebScoreState);
+                    if(isSendStateUpdate(lastClientStateUpdateTime)) {
+                        return createStateWebString(currentWebScoreState);
+                    } else {
+                        return createOkWebString(EMPTY);
+                    }
                 } else {
                     return createErrorWebString("Score state not available");
                 }
@@ -142,6 +156,13 @@ public class WebProcessor implements Processor, WebScoreEventListener {
         }
     }
 
+    private boolean isSendStateUpdate(long lastClientStateUpdateTime) {
+        if(stateUpdateTime == 0 || lastClientStateUpdateTime == 0) {
+            return true;
+        }
+        return stateUpdateTime > lastClientStateUpdateTime;
+    }
+
     @Override
     public void onWebScoreEvent(WebScoreState webScoreState) {
         if (webScoreState == null) {
@@ -155,6 +176,7 @@ public class WebProcessor implements Processor, WebScoreEventListener {
             LOG.error("onWebScoreEvent: ### WARNING ### WebState size {}Kb larger than 64Kb", stringLenKb);
         }
         this.currentWebScoreState = out;
+        this.stateUpdateTime = getClock().getSystemTimeMillis();
     }
 
     @Override

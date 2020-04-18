@@ -228,6 +228,7 @@ public interface Consts {
 
     public static final String WEB_EVENT_NAME = "ev";
     public static final String WEB_EVENT_TIME_NAME = "evt";
+    public static final String WEB_EVENT_LAST_STATE_UPDATE_TIME = "lsut";
     public static final String WEB_EVENT_SENT_TIME_NAME = "t";
     public static final String WEB_EVENT_ELEMENT_ID = "elementId";
     public static final String WEB_EVENT_IS_SELECTED = "selected";

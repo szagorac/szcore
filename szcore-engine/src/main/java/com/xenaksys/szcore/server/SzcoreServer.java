@@ -414,7 +414,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
     @Override
     public ZsHttpResponse onHttpRequest(ZsHttpRequest zsRequest) {
-        LOG.info("onHttpRequest: path: {} sourceAddr: {}", zsRequest.getRequestPath(), zsRequest.getSourceAddr());
+//        LOG.info("onHttpRequest: path: {} sourceAddr: {}", zsRequest.getRequestPath(), zsRequest.getSourceAddr());
         return webProcessor.onHttpRequest(zsRequest);
     }
 

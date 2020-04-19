@@ -54,8 +54,7 @@ public class WebProcessor implements Processor, WebScoreEventListener {
     }
 
     public ZsHttpResponse onHttpRequest(ZsHttpRequest zsRequest) {
-        LOG.info("onHttpRequest: path: {} sourceAddr: {}", zsRequest.getRequestPath(), zsRequest.getSourceAddr());
-
+//        LOG.debug("onHttpRequest: path: {} sourceAddr: {}", zsRequest.getRequestPath(), zsRequest.getSourceAddr());
         String out;
         try {
             Map<String, String> stringParams = zsRequest.getStringParams();

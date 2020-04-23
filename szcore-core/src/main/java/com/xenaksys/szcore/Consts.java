@@ -5,332 +5,336 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public interface Consts {
 
-    public static final AtomicInteger ID_SOURCE = new AtomicInteger(0);
+    AtomicInteger ID_SOURCE = new AtomicInteger(0);
 
-    public static final String ERROR_TASK_QUEUE = " Failed to process task Queue";
-    public static final String ERROR_SCHEDULED_TASKS = " Failed to process scheduled tasks";
-    public static final String ERROR_TANSPORTS = " Failed to process transports";
-    public static final String RESULT_OK = "OK";
-    public static final String COMMA = ",";
-    public static final String DOT = ".";
-    public static final String QUOTE = "'";
-    public static final String PLUS = "+";
-    public static final String PLUS_REGEX = "\\+";
-    public static final String DOT_REGEX = "\\.";
-    public static final String EMPTY = "";
-    public static final String COLUMN = ":";
-    public static final String SPACE = " ";
-    public static final String BRACKET_SQUARE_OPEN = "[";
-    public static final String BRACKET_SQUARE_CLOSE = "]";
-    public static final String BRACKET_OPEN = "(";
-    public static final String BRACKET_CLOSE = ")";
-    public static final String SLASH = "/";
-    public static final String NEW_LINE = "\n";
-    public static final String SYSTEM_NEW_LINE = System.lineSeparator();
-    public static final String EIGHTH = "/8";
-    public final Integer ONE_I = 1;
-    public final Double ONE_D = 1.0;
-    public static final String DOUBLE_UNDERSCORE = "__";
-    public static final String INSCORE_FILE_EXTENSION = ".inscore";
-    public static final String PNG_FILE_EXTENSION = ".png";
-    public static final String TXT_FILE_EXTENSION = ".txt";
-    public static final String INSCORE_FILE_SUFFIX = "_InScoreMap";
-    public static final String INSCORE_ADDR = "INScore";
-    public static final String SZCORE_ADDR = "/SZCORE";
-    public static final String OSC_INSCORE_ADDRESS_ROOT = "/ITL";
-    public static final String OSC_INSCORE_ADDRESS_SCENE = OSC_INSCORE_ADDRESS_ROOT + "/scene";
-    public static final String ERR_ADDR = "error:";
-    public static final String ARG_HELLO = "HELLO";
-    public static final String ARG_PING = "PING";
-    public static final String ARG_SET_INSTRUMENT = "SET_INSTRUMENT";
-    public static final String BLANK_PAGE_NAME = "blank";
-    public static final String BLANK_PAGE_FILE = "blankStave";
-    public static final String DEFAULT_FILE_NAME = "part" + INSCORE_FILE_EXTENSION;
-    public static final String INDEX_HTML = "index.html";
-    public static final String CSV_EXT = ".csv";
+    String ERROR_TASK_QUEUE = " Failed to process task Queue";
+    String ERROR_SCHEDULED_TASKS = " Failed to process scheduled tasks";
+    String ERROR_TANSPORTS = " Failed to process transports";
+    String RESULT_OK = "OK";
+    String COMMA = ",";
+    String DOT = ".";
+    String QUOTE = "'";
+    String PLUS = "+";
+    String PLUS_REGEX = "\\+";
+    String DOT_REGEX = "\\.";
+    String EMPTY = "";
+    String COLUMN = ":";
+    String SPACE = " ";
+    String BRACKET_SQUARE_OPEN = "[";
+    String BRACKET_SQUARE_CLOSE = "]";
+    String BRACKET_OPEN = "(";
+    String BRACKET_CLOSE = ")";
+    String SLASH = "/";
+    String NEW_LINE = "\n";
+    String SYSTEM_NEW_LINE = System.lineSeparator();
+    String EIGHTH = "/8";
+    final Integer ONE_I = 1;
+    final Double ONE_D = 1.0;
+    String DOUBLE_UNDERSCORE = "__";
+    String INSCORE_FILE_EXTENSION = ".inscore";
+    String PNG_FILE_EXTENSION = ".png";
+    String TXT_FILE_EXTENSION = ".txt";
+    String INSCORE_FILE_SUFFIX = "_InScoreMap";
+    String INSCORE_ADDR = "INScore";
+    String SZCORE_ADDR = "/SZCORE";
+    String OSC_INSCORE_ADDRESS_ROOT = "/ITL";
+    String OSC_INSCORE_ADDRESS_SCENE = OSC_INSCORE_ADDRESS_ROOT + "/scene";
+    String ERR_ADDR = "error:";
+    String ARG_HELLO = "HELLO";
+    String ARG_PING = "PING";
+    String ARG_SET_INSTRUMENT = "SET_INSTRUMENT";
+    String BLANK_PAGE_NAME = "blank";
+    String BLANK_PAGE_FILE = "blankStave";
+    String DEFAULT_FILE_NAME = "part" + INSCORE_FILE_EXTENSION;
+    String INDEX_HTML = "index.html";
+    String CSV_EXT = ".csv";
 
-    public static final String OSC_ADDRESS_SCORE_FOLLOW_LINE_STAVE1 = "/ITL/scene/slaveFollow";
-    public static final String OSC_ADDRESS_SCORE_FOLLOW_LINE_STAVE2 = "/ITL/scene/slaveFollow2";
-    public static final String OSC_ADDRESS_SCORE_FOLLOW_BEATER_STAVE1 = "/ITL/scene/slaveBeat";
-    public static final String OSC_ADDRESS_SCORE_FOLLOW_BEATER_STAVE2 = "/ITL/scene/slaveBeat2";
-    public static final String OSC_ADDRESS_SCORE_START_MARK_STAVE1 = "/ITL/scene/slaveStartMark";
-    public static final String OSC_ADDRESS_SCORE_START_MARK_STAVE2 = "/ITL/scene/slaveStartMark2";
-    public static final String OSC_ADDRESS_SCORE_DYNAMICS_LINE_STAVE1 = "/ITL/scene/dynStaveValueLine";
-    public static final String OSC_ADDRESS_SCORE_DYNAMICS_LINE_STAVE2 = "/ITL/scene/dynStaveValueLine2";
-    public static final String OSC_ADDRESS_SCORE_DYNAMICS_MID_LINE_STAVE1 = "/ITL/scene/dynStaveMidLine";
-    public static final String OSC_ADDRESS_SCORE_DYNAMICS_MID_LINE_STAVE2 = "/ITL/scene/dynStaveMidLine2";
-    public static final String OSC_ADDRESS_SCORE_DYNAMICS_BOX_STAVE1 = "/ITL/scene/dynStaveBox";
-    public static final String OSC_ADDRESS_SCORE_DYNAMICS_BOX_STAVE2 = "/ITL/scene/dynStaveBox2";
-    public static final String OSC_ADDRESS_SCORE_PRESSURE_BOX_STAVE1 = "/ITL/scene/pressureStaveBox";
-    public static final String OSC_ADDRESS_SCORE_PRESSURE_BOX_STAVE2 = "/ITL/scene/pressureStaveBox2";
-    public static final String OSC_ADDRESS_SCORE_PRESSURE_LINE1 = "/ITL/scene/pressureStaveValueLine";
-    public static final String OSC_ADDRESS_SCORE_PRESSURE_LINE2 = "/ITL/scene/pressureStaveValueLine2";
-    public static final String OSC_ADDRESS_SCORE_PRESSURE_MID_LINE1 = "/ITL/scene/pressureStaveMidLine";
-    public static final String OSC_ADDRESS_SCORE_PRESSURE_MID_LINE2 = "/ITL/scene/pressureStaveMidLine2";
-    public static final String OSC_ADDRESS_SCORE_SPEED_BOX_STAVE1 = "/ITL/scene/speedStaveBox";
-    public static final String OSC_ADDRESS_SCORE_SPEED_BOX_STAVE2 = "/ITL/scene/speedStaveBox2";
-    public static final String OSC_ADDRESS_SCORE_SPEED_LINE1 = "/ITL/scene/speedStaveValueLine";
-    public static final String OSC_ADDRESS_SCORE_SPEED_LINE2 = "/ITL/scene/speedStaveValueLine2";
-    public static final String OSC_ADDRESS_SCORE_SPEED_MID_LINE1 = "/ITL/scene/speedStaveMidLine";
-    public static final String OSC_ADDRESS_SCORE_SPEED_MID_LINE2 = "/ITL/scene/speedStaveMidLine2";
-    public static final String OSC_ADDRESS_SCORE_POSITION_BOX_STAVE1 = "/ITL/scene/positionStaveBox";
-    public static final String OSC_ADDRESS_SCORE_POSITION_BOX_STAVE2 = "/ITL/scene/positionStaveBox2";
-    public static final String OSC_ADDRESS_SCORE_POSITION_LINE1 = "/ITL/scene/positionStaveValueLine";
-    public static final String OSC_ADDRESS_SCORE_POSITION_LINE2 = "/ITL/scene/positionStaveValueLine2";
-    public static final String OSC_ADDRESS_SCORE_POSITION_ORD_LINE1 = "/ITL/scene/positionStaveOrdLine";
-    public static final String OSC_ADDRESS_SCORE_POSITION_ORD_LINE2 = "/ITL/scene/positionStaveOrdLine2";
-    public static final String OSC_ADDRESS_SCORE_POSITION_BRIDGE_LINE1 = "/ITL/scene/positionStaveBridgeLine";
-    public static final String OSC_ADDRESS_SCORE_POSITION_BRIDGE_LINE2 = "/ITL/scene/positionStaveBridgeLine2";
-    public static final String OSC_ADDRESS_SCORE_CONTENT_BOX_STAVE1 = "/ITL/scene/contentStaveBox";
-    public static final String OSC_ADDRESS_SCORE_CONTENT_BOX_STAVE2 = "/ITL/scene/contentStaveBox2";
-    public static final String OSC_ADDRESS_SCORE_CONTENT_LINE1 = "/ITL/scene/contentStaveValueLine";
-    public static final String OSC_ADDRESS_SCORE_CONTENT_LINE2 = "/ITL/scene/contentStaveValueLine2";
+    String OSC_ADDRESS_SCORE_FOLLOW_LINE_STAVE1 = "/ITL/scene/slaveFollow";
+    String OSC_ADDRESS_SCORE_FOLLOW_LINE_STAVE2 = "/ITL/scene/slaveFollow2";
+    String OSC_ADDRESS_SCORE_FOLLOW_BEATER_STAVE1 = "/ITL/scene/slaveBeat";
+    String OSC_ADDRESS_SCORE_FOLLOW_BEATER_STAVE2 = "/ITL/scene/slaveBeat2";
+    String OSC_ADDRESS_SCORE_START_MARK_STAVE1 = "/ITL/scene/slaveStartMark";
+    String OSC_ADDRESS_SCORE_START_MARK_STAVE2 = "/ITL/scene/slaveStartMark2";
+    String OSC_ADDRESS_SCORE_DYNAMICS_LINE_STAVE1 = "/ITL/scene/dynStaveValueLine";
+    String OSC_ADDRESS_SCORE_DYNAMICS_LINE_STAVE2 = "/ITL/scene/dynStaveValueLine2";
+    String OSC_ADDRESS_SCORE_DYNAMICS_MID_LINE_STAVE1 = "/ITL/scene/dynStaveMidLine";
+    String OSC_ADDRESS_SCORE_DYNAMICS_MID_LINE_STAVE2 = "/ITL/scene/dynStaveMidLine2";
+    String OSC_ADDRESS_SCORE_DYNAMICS_BOX_STAVE1 = "/ITL/scene/dynStaveBox";
+    String OSC_ADDRESS_SCORE_DYNAMICS_BOX_STAVE2 = "/ITL/scene/dynStaveBox2";
+    String OSC_ADDRESS_SCORE_PRESSURE_BOX_STAVE1 = "/ITL/scene/pressureStaveBox";
+    String OSC_ADDRESS_SCORE_PRESSURE_BOX_STAVE2 = "/ITL/scene/pressureStaveBox2";
+    String OSC_ADDRESS_SCORE_PRESSURE_LINE1 = "/ITL/scene/pressureStaveValueLine";
+    String OSC_ADDRESS_SCORE_PRESSURE_LINE2 = "/ITL/scene/pressureStaveValueLine2";
+    String OSC_ADDRESS_SCORE_PRESSURE_MID_LINE1 = "/ITL/scene/pressureStaveMidLine";
+    String OSC_ADDRESS_SCORE_PRESSURE_MID_LINE2 = "/ITL/scene/pressureStaveMidLine2";
+    String OSC_ADDRESS_SCORE_SPEED_BOX_STAVE1 = "/ITL/scene/speedStaveBox";
+    String OSC_ADDRESS_SCORE_SPEED_BOX_STAVE2 = "/ITL/scene/speedStaveBox2";
+    String OSC_ADDRESS_SCORE_SPEED_LINE1 = "/ITL/scene/speedStaveValueLine";
+    String OSC_ADDRESS_SCORE_SPEED_LINE2 = "/ITL/scene/speedStaveValueLine2";
+    String OSC_ADDRESS_SCORE_SPEED_MID_LINE1 = "/ITL/scene/speedStaveMidLine";
+    String OSC_ADDRESS_SCORE_SPEED_MID_LINE2 = "/ITL/scene/speedStaveMidLine2";
+    String OSC_ADDRESS_SCORE_POSITION_BOX_STAVE1 = "/ITL/scene/positionStaveBox";
+    String OSC_ADDRESS_SCORE_POSITION_BOX_STAVE2 = "/ITL/scene/positionStaveBox2";
+    String OSC_ADDRESS_SCORE_POSITION_LINE1 = "/ITL/scene/positionStaveValueLine";
+    String OSC_ADDRESS_SCORE_POSITION_LINE2 = "/ITL/scene/positionStaveValueLine2";
+    String OSC_ADDRESS_SCORE_POSITION_ORD_LINE1 = "/ITL/scene/positionStaveOrdLine";
+    String OSC_ADDRESS_SCORE_POSITION_ORD_LINE2 = "/ITL/scene/positionStaveOrdLine2";
+    String OSC_ADDRESS_SCORE_POSITION_BRIDGE_LINE1 = "/ITL/scene/positionStaveBridgeLine";
+    String OSC_ADDRESS_SCORE_POSITION_BRIDGE_LINE2 = "/ITL/scene/positionStaveBridgeLine2";
+    String OSC_ADDRESS_SCORE_CONTENT_BOX_STAVE1 = "/ITL/scene/contentStaveBox";
+    String OSC_ADDRESS_SCORE_CONTENT_BOX_STAVE2 = "/ITL/scene/contentStaveBox2";
+    String OSC_ADDRESS_SCORE_CONTENT_LINE1 = "/ITL/scene/contentStaveValueLine";
+    String OSC_ADDRESS_SCORE_CONTENT_LINE2 = "/ITL/scene/contentStaveValueLine2";
 
-    public static final String OSC_ADDRESS_SCORE_JAVASCRIPT = "/ITL/scene/javascript";
+    String OSC_ADDRESS_SCORE_JAVASCRIPT = "/ITL/scene/javascript";
 
-    public static final String RSRC_DIR = "rsrc/";
+    String RSRC_DIR = "rsrc/";
 
-    public static final int MILLIS_IN_MINUTE = 1000 * 60;
+    int MILLIS_IN_MINUTE = 1000 * 60;
 
-    public static final String DEFAULT_TRANSPORT_NAME = "DefaultTransport";
-    public static final String DEFAULT_PAGE_PREFIX = "page";
-    public static final String DEFAULT_BAR_PREFIX = "bar";
-    public static final String DEFAULT_OSC_PORT_NAME = "DEFAULT_OSC_PORT";
+    String DEFAULT_TRANSPORT_NAME = "DefaultTransport";
+    String DEFAULT_PAGE_PREFIX = "page";
+    String DEFAULT_BAR_PREFIX = "bar";
+    String DEFAULT_OSC_PORT_NAME = "DEFAULT_OSC_PORT";
 
-    public static final String ALL_DESTINATIONS = "ALL";
-    public static final String BROADCAST = "BROADCAST";
+    String ALL_DESTINATIONS = "ALL";
+    String BROADCAST = "BROADCAST";
 
-    public static final int DEFAULT_OSC_PORT = 7000;
-    public static final int DEFAULT_OSC_OUT_PORT = 7001;
-    public static final int DEFAULT_OSC_ERR_PORT = 7002;
-    public static final int DEFAULT_OSC_SERVER_PORT = 7777;
-    public static final int DEFAULT_ALL_PORTS = Integer.MIN_VALUE;
-    public static final String DEFAULT_SUBNET_MASK = "255.255.255.0";
+    int DEFAULT_OSC_PORT = 7000;
+    int DEFAULT_OSC_OUT_PORT = 7001;
+    int DEFAULT_OSC_ERR_PORT = 7002;
+    int DEFAULT_OSC_SERVER_PORT = 7777;
+    int DEFAULT_ALL_PORTS = Integer.MIN_VALUE;
+    String DEFAULT_SUBNET_MASK = "255.255.255.0";
 
-    public static final String OSC_INSCORE_LOAD = "load";
-    public static final String OSC_INSCORE_SET = "set";
-    public static final String OSC_INSCORE_FILE = "file";
-    public static final String OSC_INSCORE_MAP = "map";
-    public static final String OSC_INSCORE_MAPF = "mapf";
-    public static final String OSC_INSCORE_TEMPO = "tempo";
+    String OSC_INSCORE_LOAD = "load";
+    String OSC_INSCORE_SET = "set";
+    String OSC_INSCORE_FILE = "file";
+    String OSC_INSCORE_MAP = "map";
+    String OSC_INSCORE_MAPF = "mapf";
+    String OSC_INSCORE_TEMPO = "tempo";
 
-    public static final String ADDR_TOKEN = "$ADDR";
-    public static final String OSC_JS_ACTIVATE = "activate(" + ADDR_TOKEN + ")";
-    public static final String OSC_JS_DEACTIVATE = "deactivate(" + ADDR_TOKEN + ")";
+    String ADDR_TOKEN = "$ADDR";
+    String OSC_JS_ACTIVATE = "activate(" + ADDR_TOKEN + ")";
+    String OSC_JS_DEACTIVATE = "deactivate(" + ADDR_TOKEN + ")";
 
-    public static final String INET_ADDR_TOKEN = "$INET_ADDR";
-    public static final String OSC_JS_SERVER_HELLO = "serverHello('" + INET_ADDR_TOKEN + "')";
+    String INET_ADDR_TOKEN = "$INET_ADDR";
+    String OSC_JS_SERVER_HELLO = "serverHello('" + INET_ADDR_TOKEN + "')";
 
-    public static final String SEND_TIME = "$SEND_TIME";
-    public static final String OSC_JS_PING_CMD = "ping";
-    public static final String OSC_JS_PING = OSC_JS_PING_CMD + "('" + SEND_TIME + "')";
+    String SEND_TIME = "$SEND_TIME";
+    String OSC_JS_PING_CMD = "ping";
+    String OSC_JS_PING = OSC_JS_PING_CMD + "('" + SEND_TIME + "')";
 
-    public static final String TITLE_TOKEN = "$TITLE";
-    public static final String OSC_JS_SET_TITLE = "setTitle('" + TITLE_TOKEN + "')";
+    String TITLE_TOKEN = "$TITLE";
+    String OSC_JS_SET_TITLE = "setTitle('" + TITLE_TOKEN + "')";
 
-    public static final String STAVE_NO = "$STAVE_NO";
-    public static final String BEAT_NO = "$BEAT_NO";
-    public static final String OSC_JS_SET_DATE = "setDate(" + STAVE_NO + "," + BEAT_NO + ")";
+    String STAVE_NO = "$STAVE_NO";
+    String BEAT_NO = "$BEAT_NO";
+    String OSC_JS_SET_DATE = "setDate(" + STAVE_NO + "," + BEAT_NO + ")";
 
-    public static final String TEMPO = "$TEMPO";
-    public static final String OSC_JS_SET_TEMPO = "setTempo(" + TEMPO + ")";
+    String TEMPO = "$TEMPO";
+    String OSC_JS_SET_TEMPO = "setTempo(" + TEMPO + ")";
 
-    public static final String OSC_JS_STOP = "stop()";
+    String OSC_JS_STOP = "stop()";
 
-    public static final String PART_TOKEN = "$PART";
-    public static final String OSC_JS_SET_PART = "setPart('" + PART_TOKEN + "')";
+    String PART_TOKEN = "$PART";
+    String OSC_JS_SET_PART = "setPart('" + PART_TOKEN + "')";
 
-    public static final String CSV_INSTRUMENTS_TOKEN = "$INSTRUMENT";
-    public static final String OSC_JS_SET_INSTRUMENTS = "setInstruments('" + CSV_INSTRUMENTS_TOKEN + "')";
+    String CSV_INSTRUMENTS_TOKEN = "$INSTRUMENT";
+    String OSC_JS_SET_INSTRUMENTS = "setInstruments('" + CSV_INSTRUMENTS_TOKEN + "')";
 
-    public static final String SERVER_IP__TOKEN = "$SERVER_IP";
-    public static final String OSC_JS_SET_SERVER_IP = "setServerIp('" + SERVER_IP__TOKEN + "')";
+    String SERVER_IP__TOKEN = "$SERVER_IP";
+    String OSC_JS_SET_SERVER_IP = "setServerIp('" + SERVER_IP__TOKEN + "')";
 
-    public static final String BEAT_TOKEN = "$BEAT";
-    public static final String COLOUR_TOKEN = "$COLOUR";
-    public static final String OSC_JS_BEATER_ON = "beatersOn(" + BEAT_TOKEN + "," + COLOUR_TOKEN + ")";
-    public static final String OSC_JS_BEATER_OFF = "beatersOff(" + BEAT_TOKEN + ")";
+    String BEAT_TOKEN = "$BEAT";
+    String COLOUR_TOKEN = "$COLOUR";
+    String OSC_JS_BEATER_ON = "beatersOn(" + BEAT_TOKEN + "," + COLOUR_TOKEN + ")";
+    String OSC_JS_BEATER_OFF = "beatersOff(" + BEAT_TOKEN + ")";
 
-    public static final String ALPHA_VALUE_TOKEN = "$ALPHA_VALUE";
-    public static final String OSC_JS_SET_ALPHA = "setAlpha('" + ADDR_TOKEN + "'," + ALPHA_VALUE_TOKEN + ")";
+    String ALPHA_VALUE_TOKEN = "$ALPHA_VALUE";
+    String OSC_JS_SET_ALPHA = "setAlpha('" + ADDR_TOKEN + "'," + ALPHA_VALUE_TOKEN + ")";
 
-    public static final String OSC_JS_RESET_SCORE = "resetScore()";
-    public static final String OSC_JS_RESET_STAVES = "resetStaves()";
-    public static final String OSC_JS_RESET_INSTRUMENT = "resetInstrument()";
+    String OSC_JS_RESET_SCORE = "resetScore()";
+    String OSC_JS_RESET_STAVES = "resetStaves()";
+    String OSC_JS_RESET_INSTRUMENT = "resetInstrument()";
 
-    public static final double OSC_STAVE_BEATER_Y_MIN = -0.66;
-    public static final double OSC_STAV_BEATER_Y_MAX = -0.9;
+    double OSC_STAVE_BEATER_Y_MIN = -0.66;
+    double OSC_STAV_BEATER_Y_MAX = -0.9;
 
-    public static final String OSC_ADDRESS_STAVE1 = OSC_INSCORE_ADDRESS_SCENE + "/stave";
-    public static final double OSC_STAVE1_X = 0.0;
-    public static final double OSC_STAVE1_Y = -0.32;
-    public static final double OSC_STAVE1_BEATER_Y_MIN = OSC_STAVE_BEATER_Y_MIN;
-    public static final double OSC_STAVE1_BEATER_Y_MAX =OSC_STAV_BEATER_Y_MAX;
-    public static final double OSC_STAVE1_Z = 1.0;
-    public static final double OSC_STAVE1_SCALE = 1.2;
-    public static final int OSC_STAVE1_SHOW = 1;
+    String OSC_ADDRESS_STAVE1 = OSC_INSCORE_ADDRESS_SCENE + "/stave";
+    double OSC_STAVE1_X = 0.0;
+    double OSC_STAVE1_Y = -0.32;
+    double OSC_STAVE1_BEATER_Y_MIN = OSC_STAVE_BEATER_Y_MIN;
+    double OSC_STAVE1_BEATER_Y_MAX =OSC_STAV_BEATER_Y_MAX;
+    double OSC_STAVE1_Z = 1.0;
+    double OSC_STAVE1_SCALE = 1.2;
+    int OSC_STAVE1_SHOW = 1;
 
-    public static final String OSC_ADDRESS_STAVE2 = OSC_INSCORE_ADDRESS_SCENE + "/stave2";
-    public static final double OSC_STAVE2_X = 0.0;
-    public static final double OSC_STAVE2_Y = 0.32;
-    public static final double OSC_STAVE2_BEATER_Y_MIN = OSC_STAVE_BEATER_Y_MIN;
-    public static final double OSC_STAVE2_BEATER_Y_MAX = OSC_STAV_BEATER_Y_MAX;
-    public static final double OSC_STAVE2_Z = 1.0;
-    public static final double OSC_STAVE2_SCALE = 1.2;
-    public static final int OSC_STAVE2_SHOW = 1;
+    String OSC_ADDRESS_STAVE2 = OSC_INSCORE_ADDRESS_SCENE + "/stave2";
+    double OSC_STAVE2_X = 0.0;
+    double OSC_STAVE2_Y = 0.32;
+    double OSC_STAVE2_BEATER_Y_MIN = OSC_STAVE_BEATER_Y_MIN;
+    double OSC_STAVE2_BEATER_Y_MAX = OSC_STAV_BEATER_Y_MAX;
+    double OSC_STAVE2_Z = 1.0;
+    double OSC_STAVE2_SCALE = 1.2;
+    int OSC_STAVE2_SHOW = 1;
 
 
-    public static final double OSC_FULL_SCORE_STAVE_BEATER_Y_MIN = -0.26;
-    public static final double OSC_FULL_SCORE_STAV_BEATER_Y_MAX = -0.35;
-    public static final double OSC_FULL_SCORE_SCALE = 0.7;
+    double OSC_FULL_SCORE_STAVE_BEATER_Y_MIN = -0.26;
+    double OSC_FULL_SCORE_STAV_BEATER_Y_MAX = -0.35;
+    double OSC_FULL_SCORE_SCALE = 0.7;
 
-    public static final double OSC_FULL_SCORE_STAVE1_X = -0.7;
-    public static final double OSC_FULL_SCORE_STAVE1_Y = 0.0;
-    public static final double OSC_FULL_SCORE_STAVE1_BEATER_Y_MIN = OSC_FULL_SCORE_STAVE_BEATER_Y_MIN;
-    public static final double OSC_FULL_SCORE_STAVE1_BEATER_Y_MAX = OSC_FULL_SCORE_STAV_BEATER_Y_MAX;
+    double OSC_FULL_SCORE_STAVE1_X = -0.7;
+    double OSC_FULL_SCORE_STAVE1_Y = 0.0;
+    double OSC_FULL_SCORE_STAVE1_BEATER_Y_MIN = OSC_FULL_SCORE_STAVE_BEATER_Y_MIN;
+    double OSC_FULL_SCORE_STAVE1_BEATER_Y_MAX = OSC_FULL_SCORE_STAV_BEATER_Y_MAX;
 
-    public static final double OSC_FULL_SCORE_STAVE2_X = 0.7;
-    public static final double OSC_FULL_SCORE_STAVE2_Y = 0.0;
-    public static final double OSC_FULL_SCORE_STAVE2_BEATER_Y_MIN = OSC_FULL_SCORE_STAVE_BEATER_Y_MIN;
-    public static final double OSC_FULL_SCORE_STAVE2_BEATER_Y_MAX =OSC_FULL_SCORE_STAV_BEATER_Y_MAX;
+    double OSC_FULL_SCORE_STAVE2_X = 0.7;
+    double OSC_FULL_SCORE_STAVE2_Y = 0.0;
+    double OSC_FULL_SCORE_STAVE2_BEATER_Y_MIN = OSC_FULL_SCORE_STAVE_BEATER_Y_MIN;
+    double OSC_FULL_SCORE_STAVE2_BEATER_Y_MAX =OSC_FULL_SCORE_STAV_BEATER_Y_MAX;
 
-    public static final String OSC_ARG_CLOCK = "clock";
-    public static final String OSC_ARG_DATE = "date";
-    public static final String OSC_ARG_DY = "dy";
-    public static final String OSC_ARG_Y_POSITION = "y";
-    public static final String OSC_ARG_ALPHA = "alpha";
-    public static final String OSC_ARG_PEN_ALPHA = "penAlpha";
-    public static final String OSC_ARG_PEN_COLOR = "color";
+    String OSC_ARG_CLOCK = "clock";
+    String OSC_ARG_DATE = "date";
+    String OSC_ARG_DY = "dy";
+    String OSC_ARG_Y_POSITION = "y";
+    String OSC_ARG_ALPHA = "alpha";
+    String OSC_ARG_PEN_ALPHA = "penAlpha";
+    String OSC_ARG_PEN_COLOR = "color";
     ///ITL/scene/javascript run "activate('/ITL/scene/stave2')"
-    public static final String RUN = "run";
-    public static final String HELLO = "hello";
+    String RUN = "run";
+    String HELLO = "hello";
 
-    public static final int OSC_COLOUR_GREEN = 1;
-    public static final int OSC_COLOUR_YELLOW = 2;
-    public static final int OSC_COLOUR_ORANGE = 3;
-    public static final int OSC_COLOUR_RED = 4;
+    int OSC_COLOUR_GREEN = 1;
+    int OSC_COLOUR_YELLOW = 2;
+    int OSC_COLOUR_ORANGE = 3;
+    int OSC_COLOUR_RED = 4;
 
-    public static final String REGEX_ALL = "*";
+    String REGEX_ALL = "*";
 
-    public static final String NAME_LISTENER_SERVER_LOG_OUT_PORT = "ServerLogOutPort";
-    public static final String NAME_LISTENER_SERVER_LOG_ERR_PORT = "ServerLogErrPort";
-    public static final String NAME_LISTENER_CLIENT_LOG_OUT_PORT = "ClientLogOutPort";
-    public static final String NAME_LISTENER_CLIENT_LOG_ERR_PORT = "ClientLogErrPort";
-    public static final String NAME_LISTENER_SERVER_HELLO = "ServerHello";
-    public static final String NAME_LISTENER_CLIENT_MAIN = "ClientMainListener";
+    String NAME_LISTENER_SERVER_LOG_OUT_PORT = "ServerLogOutPort";
+    String NAME_LISTENER_SERVER_LOG_ERR_PORT = "ServerLogErrPort";
+    String NAME_LISTENER_CLIENT_LOG_OUT_PORT = "ClientLogOutPort";
+    String NAME_LISTENER_CLIENT_LOG_ERR_PORT = "ClientLogErrPort";
+    String NAME_LISTENER_SERVER_HELLO = "ServerHello";
+    String NAME_LISTENER_CLIENT_MAIN = "ClientMainListener";
 
-    public static final String NAME_EVENT_TIME = "time: ";
-    public static final String NAME_EVENT_HOST = "host: ";
-    public static final String NAME_EVENT_OSC_ADDR = "URL: ";
-    public static final String NAME_EVENT_OSC_ARGS = "arguments: ";
-    public static final String NAME_EVENT_OSC_IN = "Event type: OSC In, ";
-    public static final String NAME_NA = "N/A";
+    String NAME_EVENT_TIME = "time: ";
+    String NAME_EVENT_HOST = "host: ";
+    String NAME_EVENT_OSC_ADDR = "URL: ";
+    String NAME_EVENT_OSC_ARGS = "arguments: ";
+    String NAME_EVENT_OSC_IN = "Event type: OSC In, ";
+    String NAME_NA = "N/A";
 
-    public static final String WEB_EVENT_NAME = "ev";
-    public static final String WEB_EVENT_TIME_NAME = "evt";
-    public static final String WEB_EVENT_LAST_STATE_UPDATE_TIME = "lsut";
-    public static final String WEB_EVENT_SENT_TIME_NAME = "t";
-    public static final String WEB_EVENT_ELEMENT_ID = "elementId";
-    public static final String WEB_EVENT_IS_SELECTED = "selected";
+    String WEB_PATH_SSE = "/sse";
+    String WEB_PATH_WEBSOCKETS = "/ws";
+    String WEB_PATH_HTTP = "/htp";
+    String WEB_PATH_STATIC = "/";
 
-    public static final String WEB_RESPONSE_TYPE = "type";
-    public static final String WEB_RESPONSE_MESSAGE = "msg";
-    public static final String WEB_RESPONSE_STATE = "st";
-    public static final String WEB_RESPONSE_TIME = "t";
-    public static final String WEB_RESPONSE_SUBMITTED = "Submitted";
+    String WEB_EVENT_NAME = "ev";
+    String WEB_EVENT_TIME_NAME = "evt";
+    String WEB_EVENT_LAST_STATE_UPDATE_TIME = "lsut";
+    String WEB_EVENT_SENT_TIME_NAME = "t";
+    String WEB_EVENT_ELEMENT_ID = "elementId";
+    String WEB_EVENT_IS_SELECTED = "selected";
 
-    public static final String WEB_TILE_PREFIX = "t";
-    public static final String WEB_ELEMENT_NAME_DELIMITER = "-";
-    public static final String WEB_ELEMENT_GRID = "grid";
-    public static final String WEB_ZOOM_DEFAULT = "default";
+    String WEB_RESPONSE_TYPE = "type";
+    String WEB_RESPONSE_MESSAGE = "msg";
+    String WEB_RESPONSE_STATE = "st";
+    String WEB_RESPONSE_TIME = "t";
+    String WEB_RESPONSE_SUBMITTED = "Submitted";
 
-    public static final String WEB_SCORE_SUFFIX = "_webscore";
-    static final String WEB_TEXT_BACKGROUND_COLOUR = "rgba(225, 225, 225, 0.65)";
+    String WEB_TILE_PREFIX = "t";
+    String WEB_ELEMENT_NAME_DELIMITER = "-";
+    String WEB_ELEMENT_GRID = "grid";
+    String WEB_ZOOM_DEFAULT = "default";
 
-    public static final String NAME_FULL_SCORE = "FullScore";
+    String WEB_SCORE_SUFFIX = "_webscore";
+    String WEB_TEXT_BACKGROUND_COLOUR = "rgba(225, 225, 225, 0.65)";
 
-    public static final int DEFAULT_THREAD_SLEEP_MILLIS = 10;
+    String NAME_FULL_SCORE = "FullScore";
 
-    public static final Double[] TEMPO_MULTIPLIERS = {0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85,
+    int DEFAULT_THREAD_SLEEP_MILLIS = 10;
+
+    Double[] TEMPO_MULTIPLIERS = {0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85,
                                                         0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99,
                                                         1.0,
                                                         1.01, 1.02, 1.03, 1.04, 1.05, 1.06, 1.07, 1.08, 1.09,
                                                         1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5,
                                                         1.6, 1.7, 1.8, 1.9, 2.0};
 
-    public static final String RND_STRATEGY_1 = "1";
-    public static final String RND_STRATEGY_1_1 = "1,1";
-    public static final String RND_STRATEGY_1_1_1 = "1,1,1";
-    public static final String RND_STRATEGY_1_1_1_1 = "1,1,1,1";
-    public static final String RND_STRATEGY_2 = "2";
-    public static final String RND_STRATEGY_2_1 = "2,1";
-    public static final String RND_STRATEGY_2_1_1 = "2,1,1";
-    public static final String RND_STRATEGY_2_2 = "2,2";
-    public static final String RND_STRATEGY_3 = "3";
-    public static final String RND_STRATEGY_3_1 = "3,1";
-    public static final String RND_STRATEGY_4 = "4";
-    public static final String[] RANDOMISATION_STRATEGIES = {RND_STRATEGY_1, RND_STRATEGY_1_1, RND_STRATEGY_1_1_1, RND_STRATEGY_1_1_1_1,
+    String RND_STRATEGY_1 = "1";
+    String RND_STRATEGY_1_1 = "1,1";
+    String RND_STRATEGY_1_1_1 = "1,1,1";
+    String RND_STRATEGY_1_1_1_1 = "1,1,1,1";
+    String RND_STRATEGY_2 = "2";
+    String RND_STRATEGY_2_1 = "2,1";
+    String RND_STRATEGY_2_1_1 = "2,1,1";
+    String RND_STRATEGY_2_2 = "2,2";
+    String RND_STRATEGY_3 = "3";
+    String RND_STRATEGY_3_1 = "3,1";
+    String RND_STRATEGY_4 = "4";
+    String[] RANDOMISATION_STRATEGIES = {RND_STRATEGY_1, RND_STRATEGY_1_1, RND_STRATEGY_1_1_1, RND_STRATEGY_1_1_1_1,
             RND_STRATEGY_2, RND_STRATEGY_2_1, RND_STRATEGY_2_1_1, RND_STRATEGY_2_2, RND_STRATEGY_3, RND_STRATEGY_3_1, RND_STRATEGY_4};
 
-    public static final String PRESET_ALL_OFF = "All OFF";
-    public static final String PRESET_ALL_ON = "All ON Lines OFF";
-    public static final String PRESET_ALL_LINES_ON = "All ON Lines ON";
-    public static final String PRESET_ALL_OFF_CONTENT_ON = "All OFF Content ON";
-    public static final String PRESET_ALL_ON_CONTENT_OFF = "All ON Content OFF";
-    public static final String PRESET_ALL_ON_CONTENT_POSITION_OFF = "All ON Cnt/Pos OFF";
-    public static final String[] PRESETS = {PRESET_ALL_OFF, PRESET_ALL_ON, PRESET_ALL_LINES_ON, PRESET_ALL_OFF_CONTENT_ON, PRESET_ALL_ON_CONTENT_OFF, PRESET_ALL_ON_CONTENT_POSITION_OFF};
+    String PRESET_ALL_OFF = "All OFF";
+    String PRESET_ALL_ON = "All ON Lines OFF";
+    String PRESET_ALL_LINES_ON = "All ON Lines ON";
+    String PRESET_ALL_OFF_CONTENT_ON = "All OFF Content ON";
+    String PRESET_ALL_ON_CONTENT_OFF = "All ON Content OFF";
+    String PRESET_ALL_ON_CONTENT_POSITION_OFF = "All ON Cnt/Pos OFF";
+    String[] PRESETS = {PRESET_ALL_OFF, PRESET_ALL_ON, PRESET_ALL_LINES_ON, PRESET_ALL_OFF_CONTENT_ON, PRESET_ALL_ON_CONTENT_OFF, PRESET_ALL_ON_CONTENT_POSITION_OFF};
 
-    public static final String DISRUPTOR_THREAD_FACTORY = "SZCore_Dsrptr";
-    public static final String DISRUPTOR_OUT_THREAD_FACTORY = "SZCore_Out_Dsrptr";
-    public static final String DISRUPTOR_IN_THREAD_FACTORY = "SZCore_In_Dsrptr";
-    public static final String DISRUPTOR_CONTAINER_IN_THREAD_FACTORY = "SZCore_Container_In_Dsrptr";
-    public static final String SCHEDULER_THREAD_FACTORY = "SZCore_Schedlr";
-    public static final String DEFAULT_THREAD_SUFFIX = "-Thread-";
+    String DISRUPTOR_THREAD_FACTORY = "SZCore_Dsrptr";
+    String DISRUPTOR_OUT_THREAD_FACTORY = "SZCore_Out_Dsrptr";
+    String DISRUPTOR_IN_THREAD_FACTORY = "SZCore_In_Dsrptr";
+    String DISRUPTOR_CONTAINER_IN_THREAD_FACTORY = "SZCore_Container_In_Dsrptr";
+    String SCHEDULER_THREAD_FACTORY = "SZCore_Schedlr";
+    String DEFAULT_THREAD_SUFFIX = "-Thread-";
 
-    public static final double DYNAMICS_LINE_Y_MAX = 0.074;      //half  0.037
-    public static final double DYNAMICS_LINE_Y_MIN = 0.0;
-    public static final double DYNAMICS_LINE1_Y_MID_POSITION = -0.077;
-    public static final double DYNAMICS_LINE1_Y_MIN_POSITION = -0.04;
-    public static final double DYNAMICS_LINE1_Y_MAX_POSITION = -0.114;
-    public static final double DYNAMICS_LINE2_Y_MID_POSITION = 0.713;
-    public static final double DYNAMICS_LINE2_Y_MAX_POSITION = 0.676;
-    public static final double DYNAMICS_LINE2_Y_MIN_POSITION = 0.75;
+    double DYNAMICS_LINE_Y_MAX = 0.074;      //half  0.037
+    double DYNAMICS_LINE_Y_MIN = 0.0;
+    double DYNAMICS_LINE1_Y_MID_POSITION = -0.077;
+    double DYNAMICS_LINE1_Y_MIN_POSITION = -0.04;
+    double DYNAMICS_LINE1_Y_MAX_POSITION = -0.114;
+    double DYNAMICS_LINE2_Y_MID_POSITION = 0.713;
+    double DYNAMICS_LINE2_Y_MAX_POSITION = 0.676;
+    double DYNAMICS_LINE2_Y_MIN_POSITION = 0.75;
 
-    public static final double PRESSURE_LINE_Y_MAX = 0.055;  //half 0.0275
-    public static final double PRESSURE_LINE_Y_MIN = 0.0;
-    public static final double PRESSURE_LINE1_Y_MID_POSITION = -0.4;
-    public static final double PRESSURE_LINE1_Y_MIN_POSITION = -0.3725;
-    public static final double PRESSURE_LINE1_Y_MAX_POSITION = -0.4275;
-    public static final double PRESSURE_LINE2_Y_MID_POSITION = 0.391;
-    public static final double PRESSURE_LINE2_Y_MAX_POSITION = 0.3635;
-    public static final double PRESSURE_LINE2_Y_MIN_POSITION = 0.4185;
+    double PRESSURE_LINE_Y_MAX = 0.055;  //half 0.0275
+    double PRESSURE_LINE_Y_MIN = 0.0;
+    double PRESSURE_LINE1_Y_MID_POSITION = -0.4;
+    double PRESSURE_LINE1_Y_MIN_POSITION = -0.3725;
+    double PRESSURE_LINE1_Y_MAX_POSITION = -0.4275;
+    double PRESSURE_LINE2_Y_MID_POSITION = 0.391;
+    double PRESSURE_LINE2_Y_MAX_POSITION = 0.3635;
+    double PRESSURE_LINE2_Y_MIN_POSITION = 0.4185;
 
-    public static final double SPEED_LINE_Y_MAX = 0.045;      //half  0.0275
-    public static final double SPEED_LINE_Y_MIN = 0.0;
-    public static final double SPEED_LINE1_Y_MID_POSITION = -0.457;
-    public static final double SPEED_LINE1_Y_MIN_POSITION = -0.435;
-    public static final double SPEED_LINE1_Y_MAX_POSITION = -0.48;
-    public static final double SPEED_LINE2_Y_MID_POSITION = 0.334;
-    public static final double SPEED_LINE2_Y_MAX_POSITION = 0.308;
-    public static final double SPEED_LINE2_Y_MIN_POSITION = 0.355;
+    double SPEED_LINE_Y_MAX = 0.045;      //half  0.0275
+    double SPEED_LINE_Y_MIN = 0.0;
+    double SPEED_LINE1_Y_MID_POSITION = -0.457;
+    double SPEED_LINE1_Y_MIN_POSITION = -0.435;
+    double SPEED_LINE1_Y_MAX_POSITION = -0.48;
+    double SPEED_LINE2_Y_MID_POSITION = 0.334;
+    double SPEED_LINE2_Y_MAX_POSITION = 0.308;
+    double SPEED_LINE2_Y_MIN_POSITION = 0.355;
 
-    public static final double POSITION_LINE_Y_MAX = 0.128;      //half 0.0675
-    public static final double POSITION_LINE_Y_MIN = 0.0;
-    public static final double POSITION_LINE1_Y_MID_POSITION = -0.555;
-    public static final double POSITION_LINE1_Y_MIN_POSITION = -0.492;
-    public static final double POSITION_LINE1_Y_MAX_POSITION = -0.62;
-    public static final double POSITION_LINE2_Y_MID_POSITION = 0.236;
-    public static final double POSITION_LINE2_Y_MAX_POSITION = 0.17;
-    public static final double POSITION_LINE2_Y_MIN_POSITION = 0.298;
+    double POSITION_LINE_Y_MAX = 0.128;      //half 0.0675
+    double POSITION_LINE_Y_MIN = 0.0;
+    double POSITION_LINE1_Y_MID_POSITION = -0.555;
+    double POSITION_LINE1_Y_MIN_POSITION = -0.492;
+    double POSITION_LINE1_Y_MAX_POSITION = -0.62;
+    double POSITION_LINE2_Y_MID_POSITION = 0.236;
+    double POSITION_LINE2_Y_MAX_POSITION = 0.17;
+    double POSITION_LINE2_Y_MIN_POSITION = 0.298;
 
-    public static final double CONTENT_LINE_Y_MAX = 0.244;      //half 0.125
-    public static final double CONTENT_LINE_Y_MIN = 0.0;
-    public static final double CONTENT_LINE1_Y_MID_POSITION = -0.245;
-    public static final double CONTENT_LINE1_Y_MIN_POSITION = -0.125;
-    public static final double CONTENT_LINE1_Y_MAX_POSITION = -0.365;
-    public static final double CONTENT_LINE2_Y_MID_POSITION = 0.545;
-    public static final double CONTENT_LINE2_Y_MAX_POSITION = 0.425;
-    public static final double CONTENT_LINE2_Y_MIN_POSITION = 0.665;
-
+    double CONTENT_LINE_Y_MAX = 0.244;      //half 0.125
+    double CONTENT_LINE_Y_MIN = 0.0;
+    double CONTENT_LINE1_Y_MID_POSITION = -0.245;
+    double CONTENT_LINE1_Y_MIN_POSITION = -0.125;
+    double CONTENT_LINE1_Y_MAX_POSITION = -0.365;
+    double CONTENT_LINE2_Y_MID_POSITION = 0.545;
+    double CONTENT_LINE2_Y_MAX_POSITION = 0.425;
+    double CONTENT_LINE2_Y_MIN_POSITION = 0.665;
 
 }

@@ -3,6 +3,7 @@ package com.xenaksys.szcore.server.web;
 import com.google.gson.Gson;
 import com.xenaksys.szcore.server.SzcoreServer;
 import com.xenaksys.szcore.server.web.handler.ZsHttpHandler;
+import com.xenaksys.szcore.server.web.handler.ZsWsConnectionCallback;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
@@ -10,6 +11,8 @@ import io.undertow.server.handlers.resource.ClassPathResourceManager;
 import io.undertow.server.handlers.resource.PathResourceManager;
 import io.undertow.server.handlers.sse.ServerSentEventConnection;
 import io.undertow.server.handlers.sse.ServerSentEventHandler;
+import io.undertow.websockets.WebSocketConnectionCallback;
+import io.undertow.websockets.WebSocketProtocolHandshakeHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,9 +20,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static com.xenaksys.szcore.Consts.INDEX_HTML;
-import static io.undertow.Handlers.resource;
-import static io.undertow.Handlers.serverSentEvents;
+import static com.xenaksys.szcore.Consts.*;
+import static io.undertow.Handlers.*;
 
 public class WebServer {
     static final Logger LOG = LoggerFactory.getLogger(WebServer.class);
@@ -34,6 +36,7 @@ public class WebServer {
     private volatile boolean isRunning = false;
     private Undertow undertow = null;
     private ServerSentEventHandler sseHandler = null;
+    private WebSocketProtocolHandshakeHandler wsHandler = null;
 
     public WebServer(String staticDataPath, int port, int transferMinSize, SzcoreServer szcoreServer) {
         this.staticDataPath = staticDataPath;
@@ -73,7 +76,9 @@ public class WebServer {
     private void initUndertow() {
         HttpHandler staticDataHandler =  resource(new ClassPathResourceManager(WebServer.class.getClassLoader(), ""))
                 .addWelcomeFiles(INDEX_HTML);
+        WebSocketConnectionCallback wsConnectionCallback = new ZsWsConnectionCallback();
         sseHandler = serverSentEvents();
+        wsHandler = websocket(wsConnectionCallback);
 
         if(staticDataPath != null) {
             Path path = Paths.get(staticDataPath);
@@ -88,9 +93,10 @@ public class WebServer {
         undertow = Undertow.builder()
                 .addHttpListener(port, "0.0.0.0")
                 .setHandler(Handlers.path()
-                        .addPrefixPath("/", staticDataHandler)
-                        .addPrefixPath("/sse", sseHandler)
-                        .addPrefixPath("/htp", new ZsHttpHandler(szcoreServer))
+                        .addPrefixPath(WEB_PATH_STATIC, staticDataHandler)
+                        .addPrefixPath(WEB_PATH_SSE, sseHandler)
+                        .addPrefixPath(WEB_PATH_WEBSOCKETS, wsHandler)
+                        .addPrefixPath(WEB_PATH_HTTP, new ZsHttpHandler(szcoreServer))
                 ).build();
 
     }

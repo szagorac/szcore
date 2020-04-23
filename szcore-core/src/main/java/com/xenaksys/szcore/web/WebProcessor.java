@@ -53,6 +53,9 @@ public class WebProcessor implements Processor, WebScoreEventListener {
         scoreService.onIncomingWebEvent(webEvent);
     }
 
+    public String onWsRequest(String data) {
+        return currentWebScoreState;
+    }
     public ZsHttpResponse onHttpRequest(ZsHttpRequest zsRequest) {
 //        LOG.debug("onHttpRequest: path: {} sourceAddr: {}", zsRequest.getRequestPath(), zsRequest.getSourceAddr());
         String out;

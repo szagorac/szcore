@@ -419,6 +419,11 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
+    public String onWsRequest(String data) {
+        return webProcessor.onWsRequest(data);
+    }
+
+    @Override
     public void startWebServer() {
         if(webServer == null) {
             LOG.error("startWebServer: Invalid Web server");

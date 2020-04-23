@@ -94,6 +94,8 @@ public interface ScoreService {
 
     ZsHttpResponse onHttpRequest(ZsHttpRequest zsRequest);
 
+    String onWsRequest(String data);
+
     void startWebServer();
 
     void stopWebServer();

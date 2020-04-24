@@ -6,10 +6,13 @@ import com.xenaksys.szcore.model.id.BeatId;
 
 public class OutgoingWebEvent implements SzcoreEvent {
 
-    private final BeatId beatId;
-    private final String eventId;
-    private final long creationTime;
-    private final OutgoingWebEventType eventType;
+    private BeatId beatId;
+    private String eventId;
+    private long creationTime;
+    private OutgoingWebEventType eventType;
+
+    public OutgoingWebEvent() {
+    }
 
     public OutgoingWebEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, long creationTime) {
         this.beatId = beatId;
@@ -36,14 +39,30 @@ public class OutgoingWebEvent implements SzcoreEvent {
         return eventType;
     }
 
+    public long getCreationTime() {
+        return creationTime;
+    };
+
+    public void setBeatId(BeatId beatId) {
+        this.beatId = beatId;
+    }
+
+    public void setEventId(String eventId) {
+        this.eventId = eventId;
+    }
+
+    public void setCreationTime(long creationTime) {
+        this.creationTime = creationTime;
+    }
+
+    public void setEventType(OutgoingWebEventType eventType) {
+        this.eventType = eventType;
+    }
+
     @Override
     public String toString() {
         return "OutgoingWebEvent{" +
                 "type=" + getWebEventType() +
                 '}';
     }
-
-    public long getCreationTime() {
-        return creationTime;
-    };
 }

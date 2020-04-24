@@ -4,7 +4,7 @@ import com.xenaksys.szcore.event.IncomingWebEvent;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.score.WebScore;
 import com.xenaksys.szcore.util.NetUtil;
-import com.xenaksys.szcore.web.WebScoreEventListener;
+import com.xenaksys.szcore.web.WebScoreStateListener;
 import com.xenaksys.szcore.web.ZsHttpRequest;
 import com.xenaksys.szcore.web.ZsHttpResponse;
 
@@ -30,7 +30,7 @@ public interface ScoreService {
 
     void subscribe(SzcoreEngineEventListener eventListener);
 
-    void subscribe(WebScoreEventListener eventListener);
+    void subscribe(WebScoreStateListener eventListener);
 
     void setTempoModifier(Id transportId, TempoModifier tempoModifier);
 

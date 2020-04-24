@@ -13,8 +13,10 @@ import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.Timer;
 import com.xenaksys.szcore.model.Transport;
 import com.xenaksys.szcore.model.WaitStrategy;
+import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.publish.LoggingOscPublishProcessor;
+import com.xenaksys.szcore.publish.WebPublisherProcessor;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.BasicScheduler;
 import com.xenaksys.szcore.time.BasicTimer;
@@ -43,12 +45,13 @@ public class TestScoreProcessorRun {
     boolean isSkip = true;
 
     @Before
-    public void init(){
+    public void init() {
 
         WaitStrategy waitStrategy = new BockingWaitStrategy(1, TimeUnit.MILLISECONDS);
         MutableClock clock = new MutableNanoClock();
         Timer timer = new BasicTimer(waitStrategy, clock);
         oscPublisher = new LoggingOscPublishProcessor();
+        WebPublisher webPublisher = new WebPublisherProcessor();
         Scheduler scheduler = new BasicScheduler(clock, timer);
         BeatTimeStrategy beatTimeStrategy = new SimpleBeatTimeStrategy();
         transportFactory = new TransportFactory(clock, scheduler, beatTimeStrategy);
@@ -56,12 +59,12 @@ public class TestScoreProcessorRun {
         EventFactory eventFactory = new EventFactory();
         TaskFactory taskFactory = new TaskFactory();
 
-        scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, oscPublisher, scheduler, eventFactory, taskFactory);
+        scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory);
     }
 
     @Test
-    public void testRunScoreSingleInstrument(){
-        if(isSkip){
+    public void testRunScoreSingleInstrument() {
+        if (isSkip) {
             return;
         }
         String filePath = "testScoreSingleInstrument.csv";
@@ -85,10 +88,10 @@ public class TestScoreProcessorRun {
             Assert.assertEquals(4, scoreBaseBeatEvents.size());
             int[] keys = scoreBaseBeatEvents.keys();
             Arrays.sort(keys);
-            for(int key : keys){
+            for (int key : keys) {
                 List<SzcoreEvent> events = scoreBaseBeatEvents.get(key);
-                if(events != null){
-                    for(SzcoreEvent event : events){
+                if (events != null) {
+                    for (SzcoreEvent event : events) {
                         LOG.info("Found event for base beat: " + key + " event: " + event);
                     }
                 }
@@ -108,9 +111,9 @@ public class TestScoreProcessorRun {
     }
 
     @Test
-    public void testRunScoreMultiInstruments(){
+    public void testRunScoreMultiInstruments() {
 
-        if(isSkip){
+        if (isSkip) {
             return;
         }
         String filePath = "testScoreMultiInstrument.csv";
@@ -135,10 +138,10 @@ public class TestScoreProcessorRun {
             Assert.assertEquals(4, scoreBaseBeatEvents.size());
             int[] keys = scoreBaseBeatEvents.keys();
             Arrays.sort(keys);
-            for(int key : keys){
+            for (int key : keys) {
                 List<SzcoreEvent> events = scoreBaseBeatEvents.get(key);
-                if(events != null){
-                    for(SzcoreEvent event : events){
+                if (events != null) {
+                    for (SzcoreEvent event : events) {
                         LOG.info("Found event for base beat: " + key + " event: " + event);
                     }
                 }

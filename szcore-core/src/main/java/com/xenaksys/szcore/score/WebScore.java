@@ -20,9 +20,19 @@ import org.slf4j.LoggerFactory;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
-import static com.xenaksys.szcore.Consts.*;
+import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.Consts.WEB_TEXT_BACKGROUND_COLOUR;
+import static com.xenaksys.szcore.Consts.WEB_ZOOM_DEFAULT;
 
 public class WebScore {
     static final Logger LOG = LoggerFactory.getLogger(WebScore.class);
@@ -781,7 +791,7 @@ public class WebScore {
 
     public void updateServerState() {
         try {
-            scoreProcessor.onWebScoreEvent(exportState());
+            scoreProcessor.onWebScoreStateChange(exportState());
         } catch (Exception e) {
             LOG.error("Failed to process pushServerState", e);
         }

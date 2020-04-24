@@ -3,9 +3,30 @@ package com.xenaksys.szcore.server;
 
 import com.lmax.disruptor.dsl.Disruptor;
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.event.*;
+import com.xenaksys.szcore.event.ErrorEvent;
+import com.xenaksys.szcore.event.EventContainer;
+import com.xenaksys.szcore.event.EventFactory;
+import com.xenaksys.szcore.event.HelloEvent;
+import com.xenaksys.szcore.event.IncomingWebEvent;
+import com.xenaksys.szcore.event.OscEvent;
+import com.xenaksys.szcore.event.OutgoingWebEvent;
+import com.xenaksys.szcore.event.PingEvent;
+import com.xenaksys.szcore.event.ServerHelloEvent;
+import com.xenaksys.szcore.event.WebScoreEvent;
+import com.xenaksys.szcore.model.BeatTimeStrategy;
+import com.xenaksys.szcore.model.Clock;
+import com.xenaksys.szcore.model.EventService;
+import com.xenaksys.szcore.model.Id;
+import com.xenaksys.szcore.model.OscPublisher;
+import com.xenaksys.szcore.model.Scheduler;
+import com.xenaksys.szcore.model.Score;
+import com.xenaksys.szcore.model.ScoreProcessor;
+import com.xenaksys.szcore.model.ScoreService;
+import com.xenaksys.szcore.model.SzcoreEvent;
+import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.Timer;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.model.WaitStrategy;
+import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.model.id.OscListenerId;
 import com.xenaksys.szcore.net.ParticipantStats;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
@@ -14,6 +35,7 @@ import com.xenaksys.szcore.process.SimpleLogger;
 import com.xenaksys.szcore.process.SzcoreThreadFactory;
 import com.xenaksys.szcore.publish.OscDisruptorPublishProcessor;
 import com.xenaksys.szcore.publish.OscPortFactory;
+import com.xenaksys.szcore.publish.WebPublisherDisruptorProcessor;
 import com.xenaksys.szcore.receive.OscReceiveProcessor;
 import com.xenaksys.szcore.receive.SzcoreIncomingEventListener;
 import com.xenaksys.szcore.score.ScoreProcessorImpl;
@@ -33,14 +55,18 @@ import com.xenaksys.szcore.time.waitstrategy.BockingWaitStrategy;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
 import com.xenaksys.szcore.web.WebProcessor;
-import com.xenaksys.szcore.web.WebScoreEventListener;
+import com.xenaksys.szcore.web.WebScoreStateListener;
 import com.xenaksys.szcore.web.ZsHttpRequest;
 import com.xenaksys.szcore.web.ZsHttpResponse;
 import org.apache.commons.net.util.SubnetUtils;
 
 import java.io.File;
 import java.net.InetAddress;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -53,8 +79,9 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     private static final AtomicInteger DEFAULT_POOL_NUMBER = new AtomicInteger(1);
 
 
-    private OscReceiveProcessor eventReceiver;
-    private OscPublisher eventPublisher;
+    private OscReceiveProcessor oscEventReceiver;
+    private OscPublisher oscEventPublisher;
+    private WebPublisher webEventPublisher;
     private ServerEventReceiver serverEventReceiver;
     private ScoreProcessor scoreProcessor;
     private WebProcessor webProcessor;
@@ -65,13 +92,14 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     private EventFactory eventFactory;
     private TaskFactory taskFactory;
     private MutableNanoClock clock;
-    private Disruptor<OscEvent> outDisruptor;
+    private Disruptor<OscEvent> outOscDisruptor;
+    private Disruptor<OutgoingWebEvent> outWebDisruptor;
 //    private Disruptor<IncomingOscEvent> inDisruptor;
     private Disruptor<EventContainer> inDisruptor;
     private WebServer webServer;
 
-    private Map<String, InetAddress> participants = new ConcurrentHashMap<>();
-    private Map<String, ParticipantStats> participantStats = new ConcurrentHashMap<>();
+    private final Map<String, InetAddress> participants = new ConcurrentHashMap<>();
+    private final Map<String, ParticipantStats> participantStats = new ConcurrentHashMap<>();
     private PingEvent pingEvent;
 
     private volatile String subnetMask = Consts.DEFAULT_SUBNET_MASK;
@@ -124,7 +152,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
             out.addAll(broadcastAddrs);
         }
 
-        eventPublisher.resetBroadcastPorts();
+        oscEventPublisher.resetBroadcastPorts();
         for(InetAddress badr : out) {
             addBroadcastPort(badr, remotePort);
         }
@@ -139,14 +167,14 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
     public void initProcessors(){
         clock = new MutableNanoClock();
-        eventReceiver = new OscReceiveProcessor(new OscListenerId(Consts.DEFAULT_ALL_PORTS, getServerAddress().getHostAddress(), "OscReceiveProcessor"), clock);
+        oscEventReceiver = new OscReceiveProcessor(new OscListenerId(Consts.DEFAULT_ALL_PORTS, getServerAddress().getHostAddress(), "OscReceiveProcessor"), clock);
 
 //        inDisruptor = DisruptorFactory.createInDisruptor();
 //        eventProcessor = new InServerEventDisruptorProcessor(this, clock, eventFactory, inDisruptor);
         inDisruptor = DisruptorFactory.createContainerInDisruptor();
         eventProcessor = new InEventContainerDisruptorProcessor(this, clock, eventFactory, inDisruptor);
 
-        serverEventReceiver = new ServerEventReceiver(eventProcessor, eventReceiver,
+        serverEventReceiver = new ServerEventReceiver(eventProcessor, oscEventReceiver,
                 new OscListenerId(Consts.DEFAULT_ALL_PORTS, getServerAddress().getHostAddress(), "ServerEventReceiver"));
         serverEventReceiver.init();
 
@@ -154,8 +182,8 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
         Timer timer = new BasicTimer(waitStrategy, clock);
 
-        outDisruptor = DisruptorFactory.createOutDisruptor();
-        eventPublisher = new OscDisruptorPublishProcessor(outDisruptor);
+        outOscDisruptor = DisruptorFactory.createOscOutDisruptor();
+        oscEventPublisher = new OscDisruptorPublishProcessor(outOscDisruptor);
 
         SzcoreThreadFactory threadFactory = new SzcoreThreadFactory(Consts.SCHEDULER_THREAD_FACTORY + "_" +  DEFAULT_POOL_NUMBER.getAndIncrement());
         ExecutorService executor = Executors.newSingleThreadExecutor(threadFactory);
@@ -164,11 +192,13 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         BeatTimeStrategy beatTimeStrategy = new SimpleBeatTimeStrategy();
         TransportFactory transportFactory = new TransportFactory(clock, scheduler, beatTimeStrategy);
 
-        scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, eventPublisher, scheduler, eventFactory, taskFactory);
-
         logProcessor = new ServerLogProcessor(new SimpleLogger());
 
         webProcessor = new WebProcessor( this, this, clock, eventFactory);
+        outWebDisruptor = DisruptorFactory.createWebOutDisruptor();
+        webEventPublisher = new WebPublisherDisruptorProcessor(outWebDisruptor, webProcessor);
+
+        scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, oscEventPublisher, webEventPublisher, scheduler, eventFactory, taskFactory);
         subscribe(webProcessor);
 
 //        LinkedList<WebScoreEvent> events = loadWebScoreEvents();
@@ -238,11 +268,17 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     protected void onStart() throws Exception {
-        if(outDisruptor != null) {
-            outDisruptor.start();
+        if(outOscDisruptor != null) {
+            outOscDisruptor.start();
         }
-        if(eventPublisher != null) {
-            eventPublisher.start();
+        if(oscEventPublisher != null) {
+            oscEventPublisher.start();
+        }
+        if(outWebDisruptor != null) {
+            outWebDisruptor.start();
+        }
+        if(webEventPublisher != null) {
+            webEventPublisher.start();
         }
         if(inDisruptor != null) {
             inDisruptor.start();
@@ -270,13 +306,13 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     public void stop(){
-        eventReceiver.stop();
+        oscEventReceiver.stop();
         scheduler.stop();
         super.stop();
     }
 
     public void publish(SzcoreEvent event){
-        eventPublisher.process(event);
+        oscEventPublisher.process(event);
     }
 
     @Override
@@ -301,8 +337,8 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         return taskFactory;
     }
 
-    public OscPublisher getEventPublisher() {
-        return eventPublisher;
+    public OscPublisher getOscEventPublisher() {
+        return oscEventPublisher;
     }
 
     public boolean isParticipant(InetAddress addr){
@@ -342,19 +378,19 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
     public void sendHello(String remoteAddr){
         HelloEvent helloEvent = eventFactory.createHelloEvent(remoteAddr, 0L);
-        eventPublisher.process(helloEvent);
+        oscEventPublisher.process(helloEvent);
     }
 
     public void sendServerHelloEvent(String remoteAddr){
         ServerHelloEvent pingEvent = eventFactory.createServerHelloEvent(getServerAddress().getHostAddress(), remoteAddr, 0L);
-        eventPublisher.process(pingEvent);
+        oscEventPublisher.process(pingEvent);
     }
 
     public void addOutPort(InetAddress addr, int port){
         String remoteAddr = addr.getHostAddress();
-        if(!eventPublisher.isDestination(remoteAddr, port)) {
+        if(!oscEventPublisher.isDestination(remoteAddr, port)) {
             OSCPortOut outPort = OscPortFactory.createOutPort(addr, port);
-            eventPublisher.addOscPort(remoteAddr, outPort);
+            oscEventPublisher.addOscPort(remoteAddr, outPort);
         }
     }
 
@@ -363,7 +399,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
             return;
         }
 
-        List<OSCPortOut> bPorts = eventPublisher.getBroadcastPorts();
+        List<OSCPortOut> bPorts = oscEventPublisher.getBroadcastPorts();
         for(OSCPortOut bPort : bPorts) {
             if(bPort.getAddress().equals(addr)) {
                 LOG.info("addBroadcastPort: broadcast addr {} already registered, ignoring add broadcast port", addr.getHostAddress());
@@ -373,7 +409,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
         OSCPortOut broadcastPort = OscPortFactory.createOutPort(addr, port);
         if (broadcastPort != null) {
-            eventPublisher.addOscBroadcastPort(broadcastPort);
+            oscEventPublisher.addOscBroadcastPort(broadcastPort);
         }
     }
 
@@ -390,11 +426,11 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     @Override
     public List<InetAddress> getDetectedBroadcastAddresses() {
         List<InetAddress> out = new ArrayList<>();
-        if(eventPublisher == null) {
+        if(oscEventPublisher == null) {
             return out;
         }
 
-        List<OSCPortOut> bPorts = eventPublisher.getBroadcastPorts();
+        List<OSCPortOut> bPorts = oscEventPublisher.getBroadcastPorts();
         for(OSCPortOut bPort : bPorts) {
             out.add(bPort.getAddress());
         }
@@ -483,13 +519,13 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
     public void addInstrumentOutPort(InetAddress addr, String instrument){
         String remoteAddr = addr.getHostAddress();
-        OSCPortOut outPort = eventPublisher.getOutPort(remoteAddr);
+        OSCPortOut outPort = oscEventPublisher.getOutPort(remoteAddr);
         if(outPort == null){
             LOG.error("Add Instrument: Failed to find out port for instrument: " + instrument + " addr: " + remoteAddr);
             return;
         }
 
-        eventPublisher.addOscPort(instrument, outPort);
+        oscEventPublisher.addOscPort(instrument, outPort);
     }
 
     public void sendScoreInfo(String instrument){
@@ -513,14 +549,14 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         events.add(eventFactory.createResetStavesEvent(instrument, clock.getSystemTimeMillis()));
 
         for (SzcoreEvent initEvent : events) {
-            eventPublisher.process(initEvent);
+            oscEventPublisher.process(initEvent);
             ThreadUtil.doSleep(Thread.currentThread(), Consts.DEFAULT_THREAD_SLEEP_MILLIS);
         }
 
     }
 
     public void addInPort(int port){
-        eventReceiver.addListener(serverEventReceiver, port);
+        oscEventReceiver.addListener(serverEventReceiver, port);
     }
 
     public void logEvent(SzcoreEvent event){
@@ -609,7 +645,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
-    public void subscribe(WebScoreEventListener eventListener) {
+    public void subscribe(WebScoreStateListener eventListener) {
         scoreProcessor.subscribe(eventListener);
     }
 

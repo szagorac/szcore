@@ -17,7 +17,9 @@ import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.Stave;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.Transport;
+import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.publish.OscPublishProcessor;
+import com.xenaksys.szcore.publish.WebPublisherProcessor;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.time.TstBeatTimeStrategy;
@@ -42,10 +44,11 @@ public class TestScoreProcessorLoad {
     TransportFactory transportFactory;
 
     @Before
-    public void init(){
+    public void init() {
 
         MutableClock clock = new TstClock();
         OscPublisher oscPublisher = new OscPublishProcessor();
+        WebPublisher webPublisher = new WebPublisherProcessor();
         Scheduler scheduler = new TstScheduler();
         BeatTimeStrategy beatTimeStrategy = new TstBeatTimeStrategy();
         transportFactory = new TransportFactory(clock, scheduler, beatTimeStrategy);
@@ -53,12 +56,12 @@ public class TestScoreProcessorLoad {
         EventFactory eventFactory = new EventFactory();
         TaskFactory taskFactory = new TaskFactory();
 
-        scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, oscPublisher, scheduler, eventFactory, taskFactory);
+        scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory);
     }
 
     @Ignore
     @Test
-    public void testLoadScore(){
+    public void testLoadScore() {
         String filePath = "testScoreSingleInstrument.csv";
 
         try {
@@ -104,14 +107,14 @@ public class TestScoreProcessorLoad {
         List<SzcoreEvent> clockClockTickEvents = score.getClockTickEvents(transportId);
         Assert.assertNotNull(clockClockTickEvents);
         Assert.assertEquals(2, clockClockTickEvents.size());
-        for(SzcoreEvent event : clockClockTickEvents){
+        for (SzcoreEvent event : clockClockTickEvents) {
             LOG.info("Found clockClockTickEvents event: " + event);
         }
 
         List<SzcoreEvent> clockBaseBeatEvents = score.getClockBaseBeatEvents(transportId);
         Assert.assertNotNull(clockBaseBeatEvents);
         Assert.assertEquals(2, clockBaseBeatEvents.size());
-        for(SzcoreEvent event : clockBaseBeatEvents){
+        for (SzcoreEvent event : clockBaseBeatEvents) {
             LOG.info("Found clockBaseBeatEvents event: " + event);
         }
 
@@ -121,10 +124,10 @@ public class TestScoreProcessorLoad {
 
         int[] keys = scoreBaseBeatEvents.keys();
         Arrays.sort(keys);
-        for(int key : keys){
+        for (int key : keys) {
             List<SzcoreEvent> events = scoreBaseBeatEvents.get(key);
-            if(events != null){
-                for(SzcoreEvent event : events){
+            if (events != null) {
+                for (SzcoreEvent event : events) {
                     LOG.info("Found event for base beat: " + key + " event: " + event);
                 }
             }
@@ -135,7 +138,7 @@ public class TestScoreProcessorLoad {
 
     @Ignore
     @Test
-    public void testLoadMultiInstrumentScore(){
+    public void testLoadMultiInstrumentScore() {
         String filePath = "testScoreMultiInstrument.csv";
 
         try {
@@ -153,7 +156,7 @@ public class TestScoreProcessorLoad {
         Collection<Instrument> instruments = score.getInstruments();
         Assert.assertEquals(2, instruments.size());
 
-        for(Instrument instrument : instruments) {
+        for (Instrument instrument : instruments) {
             List<Stave> staves = score.getInstrumentStaves(instrument.getId());
             Assert.assertEquals(2, staves.size());
 
@@ -182,14 +185,14 @@ public class TestScoreProcessorLoad {
         List<SzcoreEvent> clockClockTickEvents = score.getClockTickEvents(transportId);
         Assert.assertNotNull(clockClockTickEvents);
         Assert.assertEquals(12, clockClockTickEvents.size());
-        for(SzcoreEvent event : clockClockTickEvents){
+        for (SzcoreEvent event : clockClockTickEvents) {
             LOG.info("Found clockClockTickEvents event: " + event);
         }
 
         List<SzcoreEvent> clockBaseBeatEvents = score.getClockBaseBeatEvents(transportId);
         Assert.assertNotNull(clockBaseBeatEvents);
         Assert.assertEquals(8, clockBaseBeatEvents.size());
-        for(SzcoreEvent event : clockBaseBeatEvents){
+        for (SzcoreEvent event : clockBaseBeatEvents) {
             LOG.info("Found clockBaseBeatEvents event: " + event);
         }
 
@@ -199,10 +202,10 @@ public class TestScoreProcessorLoad {
 
         int[] keys = scoreBaseBeatEvents.keys();
         Arrays.sort(keys);
-        for(int key : keys){
+        for (int key : keys) {
             List<SzcoreEvent> events = scoreBaseBeatEvents.get(key);
-            if(events != null){
-                for(SzcoreEvent event : events){
+            if (events != null) {
+                for (SzcoreEvent event : events) {
                     LOG.info("Found event for base beat: " + key + " event: " + event);
                 }
             }

@@ -11,8 +11,10 @@ import com.xenaksys.szcore.model.Scheduler;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.Timer;
 import com.xenaksys.szcore.model.WaitStrategy;
+import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.publish.OscPublishProcessor;
+import com.xenaksys.szcore.publish.WebPublisherProcessor;
 import com.xenaksys.szcore.score.ScoreProcessorImpl;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.BasicScheduler;
@@ -40,6 +42,7 @@ public class TestOscPublish {
     ScoreProcessor scoreProcessor;
     TransportFactory transportFactory;
     OscPublisher oscPublisher;
+    WebPublisher webPublisher;
 
     boolean isSkip = true;
 
@@ -50,6 +53,7 @@ public class TestOscPublish {
         MutableClock clock = new MutableNanoClock();
         Timer timer = new BasicTimer(waitStrategy, clock);
         oscPublisher = new OscPublishProcessor();
+        webPublisher = new WebPublisherProcessor();
         Scheduler scheduler = new BasicScheduler(clock, timer);
         BeatTimeStrategy beatTimeStrategy = new SimpleBeatTimeStrategy();
         transportFactory = new TransportFactory(clock, scheduler, beatTimeStrategy);
@@ -57,7 +61,7 @@ public class TestOscPublish {
         EventFactory eventFactory = new EventFactory();
         TaskFactory taskFactory = new TaskFactory();
 
-        scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, oscPublisher, scheduler, eventFactory, taskFactory);
+        scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory);
     }
 
     @Test

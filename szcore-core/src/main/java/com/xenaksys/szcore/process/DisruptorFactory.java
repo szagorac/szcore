@@ -5,6 +5,7 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventContainer;
 import com.xenaksys.szcore.event.IncomingOscEvent;
 import com.xenaksys.szcore.event.OscEvent;
+import com.xenaksys.szcore.event.OutgoingWebEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +15,8 @@ public class DisruptorFactory {
     static final Logger LOG = LoggerFactory.getLogger(DisruptorFactory.class);
 
     private static final AtomicInteger DEFAULT_POOL_NUMBER = new AtomicInteger(1);
-    private static final AtomicInteger OUT_POOL_NUMBER = new AtomicInteger(1);
+    private static final AtomicInteger OSC_OUT_POOL_NUMBER = new AtomicInteger(1);
+    private static final AtomicInteger WEB_OUT_POOL_NUMBER = new AtomicInteger(1);
     private static final AtomicInteger IN_POOL_NUMBER = new AtomicInteger(1);
     private static final AtomicInteger WEB_IN_POOL_NUMBER = new AtomicInteger(1);
 
@@ -26,10 +28,18 @@ public class DisruptorFactory {
         return new Disruptor<>(eventFactory, bufferSize, threadFactory);
     }
 
-    public static Disruptor<OscEvent> createOutDisruptor() {
+    public static Disruptor<OscEvent> createOscOutDisruptor() {
         int bufferSize = 512;
         OscEventFactory eventFactory = new OscEventFactory();
-        SzcoreThreadFactory threadFactory = new SzcoreThreadFactory(Consts.DISRUPTOR_OUT_THREAD_FACTORY + "_" +  OUT_POOL_NUMBER.getAndIncrement());
+        SzcoreThreadFactory threadFactory = new SzcoreThreadFactory(Consts.DISRUPTOR_OSC_OUT_THREAD_FACTORY + "_" +  OSC_OUT_POOL_NUMBER.getAndIncrement());
+        LOG.info("Created thread factory: " + threadFactory.getNamePrefix());
+        return new Disruptor<>(eventFactory, bufferSize, threadFactory);
+    }
+
+    public static Disruptor<OutgoingWebEvent> createWebOutDisruptor() {
+        int bufferSize = 512;
+        WebEventFactory eventFactory = new WebEventFactory();
+        SzcoreThreadFactory threadFactory = new SzcoreThreadFactory(Consts.DISRUPTOR_WEB_OUT_THREAD_FACTORY + "_" +  WEB_OUT_POOL_NUMBER.getAndIncrement());
         LOG.info("Created thread factory: " + threadFactory.getNamePrefix());
         return new Disruptor<>(eventFactory, bufferSize, threadFactory);
     }

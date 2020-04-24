@@ -2,29 +2,101 @@ package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.ValueScaler;
-import com.xenaksys.szcore.event.*;
-import com.xenaksys.szcore.model.*;
-import com.xenaksys.szcore.model.id.*;
+import com.xenaksys.szcore.event.BeatScriptEvent;
+import com.xenaksys.szcore.event.DateTickEvent;
+import com.xenaksys.szcore.event.ElementAlphaEvent;
+import com.xenaksys.szcore.event.ElementColorEvent;
+import com.xenaksys.szcore.event.ElementSelectedEvent;
+import com.xenaksys.szcore.event.ElementYPositionEvent;
+import com.xenaksys.szcore.event.EventFactory;
+import com.xenaksys.szcore.event.EventType;
+import com.xenaksys.szcore.event.IncomingWebEvent;
+import com.xenaksys.szcore.event.IncomingWebEventType;
+import com.xenaksys.szcore.event.MusicEvent;
+import com.xenaksys.szcore.event.MusicEventType;
+import com.xenaksys.szcore.event.OscEvent;
+import com.xenaksys.szcore.event.OscEventType;
+import com.xenaksys.szcore.event.OscStaveActivateEvent;
+import com.xenaksys.szcore.event.OscStaveTempoEvent;
+import com.xenaksys.szcore.event.OscStopEvent;
+import com.xenaksys.szcore.event.OutgoingWebEvent;
+import com.xenaksys.szcore.event.PrecountBeatSetupEvent;
+import com.xenaksys.szcore.event.PrepStaveChangeEvent;
+import com.xenaksys.szcore.event.StaveActiveChangeEvent;
+import com.xenaksys.szcore.event.StaveClockTickEvent;
+import com.xenaksys.szcore.event.StaveDateTickEvent;
+import com.xenaksys.szcore.event.StaveDyTickEvent;
+import com.xenaksys.szcore.event.StaveStartMarkEvent;
+import com.xenaksys.szcore.event.StaveYPositionEvent;
+import com.xenaksys.szcore.event.StopEvent;
+import com.xenaksys.szcore.event.TempoChangeEvent;
+import com.xenaksys.szcore.event.TimeSigChangeEvent;
+import com.xenaksys.szcore.event.TransitionEvent;
+import com.xenaksys.szcore.event.TransportEvent;
+import com.xenaksys.szcore.event.TransportPositionEvent;
+import com.xenaksys.szcore.event.WebScoreEvent;
+import com.xenaksys.szcore.event.WebScoreEventType;
+import com.xenaksys.szcore.event.WebScoreResetEvent;
+import com.xenaksys.szcore.event.WebStartEvent;
+import com.xenaksys.szcore.model.Bar;
+import com.xenaksys.szcore.model.Beat;
+import com.xenaksys.szcore.model.Id;
+import com.xenaksys.szcore.model.Instrument;
+import com.xenaksys.szcore.model.MusicTask;
+import com.xenaksys.szcore.model.MutableClock;
+import com.xenaksys.szcore.model.OscPublisher;
+import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.Scheduler;
+import com.xenaksys.szcore.model.Score;
+import com.xenaksys.szcore.model.ScoreProcessor;
+import com.xenaksys.szcore.model.Script;
+import com.xenaksys.szcore.model.ScriptType;
+import com.xenaksys.szcore.model.Stave;
+import com.xenaksys.szcore.model.SzcoreEvent;
+import com.xenaksys.szcore.model.Tempo;
+import com.xenaksys.szcore.model.TempoImpl;
+import com.xenaksys.szcore.model.TempoModifier;
+import com.xenaksys.szcore.model.TimeSignature;
+import com.xenaksys.szcore.model.Transition;
+import com.xenaksys.szcore.model.Transport;
+import com.xenaksys.szcore.model.TransportListener;
+import com.xenaksys.szcore.model.WebPublisher;
+import com.xenaksys.szcore.model.id.BarId;
+import com.xenaksys.szcore.model.id.BeatId;
+import com.xenaksys.szcore.model.id.PageId;
+import com.xenaksys.szcore.model.id.StaveId;
+import com.xenaksys.szcore.model.id.StrId;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.task.WebScoreEventTask;
 import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
-import com.xenaksys.szcore.web.WebScoreEventListener;
 import com.xenaksys.szcore.web.WebScoreState;
+import com.xenaksys.szcore.web.WebScoreStateListener;
 import gnu.trove.map.TIntObjectMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.InetAddress;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static com.xenaksys.szcore.Consts.*;
+import static com.xenaksys.szcore.Consts.CONTENT_LINE_Y_MAX;
+import static com.xenaksys.szcore.Consts.DYNAMICS_LINE_Y_MAX;
+import static com.xenaksys.szcore.Consts.POSITION_LINE_Y_MAX;
+import static com.xenaksys.szcore.Consts.PRESSURE_LINE_Y_MAX;
+import static com.xenaksys.szcore.Consts.SPEED_LINE_Y_MAX;
 
 public class ScoreProcessorImpl implements ScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(ScoreProcessorImpl.class);
@@ -34,6 +106,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private final TransportFactory transportFactory;
     private final MutableClock clock;
     private final OscPublisher oscPublisher;
+    private final WebPublisher webPublisher;
     private final Scheduler scheduler;
     private final EventFactory eventFactory;
     private final TaskFactory taskFactory;
@@ -50,7 +123,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private Map<Id, InstrumentBeatTracker> instrumentBeatTrackers = new HashMap<>();
     private BeatFollowerPositionStrategy beatFollowerPositionStrategy = new BeatFollowerPositionStrategy();
     private List<SzcoreEngineEventListener> scoreEventListeners = new CopyOnWriteArrayList<>();
-    protected List<WebScoreEventListener> webScoreEventListeners = new CopyOnWriteArrayList<>();
+    protected List<WebScoreStateListener> webScoreStateListeners = new CopyOnWriteArrayList<>();
     private Map<Id, TempoModifier> transportTempoModifiers = new ConcurrentHashMap<>();
 
     private ValueScaler dynamicsValueScaler = new ValueScaler(0.0, 100.0, 0.0, DYNAMICS_LINE_Y_MAX);
@@ -67,10 +140,11 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private WebScore webScore = null;
 
     public ScoreProcessorImpl(TransportFactory transportFactory, MutableClock clock, OscPublisher oscPublisher,
-                              Scheduler scheduler, EventFactory eventFactory, TaskFactory taskFactory) {
+                              WebPublisher webPublisher, Scheduler scheduler, EventFactory eventFactory, TaskFactory taskFactory) {
         this.transportFactory = transportFactory;
         this.clock = clock;
         this.oscPublisher = oscPublisher;
+        this.webPublisher = webPublisher;
         this.scheduler = scheduler;
         this.eventFactory = eventFactory;
         this.taskFactory = taskFactory;
@@ -1664,8 +1738,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     @Override
-    public void subscribe(WebScoreEventListener eventListener) {
-        webScoreEventListeners.add(eventListener);
+    public void subscribe(WebScoreStateListener eventListener) {
+        webScoreStateListeners.add(eventListener);
     }
 
     @Override
@@ -1814,13 +1888,13 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
     }
     @Override
-    public void onWebScoreEvent(WebScoreState webEvent) throws Exception {
-        notifyListeners(webEvent);
+    public void onWebScoreStateChange(WebScoreState webScoreState) throws Exception {
+        notifyListeners(webScoreState);
     }
 
     @Override
     public void onOutgoingWebEvent(OutgoingWebEvent webEvent) throws Exception {
-        notifyListeners(webEvent);
+        publishWebEvent(webEvent);
     }
 
     private void processElementSelected(ElementSelectedEvent webEvent) {
@@ -1880,14 +1954,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     private void notifyListeners(WebScoreState webScoreState) {
-        for(WebScoreEventListener listener : webScoreEventListeners){
-            listener.onWebScoreEvent(webScoreState);
-        }
-    }
-
-    private void notifyListeners(OutgoingWebEvent webEvent) {
-        for(WebScoreEventListener listener : webScoreEventListeners){
-            listener.onOutgoingWebEvent(webEvent);
+        for(WebScoreStateListener listener : webScoreStateListeners){
+            listener.onWebScoreStateChange(webScoreState);
         }
     }
 
@@ -2235,6 +2303,10 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void publishOscEvent(OscEvent event) {
         oscPublisher.process(event);
+    }
+
+    private void publishWebEvent(OutgoingWebEvent event) {
+        webPublisher.process(event);
     }
 
     private void processInitEvents(List<SzcoreEvent> initEvents) {

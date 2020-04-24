@@ -5,8 +5,8 @@ import com.xenaksys.szcore.event.OutgoingWebEvent;
 import com.xenaksys.szcore.event.WebScoreEvent;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.score.WebScore;
-import com.xenaksys.szcore.web.WebScoreEventListener;
 import com.xenaksys.szcore.web.WebScoreState;
+import com.xenaksys.szcore.web.WebScoreStateListener;
 
 import java.io.File;
 import java.util.LinkedList;
@@ -32,7 +32,7 @@ public interface  ScoreProcessor extends Processor {
 
     void subscribe(SzcoreEngineEventListener eventListener);
 
-    void subscribe(WebScoreEventListener eventListener);
+    void subscribe(WebScoreStateListener eventListener);
 
     void setTempoModifier(Id transportId, TempoModifier tempoModifier);
 
@@ -74,7 +74,7 @@ public interface  ScoreProcessor extends Processor {
 
     void onIncomingWebEvent(IncomingWebEvent webEvent) throws Exception;
 
-    void onWebScoreEvent(WebScoreState webEvent) throws Exception;
+    void onWebScoreStateChange(WebScoreState webScoreState) throws Exception;
 
     void onOutgoingWebEvent(OutgoingWebEvent webEvent) throws Exception;
 

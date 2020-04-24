@@ -1,6 +1,5 @@
 package com.xenaksys.szcore.server.web;
 
-import com.google.gson.Gson;
 import com.xenaksys.szcore.server.SzcoreServer;
 import com.xenaksys.szcore.server.web.handler.ZsHttpHandler;
 import com.xenaksys.szcore.server.web.handler.ZsWsConnectionCallback;
@@ -21,16 +20,19 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Set;
 
-import static com.xenaksys.szcore.Consts.*;
-import static io.undertow.Handlers.*;
+import static com.xenaksys.szcore.Consts.INDEX_HTML;
+import static com.xenaksys.szcore.Consts.WEB_PATH_HTTP;
+import static com.xenaksys.szcore.Consts.WEB_PATH_SSE;
+import static com.xenaksys.szcore.Consts.WEB_PATH_STATIC;
+import static com.xenaksys.szcore.Consts.WEB_PATH_WEBSOCKETS;
+import static io.undertow.Handlers.resource;
+import static io.undertow.Handlers.serverSentEvents;
+import static io.undertow.Handlers.websocket;
 
 public class WebServer {
     static final Logger LOG = LoggerFactory.getLogger(WebServer.class);
-
-    private static final Gson GSON = new Gson();
 
     private final String staticDataPath;
     private final int port;
@@ -41,7 +43,6 @@ public class WebServer {
     private Undertow undertow = null;
     private ServerSentEventHandler sseHandler = null;
     private WebSocketProtocolHandshakeHandler wsHandler = null;
-    private List<WebSocketChannel> channels = new CopyOnWriteArrayList<>();
 
     public WebServer(String staticDataPath, int port, int transferMinSize, SzcoreServer szcoreServer) {
         this.staticDataPath = staticDataPath;
@@ -82,10 +83,10 @@ public class WebServer {
         HttpHandler staticDataHandler =  resource(new ClassPathResourceManager(WebServer.class.getClassLoader(), ""))
                 .addWelcomeFiles(INDEX_HTML);
 
-        sseHandler = serverSentEvents();
+        this.sseHandler = serverSentEvents();
 
         WebSocketConnectionCallback wsConnectionCallback = new ZsWsConnectionCallback(this, szcoreServer);
-        wsHandler = websocket(wsConnectionCallback);
+        this.wsHandler = websocket(wsConnectionCallback);
 
         if(staticDataPath != null) {
             Path path = Paths.get(staticDataPath);
@@ -109,26 +110,37 @@ public class WebServer {
     }
 
     public void pushToChannel(String data, WebSocketChannel channel) {
-        for (WebSocketChannel session : channel.getPeerConnections()) {
-            WebSockets.sendText(data, session, null);
-        }
+        LOG.info("pushToChannel: ip: {}, isCloseInitiatedByRemotePeer: {}", channel.getSourceAddress(), channel.isCloseInitiatedByRemotePeer());
+        WebSockets.sendText(data, channel, null);
     }
 
     public void pushToAll(String data) {
+        if(wsHandler != null && data != null) {
+            Set<WebSocketChannel>  channels =  wsHandler.getPeerConnections();
+            for (WebSocketChannel channel : channels) {
+                pushToChannel(data, channel);
+            }
+        }
+
         if(sseHandler == null || data == null) {
-            return;
-        }
-
-        for(WebSocketChannel channel : channels) {
-            pushToChannel(data, channel);
-        }
-
-        for(ServerSentEventConnection sseConnection : sseHandler.getConnections()) {
-            sseConnection.send(data);
+            for(ServerSentEventConnection sseConnection : sseHandler.getConnections()) {
+                sseConnection.send(data);
+            }
         }
     }
 
-    public void addWsChannel(WebSocketChannel channel) {
-        channels.add(channel);
+    public void onChannelConnected(WebSocketChannel channel) {
+        logConnectedWebsockets();
+    }
+
+    public void logConnectedWebsockets() {
+        if(wsHandler == null) {
+            return;
+        }
+
+        Set<WebSocketChannel>  channels =  wsHandler.getPeerConnections();
+        for (WebSocketChannel channel : channels) {
+            LOG.info("logConnectedWebsockets: channel: {}", channel);
+        }
     }
 }

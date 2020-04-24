@@ -1,8 +1,19 @@
 package com.xenaksys.szcore.web;
 
 import com.google.gson.Gson;
-import com.xenaksys.szcore.event.*;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.event.ElementSelectedEvent;
+import com.xenaksys.szcore.event.EventFactory;
+import com.xenaksys.szcore.event.IncomingWebEvent;
+import com.xenaksys.szcore.event.IncomingWebEventType;
+import com.xenaksys.szcore.event.OutgoingWebEvent;
+import com.xenaksys.szcore.event.OutgoingWebEventType;
+import com.xenaksys.szcore.event.WebStartEvent;
+import com.xenaksys.szcore.model.Clock;
+import com.xenaksys.szcore.model.EventService;
+import com.xenaksys.szcore.model.Processor;
+import com.xenaksys.szcore.model.ScoreService;
+import com.xenaksys.szcore.model.SzcoreEvent;
+import com.xenaksys.szcore.model.ZsResponseType;
 import com.xenaksys.szcore.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,10 +21,21 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.xenaksys.szcore.Consts.*;
+import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.Consts.WEB_EVENT_ELEMENT_ID;
+import static com.xenaksys.szcore.Consts.WEB_EVENT_IS_SELECTED;
+import static com.xenaksys.szcore.Consts.WEB_EVENT_LAST_STATE_UPDATE_TIME;
+import static com.xenaksys.szcore.Consts.WEB_EVENT_NAME;
+import static com.xenaksys.szcore.Consts.WEB_EVENT_SENT_TIME_NAME;
+import static com.xenaksys.szcore.Consts.WEB_EVENT_TIME_NAME;
+import static com.xenaksys.szcore.Consts.WEB_RESPONSE_MESSAGE;
+import static com.xenaksys.szcore.Consts.WEB_RESPONSE_STATE;
+import static com.xenaksys.szcore.Consts.WEB_RESPONSE_SUBMITTED;
+import static com.xenaksys.szcore.Consts.WEB_RESPONSE_TIME;
+import static com.xenaksys.szcore.Consts.WEB_RESPONSE_TYPE;
 import static com.xenaksys.szcore.event.EventType.WEB_IN;
 
-public class WebProcessor implements Processor, WebScoreEventListener {
+public class WebProcessor implements Processor, WebScoreStateListener {
     static final Logger LOG = LoggerFactory.getLogger(WebProcessor.class);
 
     private static final Gson GSON = new Gson();
@@ -166,7 +188,7 @@ public class WebProcessor implements Processor, WebScoreEventListener {
     }
 
     @Override
-    public void onWebScoreEvent(WebScoreState webScoreState) {
+    public void onWebScoreStateChange(WebScoreState webScoreState) {
         if (webScoreState == null) {
             return;
         }
@@ -181,7 +203,7 @@ public class WebProcessor implements Processor, WebScoreEventListener {
         this.stateUpdateTime = getClock().getSystemTimeMillis();
     }
 
-    @Override
+
     public void onOutgoingWebEvent(OutgoingWebEvent webEvent) {
         if (webEvent == null) {
             return;

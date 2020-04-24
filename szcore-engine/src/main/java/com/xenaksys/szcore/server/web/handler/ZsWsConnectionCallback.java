@@ -21,26 +21,19 @@ public class ZsWsConnectionCallback implements WebSocketConnectionCallback {
         this.szcoreServer = szcoreServer;
     }
 
-
     @Override
     public void onConnect(WebSocketHttpExchange exchange, WebSocketChannel channel) {
-
-        webServer.addWsChannel(channel);
-
+        webServer.onChannelConnected(channel);
+        LOG.info("onConnect: connected channel: {}", channel.getSourceAddress());
         channel.getReceiveSetter().set(new AbstractReceiveListener() {
             @Override
             protected void onFullTextMessage(WebSocketChannel channel, BufferedTextMessage message) {
                 final String messageData = message.getData();
+                LOG.info("onFullTextMessage: received message: {}", messageData);
                 String out = szcoreServer.onWsRequest(messageData);
-                webServer.pushToAll(out);
-
-//                String data = message.getData();
-//                lastReceivedMessage = data;
-//                LOG.info("Received data: "+data);
-//                WebSockets.sendText(data, channel, null);
-//                for (WebSocketChannel session : channel.getPeerConnections()) {
-//                    WebSockets.sendText(messageData, session, null);
-//                }
+                if(out != null) {
+                    webServer.pushToAll(out);
+                }
             }
         });
         channel.resumeReceives();

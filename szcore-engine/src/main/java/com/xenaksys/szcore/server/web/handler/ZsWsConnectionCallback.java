@@ -32,7 +32,7 @@ public class ZsWsConnectionCallback implements WebSocketConnectionCallback {
                 LOG.info("onFullTextMessage: received message: {}", messageData);
                 String out = szcoreServer.onWsRequest(messageData);
                 if(out != null) {
-                    webServer.pushToAll(out);
+                    webServer.pushToChannel(out, channel);
                 }
             }
         });

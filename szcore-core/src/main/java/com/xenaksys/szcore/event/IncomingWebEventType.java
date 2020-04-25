@@ -4,4 +4,6 @@ public enum IncomingWebEventType {
     GET_SERVER_STATE,
     ELEMENT_SELECTED,
     WEB_START,
+    POLL,
+    CONNECTIONS_UPDATE,
 }

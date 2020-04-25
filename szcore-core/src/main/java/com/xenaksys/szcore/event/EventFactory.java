@@ -9,10 +9,12 @@ import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.score.WebScoreScript;
+import com.xenaksys.szcore.web.WebConnection;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class EventFactory {
 
@@ -249,6 +251,14 @@ public class EventFactory {
     public ElementSelectedEvent createElementSelectedEvent(String elementId, boolean isSelected, String eventId, String sourceAddr, String requestPath,
                                                            long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
         return new ElementSelectedEvent(elementId, isSelected, sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
+    }
+
+    public UpdateWebConnectionsEvent createUpdateWebConnectionsEvent(Set<WebConnection> clientConnections, long creationTime) {
+        return new UpdateWebConnectionsEvent(clientConnections, creationTime);
+    }
+
+    public WebPollEvent createWebPollEvent(String eventId, String sourceAddr, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new WebPollEvent(eventId, sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
     public WebStartEvent createWebStartEvent(String eventId, String sourceAddr, String requestPath,

@@ -2,16 +2,39 @@ package com.xenaksys.szcore.web;
 
 import gnu.trove.stack.array.TLongArrayStack;
 
-public class WebClientState {
+public class WebClientInfo {
     private final String clientAddr;
+
+    private WebConnectionType connectionType;
+    private String userAgent;
     private TLongArrayStack latencies = new TLongArrayStack(100);
 
-    public WebClientState(String clientAddr) {
+    public WebClientInfo(String clientAddr) {
         this.clientAddr = clientAddr;
+    }
+
+    public WebConnectionType getConnectionType() {
+        return connectionType;
+    }
+
+    public void setConnectionType(WebConnectionType connectionType) {
+        this.connectionType = connectionType;
     }
 
     public String getClientAddr() {
         return clientAddr;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
+    }
+
+    public void setUserAgent(String userAgent) {
+        this.userAgent = userAgent;
+    }
+
+    public WebConnection getConnection() {
+        return new WebConnection(clientAddr, connectionType);
     }
 
     public long getLatency() {
@@ -38,4 +61,5 @@ public class WebClientState {
         }
         this.latencies.push(latency);
     }
+
 }

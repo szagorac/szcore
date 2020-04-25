@@ -4,6 +4,8 @@ import com.xenaksys.szcore.event.IncomingWebEvent;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.score.WebScore;
 import com.xenaksys.szcore.util.NetUtil;
+import com.xenaksys.szcore.web.WebConnection;
+import com.xenaksys.szcore.web.WebConnectionType;
 import com.xenaksys.szcore.web.WebScoreStateListener;
 import com.xenaksys.szcore.web.ZsHttpRequest;
 import com.xenaksys.szcore.web.ZsHttpResponse;
@@ -11,6 +13,7 @@ import com.xenaksys.szcore.web.ZsHttpResponse;
 import java.io.File;
 import java.net.InetAddress;
 import java.util.List;
+import java.util.Set;
 
 public interface ScoreService {
 
@@ -96,6 +99,8 @@ public interface ScoreService {
 
     String onWsRequest(String data);
 
+    void onWebConnection(String sourceId, WebConnectionType type, String userAgent);
+
     void startWebServer();
 
     void stopWebServer();
@@ -105,4 +110,6 @@ public interface ScoreService {
     void onIncomingWebEvent(IncomingWebEvent webEvent);
 
     void pushToWebClients(String data);
+
+    void updateWebConnections(Set<WebConnection> connections);
 }

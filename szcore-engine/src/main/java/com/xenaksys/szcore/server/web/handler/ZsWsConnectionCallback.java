@@ -23,7 +23,7 @@ public class ZsWsConnectionCallback implements WebSocketConnectionCallback {
 
     @Override
     public void onConnect(WebSocketHttpExchange exchange, WebSocketChannel channel) {
-        webServer.onChannelConnected(channel);
+        webServer.onWsChannelConnected(channel, exchange);
         LOG.info("onConnect: connected channel: {}", channel.getSourceAddress());
         channel.getReceiveSetter().set(new AbstractReceiveListener() {
             @Override

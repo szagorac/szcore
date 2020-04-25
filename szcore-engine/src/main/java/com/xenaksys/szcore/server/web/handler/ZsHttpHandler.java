@@ -33,10 +33,9 @@ public class ZsHttpHandler implements HttpHandler {
 
 
         String requestPath = exchange.getRequestPath();
-        String sourceAddr = exchange.getSourceAddress().getAddress().getHostAddress();
-        String hostName = exchange.getSourceAddress().getHostName();
+        String sourceId = exchange.getSourceAddress().toString();
         HttpString method = exchange.getRequestMethod();
-        LOG.info("Received {} request {} {} from {}", method, requestPath, exchange.getQueryString(), sourceAddr);
+        LOG.info("Received {} request {} {} from {}", method, requestPath, exchange.getQueryString(), sourceId);
 
         if(method.equals(POST_STR)) {
             if (exchange.isInIoThread()) {
@@ -44,7 +43,7 @@ public class ZsHttpHandler implements HttpHandler {
                 return;
             }
 
-            ZsHttpRequest zsRequest = new ZsHttpRequest(requestPath, sourceAddr);
+            ZsHttpRequest zsRequest = new ZsHttpRequest(requestPath, sourceId);
             FormParserFactory.Builder builder = FormParserFactory.builder();
 
             final FormDataParser formDataParser = builder.build().createParser(exchange);
@@ -68,7 +67,7 @@ public class ZsHttpHandler implements HttpHandler {
             exchange.endExchange();
 
         } else {
-            ZsHttpRequest zsRequest = new ZsHttpRequest(requestPath, sourceAddr);
+            ZsHttpRequest zsRequest = new ZsHttpRequest(requestPath, sourceId);
 
             Map<String, Deque<String>> queryParams = exchange.getQueryParameters();
             for(String key : queryParams.keySet()) {

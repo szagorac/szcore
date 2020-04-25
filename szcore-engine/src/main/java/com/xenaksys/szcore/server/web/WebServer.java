@@ -2,33 +2,41 @@ package com.xenaksys.szcore.server.web;
 
 import com.xenaksys.szcore.server.SzcoreServer;
 import com.xenaksys.szcore.server.web.handler.ZsHttpHandler;
+import com.xenaksys.szcore.server.web.handler.ZsSseConnection;
+import com.xenaksys.szcore.server.web.handler.ZsSseConnectionCallback;
+import com.xenaksys.szcore.server.web.handler.ZsSseHandler;
 import com.xenaksys.szcore.server.web.handler.ZsWsConnectionCallback;
+import com.xenaksys.szcore.web.WebConnection;
+import com.xenaksys.szcore.web.WebConnectionType;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.resource.ClassPathResourceManager;
 import io.undertow.server.handlers.resource.PathResourceManager;
 import io.undertow.server.handlers.sse.ServerSentEventConnection;
-import io.undertow.server.handlers.sse.ServerSentEventHandler;
+import io.undertow.util.HttpString;
 import io.undertow.websockets.WebSocketConnectionCallback;
 import io.undertow.websockets.WebSocketProtocolHandshakeHandler;
 import io.undertow.websockets.core.WebSocketChannel;
 import io.undertow.websockets.core.WebSockets;
+import io.undertow.websockets.spi.WebSocketHttpExchange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.SocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.Set;
 
 import static com.xenaksys.szcore.Consts.INDEX_HTML;
+import static com.xenaksys.szcore.Consts.WEB_HTTP_HEADER_USER_AGENT;
 import static com.xenaksys.szcore.Consts.WEB_PATH_HTTP;
 import static com.xenaksys.szcore.Consts.WEB_PATH_SSE;
 import static com.xenaksys.szcore.Consts.WEB_PATH_STATIC;
 import static com.xenaksys.szcore.Consts.WEB_PATH_WEBSOCKETS;
 import static io.undertow.Handlers.resource;
-import static io.undertow.Handlers.serverSentEvents;
 import static io.undertow.Handlers.websocket;
 
 public class WebServer {
@@ -41,7 +49,7 @@ public class WebServer {
 
     private volatile boolean isRunning = false;
     private Undertow undertow = null;
-    private ServerSentEventHandler sseHandler = null;
+    private ZsSseHandler sseHandler = null;
     private WebSocketProtocolHandshakeHandler wsHandler = null;
 
     public WebServer(String staticDataPath, int port, int transferMinSize, SzcoreServer szcoreServer) {
@@ -83,7 +91,7 @@ public class WebServer {
         HttpHandler staticDataHandler =  resource(new ClassPathResourceManager(WebServer.class.getClassLoader(), ""))
                 .addWelcomeFiles(INDEX_HTML);
 
-        this.sseHandler = serverSentEvents();
+        this.sseHandler = new ZsSseHandler(new ZsSseConnectionCallback(this));
 
         WebSocketConnectionCallback wsConnectionCallback = new ZsWsConnectionCallback(this, szcoreServer);
         this.wsHandler = websocket(wsConnectionCallback);
@@ -115,6 +123,7 @@ public class WebServer {
     }
 
     public void pushToAll(String data) {
+        LOG.info("pushToAll: data: {}", data);
         if(wsHandler != null && data != null) {
             Set<WebSocketChannel>  channels =  wsHandler.getPeerConnections();
             for (WebSocketChannel channel : channels) {
@@ -122,25 +131,77 @@ public class WebServer {
             }
         }
 
-        if(sseHandler == null || data == null) {
-            for(ServerSentEventConnection sseConnection : sseHandler.getConnections()) {
+        if(sseHandler != null && data != null) {
+            Set<ZsSseConnection> connections = sseHandler.getConnections();
+            for(ZsSseConnection sseConnection : connections) {
                 sseConnection.send(data);
             }
         }
     }
 
-    public void onChannelConnected(WebSocketChannel channel) {
-        logConnectedWebsockets();
-    }
-
-    public void logConnectedWebsockets() {
-        if(wsHandler == null) {
+    public void onWsChannelConnected(WebSocketChannel channel, WebSocketHttpExchange exchange) {
+        if(channel == null) {
             return;
         }
-
-        Set<WebSocketChannel>  channels =  wsHandler.getPeerConnections();
-        for (WebSocketChannel channel : channels) {
-            LOG.info("logConnectedWebsockets: channel: {}", channel);
+        try {
+            String userAgent = exchange.getRequestHeader(WEB_HTTP_HEADER_USER_AGENT);
+            SocketAddress sourceAddr = channel.getPeerAddress();
+            onConnection(sourceAddr, WebConnectionType.WS, userAgent);
+            updateConnections();
+        } catch (Exception e) {
+            LOG.error("onWsChannelConnected: faled to process new Websocket connection", e);
         }
+    }
+
+    public void updateConnections() {
+        Set<WebConnection> connections = new HashSet<>();
+        connections.addAll(getWsConnections());
+        connections.addAll(getSseConnections());
+        szcoreServer.updateWebConnections(connections);
+    }
+
+    public Set<WebConnection> getWsConnections() {
+        Set<WebConnection> webConnections = new HashSet<>();
+        Set<WebSocketChannel>  channels =  wsHandler.getPeerConnections();
+        for (WebSocketChannel c : channels) {
+            String clientAddr = c.getPeerAddress().toString();
+            WebConnection webConnection = new WebConnection(clientAddr, WebConnectionType.WS);
+            webConnections.add(webConnection);
+        }
+        return webConnections;
+    }
+
+    public void onSseChannelConnected(ServerSentEventConnection connection) {
+        if(!(connection instanceof ZsSseConnection)) {
+            return;
+        }
+        try {
+            ZsSseConnection zsConn = (ZsSseConnection) connection;
+            SocketAddress sourceAddr = zsConn.getExchange().getSourceAddress();
+            String userAgent = zsConn.getExchange().getRequestHeaders().getFirst(HttpString.tryFromString(WEB_HTTP_HEADER_USER_AGENT));
+            onConnection(sourceAddr, WebConnectionType.SSE, userAgent);
+            updateConnections();
+        } catch (Exception e) {
+            LOG.error("onSseChannelConnected: faled to process new SSE connection", e);
+        }
+    }
+
+    public Set<WebConnection> getSseConnections() {
+        Set<WebConnection> webConnections = new HashSet<>();
+        Set<ZsSseConnection>  connections =  sseHandler.getConnections();
+        for (ZsSseConnection c : connections) {
+            String clientAddr = c.getExchange().getSourceAddress().toString();
+            WebConnection webConnection = new WebConnection(clientAddr, WebConnectionType.SSE);
+            webConnections.add(webConnection);
+        }
+        return webConnections;
+    }
+
+    public void onConnection(SocketAddress sourceAddr, WebConnectionType type, String userAgent) {
+        if(sourceAddr == null) {
+            return;
+        }
+        String sourceId = sourceAddr.toString();
+        szcoreServer.onWebConnection(sourceId, type, userAgent);
     }
 }

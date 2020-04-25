@@ -231,10 +231,13 @@ public interface Consts {
     String WEB_PATH_HTTP = "/htp";
     String WEB_PATH_STATIC = "/";
 
+    String WEB_HTTP_HEADER_USER_AGENT = "User-Agent";
+
     String WEB_EVENT_NAME = "ev";
     String WEB_EVENT_TIME_NAME = "evt";
     String WEB_EVENT_LAST_STATE_UPDATE_TIME = "lsut";
     String WEB_EVENT_SENT_TIME_NAME = "t";
+    String WEB_EVENT_IS_POLL_NAME = "poll";
     String WEB_EVENT_ELEMENT_ID = "elementId";
     String WEB_EVENT_IS_SELECTED = "selected";
 

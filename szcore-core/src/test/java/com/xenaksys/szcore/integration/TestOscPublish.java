@@ -23,6 +23,7 @@ import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.time.beatstrategy.SimpleBeatTimeStrategy;
 import com.xenaksys.szcore.time.clock.MutableNanoClock;
 import com.xenaksys.szcore.time.waitstrategy.BockingWaitStrategy;
+import com.xenaksys.szcore.web.WebProcessor;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -43,6 +44,7 @@ public class TestOscPublish {
     TransportFactory transportFactory;
     OscPublisher oscPublisher;
     WebPublisher webPublisher;
+    WebProcessor webProcessor;
 
     boolean isSkip = true;
 

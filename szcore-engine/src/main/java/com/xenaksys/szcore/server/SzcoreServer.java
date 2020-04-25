@@ -54,6 +54,8 @@ import com.xenaksys.szcore.time.clock.MutableNanoClock;
 import com.xenaksys.szcore.time.waitstrategy.BockingWaitStrategy;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
+import com.xenaksys.szcore.web.WebConnection;
+import com.xenaksys.szcore.web.WebConnectionType;
 import com.xenaksys.szcore.web.WebProcessor;
 import com.xenaksys.szcore.web.WebScoreStateListener;
 import com.xenaksys.szcore.web.ZsHttpRequest;
@@ -67,6 +69,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -460,6 +463,11 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
+    public void onWebConnection(String sourceId, WebConnectionType type, String userAgent) {
+        webProcessor.onWebConnection(sourceId, type, userAgent);
+    }
+
+    @Override
     public void startWebServer() {
         if(webServer == null) {
             LOG.error("startWebServer: Invalid Web server");
@@ -511,6 +519,11 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     @Override
     public void pushToWebClients(String data) {
         webServer.pushToAll(data);
+    }
+
+    @Override
+    public void updateWebConnections(Set<WebConnection> connections) {
+        webProcessor.onUpdateWebConnections(connections);
     }
 
     public WebProcessor getWebProcessor() {

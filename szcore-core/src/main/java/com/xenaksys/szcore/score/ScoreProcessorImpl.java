@@ -139,8 +139,13 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private WebScore webScore = null;
 
-    public ScoreProcessorImpl(TransportFactory transportFactory, MutableClock clock, OscPublisher oscPublisher,
-                              WebPublisher webPublisher, Scheduler scheduler, EventFactory eventFactory, TaskFactory taskFactory) {
+    public ScoreProcessorImpl(TransportFactory transportFactory,
+                              MutableClock clock,
+                              OscPublisher oscPublisher,
+                              WebPublisher webPublisher,
+                              Scheduler scheduler,
+                              EventFactory eventFactory,
+                              TaskFactory taskFactory) {
         this.transportFactory = transportFactory;
         this.clock = clock;
         this.oscPublisher = oscPublisher;
@@ -1885,8 +1890,11 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             case WEB_START:
                 processWebStart((WebStartEvent)webEvent);
                 break;
+            default:
+                LOG.info("onIncomingWebEvent: unknown IncomingWebEventType: {}", type);
         }
     }
+
     @Override
     public void onWebScoreStateChange(WebScoreState webScoreState) throws Exception {
         notifyListeners(webScoreState);

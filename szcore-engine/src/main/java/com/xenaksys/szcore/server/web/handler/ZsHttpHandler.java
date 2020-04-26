@@ -2,8 +2,8 @@ package com.xenaksys.szcore.server.web.handler;
 
 import com.xenaksys.szcore.server.SzcoreServer;
 import com.xenaksys.szcore.util.HttpUtil;
-import com.xenaksys.szcore.web.ZsHttpRequest;
-import com.xenaksys.szcore.web.ZsHttpResponse;
+import com.xenaksys.szcore.web.ZsWebRequest;
+import com.xenaksys.szcore.web.ZsWebResponse;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.form.FormData;
@@ -43,7 +43,7 @@ public class ZsHttpHandler implements HttpHandler {
                 return;
             }
 
-            ZsHttpRequest zsRequest = new ZsHttpRequest(requestPath, sourceId);
+            ZsWebRequest zsRequest = new ZsWebRequest(requestPath, sourceId);
             FormParserFactory.Builder builder = FormParserFactory.builder();
 
             final FormDataParser formDataParser = builder.build().createParser(exchange);
@@ -62,18 +62,18 @@ public class ZsHttpHandler implements HttpHandler {
                 }
             }
 
-            ZsHttpResponse response = szcoreServer.onHttpRequest(zsRequest);
+            ZsWebResponse response = szcoreServer.onWebRequest(zsRequest);
             exchange.getResponseSender().send(response.getData());
             exchange.endExchange();
 
         } else {
-            ZsHttpRequest zsRequest = new ZsHttpRequest(requestPath, sourceId);
+            ZsWebRequest zsRequest = new ZsWebRequest(requestPath, sourceId);
 
             Map<String, Deque<String>> queryParams = exchange.getQueryParameters();
             for(String key : queryParams.keySet()) {
                 zsRequest.addStringParam(key, readQueryParam(queryParams.get(key)));
             }
-            ZsHttpResponse response = szcoreServer.onHttpRequest(zsRequest);
+            ZsWebResponse response = szcoreServer.onWebRequest(zsRequest);
 
             exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, HttpUtil.getMimeType(response));
             exchange.getResponseSender().send(response.getData());

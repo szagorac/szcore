@@ -58,8 +58,8 @@ import com.xenaksys.szcore.web.WebConnection;
 import com.xenaksys.szcore.web.WebConnectionType;
 import com.xenaksys.szcore.web.WebProcessor;
 import com.xenaksys.szcore.web.WebScoreStateListener;
-import com.xenaksys.szcore.web.ZsHttpRequest;
-import com.xenaksys.szcore.web.ZsHttpResponse;
+import com.xenaksys.szcore.web.ZsWebRequest;
+import com.xenaksys.szcore.web.ZsWebResponse;
 import org.apache.commons.net.util.SubnetUtils;
 
 import java.io.File;
@@ -452,14 +452,9 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
-    public ZsHttpResponse onHttpRequest(ZsHttpRequest zsRequest) {
+    public ZsWebResponse onWebRequest(ZsWebRequest zsRequest) {
 //        LOG.info("onHttpRequest: path: {} sourceAddr: {}", zsRequest.getRequestPath(), zsRequest.getSourceAddr());
-        return webProcessor.onHttpRequest(zsRequest);
-    }
-
-    @Override
-    public String onWsRequest(String data) {
-        return webProcessor.onWsRequest(data);
+        return webProcessor.onWebRequest(zsRequest);
     }
 
     @Override

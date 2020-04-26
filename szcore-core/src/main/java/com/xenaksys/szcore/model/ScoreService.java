@@ -7,8 +7,8 @@ import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.web.WebConnection;
 import com.xenaksys.szcore.web.WebConnectionType;
 import com.xenaksys.szcore.web.WebScoreStateListener;
-import com.xenaksys.szcore.web.ZsHttpRequest;
-import com.xenaksys.szcore.web.ZsHttpResponse;
+import com.xenaksys.szcore.web.ZsWebRequest;
+import com.xenaksys.szcore.web.ZsWebResponse;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -95,9 +95,7 @@ public interface ScoreService {
 
     List<NetUtil.NetworkDevice> getParallelConnectedNetworkClients();
 
-    ZsHttpResponse onHttpRequest(ZsHttpRequest zsRequest);
-
-    String onWsRequest(String data);
+    ZsWebResponse onWebRequest(ZsWebRequest zsRequest);
 
     void onWebConnection(String sourceId, WebConnectionType type, String userAgent);
 

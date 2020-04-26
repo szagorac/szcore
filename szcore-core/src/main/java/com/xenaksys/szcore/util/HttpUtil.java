@@ -1,10 +1,10 @@
 package com.xenaksys.szcore.util;
 
-import com.xenaksys.szcore.web.ZsHttpResponse;
+import com.xenaksys.szcore.web.ZsWebResponse;
 
 public class HttpUtil {
 
-    public static String getMimeType(ZsHttpResponse response) {
+    public static String getMimeType(ZsWebResponse response) {
         switch (response.getType()) {
             case JSON:
                 return "application/json";

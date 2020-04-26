@@ -6,14 +6,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ZsHttpRequest {
+public class ZsWebRequest {
     private final Map<String, String> stringParams = new HashMap<>();
     private List<Path> filePaths = null;
 
     private final String requestPath;
     private final String sourceAddr;
 
-    public ZsHttpRequest(String requestPath, String sourceAddr) {
+    public ZsWebRequest(String requestPath, String sourceAddr) {
         this.requestPath = requestPath;
         this.sourceAddr = sourceAddr;
     }
@@ -23,6 +23,13 @@ public class ZsHttpRequest {
             return;
         }
         stringParams.put(name, value);
+    }
+
+    public void addAllParams(Map<String, String> params) {
+        if(params == null) {
+            return;
+        }
+        stringParams.putAll(params);
     }
 
     public void addFilePath(Path path) {

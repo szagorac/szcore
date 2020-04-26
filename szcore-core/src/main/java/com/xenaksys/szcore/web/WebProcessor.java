@@ -117,7 +117,8 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         scoreService.onIncomingWebEvent(webEvent);
     }
 
-    public String onWsRequest(String data) {
+    public String onWsRequest(ZsWebRequest data) {
+
         return currentWebScoreState;
     }
 
@@ -141,7 +142,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         }
     }
 
-    public ZsHttpResponse onHttpRequest(ZsHttpRequest zsRequest) {
+    public ZsWebResponse onWebRequest(ZsWebRequest zsRequest) {
 //        LOG.debug("onHttpRequest: path: {} sourceAddr: {}", zsRequest.getRequestPath(), zsRequest.getSourceAddr());
         String out;
         try {
@@ -156,7 +157,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
             LOG.error("Failed to process zsRequest: {}", zsRequest.getRequestPath());
             out = createErrorWebString("FailedToProcessRequest");
         }
-        return new ZsHttpResponse(ZsResponseType.JSON, out);
+        return new ZsWebResponse(ZsResponseType.JSON, out);
     }
 
     private String createErrorWebString(String message) {
@@ -183,7 +184,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         return GSON.toJson(dataContainer);
     }
 
-    private String processIncomingWebEvent(String eventName, ZsHttpRequest zsRequest) throws Exception {
+    private String processIncomingWebEvent(String eventName, ZsWebRequest zsRequest) throws Exception {
         if (eventName == null) {
             return createErrorWebString("InvalidEventName");
         }
@@ -290,7 +291,8 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         OutgoingWebEventType type = webEvent.getWebEventType();
         switch (type) {
             case PUSH_SERVER_STATE:
-                scoreService.pushToWebClients(currentWebScoreState);
+                String out = createStateWebString(currentWebScoreState);
+                scoreService.pushToWebClients(out);
                 break;
         }
     }

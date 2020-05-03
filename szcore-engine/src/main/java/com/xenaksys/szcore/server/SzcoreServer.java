@@ -69,12 +69,15 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.xenaksys.szcore.Consts.WEB_ROOT;
 
 public class SzcoreServer extends Server implements EventService, ScoreService {
     private static final String PROP_APP_NAME = "appName";
@@ -170,6 +173,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
     public void initProcessors(){
         clock = new MutableNanoClock();
+        Properties props = getProperties();
         oscEventReceiver = new OscReceiveProcessor(new OscListenerId(Consts.DEFAULT_ALL_PORTS, getServerAddress().getHostAddress(), "OscReceiveProcessor"), clock);
 
 //        inDisruptor = DisruptorFactory.createInDisruptor();
@@ -208,7 +212,8 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 //        scoreProcessor.loadWebScore(events);
 
 //        webServer = new WebServer("C:\\dev\\projects\\github\\scores\\ligetiq\\export\\web", 80, 1024, this);
-        webServer = new WebServer("/Users/slavko/MyHome/Dev/projects/github/scores/ligetiq/export/web", 80, 1024, this);
+        String webRoot = props.getProperty(WEB_ROOT);
+        webServer = new WebServer(webRoot, 80, 1024, this);
 
         webServer.start();
     }

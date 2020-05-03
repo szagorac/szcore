@@ -29,7 +29,7 @@ public class TransportPositionTask extends EventMusicTask {
             LOG.error("Transport is running, can not change change beat");
             return;
         }
-LOG.error("Setting Transport position beatNo: " + transportBeatNo + " positionMillis: " + positionMillis);
+
         transport.setBeatNo(transportBeatNo);
         transport.setTickNo(tickNo);
         transport.init(positionMillis);

@@ -13,9 +13,6 @@
         </layout>
     </appender>
 
-    <logger name="com.zagabet" level="DEBUG"/>
-
-
     <root level="debug">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />

@@ -226,6 +226,8 @@ public interface Consts {
     String NAME_EVENT_OSC_IN = "Event type: OSC In, ";
     String NAME_NA = "N/A";
 
+    String WEB_ROOT = "webRoot";
+
     String WEB_PATH_SSE = "/sse";
     String WEB_PATH_WEBSOCKETS = "/wsoc";
     String WEB_PATH_HTTP = "/htp";

@@ -245,7 +245,7 @@ public class Server implements Runnable {
         try {
             String propFileName = System.getProperty("propertyFile");
             if (propFileName == null) {
-                propFileName = "szcore.properties";
+                propFileName = "zscore.properties";
             }
 
             InputStream inputStream = Server.class.getClassLoader().getResourceAsStream(propFileName);

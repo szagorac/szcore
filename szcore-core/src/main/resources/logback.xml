@@ -24,7 +24,6 @@
     </appender>
 
 
-    <logger name="com.zagabet" level="DEBUG"/>
     <logger name="io.undertow" level="WARN"/>
 
 

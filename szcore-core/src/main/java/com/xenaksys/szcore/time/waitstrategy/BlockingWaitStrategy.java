@@ -5,11 +5,11 @@ import com.xenaksys.szcore.model.WaitStrategy;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
-public class BockingWaitStrategy implements WaitStrategy {
+public class BlockingWaitStrategy implements WaitStrategy {
 
     private long interval;
 
-    public BockingWaitStrategy(long interval, TimeUnit timeUnit) {
+    public BlockingWaitStrategy(long interval, TimeUnit timeUnit) {
         long nanos = TimeUnit.NANOSECONDS.convert(interval, timeUnit);
         this.interval = nanos;
 

@@ -51,7 +51,7 @@ import com.xenaksys.szcore.time.BasicTimer;
 import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.time.beatstrategy.SimpleBeatTimeStrategy;
 import com.xenaksys.szcore.time.clock.MutableNanoClock;
-import com.xenaksys.szcore.time.waitstrategy.BockingWaitStrategy;
+import com.xenaksys.szcore.time.waitstrategy.BlockingWaitStrategy;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
 import com.xenaksys.szcore.web.WebConnection;
@@ -185,7 +185,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
                 new OscListenerId(Consts.DEFAULT_ALL_PORTS, getServerAddress().getHostAddress(), "ServerEventReceiver"));
         serverEventReceiver.init();
 
-        WaitStrategy waitStrategy = new BockingWaitStrategy(1, TimeUnit.MILLISECONDS);
+        WaitStrategy waitStrategy = new BlockingWaitStrategy(1, TimeUnit.MILLISECONDS);
 
         Timer timer = new BasicTimer(waitStrategy, clock);
 

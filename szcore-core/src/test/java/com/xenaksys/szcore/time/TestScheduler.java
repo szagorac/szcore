@@ -7,7 +7,7 @@ import com.xenaksys.szcore.model.Scheduler;
 import com.xenaksys.szcore.model.WaitStrategy;
 import com.xenaksys.szcore.task.LogMusicTask;
 import com.xenaksys.szcore.time.clock.MutableNanoClock;
-import com.xenaksys.szcore.time.waitstrategy.BockingWaitStrategy;
+import com.xenaksys.szcore.time.waitstrategy.BlockingWaitStrategy;
 import gnu.trove.list.array.TLongArrayList;
 import org.junit.Assert;
 import org.junit.Before;
@@ -39,7 +39,7 @@ public class TestScheduler{
     public void init(){
         long interval = 1l;
         TimeUnit timeUnit = TimeUnit.MILLISECONDS;
-        WaitStrategy waitStrategy = new BockingWaitStrategy(interval, timeUnit);
+        WaitStrategy waitStrategy = new BlockingWaitStrategy(interval, timeUnit);
 //        WaitStrategy waitStrategy = new NanoSpinWaitStrategy(interval, timeUnit);
 
         clock = new MutableNanoClock();

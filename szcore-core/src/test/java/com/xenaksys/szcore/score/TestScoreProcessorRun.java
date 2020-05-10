@@ -23,7 +23,7 @@ import com.xenaksys.szcore.time.BasicTimer;
 import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.time.beatstrategy.SimpleBeatTimeStrategy;
 import com.xenaksys.szcore.time.clock.MutableNanoClock;
-import com.xenaksys.szcore.time.waitstrategy.BockingWaitStrategy;
+import com.xenaksys.szcore.time.waitstrategy.BlockingWaitStrategy;
 import gnu.trove.map.TIntObjectMap;
 import org.junit.Assert;
 import org.junit.Before;
@@ -47,7 +47,7 @@ public class TestScoreProcessorRun {
     @Before
     public void init() {
 
-        WaitStrategy waitStrategy = new BockingWaitStrategy(1, TimeUnit.MILLISECONDS);
+        WaitStrategy waitStrategy = new BlockingWaitStrategy(1, TimeUnit.MILLISECONDS);
         MutableClock clock = new MutableNanoClock();
         Timer timer = new BasicTimer(waitStrategy, clock);
         oscPublisher = new LoggingOscPublishProcessor();

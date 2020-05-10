@@ -22,7 +22,7 @@ import com.xenaksys.szcore.time.BasicTimer;
 import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.time.beatstrategy.SimpleBeatTimeStrategy;
 import com.xenaksys.szcore.time.clock.MutableNanoClock;
-import com.xenaksys.szcore.time.waitstrategy.BockingWaitStrategy;
+import com.xenaksys.szcore.time.waitstrategy.BlockingWaitStrategy;
 import com.xenaksys.szcore.web.WebProcessor;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +51,7 @@ public class TestOscPublish {
     @Before
     public void init(){
 
-        WaitStrategy waitStrategy = new BockingWaitStrategy(1, TimeUnit.MILLISECONDS);
+        WaitStrategy waitStrategy = new BlockingWaitStrategy(1, TimeUnit.MILLISECONDS);
         MutableClock clock = new MutableNanoClock();
         Timer timer = new BasicTimer(waitStrategy, clock);
         oscPublisher = new OscPublishProcessor();
@@ -193,7 +193,7 @@ public class TestOscPublish {
         List<Object> arguments = new ArrayList<>();;
 
         oscPublisher.addOscPort("DEFAULT_OSC_PORT", port);
-        WaitStrategy waitStrategy = new BockingWaitStrategy(25, TimeUnit.MILLISECONDS);
+        WaitStrategy waitStrategy = new BlockingWaitStrategy(25, TimeUnit.MILLISECONDS);
 
 
         arguments.clear();
@@ -333,7 +333,7 @@ public class TestOscPublish {
         List<Object> arguments = new ArrayList<>();;
 
         oscPublisher.addOscPort("DEFAULT_OSC_PORT", port);
-        WaitStrategy waitStrategy = new BockingWaitStrategy(25, TimeUnit.MILLISECONDS);
+        WaitStrategy waitStrategy = new BlockingWaitStrategy(25, TimeUnit.MILLISECONDS);
 
         arguments.clear();
         String address = "/ITL";

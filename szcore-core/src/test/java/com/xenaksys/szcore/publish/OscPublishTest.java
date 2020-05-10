@@ -5,7 +5,7 @@ import com.xenaksys.szcore.event.OscEvent;
 import com.xenaksys.szcore.model.OscPublisher;
 import com.xenaksys.szcore.model.WaitStrategy;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
-import com.xenaksys.szcore.time.waitstrategy.BockingWaitStrategy;
+import com.xenaksys.szcore.time.waitstrategy.BlockingWaitStrategy;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -30,15 +30,16 @@ public class OscPublishTest {
     public void init(){
 
         try {
-            InetAddress address = InetAddress.getLocalHost();;
+            InetAddress address = InetAddress.getLocalHost();
+            ;
             int remotePort = 7000;
             OSCPortOut oscPort = new OSCPortOut(address, remotePort);
             Map<String, OSCPortOut> oscPublishPorts = new HashMap<>();
             oscPublishPorts.put(Consts.DEFAULT_OSC_PORT_NAME, oscPort);
             oscPublisher = new OscPublishProcessor(oscPublishPorts);
 
-            waitStrategy = new BockingWaitStrategy(25, TimeUnit.MILLISECONDS);
-            beatWaitStrategy = new BockingWaitStrategy(250, TimeUnit.MILLISECONDS);
+            waitStrategy = new BlockingWaitStrategy(25, TimeUnit.MILLISECONDS);
+            beatWaitStrategy = new BlockingWaitStrategy(250, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             e.printStackTrace();
         }

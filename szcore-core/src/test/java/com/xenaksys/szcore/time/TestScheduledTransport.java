@@ -14,7 +14,7 @@ import com.xenaksys.szcore.model.WaitStrategy;
 import com.xenaksys.szcore.model.id.IntId;
 import com.xenaksys.szcore.time.beatstrategy.SimpleBeatTimeStrategy;
 import com.xenaksys.szcore.time.clock.MutableNanoClock;
-import com.xenaksys.szcore.time.waitstrategy.BockingWaitStrategy;
+import com.xenaksys.szcore.time.waitstrategy.BlockingWaitStrategy;
 import gnu.trove.list.array.TLongArrayList;
 import org.junit.Assert;
 import org.junit.Before;
@@ -58,7 +58,7 @@ public class TestScheduledTransport {
     public void init(){
         TimeUnit timeUnit = TimeUnit.MILLISECONDS;
         long interval = 1l;
-        WaitStrategy waitStrategy = new BockingWaitStrategy(interval, timeUnit);
+        WaitStrategy waitStrategy = new BlockingWaitStrategy(interval, timeUnit);
 
         clock = new MutableNanoClock();
         com.xenaksys.szcore.model.Timer timer = new BasicTimer(waitStrategy, clock);

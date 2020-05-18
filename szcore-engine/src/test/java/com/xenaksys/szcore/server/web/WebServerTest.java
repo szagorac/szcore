@@ -45,7 +45,9 @@ public class WebServerTest {
     };
 
     public static final String URL = "http://zscore";
+    public static final String WS_URL = "http://zscore/wsoc";
     public static final String HOST = "zscore";
+
 
     @Before
     public void init() {
@@ -54,14 +56,12 @@ public class WebServerTest {
 
     @Test
     public void testSimpleBasic() throws Exception {
-        //WebSocketClient13TestCase
-        //final WebSocketChannel webSocketChannel = WebSocketClient.connectionBuilder(worker, DefaultServer.getBufferPool(), new URI(DefaultServer.getDefaultServerURL())).connect().get();
-
-        ZscoreTestWebClient testWebClient = new ZscoreTestWebClient(1, URL, HOST, STRING_FILES, BINARY_FLIES);
+        ZscoreTestWebClient testWebClient = new ZscoreTestWebClient(1, URL, WS_URL, HOST, STRING_FILES, BINARY_FLIES,
+                false, 8);
         testWebClient.init();
         testWebClient.startTest();
 
-        assertTrue(testWebClient.isTestComplete);
+        assertTrue(testWebClient.isTestComplete());
 
         int reqeustNo = STRING_FILES.length + BINARY_FLIES.length;
         List<ClientResponse> responses = testWebClient.getResponses();
@@ -80,27 +80,32 @@ public class WebServerTest {
 
     @Test
     public void testMultipleClients() throws Exception {
-        int clientNo = 350;
-        int naxSleepBetweenRequests = 10;
+        int clientNo = 250;
+        int naxSleepBetweenRequests = 1000;
 
         List<ZscoreTestWebClient> clients = new ArrayList<>(clientNo);
 
         for (int i = 0; i < clientNo; i++) {
             LOG.info("Initialising client: {}", i);
-            ZscoreTestWebClient testWebClient = new ZscoreTestWebClient(i, URL, HOST, STRING_FILES, BINARY_FLIES);
+            ZscoreTestWebClient testWebClient = new ZscoreTestWebClient(i, URL, WS_URL, HOST, STRING_FILES, BINARY_FLIES,
+                    false, 8);
             testWebClient.init();
             clients.add(testWebClient);
         }
 
         ThreadUtil.doSleep(Thread.currentThread(), 2000);
-        ExecutorService executorService = Executors.newFixedThreadPool(50);
+
+        ExecutorService executorService = Executors.newFixedThreadPool(clientNo);
 
         int no = 1;
         for (ZscoreTestWebClient client : clients) {
             executorService.submit(new ClientRunner(client, no));
             no++;
             long sleep = ThreadLocalRandom.current().nextInt(0, naxSleepBetweenRequests + 1);
-            ThreadUtil.doSleep(Thread.currentThread(), sleep);
+            long clNo = ThreadLocalRandom.current().nextInt(1, 6);
+            if (no % clNo == 0) {
+                ThreadUtil.doSleep(Thread.currentThread(), sleep);
+            }
         }
 
         // Wait for tests to complete
@@ -113,7 +118,7 @@ public class WebServerTest {
         long[] durations = new long[clientNo - 1];
         int i = 0;
         for (ZscoreTestWebClient client : clients) {
-            assertTrue(client.isTestComplete);
+            assertTrue(client.isTestComplete());
 
             int reqeustNo = STRING_FILES.length + BINARY_FLIES.length;
             List<ClientResponse> responses = client.getResponses();
@@ -147,9 +152,109 @@ public class WebServerTest {
         LOG.info("Average Test duration: {}ms, min: {}, max: {} Percentile: 90th: {}, 95th: {}", mean, min, perc100, perc90, perc95);
     }
 
+    @Test
+    public void testWebsocketReceive() throws Exception {
+        ZscoreTestWebClient testWebClient = new ZscoreTestWebClient(1, URL, WS_URL, HOST, STRING_FILES, BINARY_FLIES,
+                true, 8);
+        testWebClient.init();
+        testWebClient.startTest();
+
+        assertTrue(testWebClient.isTestComplete());
+
+        int reqeustNo = STRING_FILES.length + BINARY_FLIES.length;
+        List<ClientResponse> responses = testWebClient.getResponses();
+        assertEquals(reqeustNo, responses.size());
+
+        long downloadSize = 0L;
+        Map<String, Integer> responseSizes = testWebClient.getResponseSizeBytes();
+        for (String path : responseSizes.keySet()) {
+            Integer size = responseSizes.get(path);
+            assertTrue(size > 0);
+            downloadSize += size;
+        }
+        double mb = MathUtil.bytesToMbyte(downloadSize);
+        LOG.info("Download size = {}MB", MathUtil.roundTo2DecimalPlaces(mb));
+
+        while (!testWebClient.isWsTestComplete()) {
+            ThreadUtil.doSleep(Thread.currentThread(), 1000);
+        }
+
+        long[] latencies = testWebClient.getWsLatencies();
+        long perc90 = MathUtil.percentile(latencies, 90);
+        long perc95 = MathUtil.percentile(latencies, 90);
+        long perc100 = MathUtil.percentile(latencies, 100);
+        long mean = MathUtil.mean(latencies);
+        long min = MathUtil.min(latencies);
+
+        LOG.info("Websocket Average Test latency: {}ms, min: {}, max: {} Percentile: 90th: {}, 95th: {}", mean, min, perc100, perc90, perc95);
+    }
+
+    @Test
+    public void testWebsocketMultipleClients() throws Exception {
+        int clientNo = 10;
+        int naxSleepBetweenRequests = 1000;
+
+        List<ZscoreTestWebClient> clients = new ArrayList<>(clientNo);
+
+        for (int i = 0; i < clientNo; i++) {
+            LOG.info("Initialising client: {}", i);
+            ZscoreTestWebClient testWebClient = new ZscoreTestWebClient(i, URL, WS_URL, HOST, STRING_FILES, BINARY_FLIES,
+                    true, 8);
+            testWebClient.init();
+            clients.add(testWebClient);
+        }
+
+        ThreadUtil.doSleep(Thread.currentThread(), 2000);
+
+        ExecutorService executorService = Executors.newFixedThreadPool(clientNo);
+
+        int no = 1;
+        for (ZscoreTestWebClient client : clients) {
+            executorService.submit(new ClientRunner(client, no));
+            no++;
+            long sleep = ThreadLocalRandom.current().nextInt(0, naxSleepBetweenRequests + 1);
+            long clNo = ThreadLocalRandom.current().nextInt(1, 6);
+            if (no % clNo == 0) {
+                ThreadUtil.doSleep(Thread.currentThread(), sleep);
+            }
+        }
+
+        // Wait for http tests to complete
+        while (!areTestsComplete(clients)) {
+            ThreadUtil.doSleep(Thread.currentThread(), 500);
+        }
+
+        LOG.info("### HTTP tests Complete");
+
+        // Wait for http tests to complete
+        while (!areWsTestsComplete(clients)) {
+            ThreadUtil.doSleep(Thread.currentThread(), 500);
+        }
+
+        for (ZscoreTestWebClient client : clients) {
+            long[] latencies = client.getWsLatencies();
+            long perc90 = MathUtil.percentile(latencies, 90);
+            long perc95 = MathUtil.percentile(latencies, 90);
+            long perc100 = MathUtil.percentile(latencies, 100);
+            long mean = MathUtil.mean(latencies);
+            long min = MathUtil.min(latencies);
+
+            LOG.info("Websocket Average Test latency: {}ms, min: {}, max: {} Percentile: 90th: {}, 95th: {}", mean, min, perc100, perc90, perc95);
+        }
+    }
+
     private boolean areTestsComplete(List<ZscoreTestWebClient> clients) {
         for (ZscoreTestWebClient client : clients) {
             if (!client.isTestComplete()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean areWsTestsComplete(List<ZscoreTestWebClient> clients) {
+        for (ZscoreTestWebClient client : clients) {
+            if (!client.isWsTestComplete()) {
                 return false;
             }
         }

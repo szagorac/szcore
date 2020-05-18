@@ -1,6 +1,10 @@
 package com.xenaksys.szcore.server.web;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import com.xenaksys.szcore.util.MathUtil;
+import gnu.trove.map.hash.TLongObjectHashMap;
 import io.undertow.client.ClientCallback;
 import io.undertow.client.ClientConnection;
 import io.undertow.client.ClientExchange;
@@ -14,6 +18,10 @@ import io.undertow.util.AttachmentKey;
 import io.undertow.util.Headers;
 import io.undertow.util.Methods;
 import io.undertow.util.StringReadChannelListener;
+import io.undertow.websockets.client.WebSocketClient;
+import io.undertow.websockets.core.AbstractReceiveListener;
+import io.undertow.websockets.core.BufferedTextMessage;
+import io.undertow.websockets.core.WebSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnio.ChannelListener;
@@ -36,6 +44,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.Assert.assertNotNull;
 
 public class ZscoreTestWebClient {
     static final Logger LOG = LoggerFactory.getLogger(ZscoreTestWebClient.class);
@@ -60,6 +70,7 @@ public class ZscoreTestWebClient {
 
     private final Map<String, Integer> responseSizeBytes = new ConcurrentHashMap<>();
     private final Map<String, AtomicInteger> responseCounter = new ConcurrentHashMap<>();
+    private final TLongObjectHashMap<String> wsReceived = new TLongObjectHashMap<>();
     final Xnio xnio = Xnio.getInstance();
 
     private final String[] stringFiles;
@@ -67,25 +78,37 @@ public class ZscoreTestWebClient {
     private final String url;
     private final String host;
     private final int clientNo;
+    private final boolean isUseWebsocket;
+    private final String wsUrl;
+    private final int wsMessageNo;
 
     private UndertowClient client = createClient();
     private XnioWorker worker;
     private DebuggingSlicePool pool;
+    private DebuggingSlicePool wspool;
     private List<ClientResponse> responses = new CopyOnWriteArrayList<>();
     private CountDownLatch latch;
     private ClientConnection connection;
+    private WebSocketChannel webSocketChannel;
     private URI address;
-    boolean isTestComplete = false;
+    private URI wsaddress;
+    private volatile boolean isTestComplete = false;
+    private volatile boolean isWsTestComplete = false;
     private long testDuration = 0L;
     private volatile long endTime = 0L;
+    private AtomicInteger wsCount = new AtomicInteger(0);
+    private final JsonParser jsonParser = new JsonParser();
 
-
-    public ZscoreTestWebClient(int clientNo, String url, String host, String[] stringFiles, String[] binaryFlies) {
+    public ZscoreTestWebClient(int clientNo, String url, String wsUrl, String host, String[] stringFiles, String[] binaryFlies,
+                               boolean isUseWebsocket, int wsMessageNo) {
         this.stringFiles = stringFiles;
         this.binaryFlies = binaryFlies;
         this.url = url;
         this.host = host;
         this.clientNo = clientNo;
+        this.isUseWebsocket = isUseWebsocket;
+        this.wsUrl = wsUrl;
+        this.wsMessageNo = wsMessageNo;
     }
 
     public void init() throws Exception {
@@ -99,7 +122,14 @@ public class ZscoreTestWebClient {
             int numberOfRequests = stringFiles.length + binaryFlies.length;
             latch = new CountDownLatch(numberOfRequests);
 
-            client = createClient();
+            if (isUseWebsocket) {
+                wsaddress = new URI(wsUrl);
+                wspool = new DebuggingSlicePool(new DefaultByteBufferPool(
+                        true, BUFFER_SIZE, MAX_POOL_SIZE, THREAD_LOCAL_CACHE_SIZE, LEAK_DETECTION_PERC));
+
+                webSocketChannel = WebSocketClient.connectionBuilder(worker, wspool, wsaddress).connect().get();
+                initWebSocket();
+            }
         } catch (Exception e) {
             LOG.error("Failed to initalise test", e);
             throw e;
@@ -325,6 +355,40 @@ public class ZscoreTestWebClient {
         };
     }
 
+    public void closeWebSocket() {
+        try {
+            webSocketChannel.sendClose();
+        } catch (IOException e) {
+            LOG.error("Failed to close websocket", e);
+        }
+    }
+
+    private void initWebSocket() {
+        webSocketChannel.getReceiveSetter().set(new AbstractReceiveListener() {
+
+            @Override
+            protected void onFullTextMessage(WebSocketChannel channel, BufferedTextMessage message) throws IOException {
+                String data = message.getData();
+                int c = wsCount.incrementAndGet();
+                LOG.info("Websocket received {} messages", c);
+                long now = System.currentTimeMillis();
+                wsReceived.put(now, data);
+
+                if (c >= wsMessageNo) {
+                    isWsTestComplete = true;
+                }
+            }
+
+            @Override
+            protected void onError(WebSocketChannel channel, Throwable error) {
+                super.onError(channel, error);
+                LOG.error("Websocket error", error);
+                isWsTestComplete = true;
+            }
+        });
+        webSocketChannel.resumeReceives();
+    }
+
     static UndertowClient createClient() {
         return UndertowClient.getInstance();
     }
@@ -350,5 +414,34 @@ public class ZscoreTestWebClient {
 
     public long getTestDurationMs() {
         return testDuration;
+    }
+
+    public TLongObjectHashMap<String> getWsReceived() {
+        return wsReceived;
+    }
+
+    public boolean isWsTestComplete() {
+        return isWsTestComplete;
+    }
+
+    public int getWsCount() {
+        return wsCount.intValue();
+    }
+
+    public long[] getWsLatencies() {
+        long[] times = wsReceived.keys();
+        long[] latencies = new long[times.length];
+        int i = 0;
+        for (long time : times) {
+            String value = wsReceived.get(time);
+            JsonObject response = jsonParser.parse(value).getAsJsonObject();
+            assertNotNull(response);
+            JsonObject dataBag = response.getAsJsonObject("dataBag");
+            JsonPrimitive timeJson = dataBag.getAsJsonPrimitive("t");
+            long serverTime = timeJson.getAsLong();
+            long diff = time - serverTime;
+            latencies[i] = diff;
+        }
+        return latencies;
     }
 }

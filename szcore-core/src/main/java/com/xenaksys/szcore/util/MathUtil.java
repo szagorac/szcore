@@ -10,13 +10,17 @@ public class MathUtil {
        return func.value(x);
     }
 
-    public static PolynomialSplineFunction getFitFunction(double[] x, double[] y){
+    public static PolynomialSplineFunction getFitFunction(double[] x, double[] y) {
         SplineInterpolator interpolator = new SplineInterpolator();
         return interpolator.interpolate(x, y);
     }
 
-    public static double roundTo5DecimalPlaces(double value){
-        return (double)Math.round(value * 100000d) / 100000d;
+    public static double roundTo5DecimalPlaces(double value) {
+        return (double) Math.round(value * 100000d) / 100000d;
+    }
+
+    public static double roundTo2DecimalPlaces(double value) {
+        return (double) Math.round(value * 100d) / 100d;
     }
 
 }

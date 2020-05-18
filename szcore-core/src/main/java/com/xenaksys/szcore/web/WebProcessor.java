@@ -88,7 +88,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     }
 
     private void processWebPoll(WebPollEvent pollEvent) {
-        LOG.info("processWebPoll: ");
+//        LOG.info("processWebPoll: ");
         if(pollEvent.getSourceAddr() == null) {
             return;
         }

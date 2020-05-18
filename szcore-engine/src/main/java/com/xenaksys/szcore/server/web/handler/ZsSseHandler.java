@@ -3,7 +3,6 @@ package com.xenaksys.szcore.server.web.handler;
 import io.undertow.UndertowLogger;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
-import io.undertow.server.handlers.sse.ServerSentEventConnection;
 import io.undertow.server.handlers.sse.ServerSentEventConnectionCallback;
 import io.undertow.util.Headers;
 import io.undertow.util.HttpString;
@@ -74,12 +73,7 @@ public class ZsSseHandler implements HttpHandler {
             }
         }
         connections.add(connection);
-        connection.addCloseTask(new ChannelListener<ServerSentEventConnection>() {
-            @Override
-            public void handleEvent(ServerSentEventConnection channel) {
-                connections.remove(connection);
-            }
-        });
+        connection.addCloseTask(channel1 -> connections.remove(connection));
         if(callback != null) {
             callback.connected(connection, exchange.getRequestHeaders().getLast(LAST_EVENT_ID));
         }

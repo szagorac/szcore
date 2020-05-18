@@ -5,12 +5,15 @@ import com.xenaksys.szcore.server.web.handler.ZsHttpHandler;
 import com.xenaksys.szcore.server.web.handler.ZsSseConnection;
 import com.xenaksys.szcore.server.web.handler.ZsSseConnectionCallback;
 import com.xenaksys.szcore.server.web.handler.ZsSseHandler;
+import com.xenaksys.szcore.server.web.handler.ZsStaticPathHandler;
 import com.xenaksys.szcore.server.web.handler.ZsWsConnectionCallback;
 import com.xenaksys.szcore.web.WebConnection;
 import com.xenaksys.szcore.web.WebConnectionType;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
+import io.undertow.server.handlers.cache.DirectBufferCache;
+import io.undertow.server.handlers.resource.CachingResourceManager;
 import io.undertow.server.handlers.resource.ClassPathResourceManager;
 import io.undertow.server.handlers.resource.PathResourceManager;
 import io.undertow.server.handlers.sse.ServerSentEventConnection;
@@ -31,11 +34,16 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static com.xenaksys.szcore.Consts.INDEX_HTML;
+import static com.xenaksys.szcore.Consts.WEB_BUFFER_SLICE_SIZE;
 import static com.xenaksys.szcore.Consts.WEB_HTTP_HEADER_USER_AGENT;
+import static com.xenaksys.szcore.Consts.WEB_MAX_FILE_SIZE;
+import static com.xenaksys.szcore.Consts.WEB_MAX_MEMORY_SIZE;
+import static com.xenaksys.szcore.Consts.WEB_METADATA_CACHE_SIZE;
 import static com.xenaksys.szcore.Consts.WEB_PATH_HTTP;
 import static com.xenaksys.szcore.Consts.WEB_PATH_SSE;
 import static com.xenaksys.szcore.Consts.WEB_PATH_STATIC;
 import static com.xenaksys.szcore.Consts.WEB_PATH_WEBSOCKETS;
+import static com.xenaksys.szcore.Consts.WEB_SLICES_PER_PAGE;
 import static io.undertow.Handlers.resource;
 import static io.undertow.Handlers.websocket;
 
@@ -45,6 +53,7 @@ public class WebServer {
     private final String staticDataPath;
     private final int port;
     private final int transferMinSize;
+    private final boolean isUseCaching;
     private final SzcoreServer szcoreServer;
 
     private volatile boolean isRunning = false;
@@ -52,10 +61,11 @@ public class WebServer {
     private ZsSseHandler sseHandler = null;
     private WebSocketProtocolHandshakeHandler wsHandler = null;
 
-    public WebServer(String staticDataPath, int port, int transferMinSize, SzcoreServer szcoreServer) {
+    public WebServer(String staticDataPath, int port, int transferMinSize, boolean isUseCaching, SzcoreServer szcoreServer) {
         this.staticDataPath = staticDataPath;
         this.port = port;
         this.transferMinSize = transferMinSize;
+        this.isUseCaching = isUseCaching;
         this.szcoreServer = szcoreServer;
     }
 
@@ -88,7 +98,7 @@ public class WebServer {
     }
 
     private void initUndertow() {
-        HttpHandler staticDataHandler =  resource(new ClassPathResourceManager(WebServer.class.getClassLoader(), ""))
+        HttpHandler staticDataHandler = new ZsStaticPathHandler(new ClassPathResourceManager(WebServer.class.getClassLoader(), ""))
                 .addWelcomeFiles(INDEX_HTML);
 
         this.sseHandler = new ZsSseHandler(new ZsSseConnectionCallback(this));
@@ -101,8 +111,13 @@ public class WebServer {
             Path indexPath = Paths.get(path.toAbsolutePath().toString(), INDEX_HTML);
 
             if(Files.exists(path) && Files.exists(indexPath)) {
-                staticDataHandler = resource(new PathResourceManager(path, transferMinSize))
-                        .setWelcomeFiles(INDEX_HTML);
+                staticDataHandler = createStaticDataHandler(path);
+
+//                DirectBufferCache bufferCache = new DirectBufferCache(1024, 10,1024 * 1024 * 200);
+//                staticDataHandler = new CacheHandler(bufferCache, staticPathHandler);
+
+//                staticDataHandler = resource(new PathResourceManager(path, transferMinSize))
+//                        .setWelcomeFiles(INDEX_HTML);
             }
         }
 
@@ -198,10 +213,27 @@ public class WebServer {
     }
 
     public void onConnection(SocketAddress sourceAddr, WebConnectionType type, String userAgent) {
-        if(sourceAddr == null) {
+        if (sourceAddr == null) {
             return;
         }
         String sourceId = sourceAddr.toString();
         szcoreServer.onWebConnection(sourceId, type, userAgent);
+    }
+
+    private HttpHandler createStaticDataHandler(Path path) {
+        if (isUseCaching) {
+            CachingResourceManager cachingResourceManager = new CachingResourceManager(
+                    WEB_METADATA_CACHE_SIZE,
+                    WEB_MAX_FILE_SIZE,
+                    new DirectBufferCache(WEB_BUFFER_SLICE_SIZE, WEB_SLICES_PER_PAGE, WEB_MAX_MEMORY_SIZE),
+                    new PathResourceManager(path, transferMinSize),
+                    -1);
+
+            return new ZsStaticPathHandler(cachingResourceManager)
+                    .setDirectoryListingEnabled(false)
+                    .setWelcomeFiles(INDEX_HTML);
+        }
+
+        return resource(new PathResourceManager(path, transferMinSize)).setWelcomeFiles(INDEX_HTML);
     }
 }

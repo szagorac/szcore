@@ -35,7 +35,7 @@ public class ZsHttpHandler implements HttpHandler {
         String requestPath = exchange.getRequestPath();
         String sourceId = exchange.getSourceAddress().toString();
         HttpString method = exchange.getRequestMethod();
-        LOG.info("Received {} request {} {} from {}", method, requestPath, exchange.getQueryString(), sourceId);
+//        LOG.info("Received {} request {} {} from {}", method, requestPath, exchange.getQueryString(), sourceId);
 
         if(method.equals(POST_STR)) {
             if (exchange.isInIoThread()) {

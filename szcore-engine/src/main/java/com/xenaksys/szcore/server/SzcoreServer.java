@@ -213,7 +213,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
 //        webServer = new WebServer("C:\\dev\\projects\\github\\scores\\ligetiq\\export\\web", 80, 1024, this);
         String webRoot = props.getProperty(WEB_ROOT);
-        webServer = new WebServer(webRoot, 80, 1024, this);
+        webServer = new WebServer(webRoot, 80, 1024, true, this);
 
         webServer.start();
     }

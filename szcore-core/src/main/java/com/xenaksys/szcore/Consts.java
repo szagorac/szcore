@@ -227,6 +227,11 @@ public interface Consts {
     String NAME_NA = "N/A";
 
     String WEB_ROOT = "webRoot";
+    int WEB_METADATA_CACHE_SIZE = 200;
+    long WEB_MAX_FILE_SIZE = 1024 * 1024 * 5;
+    int WEB_BUFFER_SLICE_SIZE = 1000;
+    int WEB_SLICES_PER_PAGE = 10;
+    int WEB_MAX_MEMORY_SIZE = 1024 * 1024 * 100;
 
     String WEB_PATH_SSE = "/sse";
     String WEB_PATH_WEBSOCKETS = "/wsoc";

@@ -68,7 +68,7 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
     }
 
     private void processWebEvent(IncomingWebEvent event) {
-        LOG.info("processWebEvent: {}", event);
+//        LOG.info("processWebEvent: {}", event);
         server.getWebProcessor().process(event);
     }
 

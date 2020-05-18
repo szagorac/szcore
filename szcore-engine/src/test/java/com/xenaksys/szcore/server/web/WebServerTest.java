@@ -191,7 +191,7 @@ public class WebServerTest {
 
     @Test
     public void testWebsocketMultipleClients() throws Exception {
-        int clientNo = 10;
+        int clientNo = 100;
         int naxSleepBetweenRequests = 1000;
 
         List<ZscoreTestWebClient> clients = new ArrayList<>(clientNo);
@@ -231,16 +231,26 @@ public class WebServerTest {
             ThreadUtil.doSleep(Thread.currentThread(), 500);
         }
 
+        List<Long> ltcs = new ArrayList<>();
         for (ZscoreTestWebClient client : clients) {
             long[] latencies = client.getWsLatencies();
-            long perc90 = MathUtil.percentile(latencies, 90);
-            long perc95 = MathUtil.percentile(latencies, 90);
-            long perc100 = MathUtil.percentile(latencies, 100);
-            long mean = MathUtil.mean(latencies);
-            long min = MathUtil.min(latencies);
-
-            LOG.info("Websocket Average Test latency: {}ms, min: {}, max: {} Percentile: 90th: {}, 95th: {}", mean, min, perc100, perc90, perc95);
+            for (long l : latencies) {
+                ltcs.add(l);
+            }
         }
+        long[] latencies = new long[ltcs.size()];
+        int i = 0;
+        for (Long l : ltcs) {
+            latencies[i] = l;
+            i++;
+        }
+        long perc90 = MathUtil.percentile(latencies, 90);
+        long perc95 = MathUtil.percentile(latencies, 90);
+        long perc100 = MathUtil.percentile(latencies, 100);
+        long mean = MathUtil.mean(latencies);
+        long min = MathUtil.min(latencies);
+
+        LOG.info("Websocket Average Test latency: {}ms, min: {}, max: {} Percentile: 90th: {}, 95th: {}", mean, min, perc100, perc90, perc95);
     }
 
     private boolean areTestsComplete(List<ZscoreTestWebClient> clients) {

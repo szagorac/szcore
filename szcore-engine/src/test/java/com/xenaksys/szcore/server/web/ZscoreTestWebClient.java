@@ -5,12 +5,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.xenaksys.szcore.util.MathUtil;
 import gnu.trove.map.hash.TLongObjectHashMap;
-import io.undertow.client.ClientCallback;
-import io.undertow.client.ClientConnection;
-import io.undertow.client.ClientExchange;
-import io.undertow.client.ClientRequest;
-import io.undertow.client.ClientResponse;
-import io.undertow.client.UndertowClient;
+import io.undertow.client.*;
 import io.undertow.connector.ByteBufferPool;
 import io.undertow.connector.PooledByteBuffer;
 import io.undertow.server.DefaultByteBufferPool;
@@ -24,13 +19,7 @@ import io.undertow.websockets.core.BufferedTextMessage;
 import io.undertow.websockets.core.WebSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xnio.ChannelListener;
-import org.xnio.ChannelListeners;
-import org.xnio.IoUtils;
-import org.xnio.OptionMap;
-import org.xnio.Options;
-import org.xnio.Xnio;
-import org.xnio.XnioWorker;
+import org.xnio.*;
 import org.xnio.channels.StreamSinkChannel;
 import org.xnio.channels.StreamSourceChannel;
 
@@ -370,7 +359,7 @@ public class ZscoreTestWebClient {
             protected void onFullTextMessage(WebSocketChannel channel, BufferedTextMessage message) throws IOException {
                 String data = message.getData();
                 int c = wsCount.incrementAndGet();
-                LOG.info("Websocket received {} messages", c);
+                LOG.debug("Websocket received {} messages", c);
                 long now = System.currentTimeMillis();
                 wsReceived.put(now, data);
 

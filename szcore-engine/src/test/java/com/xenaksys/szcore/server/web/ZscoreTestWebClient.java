@@ -1,7 +1,6 @@
 package com.xenaksys.szcore.server.web;
 
 import com.xenaksys.szcore.util.MathUtil;
-import com.xenaksys.szcore.util.NetUtil;
 import io.undertow.client.ClientCallback;
 import io.undertow.client.ClientConnection;
 import io.undertow.client.ClientExchange;
@@ -67,6 +66,7 @@ public class ZscoreTestWebClient {
     private final String[] binaryFlies;
     private final String url;
     private final String host;
+    private final int clientNo;
 
     private UndertowClient client = createClient();
     private XnioWorker worker;
@@ -80,14 +80,15 @@ public class ZscoreTestWebClient {
     private volatile long endTime = 0L;
 
 
-    public ZscoreTestWebClient(String url, String host, String[] stringFiles, String[] binaryFlies) {
+    public ZscoreTestWebClient(int clientNo, String url, String host, String[] stringFiles, String[] binaryFlies) {
         this.stringFiles = stringFiles;
         this.binaryFlies = binaryFlies;
         this.url = url;
         this.host = host;
+        this.clientNo = clientNo;
     }
 
-    public void init() {
+    public void init() throws Exception {
         try {
             address = new URI(url);
             worker = xnio.createWorker(null, DEFAULT_OPTIONS);
@@ -100,7 +101,8 @@ public class ZscoreTestWebClient {
 
             client = createClient();
         } catch (Exception e) {
-            LOG.info("Failed to initalise test", e);
+            LOG.error("Failed to initalise test", e);
+            throw e;
         }
     }
 
@@ -137,7 +139,9 @@ public class ZscoreTestWebClient {
                 }
 
             });
+
             isTestComplete = latch.await(10, TimeUnit.SECONDS);
+            LOG.info("Client No: {}, id Complete: {}", clientNo, isTestComplete);
 
             long byteCount = 0;
             for (String htmlFile : stringFiles) {
@@ -148,9 +152,9 @@ public class ZscoreTestWebClient {
             }
 
             testDuration = endTime - start;
-            double mb = NetUtil.bytesToMbyte(byteCount);
+            double mb = MathUtil.bytesToMbyte(byteCount);
 
-            LOG.info("Request size: {}MB, took {} ms", MathUtil.roundTo2DecimalPlaces(mb), testDuration);
+            LOG.debug("Request size: {}MB, took {} ms", MathUtil.roundTo2DecimalPlaces(mb), testDuration);
 
         } catch (Exception e) {
             LOG.error("Failed tp execute test", e);

@@ -1,14 +1,19 @@
 package com.xenaksys.szcore.server.web;
 
-import com.xenaksys.szcore.util.NetUtil;
+import com.xenaksys.szcore.util.MathUtil;
+import com.xenaksys.szcore.util.ThreadUtil;
 import io.undertow.client.ClientResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -52,7 +57,7 @@ public class WebServerTest {
         //WebSocketClient13TestCase
         //final WebSocketChannel webSocketChannel = WebSocketClient.connectionBuilder(worker, DefaultServer.getBufferPool(), new URI(DefaultServer.getDefaultServerURL())).connect().get();
 
-        ZscoreTestWebClient testWebClient = new ZscoreTestWebClient(URL, HOST, STRING_FILES, BINARY_FLIES);
+        ZscoreTestWebClient testWebClient = new ZscoreTestWebClient(1, URL, HOST, STRING_FILES, BINARY_FLIES);
         testWebClient.init();
         testWebClient.startTest();
 
@@ -69,7 +74,102 @@ public class WebServerTest {
             assertTrue(size > 0);
             downloadSize += size;
         }
+        double mb = MathUtil.bytesToMbyte(downloadSize);
+        LOG.info("Download size = {}MB", MathUtil.roundTo2DecimalPlaces(mb));
+    }
 
-        LOG.info("Download size = {}", NetUtil.bytesToMbyte(downloadSize));
+    @Test
+    public void testMultipleClients() throws Exception {
+        int clientNo = 350;
+        int naxSleepBetweenRequests = 10;
+
+        List<ZscoreTestWebClient> clients = new ArrayList<>(clientNo);
+
+        for (int i = 0; i < clientNo; i++) {
+            LOG.info("Initialising client: {}", i);
+            ZscoreTestWebClient testWebClient = new ZscoreTestWebClient(i, URL, HOST, STRING_FILES, BINARY_FLIES);
+            testWebClient.init();
+            clients.add(testWebClient);
+        }
+
+        ThreadUtil.doSleep(Thread.currentThread(), 2000);
+        ExecutorService executorService = Executors.newFixedThreadPool(50);
+
+        int no = 1;
+        for (ZscoreTestWebClient client : clients) {
+            executorService.submit(new ClientRunner(client, no));
+            no++;
+            long sleep = ThreadLocalRandom.current().nextInt(0, naxSleepBetweenRequests + 1);
+            ThreadUtil.doSleep(Thread.currentThread(), sleep);
+        }
+
+        // Wait for tests to complete
+        while (!areTestsComplete(clients)) {
+            ThreadUtil.doSleep(Thread.currentThread(), 500);
+        }
+
+        LOG.info("### tests Complete");
+
+        long[] durations = new long[clientNo - 1];
+        int i = 0;
+        for (ZscoreTestWebClient client : clients) {
+            assertTrue(client.isTestComplete);
+
+            int reqeustNo = STRING_FILES.length + BINARY_FLIES.length;
+            List<ClientResponse> responses = client.getResponses();
+            assertEquals(reqeustNo, responses.size());
+
+            long testDuration = client.getTestDurationMs();
+            if (i > 0) {
+                durations[i - 1] = testDuration;
+            }
+            i++;
+
+            long downloadSize = 0L;
+            Map<String, Integer> responseSizes = client.getResponseSizeBytes();
+            for (String path : responseSizes.keySet()) {
+                Integer size = responseSizes.get(path);
+                assertTrue(size > 0);
+                downloadSize += size;
+            }
+
+            double mb = MathUtil.bytesToMbyte(downloadSize);
+
+            LOG.info("Test duration: {}ms, Download size = {}MB", testDuration, MathUtil.roundTo2DecimalPlaces(mb));
+        }
+
+        long perc90 = MathUtil.percentile(durations, 90);
+        long perc95 = MathUtil.percentile(durations, 90);
+        long perc100 = MathUtil.percentile(durations, 100);
+        long mean = MathUtil.mean(durations);
+        long min = MathUtil.min(durations);
+
+        LOG.info("Average Test duration: {}ms, min: {}, max: {} Percentile: 90th: {}, 95th: {}", mean, min, perc100, perc90, perc95);
+    }
+
+    private boolean areTestsComplete(List<ZscoreTestWebClient> clients) {
+        for (ZscoreTestWebClient client : clients) {
+            if (!client.isTestComplete()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    class ClientRunner implements Runnable {
+
+        private int clientNo;
+        private final ZscoreTestWebClient client;
+
+        public ClientRunner(ZscoreTestWebClient client, int clientNo) {
+            this.client = client;
+            this.clientNo = clientNo;
+        }
+
+        @Override
+        public void run() {
+            LOG.info("Starting test for client: {}", clientNo);
+            client.startTest();
+        }
     }
 }

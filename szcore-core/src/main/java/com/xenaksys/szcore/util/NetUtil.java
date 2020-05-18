@@ -18,8 +18,6 @@ import java.util.stream.Collectors;
 public class NetUtil {
     static final Logger LOG = LoggerFactory.getLogger(NetUtil.class);
 
-    public static final long MEGABYTE = 1024L * 1024L;
-
     public static InetAddress getHostAddress() throws SocketException {
         Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
         while (interfaces.hasMoreElements()) {
@@ -30,7 +28,7 @@ public class NetUtil {
             List<InterfaceAddress> addrs = networkInterface.getInterfaceAddresses();
             for (InterfaceAddress ia : addrs) {
                 InetAddress inetAddress = ia.getAddress();
-                if(inetAddress instanceof Inet4Address) {
+                if (inetAddress instanceof Inet4Address) {
                     return inetAddress;
                 }
             }
@@ -106,7 +104,7 @@ public class NetUtil {
     }
 
     public static class NetworkDevice {
-        private String hostIp;
+        private final String hostIp;
         private String hostName;
         private InetAddress addr;
 
@@ -146,7 +144,4 @@ public class NetUtil {
     }
 
 
-    public static double bytesToMbyte(long bytes) {
-        return 1.0 * bytes / MEGABYTE;
-    }
 }

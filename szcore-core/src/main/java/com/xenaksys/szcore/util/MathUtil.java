@@ -40,8 +40,12 @@ public class MathUtil {
 
     public static long percentile(long[] values, int perc) {
         Arrays.sort(values);
-        int ind = (int) Math.ceil((perc / 100.0) * (double) values.length);
-        return values[ind - 1];
+        return percentileSorted(values, perc);
+    }
+
+    public static long percentileSorted(long[] sortedArray, int perc) {
+        int ind = (int) Math.ceil((perc / 100.0) * (double) sortedArray.length);
+        return sortedArray[ind - 1];
     }
 
     public static double percentile(List<Double> values, double perc) {
@@ -62,9 +66,14 @@ public class MathUtil {
     }
 
     public static long mean(long[] values) {
+        Arrays.sort(values);
+        return meanSorted(values);
+    }
+
+    public static long meanSorted(long[] sortedValues) {
         long sum = 0L;
-        int len = values.length;
-        for (long v : values) {
+        int len = sortedValues.length;
+        for (long v : sortedValues) {
             sum += v;
         }
         return sum / len;
@@ -91,6 +100,10 @@ public class MathUtil {
 
     public static long min(long[] values) {
         Arrays.sort(values);
-        return values[0];
+        return minSorted(values);
+    }
+
+    public static long minSorted(long[] sortedValues) {
+        return sortedValues[0];
     }
 }

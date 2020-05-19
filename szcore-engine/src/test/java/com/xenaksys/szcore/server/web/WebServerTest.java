@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -80,7 +81,7 @@ public class WebServerTest {
 
     @Test
     public void testMultipleClients() throws Exception {
-        int clientNo = 250;
+        int clientNo = 200;
         int naxSleepBetweenRequests = 1000;
 
         List<ZscoreTestWebClient> clients = new ArrayList<>(clientNo);
@@ -143,13 +144,7 @@ public class WebServerTest {
             LOG.info("Test duration: {}ms, Download size = {}MB", testDuration, MathUtil.roundTo2DecimalPlaces(mb));
         }
 
-        long perc90 = MathUtil.percentile(durations, 90);
-        long perc95 = MathUtil.percentile(durations, 90);
-        long perc100 = MathUtil.percentile(durations, 100);
-        long mean = MathUtil.mean(durations);
-        long min = MathUtil.min(durations);
-
-        LOG.info("Average Test duration: {}ms, min: {}, max: {} Percentile: 90th: {}, 95th: {}", mean, min, perc100, perc90, perc95);
+        printPercentile(durations, "testMultipleHttpClients clientNo: " + clientNo);
     }
 
     @Test
@@ -164,13 +159,7 @@ public class WebServerTest {
         testWebClient.closeWebSocket();
 
         long[] latencies = testWebClient.getWsLatencies();
-        long perc90 = MathUtil.percentile(latencies, 90);
-        long perc95 = MathUtil.percentile(latencies, 90);
-        long perc100 = MathUtil.percentile(latencies, 100);
-        long mean = MathUtil.mean(latencies);
-        long min = MathUtil.min(latencies);
-
-        LOG.info("Websocket Average Test latency: {}ms, min: {}, max: {} Percentile: 90th: {}, 95th: {}", mean, min, perc100, perc90, perc95);
+        printPercentile(latencies, "testWebsocketReceive clientNo: 1");
     }
 
     @Test
@@ -203,13 +192,7 @@ public class WebServerTest {
         testWebClient.closeWebSocket();
 
         long[] latencies = testWebClient.getWsLatencies();
-        long perc90 = MathUtil.percentile(latencies, 90);
-        long perc95 = MathUtil.percentile(latencies, 90);
-        long perc100 = MathUtil.percentile(latencies, 100);
-        long mean = MathUtil.mean(latencies);
-        long min = MathUtil.min(latencies);
-
-        LOG.info("Websocket Average Test latency: {}ms, min: {}, max: {} Percentile: 90th: {}, 95th: {}", mean, min, perc100, perc90, perc95);
+        printPercentile(latencies, "testWebsocketAndHttpReceive clientNo: 1");
     }
 
     @Test
@@ -244,13 +227,8 @@ public class WebServerTest {
             latencies[i] = l;
             i++;
         }
-        long perc90 = MathUtil.percentile(latencies, 90);
-        long perc95 = MathUtil.percentile(latencies, 90);
-        long perc100 = MathUtil.percentile(latencies, 100);
-        long mean = MathUtil.mean(latencies);
-        long min = MathUtil.min(latencies);
 
-        LOG.info("Websocket Average Test latency: {}ms, min: {}, max: {} Percentile: 90th: {}, 95th: {}", mean, min, perc100, perc90, perc95);
+        printPercentile(latencies, "testWebsocketMultiClient clientNo: " + clientNo);
     }
 
     @Test
@@ -309,13 +287,8 @@ public class WebServerTest {
             latencies[i] = l;
             i++;
         }
-        long perc90 = MathUtil.percentile(latencies, 90);
-        long perc95 = MathUtil.percentile(latencies, 90);
-        long perc100 = MathUtil.percentile(latencies, 100);
-        long mean = MathUtil.mean(latencies);
-        long min = MathUtil.min(latencies);
 
-        LOG.info("Websocket Average Test latency: {}ms, min: {}, max: {} Percentile: 90th: {}, 95th: {}", mean, min, perc100, perc90, perc95);
+        printPercentile(latencies, "testWebsocketAndHttpMultipleClients clientNo: " + clientNo);
     }
 
     private boolean areTestsComplete(List<ZscoreTestWebClient> clients) {
@@ -343,6 +316,18 @@ public class WebServerTest {
             }
         }
         return true;
+    }
+
+    private void printPercentile(long[] values, String testName) {
+        Arrays.sort(values);
+        long perc90 = MathUtil.percentileSorted(values, 90);
+        long perc95 = MathUtil.percentileSorted(values, 95);
+        long perc99 = MathUtil.percentileSorted(values, 99);
+        long perc100 = MathUtil.percentileSorted(values, 100);
+        long mean = MathUtil.mean(values);
+        long min = MathUtil.minSorted(values);
+
+        LOG.info(testName + ": average latency: {}ms, min: {}ms, max: {}ms # Percentiles: 90th: {}, 95th: {}, 99th: {}", mean, min, perc100, perc90, perc95, perc99);
     }
 
     class ClientRunner implements Runnable {

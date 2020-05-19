@@ -154,6 +154,27 @@ public class WebServerTest {
 
     @Test
     public void testWebsocketReceive() throws Exception {
+        ZscoreTestWebsocketClient testWebClient = new ZscoreTestWebsocketClient(1, WS_URL, 8);
+        testWebClient.init();
+
+        while (!testWebClient.isWsTestComplete()) {
+            ThreadUtil.doSleep(Thread.currentThread(), 1000);
+        }
+
+        testWebClient.closeWebSocket();
+
+        long[] latencies = testWebClient.getWsLatencies();
+        long perc90 = MathUtil.percentile(latencies, 90);
+        long perc95 = MathUtil.percentile(latencies, 90);
+        long perc100 = MathUtil.percentile(latencies, 100);
+        long mean = MathUtil.mean(latencies);
+        long min = MathUtil.min(latencies);
+
+        LOG.info("Websocket Average Test latency: {}ms, min: {}, max: {} Percentile: 90th: {}, 95th: {}", mean, min, perc100, perc90, perc95);
+    }
+
+    @Test
+    public void testWebsocketAndHttpReceive() throws Exception {
         ZscoreTestWebClient testWebClient = new ZscoreTestWebClient(1, URL, WS_URL, HOST, STRING_FILES, BINARY_FLIES,
                 true, 8);
         testWebClient.init();
@@ -179,6 +200,8 @@ public class WebServerTest {
             ThreadUtil.doSleep(Thread.currentThread(), 1000);
         }
 
+        testWebClient.closeWebSocket();
+
         long[] latencies = testWebClient.getWsLatencies();
         long perc90 = MathUtil.percentile(latencies, 90);
         long perc95 = MathUtil.percentile(latencies, 90);
@@ -190,7 +213,48 @@ public class WebServerTest {
     }
 
     @Test
-    public void testWebsocketMultipleClients() throws Exception {
+    public void testWebsocketMultiClient() throws Exception {
+        int clientNo = 100;
+
+        List<ZscoreTestWebsocketClient> clients = new ArrayList<>(clientNo);
+
+        for (int i = 0; i < clientNo; i++) {
+            LOG.info("Initialising client: {}", i);
+            ZscoreTestWebsocketClient testWebClient = new ZscoreTestWebsocketClient(i, WS_URL, 8);
+            testWebClient.init();
+            clients.add(testWebClient);
+        }
+
+        // Wait for http tests to complete
+        while (!areWsocketTestsComplete(clients)) {
+            ThreadUtil.doSleep(Thread.currentThread(), 500);
+        }
+
+        List<Long> ltcs = new ArrayList<>();
+        for (ZscoreTestWebsocketClient client : clients) {
+            client.closeWebSocket();
+            long[] latencies = client.getWsLatencies();
+            for (long l : latencies) {
+                ltcs.add(l);
+            }
+        }
+        long[] latencies = new long[ltcs.size()];
+        int i = 0;
+        for (Long l : ltcs) {
+            latencies[i] = l;
+            i++;
+        }
+        long perc90 = MathUtil.percentile(latencies, 90);
+        long perc95 = MathUtil.percentile(latencies, 90);
+        long perc100 = MathUtil.percentile(latencies, 100);
+        long mean = MathUtil.mean(latencies);
+        long min = MathUtil.min(latencies);
+
+        LOG.info("Websocket Average Test latency: {}ms, min: {}, max: {} Percentile: 90th: {}, 95th: {}", mean, min, perc100, perc90, perc95);
+    }
+
+    @Test
+    public void testWebsocketAndHttpMultipleClients() throws Exception {
         int clientNo = 100;
         int naxSleepBetweenRequests = 1000;
 
@@ -233,6 +297,7 @@ public class WebServerTest {
 
         List<Long> ltcs = new ArrayList<>();
         for (ZscoreTestWebClient client : clients) {
+            client.closeWebSocket();
             long[] latencies = client.getWsLatencies();
             for (long l : latencies) {
                 ltcs.add(l);
@@ -264,6 +329,15 @@ public class WebServerTest {
 
     private boolean areWsTestsComplete(List<ZscoreTestWebClient> clients) {
         for (ZscoreTestWebClient client : clients) {
+            if (!client.isWsTestComplete()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean areWsocketTestsComplete(List<ZscoreTestWebsocketClient> clients) {
+        for (ZscoreTestWebsocketClient client : clients) {
             if (!client.isWsTestComplete()) {
                 return false;
             }

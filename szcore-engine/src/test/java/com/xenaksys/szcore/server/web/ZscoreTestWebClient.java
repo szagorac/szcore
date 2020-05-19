@@ -5,7 +5,12 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.xenaksys.szcore.util.MathUtil;
 import gnu.trove.map.hash.TLongObjectHashMap;
-import io.undertow.client.*;
+import io.undertow.client.ClientCallback;
+import io.undertow.client.ClientConnection;
+import io.undertow.client.ClientExchange;
+import io.undertow.client.ClientRequest;
+import io.undertow.client.ClientResponse;
+import io.undertow.client.UndertowClient;
 import io.undertow.connector.ByteBufferPool;
 import io.undertow.connector.PooledByteBuffer;
 import io.undertow.server.DefaultByteBufferPool;
@@ -19,7 +24,13 @@ import io.undertow.websockets.core.BufferedTextMessage;
 import io.undertow.websockets.core.WebSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xnio.*;
+import org.xnio.ChannelListener;
+import org.xnio.ChannelListeners;
+import org.xnio.IoUtils;
+import org.xnio.OptionMap;
+import org.xnio.Options;
+import org.xnio.Xnio;
+import org.xnio.XnioWorker;
 import org.xnio.channels.StreamSinkChannel;
 import org.xnio.channels.StreamSourceChannel;
 
@@ -36,7 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertNotNull;
 
-public class ZscoreTestWebClient {
+public class ZscoreTestWebClient implements WsClient, HttpClient {
     static final Logger LOG = LoggerFactory.getLogger(ZscoreTestWebClient.class);
 
     private static final OptionMap DEFAULT_OPTIONS;
@@ -60,7 +71,7 @@ public class ZscoreTestWebClient {
     private final Map<String, Integer> responseSizeBytes = new ConcurrentHashMap<>();
     private final Map<String, AtomicInteger> responseCounter = new ConcurrentHashMap<>();
     private final TLongObjectHashMap<String> wsReceived = new TLongObjectHashMap<>();
-    final Xnio xnio = Xnio.getInstance();
+    private final Xnio xnio = Xnio.getInstance();
 
     private final String[] stringFiles;
     private final String[] binaryFlies;

@@ -110,6 +110,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
     private volatile String subnetMask = Consts.DEFAULT_SUBNET_MASK;
     private volatile int inscorePort = Consts.DEFAULT_OSC_PORT;
+    private volatile int maxPort = Consts.DEFAULT_OSC_MAX_PORT;
     private InetAddress broadcastAddress = null;
 
     protected SzcoreServer(String id) {
@@ -132,23 +133,29 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         try {
             String serverIp = getServerAddress().getHostAddress();
             String subnetMask = getSubnetMask();
-            int remotePort = getInscorePort();
-            initBroadcastAddresses(serverIp, subnetMask, remotePort);
+            int[] remotePorts = getRemotePorts();
+            initBroadcastAddresses(serverIp, subnetMask, remotePorts);
         } catch (Exception e) {
             LOG.error("Failed to init net info", e);
         }
     }
 
-    public void initBroadcastAddresses(String serverIp, String subnetMask, int remotePort) throws Exception {
+    public int[] getRemotePorts() {
+        int inscorePort = getInscorePort();
+        int maxPort = getMaxPort();
+        return new int[]{inscorePort, maxPort};
+    }
+
+    public void initBroadcastAddresses(String serverIp, String subnetMask, int[] remotePorts) throws Exception {
         InetAddress broadcastAddress = getBroadcastAddress();
-        if(broadcastAddress == null) {
+        if (broadcastAddress == null) {
             broadcastAddress = detectBroadcastAddress(serverIp, subnetMask);
             setBroadcastAddress(broadcastAddress);
         }
 
         List<InetAddress> out = new ArrayList<>();
         List<InetAddress> broadcastAddrs = NetUtil.listAllBroadcastAddresses();
-        if(broadcastAddrs.isEmpty()) {
+        if (broadcastAddrs.isEmpty()) {
             out.add(broadcastAddress);
         } else {
             if(!broadcastAddrs.contains(broadcastAddress)) {
@@ -159,8 +166,11 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         }
 
         oscEventPublisher.resetBroadcastPorts();
+
         for(InetAddress badr : out) {
-            addBroadcastPort(badr, remotePort);
+            for (int port : remotePorts) {
+                addBroadcastPort(badr, port);
+            }
         }
     }
 
@@ -409,7 +419,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
         List<OSCPortOut> bPorts = oscEventPublisher.getBroadcastPorts();
         for(OSCPortOut bPort : bPorts) {
-            if(bPort.getAddress().equals(addr)) {
+            if (bPort.getAddress().equals(addr) && bPort.getPort() == port) {
                 LOG.info("addBroadcastPort: broadcast addr {} already registered, ignoring add broadcast port", addr.getHostAddress());
                 return;
             }
@@ -868,12 +878,22 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
+    public int getMaxPort() {
+        return maxPort;
+    }
+
+    @Override
+    public void setMaxPort(int maxPort) {
+        this.maxPort = maxPort;
+    }
+
+    @Override
     public String getSubnetMask() {
         return subnetMask;
     }
 
     @Override
-    public void  setSubnetMask(String subnetMask) {
+    public void setSubnetMask(String subnetMask) {
         this.subnetMask = subnetMask;
     }
 

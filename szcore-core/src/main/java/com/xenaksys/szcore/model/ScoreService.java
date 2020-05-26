@@ -87,6 +87,10 @@ public interface ScoreService {
 
     void setInscorePort(int inscorePort);
 
+    int getMaxPort();
+
+    void setMaxPort(int maxPort);
+
     String getSubnetMask();
 
     void setSubnetMask(String subnetMask);

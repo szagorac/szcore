@@ -138,17 +138,18 @@ public class WebServer {
     }
 
     public void pushToAll(String data) {
-        LOG.info("pushToAll: data: {}", data);
-        if(wsHandler != null && data != null) {
-            Set<WebSocketChannel>  channels =  wsHandler.getPeerConnections();
+        byte[] bytes = data.getBytes();
+        LOG.info("pushToAll:  size {} data: {}", bytes.length, data);
+        if (wsHandler != null && data != null) {
+            Set<WebSocketChannel> channels = wsHandler.getPeerConnections();
             for (WebSocketChannel channel : channels) {
                 pushToChannel(data, channel);
             }
         }
 
-        if(sseHandler != null && data != null) {
+        if (sseHandler != null && data != null) {
             Set<ZsSseConnection> connections = sseHandler.getConnections();
-            for(ZsSseConnection sseConnection : connections) {
+            for (ZsSseConnection sseConnection : connections) {
                 sseConnection.send(data);
             }
         }

@@ -122,23 +122,35 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
     }
 
     private void processInscoreHello(IncomingOscEvent event) {
-        List<Object> args =  event.getArguments();
+        List<Object> args = event.getArguments();
 
-        String ip = (String)args.get(0);
+        String ip = (String) args.get(0);
         InetAddress inetAddress = event.getInetAddress();
-        if(!inetAddress.getHostAddress().equals(ip)){
+        if (!inetAddress.getHostAddress().equals(ip)) {
             LOG.error("Inscore HELLO Event IP address: " + ip + " is not the same as InetAddress: " + inetAddress.getHostAddress() + ", assuming local host");
         }
+
         addParticipant(inetAddress);
 
-        int remoteInPort = (Integer)args.get(1);
+        int remoteOutPort = 0;
+        int remoteErrPort = 0;
+
+        int remoteInPort = (Integer) args.get(1);
         addOutPort(inetAddress, remoteInPort);
 
-        int remoteOutPort = (Integer)args.get(2);
-        addInPort(remoteOutPort);
+        if (args.size() > 2) {
+            remoteOutPort = (Integer) args.get(2);
+            if (remoteOutPort != 0) {
+                addInPort(remoteOutPort);
+            }
+        }
 
-        int remoteErrPort = (Integer)args.get(3);
-        addInPort(remoteErrPort);
+        if (args.size() > 3) {
+            remoteErrPort = (Integer) args.get(3);
+            if (remoteErrPort != 0) {
+                addInPort(remoteErrPort);
+            }
+        }
 
         server.sendServerHelloEvent(inetAddress.getHostAddress());
 
@@ -157,7 +169,7 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
 //        LOG.debug("Received SZCORE message: " + event.getAddress() + " args: " + event.getArguments());
 
         if(isSzcoreHello(event)) {
-            processHello(event);
+            processSzcoreHello(event);
         } else if(isSzcorePing(event)){
             processPing(event);
         } else if(isSzcoreSetInstrument(event)){
@@ -196,14 +208,14 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
 
     }
 
-    private void processHello(IncomingOscEvent event){
-        List<Object> args =  event.getArguments();
+    private void processSzcoreHello(IncomingOscEvent event) {
+        List<Object> args = event.getArguments();
         int port = Consts.DEFAULT_OSC_PORT;
 
-        if(args.size() > 1) {
+        if (args.size() > 1) {
             Object arg = args.get(1);
-            if(arg != null && (arg instanceof Integer)){
-                port = (Integer)arg;
+            if (arg != null && (arg instanceof Integer)) {
+                port = (Integer) arg;
             }
 
         }
@@ -329,15 +341,19 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
         return Consts.ARG_SET_INSTRUMENT.equals(sarg);
     }
 
-    private boolean isInscoreHello(IncomingOscEvent event){
+    private boolean isInscoreHello(IncomingOscEvent event) {
+        String oscAddress = event.getAddress();
+        if (!Consts.OSC_INSCORE_ADDRESS_ROOT.equals(oscAddress)) {
+            return false;
+        }
 
-        List<Object> args =  event.getArguments();
-        if(args == null || args.size() != 4) {
+        List<Object> args = event.getArguments();
+        if (args == null || args.size() != 4) {
             return false;
         }
 
         Object arg = args.get(0);
-        if(arg == null || !(arg instanceof String)){
+        if (!(arg instanceof String)) {
             return false;
         }
 
@@ -349,7 +365,7 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
 
         for(int i = 1 ; i <=3; i++){
             arg = args.get(i);
-            if(arg == null || !(arg instanceof Integer)){
+            if (!(arg instanceof Integer)) {
                 return false;
             }
         }

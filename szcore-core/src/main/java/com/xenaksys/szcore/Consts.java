@@ -104,7 +104,7 @@ public interface Consts {
     int DEFAULT_OSC_OUT_PORT = 7001;
     int DEFAULT_OSC_ERR_PORT = 7002;
     int DEFAULT_OSC_SERVER_PORT = 7777;
-    int DEFAULT_OSC_MAX_PORT = 7666;
+    int DEFAULT_OSC_MAX_PORT = 6666;
     int DEFAULT_ALL_PORTS = Integer.MIN_VALUE;
     String DEFAULT_SUBNET_MASK = "255.255.255.0";
 

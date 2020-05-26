@@ -13,6 +13,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 import java.net.InetAddress;
+import java.util.Objects;
 
 public class Participant {
     private ObjectProperty<InetAddress> inetAddress = new SimpleObjectProperty<>();
@@ -119,16 +120,15 @@ public class Participant {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Participant)) return false;
-
+        if (o == null || getClass() != o.getClass()) return false;
         Participant that = (Participant) o;
-
-        return getHostAddress().equals(that.getHostAddress());
+        return hostAddress.getValue().equals(that.hostAddress.getValue()) &&
+                portIn.getValue().equals(that.portIn.getValue());
     }
 
     @Override
     public int hashCode() {
-        return hostAddress.hashCode();
+        return Objects.hash(hostAddress, portIn);
     }
 
     @Override

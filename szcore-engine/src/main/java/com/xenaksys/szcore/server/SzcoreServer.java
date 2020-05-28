@@ -14,6 +14,7 @@ import com.xenaksys.szcore.event.PingEvent;
 import com.xenaksys.szcore.event.ServerHelloEvent;
 import com.xenaksys.szcore.event.WebScoreEvent;
 import com.xenaksys.szcore.model.BeatTimeStrategy;
+import com.xenaksys.szcore.model.ClientInfo;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.EventService;
 import com.xenaksys.szcore.model.Id;
@@ -104,7 +105,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     private Disruptor<EventContainer> inDisruptor;
     private WebServer webServer;
 
-    private final Map<String, InetAddress> participants = new ConcurrentHashMap<>();
+    private final Map<String, ClientInfo> participants = new ConcurrentHashMap<>();
     private final Map<String, ParticipantStats> participantStats = new ConcurrentHashMap<>();
     private PingEvent pingEvent;
 
@@ -359,61 +360,67 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         return oscEventPublisher;
     }
 
-    public boolean isParticipant(InetAddress addr){
-        if(addr == null){
+    public boolean isParticipant(String clientId) {
+        if (clientId == null) {
             return false;
         }
-
-        String ip = addr.getHostAddress();
-        return participants.containsKey(ip);
+        return participants.containsKey(clientId);
     }
 
-    public void addParticipant(InetAddress addr){
-        if(addr == null){
+    public void addParticipant(String id, InetAddress addr, int port) {
+        if (id == null || addr == null) {
             return;
         }
-        participants.put(addr.getHostAddress(), addr);
-    }
-
-    public void addParticipantStats(ParticipantStats stats){
-        if(stats == null || stats.getIpAddress() == null){
+        if (participants.containsKey(id)) {
+            LOG.info("addParticipant: participant key {} exists already, ignoring add..", id);
             return;
         }
-        participantStats.put(stats.getIpAddress(), stats);
+
+        ClientInfo info = new ClientInfo(id, addr, port);
+        participants.put(id, info);
     }
 
-    public ParticipantStats getParticipantStats(String ipAddress){
-        return participantStats.get(ipAddress);
+    public void addParticipantStats(ParticipantStats stats) {
+        if (stats == null || stats.getId() == null) {
+            return;
+        }
+        participantStats.put(stats.getId(), stats);
     }
 
-    public InetAddress getParticipantAddress(String ipAddress){
-        return participants.get(ipAddress);
+    public ParticipantStats getParticipantStats(String participantId) {
+        return participantStats.get(participantId);
     }
 
-    public Collection<String> getParticipants(){
+    public InetAddress getParticipantAddress(String participantId) {
+        if (participants.containsKey(participantId)) {
+            return null;
+        }
+        return participants.get(participantId).getAddr();
+    }
+
+    public Collection<String> getParticipantIds() {
         return participants.keySet();
     }
 
-    public void sendHello(String remoteAddr){
-        HelloEvent helloEvent = eventFactory.createHelloEvent(remoteAddr, 0L);
+    public void sendHello(String clientId) {
+        HelloEvent helloEvent = eventFactory.createHelloEvent(clientId, 0L);
         oscEventPublisher.process(helloEvent);
     }
 
-    public void sendServerHelloEvent(String remoteAddr){
+    public void sendServerHelloEvent(String remoteAddr) {
         ServerHelloEvent pingEvent = eventFactory.createServerHelloEvent(getServerAddress().getHostAddress(), remoteAddr, 0L);
         oscEventPublisher.process(pingEvent);
     }
 
-    public void addOutPort(InetAddress addr, int port){
-        String remoteAddr = addr.getHostAddress();
-        if(!oscEventPublisher.isDestination(remoteAddr, port)) {
+    public void addOutPort(String id, InetAddress addr, int port) {
+        if (!oscEventPublisher.isDestination(id, port)) {
             OSCPortOut outPort = OscPortFactory.createOutPort(addr, port);
-            oscEventPublisher.addOscPort(remoteAddr, outPort);
+            oscEventPublisher.addOscPort(id, outPort);
         }
     }
 
-    public void addBroadcastPort(InetAddress addr, int port){
-        if(addr == null) {
+    public void addBroadcastPort(InetAddress addr, int port) {
+        if (addr == null) {
             return;
         }
 
@@ -540,19 +547,18 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         return webProcessor;
     }
 
-    public void addInstrumentOutPort(InetAddress addr, String instrument){
-        String remoteAddr = addr.getHostAddress();
-        OSCPortOut outPort = oscEventPublisher.getOutPort(remoteAddr);
-        if(outPort == null){
-            LOG.error("Add Instrument: Failed to find out port for instrument: " + instrument + " addr: " + remoteAddr);
+    public void addInstrumentOutPort(String clientId, String instrument) {
+        OSCPortOut outPort = oscEventPublisher.getOutPort(clientId);
+        if (outPort == null) {
+            LOG.error("Add Instrument: Failed to find out port for instrument: " + instrument + " clientId: " + clientId);
             return;
         }
 
         oscEventPublisher.addOscPort(instrument, outPort);
     }
 
-    public void sendScoreInfo(String instrument){
-        if(instrument == null){
+    public void sendScoreInfo(String instrument) {
+        if (instrument == null) {
             return;
         }
 

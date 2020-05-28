@@ -18,12 +18,18 @@ import com.xenaksys.szcore.process.AbstractContainerEventReceiverDisruptorProces
 import com.xenaksys.szcore.receive.SzcoreIncomingEventListener;
 import com.xenaksys.szcore.server.SzcoreServer;
 import com.xenaksys.szcore.util.IpAddressValidator;
+import com.xenaksys.szcore.util.NetUtil;
+import com.xenaksys.szcore.util.PropertyUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import static com.xenaksys.szcore.Consts.DEFAULT_OSC_ERR_PORT;
+import static com.xenaksys.szcore.Consts.DEFAULT_OSC_OUT_PORT;
+import static com.xenaksys.szcore.Consts.DEFAULT_OSC_PORT;
 
 
 public class InEventContainerDisruptorProcessor extends AbstractContainerEventReceiverDisruptorProcessor {
@@ -81,19 +87,19 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
     }
 
     private void processIncomingOscEvent(IncomingOscEvent event) {
-        if(event == null){
+        if (event == null) {
             return;
         }
 
-        InetAddress inetAddress = event.getInetAddress();
-        boolean isParticipant = checkAddress(inetAddress);
-
-        if(!isParticipant){
-            addParticipant(inetAddress);
-        }
+//        InetAddress inetAddress = event.getInetAddress();
+//        boolean isParticipant = checkAddress(inetAddress);
+//
+//        if(!isParticipant){
+//            addParticipant(inetAddress);
+//        }
 
         String address = event.getAddress();
-        switch(address){
+        switch (address) {
             case Consts.SZCORE_ADDR:
                 processSzcoreMessage(event);
                 break;
@@ -130,29 +136,22 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
             LOG.error("Inscore HELLO Event IP address: " + ip + " is not the same as InetAddress: " + inetAddress.getHostAddress() + ", assuming local host");
         }
 
-        addParticipant(inetAddress);
+        int remoteInPort = PropertyUtil.parseIntArg(args, 1, DEFAULT_OSC_PORT);
+        String clientId = NetUtil.createClientId(inetAddress, remoteInPort);
+        addParticipant(clientId, inetAddress, remoteInPort);
+        addOutPort(clientId, inetAddress, remoteInPort);
 
-        int remoteOutPort = 0;
-        int remoteErrPort = 0;
-
-        int remoteInPort = (Integer) args.get(1);
-        addOutPort(inetAddress, remoteInPort);
-
-        if (args.size() > 2) {
-            remoteOutPort = (Integer) args.get(2);
-            if (remoteOutPort != 0) {
-                addInPort(remoteOutPort);
-            }
+        int remoteOutPort = PropertyUtil.parseIntArg(args, 2, DEFAULT_OSC_OUT_PORT);
+        if (remoteOutPort != 0) {
+            addInPort(remoteOutPort);
         }
 
-        if (args.size() > 3) {
-            remoteErrPort = (Integer) args.get(3);
-            if (remoteErrPort != 0) {
-                addInPort(remoteErrPort);
-            }
+        int remoteErrPort = PropertyUtil.parseIntArg(args, 3, DEFAULT_OSC_ERR_PORT);
+        if (remoteErrPort != 0) {
+            addInPort(remoteErrPort);
         }
 
-        server.sendServerHelloEvent(inetAddress.getHostAddress());
+        server.sendServerHelloEvent(clientId);
 
         ParticipantEvent participantEvent = eventFactory.createParticipantEvent(inetAddress, inetAddress.getHostAddress(), remoteInPort, remoteOutPort,
                 remoteErrPort, 0, Consts.NAME_NA, clock.getSystemTimeMillis());
@@ -168,11 +167,11 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
     private void processSzcoreMessage(IncomingOscEvent event) {
 //        LOG.debug("Received SZCORE message: " + event.getAddress() + " args: " + event.getArguments());
 
-        if(isSzcoreHello(event)) {
+        if (isSzcoreHello(event)) {
             processSzcoreHello(event);
-        } else if(isSzcorePing(event)){
+        } else if (isSzcorePing(event)) {
             processPing(event);
-        } else if(isSzcoreSetInstrument(event)){
+        } else if (isSzcoreSetInstrument(event)) {
             processSetInstrument(event);
         }
 
@@ -180,29 +179,29 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
     }
 
     private void processSetInstrument(IncomingOscEvent event) {
-        List<Object> args =  event.getArguments();
-        String instrument = null;
+        List<Object> args = event.getArguments();
 
-        if(args.size() > 1) {
-            Object arg = args.get(1);
-            if(arg != null && (arg instanceof String)){
-                instrument = (String)arg;
-            }
+        String instrument = PropertyUtil.parseStringArg(args, 1, null);
+        if (instrument == null) {
+            LOG.error("processSetInstrument: Received invalid instrument");
+            return;
         }
 
+        int port = PropertyUtil.parseIntArg(args, 2, DEFAULT_OSC_PORT);
         InetAddress inetAddress = event.getInetAddress();
+        String clientId = NetUtil.createClientId(inetAddress, port);
 
-        if(!server.isParticipant(inetAddress)){
+        if (!server.isParticipant(clientId)) {
             LOG.error("Invalid participant in set Instrument: " + inetAddress.getHostAddress());
-            addParticipant(inetAddress);
+            addParticipant(clientId, inetAddress, port);
             server.sendHello(inetAddress.getHostAddress());
         }
 
-        server.addInstrumentOutPort(inetAddress, instrument);
+        server.addInstrumentOutPort(clientId, instrument);
 
         server.sendScoreInfo(instrument);
 
-        InstrumentEvent instrumentEvent = new InstrumentEvent(inetAddress, instrument, clock.getSystemTimeMillis());
+        InstrumentEvent instrumentEvent = new InstrumentEvent(inetAddress, port, instrument, clock.getSystemTimeMillis());
 
         notifyListeners(instrumentEvent);
 
@@ -210,60 +209,49 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
 
     private void processSzcoreHello(IncomingOscEvent event) {
         List<Object> args = event.getArguments();
-        int port = Consts.DEFAULT_OSC_PORT;
 
-        if (args.size() > 1) {
-            Object arg = args.get(1);
-            if (arg != null && (arg instanceof Integer)) {
-                port = (Integer) arg;
-            }
+        int clientInPort = PropertyUtil.parseIntArg(args, 1, DEFAULT_OSC_PORT);
+        InetAddress inetAddress = event.getInetAddress();
+        String clientId = NetUtil.createClientId(inetAddress, clientInPort);
+        addParticipant(clientId, inetAddress, clientInPort);
+        addOutPort(clientId, inetAddress, clientInPort);
 
-        }
-        addOutPort(event.getInetAddress(), port);
+        int clientOutPort = PropertyUtil.parseIntArg(args, 2, DEFAULT_OSC_OUT_PORT);
+        addInPort(clientOutPort);
 
-        port = Consts.DEFAULT_OSC_OUT_PORT;
-        if( args.size() > 2) {
-            Object arg = args.get(2);
-            if(arg != null && (arg instanceof Integer)){
-                port = (Integer)arg;
-            }
-        }
-        addInPort(port);
+        server.sendHello(clientId);
 
+        ParticipantEvent participantEvent = eventFactory.createParticipantEvent(inetAddress, inetAddress.getHostAddress(), clientInPort, clientOutPort,
+                0, 0, Consts.NAME_NA, clock.getSystemTimeMillis());
 
-        server.sendHello(event.getInetAddress().getHostAddress());
+        notifyListeners(participantEvent);
     }
 
-    private void processPing(IncomingOscEvent event){
-        List<Object> args =  event.getArguments();
-        String st = null;
+    private void processPing(IncomingOscEvent event) {
+        List<Object> args = event.getArguments();
 
-        if(args.size() > 1) {
-            Object arg = args.get(1);
-            if(arg != null && (arg instanceof String)){
-                st = (String)arg;
-            }
-        }
+        long sendTime = PropertyUtil.parseLongArg(args, 1, 0L);
+        int port = PropertyUtil.parseIntArg(args, 2, DEFAULT_OSC_PORT);
 
-        if(st == null){
+        if (sendTime == 0L) {
             return;
         }
 
         InetAddress inetAddress = event.getInetAddress();
+        String ipAddress = inetAddress.getHostAddress();
+        String clientId = NetUtil.createClientId(inetAddress, port);
 
-        if(!server.isParticipant(inetAddress)){
+        if (!server.isParticipant(clientId)) {
             LOG.error("Ping from Invalid participant: " + inetAddress.getHostAddress());
             return;
         }
 
-        String ipAddress = inetAddress.getHostAddress();
-        ParticipantStats stats = server.getParticipantStats(ipAddress);
-        if(stats == null){
-            stats = new ParticipantStats(ipAddress);
+        ParticipantStats stats = server.getParticipantStats(clientId);
+        if (stats == null) {
+            stats = new ParticipantStats(clientId, ipAddress);
             server.addParticipantStats(stats);
         }
 
-        long sendTime = Long.valueOf(st);
         long receivedTime = event.getCreationTime();
         double latency = 1.0*(receivedTime - sendTime);
         double oneWayLatency = latency/2.0;
@@ -273,7 +261,7 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
         stats.setPingLatency(latency);
         stats.setOneWayPingLatency(oneWayLatency);
 
-        ParticipantStatsEvent statsEvent = eventFactory.createParticipantStatsEvent(inetAddress, ipAddress, latency, oneWayLatency, clock.getSystemTimeMillis());
+        ParticipantStatsEvent statsEvent = eventFactory.createParticipantStatsEvent(inetAddress, ipAddress, port, latency, oneWayLatency, clock.getSystemTimeMillis());
 
         notifyListeners(statsEvent);
     }
@@ -301,7 +289,7 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
         }
 
         Object arg = args.get(0);
-        if(arg == null || !(arg instanceof String)){
+        if (!(arg instanceof String)) {
             return false;
         }
 
@@ -317,7 +305,7 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
         }
 
         Object arg = args.get(0);
-        if(arg == null || !(arg instanceof String)){
+        if (!(arg instanceof String)) {
             return false;
         }
 
@@ -333,7 +321,7 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
         }
 
         Object arg = args.get(0);
-        if(arg == null || !(arg instanceof String)){
+        if (!(arg instanceof String)) {
             return false;
         }
 
@@ -373,23 +361,19 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
         return true;
     }
 
-    private boolean isIpAddress(String ip){
+    private boolean isIpAddress(String ip) {
         return ipValidator.validate(ip);
     }
 
-    private boolean checkAddress(InetAddress address){
-        return server.isParticipant(address);
+    private void addParticipant(String id, InetAddress address, int port) {
+        server.addParticipant(id, address, port);
     }
 
-    private void addParticipant(InetAddress address){
-        server.addParticipant(address);
+    private void addOutPort(String id, InetAddress address, int port) {
+        server.addOutPort(id, address, port);
     }
 
-    private void addOutPort(InetAddress address, int port){
-        server.addOutPort(address, port);
-    }
-
-    private void addInPort(int port){
+    private void addInPort(int port) {
         server.addInPort(port);
     }
 

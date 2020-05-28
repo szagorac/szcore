@@ -6,6 +6,7 @@ import com.xenaksys.szcore.event.OscEvent;
 import com.xenaksys.szcore.net.osc.OSCMessage;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.process.AbstractOscPublisherDisruptorProcessor;
+import com.xenaksys.szcore.util.NetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,26 +33,31 @@ public class OscDisruptorPublishProcessor extends AbstractOscPublisherDisruptorP
         }
 
         InetAddress inetAddress = port.getAddress();
-        if(inetAddress == null){
+        if (inetAddress == null) {
             return;
         }
 
         String hostAddr = inetAddress.getHostAddress();
-        if(hostAddr == null){
+        if (hostAddr == null) {
             return;
         }
 
+        int portNo = port.getPort();
+        String clientId = NetUtil.createClientId(hostAddr, portNo);
+
         toRemove.clear();
-        for(String outKey: oscPublishPorts.keySet()){
-            OSCPortOut outPort = oscPublishPorts.get(outKey);
-            InetAddress outInetAddress = outPort.getAddress();
-            String outHostAddr = outInetAddress.getHostAddress();
-            if(hostAddr.equals(outHostAddr)){
-                LOG.warn("Already have out port with the same IP address for destination: " + outKey);
-                if(hostAddr.equals(outKey)){
-                    LOG.warn("Existing out port is allowed; IP address destination: " + outKey);
+        for (String outKey : oscPublishPorts.keySet()) {
+            OSCPortOut publishPort = oscPublishPorts.get(outKey);
+            InetAddress publishInetAddress = publishPort.getAddress();
+            String publishHostAddr = publishInetAddress.getHostAddress();
+            int publishPortNo = publishPort.getPort();
+
+            if (hostAddr.equals(publishHostAddr) && portNo == publishPortNo) {
+                LOG.info("addOscPort: Already have out port for id: {}, adding destination: {}", outKey, destination);
+                if (clientId.equals(outKey)) {
+                    LOG.info("addOscPort: OutPort exists for destination: {}, reusing port for destination: {}", outKey, destination);
                 } else {
-                    LOG.warn("Removing existing out port mapping for a different destination: " + outKey);
+                    LOG.warn("addOscPort: Removing existing out port mapping: {}, adding mapping for destination: {}", outKey, destination);
                     toRemove.add(outKey);
                 }
             }
@@ -122,7 +128,7 @@ public class OscDisruptorPublishProcessor extends AbstractOscPublisherDisruptorP
         } else {
             OSCPortOut port = oscPublishPorts.get(destination);
             if (port == null) {
-//            LOG.error("Failed to find OSC port for destination: " + destination);
+                LOG.error("Failed to find OSC port for destination: " + destination);
                 return;
             }
             send(port, address, args);

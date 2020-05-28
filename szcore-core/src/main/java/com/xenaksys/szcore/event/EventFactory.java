@@ -87,11 +87,11 @@ public class EventFactory {
     }
 
     public ParticipantEvent createParticipantEvent(InetAddress inetAddress, String hostAddress, int portIn, int portOut, int portErr, int ping, String instrument, long creationTime) {
-        return new  ParticipantEvent(inetAddress, hostAddress, portIn, portOut, portErr, ping, instrument, creationTime);
+        return new ParticipantEvent(inetAddress, hostAddress, portIn, portOut, portErr, ping, instrument, creationTime);
     }
 
-    public ParticipantStatsEvent createParticipantStatsEvent(InetAddress inetAddress, String hostAddress, double pingLatencyMillis, double halfPingLatencyMillis, long creationTime){
-        return new ParticipantStatsEvent(inetAddress, hostAddress, pingLatencyMillis, halfPingLatencyMillis, creationTime);
+    public ParticipantStatsEvent createParticipantStatsEvent(InetAddress inetAddress, String hostAddress, int port, double pingLatencyMillis, double halfPingLatencyMillis, long creationTime) {
+        return new ParticipantStatsEvent(inetAddress, hostAddress, port, pingLatencyMillis, halfPingLatencyMillis, creationTime);
     }
 
     public OscEvent createOscEvent(String address, List<Object> arguments, BeatId eventBaseBeat, long creationTime) {

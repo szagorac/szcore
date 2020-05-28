@@ -15,8 +15,28 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static com.xenaksys.szcore.Consts.COLUMN;
+import static com.xenaksys.szcore.Consts.EMPTY;
+
 public class NetUtil {
     static final Logger LOG = LoggerFactory.getLogger(NetUtil.class);
+
+
+    public static String createClientId(InetAddress addr, int port) {
+        String a = EMPTY;
+        if (addr != null) {
+            a = addr.getHostAddress();
+        }
+        return a + COLUMN + port;
+    }
+
+    public static String createClientId(String addr, int port) {
+        String a = EMPTY;
+        if (addr != null) {
+            a = addr;
+        }
+        return a + COLUMN + port;
+    }
 
     public static InetAddress getHostAddress() throws SocketException {
         Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();

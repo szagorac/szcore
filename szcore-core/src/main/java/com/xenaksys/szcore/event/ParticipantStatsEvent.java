@@ -6,13 +6,15 @@ public class ParticipantStatsEvent extends ClientEvent{
 
     private final InetAddress inetAddress;
     private final String hostAddress;
+    private final int port;
     private final double pingLatencyMillis;
     private final double oneWayPingLatencyMillis;
 
-    public ParticipantStatsEvent(InetAddress inetAddress, String hostAddress, double pingLatencyMillis, double oneWayPingLatencyMillis, long time) {
+    public ParticipantStatsEvent(InetAddress inetAddress, String hostAddress, int port, double pingLatencyMillis, double oneWayPingLatencyMillis, long time) {
         super(time);
         this.inetAddress = inetAddress;
         this.hostAddress = hostAddress;
+        this.port = port;
         this.pingLatencyMillis = pingLatencyMillis;
         this.oneWayPingLatencyMillis = oneWayPingLatencyMillis;
     }
@@ -33,6 +35,10 @@ public class ParticipantStatsEvent extends ClientEvent{
         return oneWayPingLatencyMillis;
     }
 
+    public int getPort() {
+        return port;
+    }
+
     @Override
     public ClientEventType getClientEventType() {
         return ClientEventType.PARTICIPANT_STATS;
@@ -43,6 +49,7 @@ public class ParticipantStatsEvent extends ClientEvent{
         return "ParticipantStatsEvent{" +
                 "inetAddress=" + inetAddress +
                 ", hostAddress='" + hostAddress + '\'' +
+                ", port=" + port +
                 ", pingLatencyMillis=" + pingLatencyMillis +
                 ", oneWayPingLatencyMillis=" + oneWayPingLatencyMillis +
                 '}';

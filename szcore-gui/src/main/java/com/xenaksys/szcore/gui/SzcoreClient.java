@@ -216,8 +216,8 @@ public class SzcoreClient extends Application {
             return;
         }
 
-        if(participants.contains(participant)){
-            LOG.warn("Participant is already registered: " + participant);
+        if (participants.contains(participant)) {
+            updateParticipant(participant);
             return;
         }
 
@@ -225,13 +225,26 @@ public class SzcoreClient extends Application {
         participants.add(participant);
     }
 
-    public Participant getParticipant(String hostAddress){
-        if(hostAddress == null){
+    public void updateParticipant(Participant participant) {
+        Participant toUpdate = getParticipant(participant.getHostAddress(), participant.getPortIn());
+        if (toUpdate == null) {
+            return;
+        }
+        LOG.info("Updating Participant: " + participant);
+        toUpdate.setInstrument(participant.getInstrument());
+        toUpdate.setPing(participant.getPing());
+        toUpdate.setPortErr(participant.getPortErr());
+        toUpdate.setPortOut(participant.getPortOut());
+        toUpdate.setSelect(participant.getSelect());
+    }
+
+    public Participant getParticipant(String hostAddress, int port) {
+        if (hostAddress == null) {
             return null;
         }
 
-        for(Participant participant : participants){
-            if(hostAddress.equals(participant.getHostAddress())){
+        for (Participant participant : participants) {
+            if (hostAddress.equals(participant.getHostAddress()) && port == participant.getPortIn()) {
                 return participant;
             }
         }

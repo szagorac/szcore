@@ -9,12 +9,14 @@ public class InstrumentEvent extends ClientEvent{
     private final InetAddress inetAddress;
     private final String hostAddress;
     private final String instrument;
+    private final int port;
 
-    public InstrumentEvent(InetAddress inetAddress, String instrument, long time) {
+    public InstrumentEvent(InetAddress inetAddress, int port, String instrument, long time) {
         super(time);
         this.inetAddress = inetAddress;
         this.hostAddress = inetAddress.getHostAddress();
         this.instrument = instrument;
+        this.port = port;
     }
 
     public InetAddress getInetAddress() {
@@ -27,6 +29,10 @@ public class InstrumentEvent extends ClientEvent{
 
     public String getInstrument() {
         return instrument;
+    }
+
+    public int getPort() {
+        return port;
     }
 
     @Override

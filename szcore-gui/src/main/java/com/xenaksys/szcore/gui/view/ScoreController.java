@@ -22,6 +22,7 @@ import com.xenaksys.szcore.model.id.BarId;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.score.WebScore;
+import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.Util;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -924,7 +925,7 @@ public class ScoreController {
             return;
         }
         EventFactory eventFactory = publisher.getEventFactory();
-        String destination = participant.getHostAddress();
+        String destination = NetUtil.createClientId(participant.getHostAddress(), participant.getPortIn());
         AddPartsEvent addPartsEvent = eventFactory.createAddPartsEvent(instrumentsCsv, destination, clock.getSystemTimeMillis());
         publisher.publish(addPartsEvent);
     }

@@ -1,7 +1,22 @@
 package com.xenaksys.szcore.gui.processor;
 
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.event.*;
+import com.xenaksys.szcore.event.ClientEvent;
+import com.xenaksys.szcore.event.ClientEventType;
+import com.xenaksys.szcore.event.ErrorEvent;
+import com.xenaksys.szcore.event.EventType;
+import com.xenaksys.szcore.event.IncomingOscEvent;
+import com.xenaksys.szcore.event.InstrumentEvent;
+import com.xenaksys.szcore.event.MusicEvent;
+import com.xenaksys.szcore.event.MusicEventType;
+import com.xenaksys.szcore.event.OscEvent;
+import com.xenaksys.szcore.event.OscEventType;
+import com.xenaksys.szcore.event.ParticipantEvent;
+import com.xenaksys.szcore.event.ParticipantStatsEvent;
+import com.xenaksys.szcore.event.StopEvent;
+import com.xenaksys.szcore.event.TempoChangeEvent;
+import com.xenaksys.szcore.event.TimeSigChangeEvent;
+import com.xenaksys.szcore.event.WebScoreEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Participant;
 import com.xenaksys.szcore.model.Id;
@@ -244,7 +259,7 @@ public class ClientEventProcessor implements Processor {
             return;
         }
 
-        Participant participant = client.getParticipant(event.getHostAddress());
+        Participant participant = client.getParticipant(event.getHostAddress(), event.getPort());
         if(participant == null){
             LOG.error("Can not find participant for event: " + event);
             return;
@@ -256,7 +271,7 @@ public class ClientEventProcessor implements Processor {
     private void processInstrumentEvent(InstrumentEvent event) {
 
         String hostAddress = event.getHostAddress();
-        Participant participant = client.getParticipant(hostAddress);
+        Participant participant = client.getParticipant(hostAddress, event.getPort());
         if(participant == null){
             LOG.error("Failed to find participant for event: " + event);
             return;

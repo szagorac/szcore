@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.xenaksys.szcore.Consts.ALLOWED_DESTINATIONS;
+
 public class OscDisruptorPublishProcessor extends AbstractOscPublisherDisruptorProcessor {
     static final Logger LOG = LoggerFactory.getLogger(OscDisruptorPublishProcessor.class);
 
@@ -70,29 +72,26 @@ public class OscDisruptorPublishProcessor extends AbstractOscPublisherDisruptorP
         oscPublishPorts.put(destination, port);
     }
 
-    public void setPublishPorts(Map<String, OSCPortOut> oscPublishPorts){
+    public void setPublishPorts(Map<String, OSCPortOut> oscPublishPorts) {
         this.oscPublishPorts = oscPublishPorts;
     }
 
-    public OSCPortOut getOutPort(String destination){
+    public OSCPortOut getOutPort(String destination) {
         return oscPublishPorts.get(destination);
     }
 
-    public boolean isDestination(String destination, int port) {
-        if (!oscPublishPorts.containsKey(destination)) {
-            return false;
+    public boolean isDestination(String destination) {
+        if (ALLOWED_DESTINATIONS.contains(destination)) {
+            return true;
         }
-
-        OSCPortOut portOut = oscPublishPorts.get(destination);
-        int outPort = portOut.getPort();
-        return port == outPort;
+        return oscPublishPorts.containsKey(destination);
     }
 
     public void removeDestination(String destination) {
         oscPublishPorts.remove(destination);
     }
 
-    public Collection<String> getDestinations(){
+    public Collection<String> getDestinations() {
         return oscPublishPorts.keySet();
     }
 

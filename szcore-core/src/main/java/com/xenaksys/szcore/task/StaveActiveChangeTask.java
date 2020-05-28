@@ -49,6 +49,12 @@ public class StaveActiveChangeTask extends EventMusicTask {
             return;
         }
 
+        String destination = oscStaveActivateEvent.getDestination();
+        if (!oscPublisher.isDestination(destination)) {
+//            LOG.debug("Destination {} is not active, ignoring event {}", destination, oscStaveActivateEvent);
+            return;
+        }
+
 //        LOG.info("Executing StaveActiveChangeTask, event: " + event);
 
         oscPublisher.process(oscStaveActivateEvent);

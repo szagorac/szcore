@@ -20,7 +20,7 @@ public interface OscPublisher extends Processor {
 
     void setPublishPorts(Map<String, OSCPortOut> oscPublishPorts);
 
-    boolean isDestination(String destination, int port);
+    boolean isDestination(String destination);
 
     void removeDestination(String destination);
 

@@ -1,6 +1,9 @@
 package com.xenaksys.szcore;
 
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public interface Consts {
@@ -99,6 +102,8 @@ public interface Consts {
 
     String ALL_DESTINATIONS = "ALL";
     String BROADCAST = "BROADCAST";
+    String[] ALLOWED_DESTINATIONS_ARR = {ALL_DESTINATIONS, BROADCAST};
+    List<String> ALLOWED_DESTINATIONS = new ArrayList<>(Arrays.asList(ALLOWED_DESTINATIONS_ARR));
 
     int DEFAULT_OSC_PORT = 7000;
     int DEFAULT_OSC_OUT_PORT = 7001;

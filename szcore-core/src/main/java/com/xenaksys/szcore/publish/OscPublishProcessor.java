@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.xenaksys.szcore.Consts.ALLOWED_DESTINATIONS;
+
 public class OscPublishProcessor implements OscPublisher {
     static final Logger LOG = LoggerFactory.getLogger(OscPublishProcessor.class);
 
@@ -98,14 +100,11 @@ public class OscPublishProcessor implements OscPublisher {
     }
 
     @Override
-    public boolean isDestination(String destination, int port) {
-        if (!oscPublishPorts.containsKey(destination)) {
-            return false;
+    public boolean isDestination(String destination) {
+        if (ALLOWED_DESTINATIONS.contains(destination)) {
+            return true;
         }
-
-        OSCPortOut portOut = oscPublishPorts.get(destination);
-        int outPort = portOut.getPort();
-        return port == outPort;
+        return oscPublishPorts.containsKey(destination);
     }
 
     @Override

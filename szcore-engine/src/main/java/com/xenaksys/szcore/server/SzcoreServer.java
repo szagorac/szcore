@@ -412,10 +412,10 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         oscEventPublisher.process(pingEvent);
     }
 
-    public void addOutPort(String id, InetAddress addr, int port) {
-        if (!oscEventPublisher.isDestination(id, port)) {
+    public void addOutPort(String destinationId, InetAddress addr, int port) {
+        if (!oscEventPublisher.isDestination(destinationId)) {
             OSCPortOut outPort = OscPortFactory.createOutPort(addr, port);
-            oscEventPublisher.addOscPort(id, outPort);
+            oscEventPublisher.addOscPort(destinationId, outPort);
         }
     }
 

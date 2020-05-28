@@ -2310,6 +2310,12 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     private void publishOscEvent(OscEvent event) {
+        String destination = event.getDestination();
+        if (!oscPublisher.isDestination(destination)) {
+//            LOG.debug("publishOscEvent: destination {} is not active, ignoring event: {}", destination, event);
+            return;
+        }
+
         oscPublisher.process(event);
     }
 

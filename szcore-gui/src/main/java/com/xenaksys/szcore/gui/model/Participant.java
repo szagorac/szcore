@@ -24,6 +24,8 @@ public class Participant {
     private DoubleProperty ping = new SimpleDoubleProperty(0.0);
     private StringProperty instrument = new SimpleStringProperty(Consts.EMPTY);
     private BooleanProperty select = new SimpleBooleanProperty(false);
+    private BooleanProperty expired = new SimpleBooleanProperty(false);
+    private StringProperty lastPingTime = new SimpleStringProperty(Consts.EMPTY);
 
     public InetAddress getInetAddress() {
         return inetAddress.get();
@@ -115,6 +117,30 @@ public class Participant {
 
     public void setSelect(Boolean select) {
         this.select.set(select);
+    }
+
+    public BooleanProperty getExpiredProperty() {
+        return expired;
+    }
+
+    public Boolean getExpired() {
+        return expired.get();
+    }
+
+    public void setExpired(Boolean select) {
+        this.expired.set(select);
+    }
+
+    public String getLastPingTime() {
+        return lastPingTime.get();
+    }
+
+    public StringProperty getLastPingMillisProperty() {
+        return lastPingTime;
+    }
+
+    public void setLastPingTime(String lastPing) {
+        this.lastPingTime.set(lastPing);
     }
 
     @Override

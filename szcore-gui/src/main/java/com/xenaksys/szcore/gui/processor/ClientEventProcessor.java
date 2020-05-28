@@ -25,6 +25,7 @@ import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.util.IpAddressValidator;
+import com.xenaksys.szcore.util.TimeUtil;
 import javafx.scene.control.Alert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -260,12 +261,15 @@ public class ClientEventProcessor implements Processor {
         }
 
         Participant participant = client.getParticipant(event.getHostAddress(), event.getPort());
-        if(participant == null){
+        if (participant == null) {
             LOG.error("Can not find participant for event: " + event);
             return;
         }
 
         participant.setPing(event.getOneWayPingLatencyMillis());
+        participant.setExpired(event.isExpired());
+        String pingPeriod = TimeUtil.formatPeriod(event.getLastPingMillis());
+        participant.setLastPingTime(pingPeriod);
     }
 
     private void processInstrumentEvent(InstrumentEvent event) {

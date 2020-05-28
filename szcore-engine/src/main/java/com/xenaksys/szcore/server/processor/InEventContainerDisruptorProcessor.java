@@ -11,6 +11,7 @@ import com.xenaksys.szcore.event.InstrumentEvent;
 import com.xenaksys.szcore.event.OscEvent;
 import com.xenaksys.szcore.event.ParticipantEvent;
 import com.xenaksys.szcore.event.ParticipantStatsEvent;
+import com.xenaksys.szcore.model.ClientInfo;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.net.ParticipantStats;
@@ -228,6 +229,7 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
     }
 
     private void processPing(IncomingOscEvent event) {
+        long now = clock.getSystemTimeMillis();
         List<Object> args = event.getArguments();
 
         long sendTime = PropertyUtil.parseLongArg(args, 1, 0L);
@@ -253,15 +255,17 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
         }
 
         long receivedTime = event.getCreationTime();
-        double latency = 1.0*(receivedTime - sendTime);
-        double oneWayLatency = latency/2.0;
+        double latency = 1.0 * (receivedTime - sendTime);
+        double oneWayLatency = latency / 2.0;
         oneWayLatency = Math.round(oneWayLatency * 100.0) / 100.0;
 //LOG.debug("Calculated oneWayLatency: " + oneWayLatency + " roundTriplatency: " + latency + " for " + ipAddress + " receivedTime: " + receivedTime + " sendTime: " + sendTime);
 
         stats.setPingLatency(latency);
         stats.setOneWayPingLatency(oneWayLatency);
+        stats.setLastPingResponseTime(now);
 
-        ParticipantStatsEvent statsEvent = eventFactory.createParticipantStatsEvent(inetAddress, ipAddress, port, latency, oneWayLatency, clock.getSystemTimeMillis());
+        ParticipantStatsEvent statsEvent = eventFactory.createParticipantStatsEvent(inetAddress, ipAddress, port, latency,
+                oneWayLatency, false, 0L, clock.getSystemTimeMillis());
 
         notifyListeners(statsEvent);
     }
@@ -377,4 +381,9 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
         server.addInPort(port);
     }
 
+    public void expireParticipant(ParticipantStats stats, ClientInfo clientInfo, long lastPingMillis) {
+        ParticipantStatsEvent statsEvent = eventFactory.createParticipantStatsEvent(clientInfo.getAddr(), clientInfo.getHost(),
+                clientInfo.getPort(), stats.getPingLatency(), stats.getOneWayPingLatency(), true, lastPingMillis, clock.getSystemTimeMillis());
+        notifyListeners(statsEvent);
+    }
 }

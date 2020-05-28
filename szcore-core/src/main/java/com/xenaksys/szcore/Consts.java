@@ -51,6 +51,8 @@ public interface Consts {
     String DEFAULT_FILE_NAME = "part" + INSCORE_FILE_EXTENSION;
     String INDEX_HTML = "index.html";
     String CSV_EXT = ".csv";
+    String MINUTES_SHORT = "m";
+    String SECONDS_SHORT = "s";
 
     String OSC_ADDRESS_SCORE_FOLLOW_LINE_STAVE1 = "/ITL/scene/slaveFollow";
     String OSC_ADDRESS_SCORE_FOLLOW_LINE_STAVE2 = "/ITL/scene/slaveFollow2";
@@ -94,6 +96,8 @@ public interface Consts {
     String RSRC_DIR = "rsrc/";
 
     int MILLIS_IN_MINUTE = 1000 * 60;
+
+    long PING_EXPIRY_MILLIS = 5 * 1000;
 
     String DEFAULT_TRANSPORT_NAME = "DefaultTransport";
     String DEFAULT_PAGE_PREFIX = "page";

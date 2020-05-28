@@ -41,6 +41,7 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.paint.Color;
@@ -57,6 +58,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import static com.xenaksys.szcore.Consts.EMPTY;
 
 public class ScoreController {
     static final Logger LOG = LoggerFactory.getLogger(ScoreController.class);
@@ -103,6 +106,8 @@ public class ScoreController {
     private TableColumn<Participant, Double> pingColumn;
     @FXML
     private TableColumn<Participant, String> instrumentColumn;
+    @FXML
+    private TableColumn<Participant, String> expiredColumn;
     @FXML
     private TableColumn<Participant, Boolean> selectColumn;
     @FXML
@@ -496,22 +501,11 @@ public class ScoreController {
         pingColumn.setCellValueFactory(cellData -> cellData.getValue().getPingProperty().asObject());
         instrumentColumn.setCellValueFactory(cellData -> cellData.getValue().getInstrumentProperty());
         selectColumn.setCellValueFactory(cellData -> cellData.getValue().getSelectProperty());
+        expiredColumn.setCellValueFactory(cellData -> cellData.getValue().getLastPingMillisProperty());
 
         selectColumn.setCellFactory(CheckBoxTableCell.forTableColumn(selectColumn));
         participantsTableView.setEditable(true);
         selectColumn.setEditable(true);
-//        selectColumn.setCellValueFactory(cellData -> {
-//            Participant cellValue = cellData.getValue();
-//            BooleanProperty property = cellValue.getSelectProperty();
-//            // Add listener to handler change
-//            property.addListener((observable, oldValue, newValue) -> cellValue.setSelect(newValue));
-//            return property;
-//        });
-
-//        pageNoLbl.textProperty().bind(playPosition.pageNoProperty());
-//        barNoLbl.textProperty().bind(playPosition.barNoProperty());
-//        beatNoLbl.textProperty().bind(playPosition.beatNoProperty());
-//        tickNoLbl.textProperty().bind(playPosition.tickNoProperty());
 
         instrumentColumn.setCellFactory(column -> {
             return new TableCell<Participant, String>() {
@@ -520,8 +514,8 @@ public class ScoreController {
                     super.updateItem(item, empty);
 
                     if (item == null || empty) {
-                        setText("");
-                        setStyle("");
+                        setText(EMPTY);
+                        setStyle(EMPTY);
                     } else if (Consts.NAME_NA.equals(item)) {
                         setText(Consts.NAME_NA);
                         setTextFill(Color.BLACK);
@@ -529,8 +523,32 @@ public class ScoreController {
                     } else {
                         // Format date.
                         setText(item);
-                        setStyle("");
+                        setStyle(EMPTY);
                         setTextFill(Color.CHOCOLATE);
+                    }
+                }
+            };
+        });
+
+        expiredColumn.setCellFactory(column -> {
+            return new TableCell<Participant, String>() {
+                @Override
+                protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+
+                    TableRow<Participant> currentRow = getTableRow();
+
+                    Participant participant = currentRow.getItem();
+                    if (participant == null) {
+                        return;
+                    }
+
+                    if (participant.getExpired()) {
+                        currentRow.setStyle("-fx-background-color:red");
+                        setText(item);
+                    } else {
+                        currentRow.setStyle("-fx-background-color:inherit");
+                        setText(EMPTY);
                     }
                 }
             };

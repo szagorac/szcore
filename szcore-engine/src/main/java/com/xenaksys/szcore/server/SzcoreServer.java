@@ -78,6 +78,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.xenaksys.szcore.Consts.PING_EXPIRY_MILLIS;
 import static com.xenaksys.szcore.Consts.WEB_ROOT;
 
 public class SzcoreServer extends Server implements EventService, ScoreService {
@@ -903,8 +904,21 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         this.subnetMask = subnetMask;
     }
 
-    protected void tick(){
-        if(pingEvent == null) {
+    private void systemCheck() {
+        long now = clock.getSystemTimeMillis();
+        for (String key : participantStats.keySet()) {
+            ParticipantStats stats = participantStats.get(key);
+            long pingTime = stats.getLastPingResponseTime();
+            long diff = now - pingTime;
+            if (diff > PING_EXPIRY_MILLIS) {
+                ClientInfo clientInfo = participants.get(key);
+                eventProcessor.expireParticipant(stats, clientInfo, diff);
+            }
+        }
+    }
+
+    protected void tick() {
+        if (pingEvent == null) {
             pingEvent = eventFactory.createPingEvent(Consts.ALL_DESTINATIONS, clock.getSystemTimeMillis());
         } else {
             pingEvent.addCommandArg(clock.getSystemTimeMillis());
@@ -912,6 +926,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
 //        LOG.debug("Sending ping event: " + pingEvent);
         publish(pingEvent);
+        systemCheck();
     }
 
 }

@@ -55,13 +55,8 @@ public class OscDisruptorPublishProcessor extends AbstractOscPublisherDisruptorP
             int publishPortNo = publishPort.getPort();
 
             if (hostAddr.equals(publishHostAddr) && portNo == publishPortNo) {
-                LOG.info("addOscPort: Already have out port for id: {}, adding destination: {}", outKey, destination);
-                if (clientId.equals(outKey)) {
-                    LOG.info("addOscPort: OutPort exists for destination: {}, reusing port for destination: {}", outKey, destination);
-                } else {
-                    LOG.warn("addOscPort: Removing existing out port mapping: {}, adding mapping for destination: {}", outKey, destination);
-                    toRemove.add(outKey);
-                }
+                LOG.warn("addOscPort: Removing existing out port mapping: {}, adding mapping for destination: {}", outKey, destination);
+                toRemove.add(outKey);
             }
         }
 

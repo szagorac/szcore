@@ -2,8 +2,21 @@ package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.instrument.BasicInstrument;
-import com.xenaksys.szcore.model.*;
-import com.xenaksys.szcore.model.id.*;
+import com.xenaksys.szcore.model.Id;
+import com.xenaksys.szcore.model.Instrument;
+import com.xenaksys.szcore.model.NoteDuration;
+import com.xenaksys.szcore.model.Score;
+import com.xenaksys.szcore.model.Script;
+import com.xenaksys.szcore.model.Tempo;
+import com.xenaksys.szcore.model.TempoImpl;
+import com.xenaksys.szcore.model.TimeSignature;
+import com.xenaksys.szcore.model.TimeSignatureImpl;
+import com.xenaksys.szcore.model.Transition;
+import com.xenaksys.szcore.model.id.BarId;
+import com.xenaksys.szcore.model.id.BeatId;
+import com.xenaksys.szcore.model.id.IntId;
+import com.xenaksys.szcore.model.id.PageId;
+import com.xenaksys.szcore.model.id.StrId;
 import com.xenaksys.szcore.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,15 +27,21 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import static com.xenaksys.szcore.score.ResourceType.*;
+import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.score.ResourceType.FILE;
+import static com.xenaksys.szcore.score.ResourceType.JAVASCRIPT;
+import static com.xenaksys.szcore.score.ResourceType.MAX;
+import static com.xenaksys.szcore.score.ResourceType.TRANSITION;
+import static com.xenaksys.szcore.score.ResourceType.WEB;
 
 
 public class ScoreLoader {
     static final Logger LOG = LoggerFactory.getLogger(ScoreLoader.class);
 
-    static final String RECOURCE_JAVASCRIPT = "javascript";
-    static final String RECOURCE_WEB = "web";
-    static final String RECOURCE_TRANSITION = "transition";
+    static final String RESOURCE_JAVASCRIPT = "javascript";
+    static final String RESOURCE_WEB = "web";
+    static final String RESOURCE_MAX = "max";
+    static final String RESOURCE_TRANSITION = "transition";
     static final String BEAT = "beat";
     static final String IS_RESET_POINT = "reset";
     static final String ONLY = "only";
@@ -158,6 +177,9 @@ public class ScoreLoader {
             case WEB:
                 processWebScoreElement(scoreElement, score, resource, scoreId);
                 break;
+            case MAX:
+                processMaxScoreElement(scoreElement, score, resource, scoreId);
+                break;
             case FILE:
             default:
                 processFileScoreElement(scoreElement, score, resource, scoreId);
@@ -170,14 +192,14 @@ public class ScoreLoader {
             return FILE;
 
         }
-        if (resource.startsWith(RECOURCE_JAVASCRIPT)) {
+        if (resource.startsWith(RESOURCE_JAVASCRIPT)) {
             return JAVASCRIPT;
-        }
-        if (resource.startsWith(RECOURCE_TRANSITION)) {
+        } else if (resource.startsWith(RESOURCE_TRANSITION)) {
             return TRANSITION;
-        }
-        if (resource.startsWith(RECOURCE_WEB)) {
+        } else if (resource.startsWith(RESOURCE_WEB)) {
             return WEB;
+        } else if (resource.startsWith(RESOURCE_MAX)) {
+            return MAX;
         }
         return FILE;
     }
@@ -277,6 +299,92 @@ public class ScoreLoader {
         return inscorePageMap;
     }
 
+    private static void processMaxScoreElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) throws Exception {
+        String instrumentName = scoreElement.getInstrumentName();
+        StrId instrumentId = new StrId(instrumentName);
+
+        int pageNo = scoreElement.getPageNo();
+        PageId pageId = new PageId(pageNo, instrumentId, scoreId);
+
+        int barNo = scoreElement.getBarNo();
+        BarId barId = new BarId(barNo, instrumentId, pageId, scoreId);
+
+        int beatNo = scoreElement.getBeatNo();
+        int baseBeatUnitsNoAtStart = scoreElement.getStartBaseBeatUnits();
+
+        BeatId beatId = new BeatId(beatNo, instrumentId, pageId, scoreId, barId, baseBeatUnitsNoAtStart);
+
+        IntId id = new IntId(Consts.ID_SOURCE.incrementAndGet());
+
+        String script = resource;
+        String target = Consts.OSC_ADDRESS_ZSCORE;
+        List<Object> args = new ArrayList<>();
+
+        if (script.startsWith(RESOURCE_MAX)) {
+            script = script.substring(RESOURCE_MAX.length());
+        }
+
+        if (script.startsWith(SCRIPT_DELIMITER)) {
+            script = script.substring(SCRIPT_DELIMITER.length());
+        }
+
+        if (script.startsWith(BEAT)) {
+            script = script.substring(BEAT.length());
+            if (script.startsWith(NAME_VAL_DELIMITER)) {
+                script = script.substring(NAME_VAL_DELIMITER.length());
+            }
+
+            int end = script.indexOf(SCRIPT_DELIMITER);
+            String beatNoStr = script.substring(0, end);
+            script = script.substring(end);
+            int scriptBeatNo = Integer.parseInt(beatNoStr);
+            if (scriptBeatNo != beatNo) {
+                if (scriptBeatNo < 0) {
+                    scriptBeatNo = beatNo + scriptBeatNo;
+                }
+                BeatId instrumentBeatId = score.getInstrumentBeat(instrumentId, scriptBeatNo);
+                if (instrumentBeatId == null) {
+                    LOG.warn("processWebScoreElement: Could not find instrument beat: {}", scriptBeatNo);
+                } else {
+                    beatId = instrumentBeatId;
+                }
+            }
+
+            if (script.startsWith(SCRIPT_DELIMITER)) {
+                script = script.substring(SCRIPT_DELIMITER.length());
+            }
+        }
+
+        if (script.contains(SCRIPT_COMMA_REPLACE_CHAR)) {
+            script = script.replace(SCRIPT_COMMA_REPLACE_CHAR, COMMA);
+        }
+
+        if (script.contains(CURLY_QUOTE)) {
+            script = script.replace(CURLY_QUOTE, SINGLE_QUOTE);
+        }
+
+        String cmd = EMPTY;
+        //args 0 = cmd, then other args
+        String[] sargs = script.split(COMMA);
+        if (sargs.length > 0) {
+            cmd = sargs[0];
+            args.add(cmd);
+        }
+        if (sargs.length > 1) {
+            target += sargs[1];
+        }
+
+        if (sargs.length > 2) {
+            for (int i = 2; i < sargs.length; i++) {
+                args.add(sargs[i]);
+            }
+        }
+
+        Script scriptObj = new OscScript(id, beatId, target, args);
+        LOG.info("Created script: {}", scriptObj);
+        score.addScript(scriptObj);
+    }
+
     private static void processWebScoreElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) throws Exception {
         String instrumentName = scoreElement.getInstrumentName();
         StrId instrumentId = new StrId(instrumentName);
@@ -298,8 +406,8 @@ public class ScoreLoader {
         boolean isResetPoint = false;
         boolean isResetOnly = false;
 
-        if (script.startsWith(RECOURCE_WEB)) {
-            script = script.substring(RECOURCE_WEB.length());
+        if (script.startsWith(RESOURCE_WEB)) {
+            script = script.substring(RESOURCE_WEB.length());
         }
 
         if (script.startsWith(SCRIPT_DELIMITER)) {
@@ -391,8 +499,8 @@ public class ScoreLoader {
         IntId id = new IntId(Consts.ID_SOURCE.incrementAndGet());
 
         String script = resource;
-        if (script.startsWith(RECOURCE_JAVASCRIPT)) {
-            script = script.substring(RECOURCE_JAVASCRIPT.length());
+        if (script.startsWith(RESOURCE_JAVASCRIPT)) {
+            script = script.substring(RESOURCE_JAVASCRIPT.length());
         }
 
         if (script.startsWith(SCRIPT_DELIMITER)) {
@@ -431,8 +539,8 @@ public class ScoreLoader {
         IntId id = new IntId(Consts.ID_SOURCE.incrementAndGet());
 
         String script = resource;
-        if (script.startsWith(RECOURCE_TRANSITION)) {
-            script = script.substring(RECOURCE_TRANSITION.length());
+        if (script.startsWith(RESOURCE_TRANSITION)) {
+            script = script.substring(RESOURCE_TRANSITION.length());
         }
 
         if (script.startsWith(SCRIPT_DELIMITER)) {

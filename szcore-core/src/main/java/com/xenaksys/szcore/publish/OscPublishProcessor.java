@@ -165,8 +165,8 @@ public class OscPublishProcessor implements OscPublisher {
 
         OSCMessage msg = new OSCMessage(address, args);
 
-long diff = System.currentTimeMillis() - creationTime;
-LOG.debug("Sending message time diff: " + diff);
+        long diff = System.currentTimeMillis() - creationTime;
+        LOG.debug("Sending message time diff: " + diff);
 
         sendMessage(msg, port);
     }

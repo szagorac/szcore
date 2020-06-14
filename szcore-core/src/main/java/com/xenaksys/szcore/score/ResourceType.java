@@ -1,5 +1,5 @@
 package com.xenaksys.szcore.score;
 
 public enum ResourceType {
-    FILE, JAVASCRIPT, TRANSITION, WEB
+    FILE, JAVASCRIPT, TRANSITION, WEB, MAX
 }

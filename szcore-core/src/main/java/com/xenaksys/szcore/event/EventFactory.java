@@ -194,6 +194,10 @@ public class EventFactory {
         return new BeatScriptEvent(createJavaScriptArgs(), beatId, destination, creationTime);
     }
 
+    public OscScriptEvent createOscScriptEvent(String destination, BeatId beatId, String address, List<Object> args, long creationTime) {
+        return new OscScriptEvent(address, args, beatId, destination, creationTime);
+    }
+
     public TransitionEvent createTransitionEvent(String destination, BeatId beatId, Transition transition, long creationTime) {
         return new TransitionEvent(beatId, destination, transition, creationTime);
     }

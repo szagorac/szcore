@@ -92,6 +92,7 @@ public interface Consts {
     String OSC_ADDRESS_SCORE_CONTENT_LINE2 = "/ITL/scene/contentStaveValueLine2";
 
     String OSC_ADDRESS_SCORE_JAVASCRIPT = "/ITL/scene/javascript";
+    String OSC_ADDRESS_ZSCORE = "/zs/";
 
     String RSRC_DIR = "rsrc/";
 

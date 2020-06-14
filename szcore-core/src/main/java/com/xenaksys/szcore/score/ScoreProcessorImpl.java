@@ -16,6 +16,7 @@ import com.xenaksys.szcore.event.MusicEvent;
 import com.xenaksys.szcore.event.MusicEventType;
 import com.xenaksys.szcore.event.OscEvent;
 import com.xenaksys.szcore.event.OscEventType;
+import com.xenaksys.szcore.event.OscScriptEvent;
 import com.xenaksys.szcore.event.OscStaveActivateEvent;
 import com.xenaksys.szcore.event.OscStaveTempoEvent;
 import com.xenaksys.szcore.event.OscStopEvent;
@@ -374,12 +375,20 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 addBeatScriptEvent(beatId, script, transportId);
                 break;
             case TRANSITION:
-                addBeatTransitionEvent(beatId, (BasicTransition)script, transportId);
+                addBeatTransitionEvent(beatId, (BasicTransition) script, transportId);
                 break;
             case WEB_SCORE:
-                webScore.addBeatScript(beatId, (WebScoreScript)script);
+                webScore.addBeatScript(beatId, (WebScoreScript) script);
+                break;
+            case MAX:
+                addOscScriptEvent(beatId, script, transportId);
                 break;
         }
+    }
+
+    private void addOscScriptEvent(BeatId beatId, Script script, Id transportId) {
+        OscEvent beatScriptEvent = createOscBeatScriptEvent(script, beatId);
+        szcore.addScoreBaseBeatEvent(transportId, beatScriptEvent);
     }
 
     private void addBeatScriptEvent(BeatId beatId, Script script, Id transportId) {
@@ -1462,18 +1471,33 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         String destination = szcore.getOscDestination(eventBeatId.getInstrumentId());
         BeatScriptEvent beatScriptEvent = eventFactory.createBeatScriptEvent(destination, eventBeatId, clock.getSystemTimeMillis());
-        beatScriptEvent.addCommandArg(script.getContent()) ;
+        beatScriptEvent.addCommandArg(script.getContent());
 
         return beatScriptEvent;
     }
 
-    private TransitionEvent createTransitionEvent(Transition transition, BeatId eventBeatId){
+    private OscEvent createOscBeatScriptEvent(Script script, BeatId eventBeatId) {
+        if (script == null || eventBeatId == null) {
+            return null;
+        }
+
+        if (!(script instanceof OscScript)) {
+            return null;
+        }
+
+        OscScript oscScript = (OscScript) script;
+
+        String destination = szcore.getOscDestination(eventBeatId.getInstrumentId());
+        return eventFactory.createOscScriptEvent(destination, eventBeatId, oscScript.getTarget(), oscScript.getArgs(), clock.getSystemTimeMillis());
+    }
+
+    private TransitionEvent createTransitionEvent(Transition transition, BeatId eventBeatId) {
         if (transition == null || eventBeatId == null) {
             return null;
         }
 
         String destination = szcore.getOscDestination(eventBeatId.getInstrumentId());
-        return  eventFactory.createTransitionEvent(destination, eventBeatId, transition, clock.getSystemTimeMillis());
+        return eventFactory.createTransitionEvent(destination, eventBeatId, transition, clock.getSystemTimeMillis());
     }
 
     private WebScoreEvent createWebScoreEvent(List<WebScoreScript> scripts, BeatId eventBeatId){
@@ -2139,6 +2163,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             case BEAT_SCRIPT:
                 processBeatScriptEvent((BeatScriptEvent) event, beatNo);
                 break;
+            case OSC_SCRIPT:
+                processOscScriptEvent((OscScriptEvent) event, beatNo);
+                break;
             case ELEMENT_ALPHA:
             case ELEMENT_COLOR:
             case ELEMENT_Y_POSITION:
@@ -2197,7 +2224,14 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
 
     private void processBeatScriptEvent(BeatScriptEvent event, int beatNo) {
-        if(event == null ) {
+        if (event == null) {
+            return;
+        }
+        publishOscEvent(event);
+    }
+
+    private void processOscScriptEvent(OscScriptEvent event, int beatNo) {
+        if (event == null) {
             return;
         }
         publishOscEvent(event);

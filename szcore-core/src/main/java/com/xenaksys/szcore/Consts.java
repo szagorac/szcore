@@ -54,6 +54,11 @@ public interface Consts {
     String MINUTES_SHORT = "m";
     String SECONDS_SHORT = "s";
 
+    char MINUS_CHAR = '-';
+    char DOT_CHAR = '.';
+    String TRUE = "true";
+    String FALSE = "false";
+
     String OSC_ADDRESS_SCORE_FOLLOW_LINE_STAVE1 = "/ITL/scene/slaveFollow";
     String OSC_ADDRESS_SCORE_FOLLOW_LINE_STAVE2 = "/ITL/scene/slaveFollow2";
     String OSC_ADDRESS_SCORE_FOLLOW_BEATER_STAVE1 = "/ITL/scene/slaveBeat";

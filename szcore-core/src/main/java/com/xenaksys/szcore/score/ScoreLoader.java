@@ -18,6 +18,7 @@ import com.xenaksys.szcore.model.id.IntId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StrId;
 import com.xenaksys.szcore.util.FileUtil;
+import com.xenaksys.szcore.util.ParseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -376,7 +377,7 @@ public class ScoreLoader {
 
         if (sargs.length > 2) {
             for (int i = 2; i < sargs.length; i++) {
-                args.add(sargs[i]);
+                args.add(ParseUtil.convertToType(sargs[i]));
             }
         }
 

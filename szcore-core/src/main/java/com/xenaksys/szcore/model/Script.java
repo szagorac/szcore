@@ -9,4 +9,6 @@ public interface Script extends Identifiable, Comparable<Script> {
     String getContent();
 
     ScriptType getType();
+
+    Script copy(BeatId newBeatId);
 }

@@ -213,10 +213,10 @@ public class ScoreLoader {
             isAudioVideo = true;
         }
         StrId instrumentId = new StrId(instrumentName);
-        Instrument intrument = new BasicInstrument(instrumentId, instrumentName, isAudioVideo);
+        Instrument instrument = new BasicInstrument(instrumentId, instrumentName, isAudioVideo);
         Collection<Instrument> instruments = score.getInstruments();
-        if (!instruments.contains(intrument)) {
-            score.addInstrument(intrument);
+        if (!instruments.contains(instrument)) {
+            score.addInstrument(instrument);
         }
 
         //page
@@ -303,6 +303,16 @@ public class ScoreLoader {
     private static void processMaxScoreElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) throws Exception {
         String instrumentName = scoreElement.getInstrumentName();
         StrId instrumentId = new StrId(instrumentName);
+
+        boolean isAudioVideo = false;
+        if (instrumentName.startsWith(AV)) {
+            isAudioVideo = true;
+        }
+        Instrument instrument = new BasicInstrument(instrumentId, instrumentName, isAudioVideo);
+        Collection<Instrument> maxClients = score.getMaxClients();
+        if (!maxClients.contains(instrument)) {
+            score.addMaxClient(instrument);
+        }
 
         int pageNo = scoreElement.getPageNo();
         PageId pageId = new PageId(pageNo, instrumentId, scoreId);

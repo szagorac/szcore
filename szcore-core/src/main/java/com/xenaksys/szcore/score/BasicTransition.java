@@ -1,5 +1,6 @@
 package com.xenaksys.szcore.score;
 
+import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Script;
 import com.xenaksys.szcore.model.Transition;
@@ -34,6 +35,12 @@ public class BasicTransition implements Transition {
     @Override
     public String getContent() {
         return null;
+    }
+
+    @Override
+    public Script copy(BeatId newBeatId) {
+        IntId newId = new IntId(Consts.ID_SOURCE.incrementAndGet());
+        return new BasicTransition(newId, newBeatId, this.component, this.duration, this.startValue, this.endValue, this.frequency);
     }
 
     @Override

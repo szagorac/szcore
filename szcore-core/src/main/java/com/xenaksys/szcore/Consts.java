@@ -98,11 +98,15 @@ public interface Consts {
 
     String OSC_ADDRESS_SCORE_JAVASCRIPT = "/ITL/scene/javascript";
     String OSC_ADDRESS_ZSCORE = "/zs/";
+    String OSC_ADDRESS_JSUI = OSC_ADDRESS_ZSCORE + "jsui";
+    String OSC_ADDR_BEAT_INFO = OSC_ADDRESS_JSUI;
+    String OSC_CMD_BEAT_INFO = "beatInfo";
+
+    int OSC_UPDATE_BEAT_COMPLETE_PERC_THRESHOLD = 1;
 
     String RSRC_DIR = "rsrc/";
 
     int MILLIS_IN_MINUTE = 1000 * 60;
-
     long PING_EXPIRY_MILLIS = 5 * 1000;
 
     String DEFAULT_TRANSPORT_NAME = "DefaultTransport";

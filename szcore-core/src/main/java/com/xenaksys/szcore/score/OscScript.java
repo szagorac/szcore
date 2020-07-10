@@ -1,11 +1,13 @@
 package com.xenaksys.szcore.score;
 
+import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Script;
 import com.xenaksys.szcore.model.ScriptType;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.IntId;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -37,6 +39,13 @@ public class OscScript implements Script {
     @Override
     public ScriptType getType() {
         return ScriptType.MAX;
+    }
+
+    @Override
+    public Script copy(BeatId newBeatId) {
+        IntId newId = new IntId(Consts.ID_SOURCE.incrementAndGet());
+        List<Object> newArgs = new ArrayList<>(this.args);
+        return new OscScript(newId, newBeatId, this.target, newArgs);
     }
 
     public List<Object> getArgs() {

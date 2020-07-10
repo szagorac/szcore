@@ -1,5 +1,6 @@
 package com.xenaksys.szcore.score;
 
+import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Script;
 import com.xenaksys.szcore.model.ScriptType;
@@ -34,6 +35,12 @@ public class WebScoreScript implements Script {
     @Override
     public ScriptType getType() {
         return ScriptType.WEB_SCORE;
+    }
+
+    @Override
+    public Script copy(BeatId newBeatId) {
+        IntId newId = new IntId(Consts.ID_SOURCE.incrementAndGet());
+        return new WebScoreScript(newId, newBeatId, this.content, this.isResetPoint, this.isResetOnly);
     }
 
     public boolean isResetPoint() {

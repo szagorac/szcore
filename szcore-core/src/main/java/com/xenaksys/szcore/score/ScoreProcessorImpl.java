@@ -68,6 +68,7 @@ import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.model.id.StrId;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
+import com.xenaksys.szcore.process.OscDestinationEventListener;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.task.WebScoreEventTask;
 import com.xenaksys.szcore.time.TransportFactory;
@@ -111,6 +112,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private final Scheduler scheduler;
     private final EventFactory eventFactory;
     private final TaskFactory taskFactory;
+    private final OscDestinationEventListener oscDestinationEventListener;
 
     private BasicScore szcore = null;
     private boolean isScoreLoaded = false;
@@ -154,6 +156,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         this.scheduler = scheduler;
         this.eventFactory = eventFactory;
         this.taskFactory = taskFactory;
+        this.oscDestinationEventListener = new OscDestinationEventListener(this, eventFactory, clock);
     }
 
     @Override
@@ -226,28 +229,30 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         BeatId lastBeat = null;
         for (Instrument instrument : instruments) {
             Id instrumentId = instrument.getId();
-            boolean isAudioVideoInstrument = instrument.isAv();
-            boolean isScoreInstrument = !isAudioVideoInstrument;
             instrumentBeatTrackers.put(instrumentId, new InstrumentBeatTracker(transport, instrumentId));
             lastBeat = prepareInstrument(instrument, transport);
             Page lastPage =  szcore.getLastInstrumentPage(instrumentId);
             szcore.setContinuousPage(instrumentId, lastPage);
 
-            if(szcore.isUseContinuousPage() && isScoreInstrument) {
+            if (szcore.isUseContinuousPage()) {
                 prepareContinuousPages(instrumentId, lastPage);
             }
         }
 
-        if(szcore.isRandomizeContinuousPageContent()) {
+        if (szcore.isRandomizeContinuousPageContent()) {
             szcore.initRandomisation();
         }
 
-        if(!szcore.isUseContinuousPage()) {
+        if (!szcore.isUseContinuousPage()) {
             addStopEvent(lastBeat, transport.getId());
         }
         int precountMillis = 5 * 1000;
         int precountBeatNo = 4;
         szcore.setPrecount(precountMillis, precountBeatNo);
+
+        Collection<Instrument> maxClients = szcore.getMaxClients();
+        oscDestinationEventListener.reloadDestinations(maxClients);
+
         isScoreLoaded = true;
     }
 
@@ -534,8 +539,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             beats = (List<Beat>) bar.getBeats();
 
             for(Beat beat : beats) {
+                BeatId newBeatId;
                 if(beat.isUpbeat()) {
-                    BeatId newBeatId = new BeatId(lastBeatNo, instrumentId, newPageId, scoreId, newBarId, lastBeat.getBaseBeatUnitsNoAtStart());
+                    newBeatId = new BeatId(lastBeatNo, instrumentId, newPageId, scoreId, newBarId, lastBeat.getBaseBeatUnitsNoAtStart());
                     if(firstBeatId == null) {
                         firstBeatId = newBeatId;
                     }
@@ -554,7 +560,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                     lastBeatNo++;
                     long startTimeMillis = lastBeat.getEndTimeMillis();
                     int baseBeatUnitsNoAtStart = lastBeat.getBaseBeatUnitsNoOnEnd();
-                    BeatId newBeatId = new BeatId(lastBeatNo, instrumentId, newPageId, scoreId, newBarId, baseBeatUnitsNoAtStart);
+                    newBeatId = new BeatId(lastBeatNo, instrumentId, newPageId, scoreId, newBarId, baseBeatUnitsNoAtStart);
                     if(firstBeatId == null) {
                         firstBeatId = newBeatId;
                     }
@@ -573,12 +579,29 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                     }
                     lastBeat = newBeat;
                 }
+
+                //copy scripts
+                BeatId beatId = beat.getBeatId();
+                List<Script> scripts = szcore.getBeatScripts(beatId);
+                if (scripts != null) {
+                    for (Script script : scripts) {
+                        Script newScript = script.copy(newBeatId);
+                        szcore.addScript(newScript);
+                    }
+                }
+
             }
 
         }
 
+        Instrument instrument = szcore.getInstrument(instrumentId);
+        if (instrument.isAv()) {
+            return newPage;
+        }
+
+        //Add stave changes only for score instruments
         List<InscoreMapElement> continuousInscoreMapElements = continuousInscorePageMap.getMapElements();
-        for(int i = 0; i < newBeats.size(); i++) {
+        for (int i = 0; i < newBeats.size(); i++) {
             BasicBeat newBeat = newBeats.get(i);
             InscoreMapElement continuousMapElement = continuousInscoreMapElements.get(i);
             InscoreMapElement newInscoreMapElement = new InscoreMapElement(
@@ -2488,7 +2511,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             szcore.removeOneOffBeatEvents(transportId, beatNo);
         }
 
-        if(baseBeatEventsToProcess.isEmpty()){
+        if (baseBeatEventsToProcess.isEmpty()) {
             return;
         }
 
@@ -2496,6 +2519,15 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 //            LOG.debug("###  Processing base Beat event: " + beatEvent);
             process(beatEvent, beatNo);
         }
+    }
+
+    //use with care - will be processed for each base beat;
+    public void addBeatEventToProcess(SzcoreEvent event) {
+        baseBeatEventsToProcess.add(event);
+    }
+
+    public InstrumentBeatTracker getInstrumentBeatTracker(Id instrumentId) {
+        return instrumentBeatTrackers.get(instrumentId);
     }
 
     private void processTempoChange(Id transportId, Tempo tempo) {

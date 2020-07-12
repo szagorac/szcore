@@ -101,6 +101,7 @@ public interface Consts {
     String OSC_ADDRESS_JSUI = OSC_ADDRESS_ZSCORE + "jsui";
     String OSC_ADDR_BEAT_INFO = OSC_ADDRESS_JSUI;
     String OSC_CMD_BEAT_INFO = "beatInfo";
+    String OSC_CMD_SET_TEMPO = "setTempo";
 
     int OSC_UPDATE_BEAT_COMPLETE_PERC_THRESHOLD = 1;
 

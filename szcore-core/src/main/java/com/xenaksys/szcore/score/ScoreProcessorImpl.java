@@ -1810,8 +1810,6 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         Tempo newTempo = new TempoImpl(currentTempo, tempoModifier);
 
-        boolean isSchedulerRunning = scheduler.isActive();
-
         TempoChangeEvent tempoChangeEvent = createTempoChangeEvent(newTempo, null, Consts.ALL_DESTINATIONS, transportId);
         process(tempoChangeEvent);
     }
@@ -2366,7 +2364,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         publishOscEvent(event);
     }
 
-    private void publishOscEvent(OscEvent event) {
+    public void publishOscEvent(OscEvent event) {
         String destination = event.getDestination();
         if (!oscPublisher.isDestination(destination)) {
 //            LOG.debug("publishOscEvent: destination {} is not active, ignoring event: {}", destination, event);
@@ -2819,6 +2817,10 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private boolean inNotOverlayInstrument(Instrument instrument) {
         return instrument.isAv() || Consts.NAME_FULL_SCORE.equalsIgnoreCase(instrument.getName());
+    }
+
+    public boolean isSchedulerRunning() {
+        return scheduler.isActive();
     }
 
     class ScoreTransportListener implements TransportListener {

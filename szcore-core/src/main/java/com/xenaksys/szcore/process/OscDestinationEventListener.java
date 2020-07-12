@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static com.xenaksys.szcore.Consts.OSC_CMD_SET_TEMPO;
 import static com.xenaksys.szcore.Consts.OSC_UPDATE_BEAT_COMPLETE_PERC_THRESHOLD;
 
 public class OscDestinationEventListener implements SzcoreEngineEventListener {
@@ -60,30 +61,48 @@ public class OscDestinationEventListener implements SzcoreEngineEventListener {
 
     @Override
     public void onTransportBeatEvent(Id transportId, int beatNo, int baseBeatNo) {
+        sendBeatInfo(beatNo, false);
+    }
+
+    @Override
+    public void onTransportTickEvent(Id transportId, int beatNo, int baseBeatNo, int tickNo) {
+
+    }
+
+    @Override
+    public void onTransportTempoChange(Id transportId, Tempo tempo) {
+        // if scheduler running tempo event sent my events
+        if (processor.isSchedulerRunning()) {
+            return;
+        }
         if (destinations.isEmpty()) {
             return;
         }
 
-//        Score score = processor.getScore();
-//        List<BeatId> beatIds = score.findBeatIds(transportId, baseBeatNo);
-//        if (beatIds == null) {
-//            LOG.info("onTransportBeatEvent: BeatIds are NULL");
-//            return;
-//        }
-//        int pageNo = 0;
-//        int barNo = 0;
-//        BeatId btId = null;
-//
-//        for (BeatId beatId : beatIds) {
-//            if (beatId.getBaseBeatNo() == baseBeatNo) {
-//                btId = beatId;
-//                PageId pageId = (PageId) beatId.getPageId();
-//                pageNo = pageId.getPageNo();
-//                BarId barId = (BarId) beatId.getBarId();
-//                barNo = barId.getBarNo();
-//                break;
-//            }
-//        }
+        for (Instrument destination : destinations) {
+            InstrumentBeatTracker instrumentBeatTracker = processor.getInstrumentBeatTracker(destination.getId());
+            Beat currentBeat = instrumentBeatTracker.getCurrent();
+            BeatId beatId = currentBeat.getBeatId();
+            List<Object> args = new ArrayList<>(2);
+            //arg0 command
+            args.add(OSC_CMD_SET_TEMPO);
+            args.add(tempo.getBpm());
+
+            LOG.info("onTransportTempoChange: Sending tempo change bpm: {}", tempo.getBpm());
+            OscScriptEvent oscScriptEvent = eventFactory.createOscScriptEvent(destination.getName(), beatId, ADDR_BEAT_INFO, args, clock.getSystemTimeMillis());
+            processor.publishOscEvent(oscScriptEvent);
+        }
+    }
+
+    @Override
+    public void onTransportPositionChange(Id transportId, int beatNo) {
+        sendBeatInfo(beatNo, true);
+    }
+
+    private void sendBeatInfo(int beatNo, boolean isSendNow) {
+        if (destinations.isEmpty()) {
+            return;
+        }
 
         for (Instrument destination : destinations) {
             InstrumentBeatTracker instrumentBeatTracker = processor.getInstrumentBeatTracker(destination.getId());
@@ -97,7 +116,8 @@ public class OscDestinationEventListener implements SzcoreEngineEventListener {
             BeatId beatId = currentBeat.getBeatId();
             int bbno = beatId.getBeatNo();
             if (bbno != beatNo) {
-                LOG.error("onTransportBeatEvent: retrieved beatNo: {} not equal to expected  beatNo: {}", bbno, beatNo);
+                LOG.warn("onTransportBeatEvent: retrieved beatNo: {} not equal to expected  beatNo: {}", bbno, beatNo);
+                beatNo = bbno;
             }
 
             PageId pageId = (PageId) beatId.getPageId();
@@ -112,23 +132,12 @@ public class OscDestinationEventListener implements SzcoreEngineEventListener {
             args.add(barNo);
             args.add(beatNo);
             OscScriptEvent oscScriptEvent = eventFactory.createOscScriptEvent(destination.getName(), beatId, ADDR_BEAT_INFO, args, clock.getSystemTimeMillis());
-            processor.addBeatEventToProcess(oscScriptEvent);
+            if (isSendNow) {
+                processor.publishOscEvent(oscScriptEvent);
+            } else {
+                processor.addBeatEventToProcess(oscScriptEvent);
+            }
         }
-    }
-
-    @Override
-    public void onTransportTickEvent(Id transportId, int beatNo, int baseBeatNo, int tickNo) {
-
-    }
-
-    @Override
-    public void onTransportTempoChange(Id transportId, Tempo tempo) {
-
-    }
-
-    @Override
-    public void onTransportPositionChange(Id transportId, int beatNo) {
-
     }
 
     public void reloadDestinations(Collection<Instrument> maxClients) {

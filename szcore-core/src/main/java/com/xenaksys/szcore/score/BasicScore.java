@@ -300,6 +300,19 @@ public class BasicScore implements Score {
         return instruments.values();
     }
 
+    public Instrument getInstrument(String name) {
+        if (name == null) {
+            return null;
+        }
+        Collection<Instrument> instruments = getInstruments();
+        for (Instrument instrument : instruments) {
+            if (name.equals(instrument.getName())) {
+                return instrument;
+            }
+        }
+        return null;
+    }
+
     public Collection<Instrument> getMaxClients() {
         return maxClients.values();
     }
@@ -833,5 +846,9 @@ public class BasicScore implements Score {
 
     public String getRandomPageName(Id instrumentId) {
         return randomisationStrategy.getRandomPageName(instrumentId);
+    }
+
+    public ScoreRandomisationStrategy getRandomisationStrategy() {
+        return randomisationStrategy;
     }
 }

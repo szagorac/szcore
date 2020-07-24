@@ -174,6 +174,8 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
             processPing(event);
         } else if (isSzcoreSetInstrument(event)) {
             processSetInstrument(event);
+        } else if (isSzcoreSelectInstrumentSlot(event)) {
+            processSelectInstrumentSlot(event);
         }
 
         notifyListeners(event);
@@ -206,6 +208,30 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
 
         notifyListeners(instrumentEvent);
 
+    }
+
+    private void processSelectInstrumentSlot(IncomingOscEvent event) {
+        List<Object> args = event.getArguments();
+
+        int slotNo = PropertyUtil.parseIntArg(args, 1, -1);
+        if (slotNo < 0) {
+            LOG.error("processSelectInstrumentSlot: Received invalid instrument slot");
+            return;
+        }
+
+        String slotInstrument = PropertyUtil.parseStringArg(args, 2, null);
+        if (slotInstrument == null) {
+            LOG.error("processSelectInstrumentSlot: Received invalid slot instrument");
+            return;
+        }
+
+        String sourceInst = PropertyUtil.parseStringArg(args, 3, null);
+        if (sourceInst == null) {
+            LOG.error("processSelectInstrumentSlot: Received invalid source instrument");
+            return;
+        }
+
+        server.processSelectInstrumentSlot(slotNo, slotInstrument, sourceInst);
     }
 
     private void processSzcoreHello(IncomingOscEvent event) {
@@ -329,8 +355,24 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
             return false;
         }
 
-        String sarg = (String)arg;
+        String sarg = (String) arg;
         return Consts.ARG_SET_INSTRUMENT.equals(sarg);
+    }
+
+    private boolean isSzcoreSelectInstrumentSlot(IncomingOscEvent event) {
+
+        List<Object> args = event.getArguments();
+        if (args == null || args.size() < 1) {
+            return false;
+        }
+
+        Object arg = args.get(0);
+        if (!(arg instanceof String)) {
+            return false;
+        }
+
+        String sarg = (String) arg;
+        return Consts.ARG_SELECT_INST_SLOT.equals(sarg);
     }
 
     private boolean isInscoreHello(IncomingOscEvent event) {

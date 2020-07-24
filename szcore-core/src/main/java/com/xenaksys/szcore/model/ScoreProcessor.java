@@ -81,4 +81,6 @@ public interface  ScoreProcessor extends Processor {
     void loadWebScore(LinkedList<WebScoreEvent> events);
 
     WebScore loadWebScore(File file) throws Exception;
+
+    void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst);
 }

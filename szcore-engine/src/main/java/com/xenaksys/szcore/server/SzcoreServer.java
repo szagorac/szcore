@@ -558,13 +558,17 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         oscEventPublisher.addOscPort(instrument, outPort);
     }
 
+    public void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst) {
+        scoreProcessor.processSelectInstrumentSlot(slotNo, slotInstrument, sourceInst);
+    }
+
     public void sendScoreInfo(String instrument) {
         if (instrument == null) {
             return;
         }
 
         Score score = scoreProcessor.getScore();
-        if(score == null){
+        if (score == null) {
             return;
         }
 

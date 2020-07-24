@@ -46,6 +46,7 @@ public interface Consts {
     String ARG_HELLO = "HELLO";
     String ARG_PING = "PING";
     String ARG_SET_INSTRUMENT = "SET_INSTRUMENT";
+    String ARG_SELECT_INST_SLOT = "SELECT_ISLOT";
     String BLANK_PAGE_NAME = "blank";
     String BLANK_PAGE_FILE = "blankStave";
     String DEFAULT_FILE_NAME = "part" + INSCORE_FILE_EXTENSION;

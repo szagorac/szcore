@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.algo.ValueScaler;
 import com.xenaksys.szcore.event.BeatScriptEvent;
 import com.xenaksys.szcore.event.DateTickEvent;
@@ -2526,6 +2527,30 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     public InstrumentBeatTracker getInstrumentBeatTracker(Id instrumentId) {
         return instrumentBeatTrackers.get(instrumentId);
+    }
+
+
+    @Override
+    public void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst) {
+        if (slotInstrument == null || sourceInst == null) {
+            LOG.error("processSelectInstrumentSlot: Invalid slot: {} or source {} instrument", slotInstrument, sourceInst);
+            return;
+        }
+
+        Instrument inst = szcore.getInstrument(sourceInst);
+        if (inst == null) {
+            LOG.error("processSelectInstrumentSlot: could not find instrument for source value: {}", sourceInst);
+            return;
+        }
+
+        boolean isOptOut = false;
+        if (slotInstrument.equals(sourceInst)) {
+            isOptOut = true;
+        }
+
+        ScoreRandomisationStrategy randomisationStrategy = szcore.getRandomisationStrategy();
+        randomisationStrategy.optOutInstrument(inst, isOptOut);
+
     }
 
     private void processTempoChange(Id transportId, Tempo tempo) {

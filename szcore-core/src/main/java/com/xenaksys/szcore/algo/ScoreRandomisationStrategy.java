@@ -4,6 +4,7 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.MutablePageId;
 import com.xenaksys.szcore.score.BasicScore;
 import org.slf4j.Logger;
@@ -27,9 +28,9 @@ public class ScoreRandomisationStrategy {
     private final MutablePageId tempPageId = new MutablePageId(0, null, null);
 
     private long lastRecalc = 0L;
-    private final List<Id> instruments = new ArrayList<>();
-    private final List<Id> optOutInstruments = new ArrayList<>();
-    private final Map<Id, Integer> instrumentPage = new HashMap<>();
+    private final List<InstrumentId> instruments = new ArrayList<>();
+    private final List<InstrumentId> optOutInstruments = new ArrayList<>();
+    private final Map<InstrumentId, Integer> instrumentPage = new HashMap<>();
     private final List<Integer> assignmentStrategy = new ArrayList<>();
     private int maxPageNo = Integer.MAX_VALUE;
     private final Random rnd = new Random();
@@ -42,12 +43,12 @@ public class ScoreRandomisationStrategy {
         Collection<Instrument> instruments = szcore.getInstruments();
 
         for (Instrument instrument : instruments) {
-            if (Consts.NAME_FULL_SCORE.equalsIgnoreCase(instrument.getName())) {
+            if (Consts.NAME_FULL_SCORE.equalsIgnoreCase(instrument.getName()) || instrument.isAv()) {
                 continue;
             }
 
-            this.instruments.add(instrument.getId());
-            this.instrumentPage.put(instrument.getId(), 0);
+            this.instruments.add((InstrumentId) instrument.getId());
+            this.instrumentPage.put((InstrumentId) instrument.getId(), 0);
 
             Page continuousPage = szcore.getContinuousPage(instrument.getId());
 
@@ -61,7 +62,7 @@ public class ScoreRandomisationStrategy {
     }
 
     private void reset() {
-        for (Id instrumentId : instrumentPage.keySet()) {
+        for (InstrumentId instrumentId : instrumentPage.keySet()) {
             instrumentPage.put(instrumentId, 0);
         }
         optOutInstruments.clear();
@@ -76,7 +77,7 @@ public class ScoreRandomisationStrategy {
         assignmentStrategy.addAll(strategy);
     }
 
-    public String getRandomPageName(Id instrumentId) {
+    public String getRandomPageName(InstrumentId instrumentId) {
         long now = System.currentTimeMillis();
         long diff = now - (lastRecalc + RECALC_TIME_LIMIT);
         if (diff > 0) {
@@ -116,7 +117,7 @@ public class ScoreRandomisationStrategy {
             }
         }
 
-        List<Id> rndInst = new ArrayList<>(instrumentPage.keySet());
+        List<InstrumentId> rndInst = new ArrayList<>(instrumentPage.keySet());
         Collections.shuffle(rndInst, rnd);
         int instStart = 0;
         int instEnd = 0;
@@ -128,7 +129,7 @@ public class ScoreRandomisationStrategy {
                 if (rndInst.size() < j) {
                     break;
                 }
-                Id instrumentId = rndInst.get(j);
+                InstrumentId instrumentId = rndInst.get(j);
                 LOG.debug("recalcStrategy() instrumentId: {}, pageNo: {}", instrumentId, pageNo);
                 instrumentPage.put(instrumentId, pageNo);
             }
@@ -148,23 +149,23 @@ public class ScoreRandomisationStrategy {
     }
 
     public void optOutInstrument(Instrument instrument, boolean isOptOut) {
-        Id instId = instrument.getId();
+        InstrumentId instId = (InstrumentId) instrument.getId();
         LOG.info("optOutInstrument: received opt-out: {} instrument: {}", isOptOut, instId);
 
         Integer pageNo = instrumentPage.get(instId);
         boolean isAssigned = pageNo != 0;
 
-        List<Id> unassignedInsts = getUnassignedInstruments();
-        List<Id> assignedInsts = getAssignedInstruments();
+        List<InstrumentId> unassignedInsts = getUnassignedInstruments();
+        List<InstrumentId> assignedInsts = getAssignedInstruments();
         if (isOptOut) {
             //Opt-out instrument
-            Id replacementInst = instId;
+            InstrumentId replacementInst = instId;
             optOutInstruments.add(instId);
             if (isAssigned) {
                 if (unassignedInsts.isEmpty()) {
                     LOG.info("optOutInstrument: can not opt out instrument: {}, all instruments assigned", instId);
                 } else {
-                    for (Id iid : unassignedInsts) {
+                    for (InstrumentId iid : unassignedInsts) {
                         if (!iid.equals(instId) && !optOutInstruments.contains(iid)) {
                             replacementInst = iid;
                             LOG.info("optOutInstrument: assigning replacement instrument: {}", replacementInst);
@@ -187,7 +188,7 @@ public class ScoreRandomisationStrategy {
             }
         } else {
             //Opt-in instrument
-            Id toReplaceInst = instId;
+            InstrumentId toReplaceInst = instId;
             optOutInstruments.remove(instId);
 
             if (isAssigned) {
@@ -205,9 +206,9 @@ public class ScoreRandomisationStrategy {
         }
     }
 
-    public List<Id> getUnassignedInstruments() {
-        List<Id> unassignedInsts = new ArrayList<>();
-        for (Id instId : instrumentPage.keySet()) {
+    public List<InstrumentId> getUnassignedInstruments() {
+        List<InstrumentId> unassignedInsts = new ArrayList<>();
+        for (InstrumentId instId : instrumentPage.keySet()) {
             Integer pNo = instrumentPage.get(instId);
             if (pNo == 0) {
                 unassignedInsts.add(instId);
@@ -216,9 +217,9 @@ public class ScoreRandomisationStrategy {
         return unassignedInsts;
     }
 
-    public List<Id> getAssignedInstruments() {
-        List<Id> unassignedInsts = new ArrayList<>();
-        for (Id instId : instrumentPage.keySet()) {
+    public List<InstrumentId> getAssignedInstruments() {
+        List<InstrumentId> unassignedInsts = new ArrayList<>();
+        for (InstrumentId instId : instrumentPage.keySet()) {
             Integer pNo = instrumentPage.get(instId);
             if (pNo != 0) {
                 unassignedInsts.add(instId);
@@ -227,12 +228,18 @@ public class ScoreRandomisationStrategy {
         return unassignedInsts;
     }
 
-    public void setInstrumentAssignments(Map<Id, Integer> pageAssignments) {
+    public void setInstrumentAssignments(Map<InstrumentId, Integer> pageAssignments) {
         instrumentPage.clear();
         instrumentPage.putAll(pageAssignments);
     }
 
-    public Map<Id, Integer> getInstrumentAssignments() {
+    public Map<InstrumentId, Integer> getInstrumentAssignments() {
         return instrumentPage;
+    }
+
+    public List<InstrumentId> getInstrumentSlotIds() {
+        List<InstrumentId> ids = getAssignedInstruments();
+        Collections.sort(ids);
+        return ids;
     }
 }

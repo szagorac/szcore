@@ -228,6 +228,12 @@ public class EventFactory {
         return event;
     }
 
+    public InstrumentSlotsEvent createInstrumentSlotsEvent(String instrumentsCsv, String destination, long creationTime, BeatId beatId) {
+        InstrumentSlotsEvent event = new InstrumentSlotsEvent(createJavaScriptArgs(), beatId, destination, creationTime);
+        event.addCommandArg(instrumentsCsv);
+        return event;
+    }
+
     public SendServerIpBroadcastEvent createServerIpBroadcastEvent(String serverIp, String destination, long creationTime) {
         SendServerIpBroadcastEvent event = new SendServerIpBroadcastEvent(createJavaScriptArgs(), destination, creationTime);
         event.addCommandArg(serverIp);

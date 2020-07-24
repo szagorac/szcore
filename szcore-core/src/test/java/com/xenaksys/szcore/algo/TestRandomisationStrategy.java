@@ -1,8 +1,8 @@
 package com.xenaksys.szcore.algo;
 
-import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.StrId;
 import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.score.TstFactory;
@@ -82,17 +82,17 @@ public class TestRandomisationStrategy {
         strategy.add(2);
         scoreRandomisationStrategy.setAssignmentStrategy(strategy);
 
-        Map<Id, Integer> initAssignments = new HashMap<>();
-        initAssignments.put(violin1.getId(), 1);
-        initAssignments.put(cello.getId(), 1);
-        initAssignments.put(violin2.getId(), 0);
-        initAssignments.put(viola.getId(), 0);
+        Map<InstrumentId, Integer> initAssignments = new HashMap<>();
+        initAssignments.put((InstrumentId) violin1.getId(), 1);
+        initAssignments.put((InstrumentId) cello.getId(), 1);
+        initAssignments.put((InstrumentId) violin2.getId(), 0);
+        initAssignments.put((InstrumentId) viola.getId(), 0);
         scoreRandomisationStrategy.setInstrumentAssignments(initAssignments);
 
         scoreRandomisationStrategy.optOutInstrument(violin1, true);
 
-        Map<Id, Integer> assignments = scoreRandomisationStrategy.getInstrumentAssignments();
-        Integer pageNo = assignments.get(violin1.getId());
+        Map<InstrumentId, Integer> assignments = scoreRandomisationStrategy.getInstrumentAssignments();
+        Integer pageNo = assignments.get((InstrumentId) violin1.getId());
 
         assertEquals(0, pageNo.intValue());
 
@@ -112,17 +112,17 @@ public class TestRandomisationStrategy {
         strategy.add(2);
         scoreRandomisationStrategy.setAssignmentStrategy(strategy);
 
-        Map<Id, Integer> initAssignments = new HashMap<>();
-        initAssignments.put(violin1.getId(), 0);
-        initAssignments.put(cello.getId(), 0);
-        initAssignments.put(violin2.getId(), 1);
-        initAssignments.put(viola.getId(), 1);
+        Map<InstrumentId, Integer> initAssignments = new HashMap<>();
+        initAssignments.put((InstrumentId) violin1.getId(), 0);
+        initAssignments.put((InstrumentId) cello.getId(), 0);
+        initAssignments.put((InstrumentId) violin2.getId(), 1);
+        initAssignments.put((InstrumentId) viola.getId(), 1);
         scoreRandomisationStrategy.setInstrumentAssignments(initAssignments);
 
         scoreRandomisationStrategy.optOutInstrument(violin1, false);
 
-        Map<Id, Integer> assignments = scoreRandomisationStrategy.getInstrumentAssignments();
-        Integer pageNo = assignments.get(violin1.getId());
+        Map<InstrumentId, Integer> assignments = scoreRandomisationStrategy.getInstrumentAssignments();
+        Integer pageNo = assignments.get((InstrumentId) violin1.getId());
 
         assertNotEquals(0, pageNo.intValue());
 

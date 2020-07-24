@@ -14,6 +14,7 @@ import com.xenaksys.szcore.model.TimeSignatureImpl;
 import com.xenaksys.szcore.model.Transition;
 import com.xenaksys.szcore.model.id.BarId;
 import com.xenaksys.szcore.model.id.BeatId;
+import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.IntId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StrId;
@@ -212,7 +213,7 @@ public class ScoreLoader {
         if (instrumentName.startsWith(AV)) {
             isAudioVideo = true;
         }
-        StrId instrumentId = new StrId(instrumentName);
+        InstrumentId instrumentId = new InstrumentId(instrumentName);
         Instrument instrument = new BasicInstrument(instrumentId, instrumentName, isAudioVideo);
         Collection<Instrument> instruments = score.getInstruments();
         if (!instruments.contains(instrument)) {
@@ -302,7 +303,7 @@ public class ScoreLoader {
 
     private static void processMaxScoreElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) throws Exception {
         String instrumentName = scoreElement.getInstrumentName();
-        StrId instrumentId = new StrId(instrumentName);
+        InstrumentId instrumentId = new InstrumentId(instrumentName);
 
         boolean isAudioVideo = false;
         if (instrumentName.startsWith(AV)) {

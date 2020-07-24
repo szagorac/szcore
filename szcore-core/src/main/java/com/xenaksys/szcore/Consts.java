@@ -165,6 +165,9 @@ public interface Consts {
     String CSV_INSTRUMENTS_TOKEN = "$INSTRUMENT";
     String OSC_JS_SET_INSTRUMENTS = "setInstruments('" + CSV_INSTRUMENTS_TOKEN + "')";
 
+    String CSV_INSTRUMENT_SLOTS_TOKEN = "$INSTRUMENT_SLOTS";
+    String OSC_JS_SET_INSTRUMENT_SLOTS = "setInstrumentSlots('" + CSV_INSTRUMENT_SLOTS_TOKEN + "')";
+
     String SERVER_IP__TOKEN = "$SERVER_IP";
     String OSC_JS_SET_SERVER_IP = "setServerIp('" + SERVER_IP__TOKEN + "')";
 

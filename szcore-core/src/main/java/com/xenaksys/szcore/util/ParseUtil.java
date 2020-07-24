@@ -1,7 +1,13 @@
 package com.xenaksys.szcore.util;
 
+import com.xenaksys.szcore.model.id.InstrumentId;
+
+import java.util.List;
+
+import static com.xenaksys.szcore.Consts.COMMA;
 import static com.xenaksys.szcore.Consts.DOT;
 import static com.xenaksys.szcore.Consts.DOT_CHAR;
+import static com.xenaksys.szcore.Consts.EMPTY;
 import static com.xenaksys.szcore.Consts.FALSE;
 import static com.xenaksys.szcore.Consts.MINUS_CHAR;
 import static com.xenaksys.szcore.Consts.TRUE;
@@ -75,6 +81,17 @@ public class ParseUtil {
             return Boolean.parseBoolean(val);
         }
         return val;
+    }
+
+    public static String convertToCsv(List<InstrumentId> instrumentIds) {
+        StringBuilder csvBuilder = new StringBuilder();
+        String delimiter = EMPTY;
+        for (InstrumentId id : instrumentIds) {
+            csvBuilder.append(delimiter);
+            csvBuilder.append(id.getName());
+            delimiter = COMMA;
+        }
+        return csvBuilder.toString();
     }
 }
 

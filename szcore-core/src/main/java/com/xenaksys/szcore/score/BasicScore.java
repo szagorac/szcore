@@ -13,6 +13,7 @@ import com.xenaksys.szcore.model.Stave;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.Transport;
 import com.xenaksys.szcore.model.id.BeatId;
+import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.MutableBeatId;
 import com.xenaksys.szcore.model.id.MutablePageId;
 import com.xenaksys.szcore.model.id.PageId;
@@ -844,7 +845,7 @@ public class BasicScore implements Score {
         return beats.get(offsetBeatId);
     }
 
-    public String getRandomPageName(Id instrumentId) {
+    public String getRandomPageName(InstrumentId instrumentId) {
         return randomisationStrategy.getRandomPageName(instrumentId);
     }
 

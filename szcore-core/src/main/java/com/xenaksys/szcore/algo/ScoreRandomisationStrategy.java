@@ -25,6 +25,7 @@ public class ScoreRandomisationStrategy {
     private static final long RECALC_TIME_LIMIT = 1000 * 5;
 
     private final BasicScore szcore;
+    private final ScoreRandomisationStrategyConfig config;
     private final MutablePageId tempPageId = new MutablePageId(0, null, null);
 
     private long lastRecalc = 0L;
@@ -35,8 +36,9 @@ public class ScoreRandomisationStrategy {
     private int maxPageNo = Integer.MAX_VALUE;
     private final Random rnd = new Random();
 
-    public ScoreRandomisationStrategy(BasicScore szcore) {
+    public ScoreRandomisationStrategy(BasicScore szcore, ScoreRandomisationStrategyConfig config) {
         this.szcore = szcore;
+        this.config = config;
     }
 
     public void init() {
@@ -77,7 +79,7 @@ public class ScoreRandomisationStrategy {
         assignmentStrategy.addAll(strategy);
     }
 
-    public String getRandomPageName(InstrumentId instrumentId) {
+    public String getRandomPageFileName(InstrumentId instrumentId) {
         long now = System.currentTimeMillis();
         long diff = now - (lastRecalc + RECALC_TIME_LIMIT);
         if (diff > 0) {
@@ -148,9 +150,9 @@ public class ScoreRandomisationStrategy {
         return next;
     }
 
-    public void optOutInstrument(Instrument instrument, boolean isOptOut) {
+    public void optOutInstrument(Instrument instrument, Instrument replaceInst, boolean isOptOut) {
         InstrumentId instId = (InstrumentId) instrument.getId();
-        LOG.info("optOutInstrument: received opt-out: {} instrument: {}", isOptOut, instId);
+        LOG.info("optOutInstrument: received opt-out: {} instrument: {} replaceInst: {}", isOptOut, instId, replaceInst);
 
         Integer pageNo = instrumentPage.get(instId);
         boolean isAssigned = pageNo != 0;
@@ -188,19 +190,27 @@ public class ScoreRandomisationStrategy {
             }
         } else {
             //Opt-in instrument
-            InstrumentId toReplaceInst = instId;
+            InstrumentId toReplaceInstId = (InstrumentId) replaceInst.getId();
             optOutInstruments.remove(instId);
 
             if (isAssigned) {
                 LOG.info("optOutInstrument: Opt-in instrument: {}, is already assigned, not doing anything", instId);
             } else {
-                if (assignedInsts.isEmpty()) {
-                    LOG.info("optOutInstrument: Opt-in instrument: {}, can not find any instruments to assign", instId);
-                } else {
-                    toReplaceInst = assignedInsts.remove(0);
-                    Integer replacePageNo = instrumentPage.get(toReplaceInst);
+                Integer replacePageNo = instrumentPage.get(toReplaceInstId);
+                boolean isReplaceAssigned = replacePageNo != 0;
+
+                if (isReplaceAssigned) {
                     instrumentPage.put(instId, replacePageNo);
-                    instrumentPage.put(toReplaceInst, 0);
+                    instrumentPage.put(toReplaceInstId, 0);
+                } else {
+                    if (assignedInsts.isEmpty()) {
+                        LOG.info("optOutInstrument: Opt-in instrument: {}, can not find any instruments to assign", instId);
+                    } else {
+                        toReplaceInstId = assignedInsts.remove(0);
+                        replacePageNo = instrumentPage.get(toReplaceInstId);
+                        instrumentPage.put(instId, replacePageNo);
+                        instrumentPage.put(toReplaceInstId, 0);
+                    }
                 }
             }
         }

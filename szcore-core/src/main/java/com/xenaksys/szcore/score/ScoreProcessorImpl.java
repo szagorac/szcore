@@ -2,6 +2,7 @@ package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
+import com.xenaksys.szcore.algo.ScoreRandomisationStrategyConfig;
 import com.xenaksys.szcore.algo.ValueScaler;
 import com.xenaksys.szcore.event.BeatScriptEvent;
 import com.xenaksys.szcore.event.DateTickEvent;
@@ -98,10 +99,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static com.xenaksys.szcore.Consts.CONTENT_LINE_Y_MAX;
+import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NAME;
+import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NO;
 import static com.xenaksys.szcore.Consts.DYNAMICS_LINE_Y_MAX;
 import static com.xenaksys.szcore.Consts.POSITION_LINE_Y_MAX;
 import static com.xenaksys.szcore.Consts.PRESSURE_LINE_Y_MAX;
 import static com.xenaksys.szcore.Consts.SPEED_LINE_Y_MAX;
+import static com.xenaksys.szcore.Consts.UNDERSCORE;
 
 public class ScoreProcessorImpl implements ScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(ScoreProcessorImpl.class);
@@ -181,7 +185,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     @Override
     public Score loadScore(File file) throws Exception {
-        if(scheduler.isActive()){
+        if (scheduler.isActive()) {
             LOG.warn("Scheduler is active, can not perform load score");
             throw new Exception("Scheduler is active, can not perform load score");
         }
@@ -191,6 +195,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         szcore = (BasicScore) score;
         webScore = new WebScore(this, eventFactory, clock);
         webScore.init();
+
+        ScoreRandomisationStrategyConfig strategyConfig = StrategyConfigLoader.loadStrategyConfig(file.getParent(), szcore);
+        szcore.setRandomisationStrategyConfig(strategyConfig);
 
         return score;
     }
@@ -234,8 +241,16 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             Id instrumentId = instrument.getId();
             instrumentBeatTrackers.put(instrumentId, new InstrumentBeatTracker(transport, instrumentId));
             lastBeat = prepareInstrument(instrument, transport);
-            Page lastPage =  szcore.getLastInstrumentPage(instrumentId);
-            szcore.setContinuousPage(instrumentId, lastPage);
+            Page lastPage = szcore.getLastInstrumentPage(instrumentId);
+
+            String contPageName = instrument.getName() + UNDERSCORE + CONTINUOUS_PAGE_NAME;
+            PageId contPageId = new PageId(CONTINUOUS_PAGE_NO, instrumentId, lastPage.getScoreId());
+            BasicPage contPage = new BasicPage(contPageId, contPageName, contPageName, lastPage.getInscorePageMap(), true);
+            Collection<Bar> lpBars = lastPage.getBars();
+            for (Bar bar : lpBars) {
+                contPage.addBar(bar);
+            }
+            szcore.setContinuousPage(instrumentId, contPage);
 
             if (szcore.isUseContinuousPage()) {
                 prepareContinuousPages(instrumentId, lastPage);
@@ -480,13 +495,10 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
 
         if(szcore.isUseContinuousPage() && szcore.isRandomizeContinuousPageContent()) {
-            Page continuousPage = szcore.getContinuousPage(instrumentId);
-            int currentPageNo = pageId.getPageNo();
-            int continuousPageNo = continuousPage.getPageNo();
-            boolean isRandomReady = currentPageNo >= continuousPageNo;
+            boolean isRandomReady = szcore.isRandomisePage(nextPage);
 
             if(isRandomReady) {
-                String pageFileName = szcore.getRandomPageName((InstrumentId) instrument.getId());
+                String pageFileName = szcore.getRandomPageFileName((InstrumentId) instrument.getId());
                 if(pageFileName == null) {
                     pageFileName = nextPage.getFileName();
                     LOG.info("Invalid random page file name, using: {}", pageFileName);
@@ -2569,13 +2581,19 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             return;
         }
 
+        Instrument replaceInst = szcore.getInstrument(slotInstrument);
+        if (replaceInst == null) {
+            LOG.error("processSelectInstrumentSlot: could not find instrument for source value: {}", sourceInst);
+            return;
+        }
+
         boolean isOptOut = false;
         if (slotInstrument.equals(sourceInst)) {
             isOptOut = true;
         }
 
         ScoreRandomisationStrategy randomisationStrategy = szcore.getRandomisationStrategy();
-        randomisationStrategy.optOutInstrument(inst, isOptOut);
+        randomisationStrategy.optOutInstrument(inst, replaceInst, isOptOut);
 
     }
 

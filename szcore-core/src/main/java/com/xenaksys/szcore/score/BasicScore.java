@@ -2,6 +2,7 @@ package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
+import com.xenaksys.szcore.algo.ScoreRandomisationStrategyConfig;
 import com.xenaksys.szcore.model.Bar;
 import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.Id;
@@ -75,23 +76,38 @@ public class BasicScore implements Score {
     private boolean isUseContinuousPage = true;
     public int noContinuousPages = 10;
     private boolean isRandomizeContinuousPageContent = true;
+
+    private ScoreRandomisationStrategyConfig config;
     private ScoreRandomisationStrategy randomisationStrategy;
+
+    private String workingDir;
 
     public BasicScore(StrId id) {
         this.id = id;
     }
 
     public void initRandomisation() {
-        randomisationStrategy = new ScoreRandomisationStrategy(this);
+        if (config == null) {
+            LOG.info("initRandomisation: no config, ignoring ...");
+            return;
+        }
+        randomisationStrategy = new ScoreRandomisationStrategy(this, config);
         randomisationStrategy.init();
     }
 
     public void setRandomisationStrategy(List<Integer> strategy) {
-        if(randomisationStrategy == null || strategy == null) {
+        if (randomisationStrategy == null || strategy == null) {
             return;
         }
 
         randomisationStrategy.setAssignmentStrategy(strategy);
+    }
+
+    public boolean isRandomisePage(Page nextPage) {
+        int pageNo = nextPage.getPageNo();
+        boolean out = pageNo > 3;
+        LOG.info("isRandomisePage: {} {} ", out, nextPage);
+        return out;
     }
 
     public boolean isUseContinuousPage() {
@@ -341,7 +357,12 @@ public class BasicScore implements Score {
 
     public Page getLastInstrumentPage(Id instrumentId) {
         TreeSet<Page> out = getInstrumentPages(instrumentId);
-        return out.last();
+        Page last = out.last();
+        if (last.getPageNo() == Consts.CONTINUOUS_PAGE_NO) {
+            out.remove(last);
+            last = out.last();
+        }
+        return last;
     }
 
     public TreeSet<Page> getInstrumentPages(Id instrumentId) {
@@ -845,11 +866,16 @@ public class BasicScore implements Score {
         return beats.get(offsetBeatId);
     }
 
-    public String getRandomPageName(InstrumentId instrumentId) {
-        return randomisationStrategy.getRandomPageName(instrumentId);
+    public String getRandomPageFileName(InstrumentId instrumentId) {
+        return randomisationStrategy.getRandomPageFileName(instrumentId);
     }
 
     public ScoreRandomisationStrategy getRandomisationStrategy() {
         return randomisationStrategy;
     }
+
+    public void setRandomisationStrategyConfig(ScoreRandomisationStrategyConfig config) {
+        this.config = config;
+    }
+
 }

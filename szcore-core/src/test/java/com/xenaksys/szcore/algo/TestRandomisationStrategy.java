@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 
 public class TestRandomisationStrategy {
     static final Logger LOG = LoggerFactory.getLogger(TestRandomisationStrategy.class);
@@ -37,7 +36,8 @@ public class TestRandomisationStrategy {
     public void init() {
         StrId scoreId = new StrId("testScore");
         score = new BasicScore(scoreId);
-        scoreRandomisationStrategy = new ScoreRandomisationStrategy(score);
+        ScoreRandomisationStrategyConfig config = new ScoreRandomisationStrategyConfig();
+        scoreRandomisationStrategy = new ScoreRandomisationStrategy(score, config);
 
         violin1 = TstFactory.createInstrument("Violin1", false);
         score.addInstrument(violin1);
@@ -89,7 +89,7 @@ public class TestRandomisationStrategy {
         initAssignments.put((InstrumentId) viola.getId(), 0);
         scoreRandomisationStrategy.setInstrumentAssignments(initAssignments);
 
-        scoreRandomisationStrategy.optOutInstrument(violin1, true);
+        scoreRandomisationStrategy.optOutInstrument(violin1, violin1, true);
 
         Map<InstrumentId, Integer> assignments = scoreRandomisationStrategy.getInstrumentAssignments();
         Integer pageNo = assignments.get((InstrumentId) violin1.getId());
@@ -119,12 +119,12 @@ public class TestRandomisationStrategy {
         initAssignments.put((InstrumentId) viola.getId(), 1);
         scoreRandomisationStrategy.setInstrumentAssignments(initAssignments);
 
-        scoreRandomisationStrategy.optOutInstrument(violin1, false);
+        scoreRandomisationStrategy.optOutInstrument(violin1, violin2, false);
 
         Map<InstrumentId, Integer> assignments = scoreRandomisationStrategy.getInstrumentAssignments();
         Integer pageNo = assignments.get((InstrumentId) violin1.getId());
 
-        assertNotEquals(0, pageNo.intValue());
+        assertEquals(1, pageNo.intValue());
 
         int countAssigned = 0;
         for (Integer page : assignments.values()) {

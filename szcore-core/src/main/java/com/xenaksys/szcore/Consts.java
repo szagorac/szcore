@@ -33,11 +33,14 @@ public interface Consts {
     String EIGHTH = "/8";
     final Integer ONE_I = 1;
     final Double ONE_D = 1.0;
+    String UNDERSCORE = "_";
     String DOUBLE_UNDERSCORE = "__";
     String INSCORE_FILE_EXTENSION = ".inscore";
     String PNG_FILE_EXTENSION = ".png";
     String TXT_FILE_EXTENSION = ".txt";
+    String YAML_FILE_EXTENSION = ".yml";
     String INSCORE_FILE_SUFFIX = "_InScoreMap";
+    String STRATEGY_CONFIG_FILE_SUFFIX = "strategyConfig";
     String INSCORE_ADDR = "INScore";
     String SZCORE_ADDR = "/SZCORE";
     String OSC_INSCORE_ADDRESS_ROOT = "/ITL";
@@ -110,6 +113,9 @@ public interface Consts {
 
     int MILLIS_IN_MINUTE = 1000 * 60;
     long PING_EXPIRY_MILLIS = 5 * 1000;
+
+    int CONTINUOUS_PAGE_NO = 6666;
+    String CONTINUOUS_PAGE_NAME = "pagex";
 
     String DEFAULT_TRANSPORT_NAME = "DefaultTransport";
     String DEFAULT_PAGE_PREFIX = "page";
@@ -373,4 +379,11 @@ public interface Consts {
     double CONTENT_LINE2_Y_MAX_POSITION = 0.425;
     double CONTENT_LINE2_Y_MIN_POSITION = 0.665;
 
+    String CONFIG_SCORE_NAME = "scoreName";
+    String CONFIG_RND_STRATEGY = "rndStrategy";
+    String CONFIG_ACTIVE_RANGES = "activePageRanges";
+    String CONFIG_INSTRUMENT_ID = "instrumentid";
+    String CONFIG_RANGE = "range";
+    String CONFIG_START = "start";
+    String CONFIG_END = "end";
 }

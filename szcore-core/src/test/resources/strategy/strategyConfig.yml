@@ -1,0 +1,11 @@
+scoreName: "Test Score"
+rndStrategy:
+  activePageRanges:
+    - instrumentid: Violin1
+      range: { start: 3, end: 0}
+    - instrumentid: Violin2
+      range: { start: 3, end: 0}
+    - instrumentid: Viola
+      range: { start: 3, end: 0}
+    - instrumentid: Cello
+      range: { start: 3, end: 0}

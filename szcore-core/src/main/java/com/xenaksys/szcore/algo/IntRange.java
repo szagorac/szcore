@@ -18,6 +18,10 @@ public class IntRange {
     }
 
     public boolean isInRange(int value) {
-        return value >= start && value <= end;
+        int max = Integer.MAX_VALUE;
+        if (end != 0) {
+            max = end;
+        }
+        return value >= start && value <= max;
     }
 }

@@ -495,11 +495,15 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
 
         if(szcore.isUseContinuousPage() && szcore.isRandomizeContinuousPageContent()) {
-            boolean isRandomReady = szcore.isRandomisePage(nextPage);
-
-            if(isRandomReady) {
-                String pageFileName = szcore.getRandomPageFileName((InstrumentId) instrument.getId());
-                if(pageFileName == null) {
+            ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
+            boolean isInRange = strategy.isInRange((InstrumentId) instrument.getId(), nextPage);
+            boolean isRecalcTime = strategy.isRecalcTime();
+            if (isRecalcTime) {
+                strategy.recalcStrategy(nextPage);
+            }
+            if (isInRange) {
+                String pageFileName = strategy.getRandomPageFileName((InstrumentId) instrument.getId());
+                if (pageFileName == null) {
                     pageFileName = nextPage.getFileName();
                     LOG.info("Invalid random page file name, using: {}", pageFileName);
                 } else {

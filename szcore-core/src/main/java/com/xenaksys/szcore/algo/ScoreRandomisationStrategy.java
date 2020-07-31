@@ -22,7 +22,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class ScoreRandomisationStrategy {
     static final Logger LOG = LoggerFactory.getLogger(ScoreRandomisationStrategy.class);
-    private static final long RECALC_TIME_LIMIT = 1000 * 5;
+    private static final long RECALC_TIME_LIMIT = 1000 * 3;
 
     private final BasicScore szcore;
     private final ScoreRandomisationStrategyConfig config;
@@ -33,7 +33,6 @@ public class ScoreRandomisationStrategy {
     private final List<InstrumentId> optOutInstruments = new ArrayList<>();
     private final Map<InstrumentId, Integer> instrumentPage = new HashMap<>();
     private final List<Integer> assignmentStrategy = new ArrayList<>();
-    private int maxPageNo = Integer.MAX_VALUE;
     private final Random rnd = new Random();
 
     public ScoreRandomisationStrategy(BasicScore szcore, ScoreRandomisationStrategyConfig config) {
@@ -53,11 +52,6 @@ public class ScoreRandomisationStrategy {
             this.instrumentPage.put((InstrumentId) instrument.getId(), 0);
 
             Page continuousPage = szcore.getContinuousPage(instrument.getId());
-
-            int cPageNo = continuousPage.getPageNo();
-            if (cPageNo < maxPageNo) {
-                maxPageNo = cPageNo;
-            }
         }
 
         assignmentStrategy.add(2);
@@ -80,13 +74,6 @@ public class ScoreRandomisationStrategy {
     }
 
     public String getRandomPageFileName(InstrumentId instrumentId) {
-        long now = System.currentTimeMillis();
-        long diff = now - (lastRecalc + RECALC_TIME_LIMIT);
-        if (diff > 0) {
-            LOG.debug("getRandomPageName() time limit reached diff: {}", diff);
-            recalcStrategy();
-        }
-
         if (!instruments.contains(instrumentId)) {
             return null;
         }
@@ -105,17 +92,37 @@ public class ScoreRandomisationStrategy {
         return null;
     }
 
-    private void recalcStrategy() {
-        reset();
+    public boolean isInRange(InstrumentId instId, Page page) {
+        if (page == null || instId == null) {
+            return false;
+        }
+        return config.isPageInActiveRange(page);
+    }
 
+
+    public boolean isRecalcTime() {
+        long now = System.currentTimeMillis();
+        long diff = now - (lastRecalc + RECALC_TIME_LIMIT);
+        return diff > 0;
+    }
+
+    public void recalcStrategy(Page page) {
+        reset();
         int rndNo = assignmentStrategy.size();
         int[] rndNos = new int[rndNo];
+        IntRange range = config.getSelectionRangeFor(page);
+        if (range == null) {
+            return;
+        }
+
+        int start = range.getStart();
+        int end = range.getEnd();
 
         for (int i = 0; i < rndNo; i++) {
-            if (maxPageNo == 1) {
+            if (end == 1) {
                 rndNos[i] = 1;
             } else {
-                rndNos[i] = ThreadLocalRandom.current().nextInt(1, maxPageNo);
+                rndNos[i] = ThreadLocalRandom.current().nextInt(start, end + 1);
             }
         }
 

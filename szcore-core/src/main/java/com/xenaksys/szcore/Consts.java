@@ -382,8 +382,10 @@ public interface Consts {
     String CONFIG_SCORE_NAME = "scoreName";
     String CONFIG_RND_STRATEGY = "rndStrategy";
     String CONFIG_ACTIVE_RANGES = "activePageRanges";
-    String CONFIG_INSTRUMENT_ID = "instrumentid";
-    String CONFIG_RANGE = "range";
+    String CONFIG_INSTRUMENTS = "instruments";
+    String CONFIG_ACTIVE_RANGE = "activeRange";
+    String CONFIG_SELECTION_RANGE = "selectionRange";
     String CONFIG_START = "start";
     String CONFIG_END = "end";
+    String CONFIG_ALL = "all";
 }

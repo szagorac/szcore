@@ -12,10 +12,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.Map;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class TestRandomStrategyConfig {
     static final Logger LOG = LoggerFactory.getLogger(TestRandomStrategyConfig.class);
@@ -52,12 +54,38 @@ public class TestRandomStrategyConfig {
 
         assertEquals(score.getName(), config.getScoreName());
 
-        Map<InstrumentId, IntRange> ranges = config.getInstrumentActivePageRanges();
-        assertEquals(4, ranges.size());
+        List<RndPageRangeConfig> pageRangeConfigs = config.getPageRangeConfigs();
+        assertEquals(2, pageRangeConfigs.size());
 
-        IntRange range = ranges.get((InstrumentId) violin1.getId());
-        assertEquals(3, range.getStart());
+        RndPageRangeConfig first = pageRangeConfigs.get(0);
+        List<InstrumentId> instrumentIds = first.getInstruments();
+        assertTrue(instrumentIds.contains((InstrumentId) violin1.getId()));
+        assertTrue(instrumentIds.contains((InstrumentId) violin2.getId()));
+        assertTrue(instrumentIds.contains((InstrumentId) viola.getId()));
+        assertTrue(instrumentIds.contains((InstrumentId) cello.getId()));
+
+        IntRange range = first.getActivePageRange();
+        assertEquals(4, range.getStart());
         assertEquals(0, range.getEnd());
+
+        IntRange selection = first.getSelectionPageRange();
+        assertEquals(1, selection.getStart());
+        assertEquals(3, selection.getEnd());
+
+        RndPageRangeConfig second = pageRangeConfigs.get(1);
+        instrumentIds = second.getInstruments();
+        assertFalse(instrumentIds.contains((InstrumentId) violin1.getId()));
+        assertFalse(instrumentIds.contains((InstrumentId) violin2.getId()));
+        assertTrue(instrumentIds.contains((InstrumentId) viola.getId()));
+        assertTrue(instrumentIds.contains((InstrumentId) cello.getId()));
+
+        range = second.getActivePageRange();
+        assertEquals(50, range.getStart());
+        assertEquals(52, range.getEnd());
+
+        selection = second.getSelectionPageRange();
+        assertEquals(1, selection.getStart());
+        assertEquals(3, selection.getEnd());
     }
 
 }

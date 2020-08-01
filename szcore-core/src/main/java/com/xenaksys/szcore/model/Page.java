@@ -12,6 +12,14 @@ public interface Page extends Identifiable, Comparable<Page> {
 
     Collection<Bar> getBars();
 
+    Bar getFirstBar();
+
+    Bar getLastBar();
+
+    Beat getFirstBeat();
+
+    Beat getLastBeat();
+
     Id getInstrumentId();
 
     String getFileName();

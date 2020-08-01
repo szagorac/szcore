@@ -80,13 +80,29 @@ public class BasicBar implements Bar {
     }
 
     @Override
+    public Beat getFirstBeat() {
+        if (beats == null || beats.isEmpty()) {
+            return null;
+        }
+        return beats.get(0);
+    }
+
+    @Override
+    public Beat getLastBeat() {
+        if (beats == null || beats.isEmpty()) {
+            return null;
+        }
+        return beats.get(beats.size() - 1);
+    }
+
+    @Override
     public boolean isUpbeatBar() {
         Collection<Beat> beats = getBeats();
-        if(beats == null || beats.size() != 1){
+        if (beats == null || beats.size() != 1) {
             return false;
         }
 
-        return  beats.iterator().next().isUpbeat() ;
+        return beats.iterator().next().isUpbeat();
     }
 
     @Override

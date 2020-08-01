@@ -2,6 +2,7 @@ package com.xenaksys.szcore.event;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.model.Id;
+import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.TimeSignature;
 import com.xenaksys.szcore.model.Transition;
@@ -50,16 +51,20 @@ public class EventFactory {
 
 
     public TransportPositionEvent createTransportPositionEvent(Id transportId,
-                                                                int startBaseBeatNo,
-                                                                int transportBeatNo,
-                                                                int tickNo,
-                                                                long positionMillis,
-                                                                long creationTime) {
+                                                               int startBaseBeatNo,
+                                                               int transportBeatNo,
+                                                               int tickNo,
+                                                               long positionMillis,
+                                                               long creationTime) {
         return new TransportPositionEvent(transportId, startBaseBeatNo, transportBeatNo, tickNo, positionMillis, creationTime);
     }
 
     public StopEvent createStopEvent(BeatId lastEvent, Id transportId, long creationTime) {
         return new StopEvent(lastEvent, transportId, creationTime);
+    }
+
+    public ModWindowEvent createModWindowEvent(BeatId beatId, Page nextPage, boolean isOpen, long creationTime) {
+        return new ModWindowEvent(beatId, nextPage, isOpen, creationTime);
     }
 
     public TimeSigChangeEvent createTimeSigChangeEvent(TimeSignature timeSignature,
@@ -231,6 +236,12 @@ public class EventFactory {
     public InstrumentSlotsEvent createInstrumentSlotsEvent(String instrumentsCsv, String destination, long creationTime, BeatId beatId) {
         InstrumentSlotsEvent event = new InstrumentSlotsEvent(createJavaScriptArgs(), beatId, destination, creationTime);
         event.addCommandArg(instrumentsCsv);
+        return event;
+    }
+
+    public InstrumentResetSlotsEvent createResetInstrumentSlotsEvent(String destination, long creationTime, BeatId beatId) {
+        InstrumentResetSlotsEvent event = new InstrumentResetSlotsEvent(createJavaScriptArgs(), beatId, destination, creationTime);
+        event.addCommandArg();
         return event;
     }
 

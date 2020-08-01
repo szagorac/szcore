@@ -1,7 +1,23 @@
 package com.xenaksys.szcore.task;
 
-import com.xenaksys.szcore.event.*;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.event.EventFactory;
+import com.xenaksys.szcore.event.ModWindowEvent;
+import com.xenaksys.szcore.event.PrecountBeatSetupEvent;
+import com.xenaksys.szcore.event.PrepStaveChangeEvent;
+import com.xenaksys.szcore.event.StaveActiveChangeEvent;
+import com.xenaksys.szcore.event.StopEvent;
+import com.xenaksys.szcore.event.TempoChangeEvent;
+import com.xenaksys.szcore.event.TimeSigChangeEvent;
+import com.xenaksys.szcore.event.TransitionEvent;
+import com.xenaksys.szcore.event.TransportPositionEvent;
+import com.xenaksys.szcore.event.WebScoreEvent;
+import com.xenaksys.szcore.model.Clock;
+import com.xenaksys.szcore.model.OscPublisher;
+import com.xenaksys.szcore.model.Scheduler;
+import com.xenaksys.szcore.model.ScoreProcessor;
+import com.xenaksys.szcore.model.Stave;
+import com.xenaksys.szcore.model.TempoModifier;
+import com.xenaksys.szcore.model.Transport;
 import com.xenaksys.szcore.score.ScoreProcessorImpl;
 import com.xenaksys.szcore.score.WebScore;
 
@@ -23,6 +39,10 @@ public class TaskFactory {
 
     public StopPlayTask createStopPlayTask(StopEvent event, long playTime, ScoreProcessor scoreProcessor) {
         return new StopPlayTask(playTime, event, scoreProcessor);
+    }
+
+    public ModWindowTask createModWindowTask(ModWindowEvent event, long playTime, ScoreProcessor scoreProcessor) {
+        return new ModWindowTask(playTime, event, scoreProcessor);
     }
 
     public StaveActiveChangeTask createActiveStaveChangeTask(StaveActiveChangeEvent event, long playTime, Stave stave, OscPublisher oscPublisher) {

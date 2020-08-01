@@ -34,6 +34,8 @@ public interface Score extends Identifiable {
 
     Collection<Instrument> getInstruments();
 
+    Collection<Instrument> getScoreInstruments();
+
     Collection<Page> getPages();
 
     Collection<Bar> getBars();

@@ -2,6 +2,7 @@ package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.model.Bar;
+import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.id.PageId;
@@ -57,6 +58,40 @@ public class BasicPage implements Page {
     @Override
     public Collection<Bar> getBars() {
         return bars;
+    }
+
+    @Override
+    public Bar getFirstBar() {
+        if (bars == null || bars.isEmpty()) {
+            return null;
+        }
+        return bars.get(0);
+    }
+
+    @Override
+    public Bar getLastBar() {
+        if (bars == null || bars.isEmpty()) {
+            return null;
+        }
+        return bars.get(bars.size() - 1);
+    }
+
+    @Override
+    public Beat getFirstBeat() {
+        Bar first = getFirstBar();
+        if (first == null) {
+            return null;
+        }
+        return first.getFirstBeat();
+    }
+
+    @Override
+    public Beat getLastBeat() {
+        Bar last = getLastBar();
+        if (last == null) {
+            return null;
+        }
+        return last.getLastBeat();
     }
 
     @Override

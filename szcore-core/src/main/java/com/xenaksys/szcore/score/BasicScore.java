@@ -45,6 +45,7 @@ public class BasicScore implements Score {
 
     private List<SzcoreEvent> initEvents = new ArrayList<>();
     private Set<Id> transportIds = new HashSet<>();
+    private List<Instrument> scoreInstruments = new ArrayList<>();
     private Map<Id, Instrument> instruments = new HashMap<>();
     private Map<Id, Page> pages = new HashMap<>();
     private Map<Id, Bar> bars = new HashMap<>();
@@ -132,6 +133,9 @@ public class BasicScore implements Score {
 
     public void addInstrument(Instrument instrument) {
         instruments.put(instrument.getId(), instrument);
+        if (!instrument.isAv()) {
+            scoreInstruments.add(instrument);
+        }
     }
 
     public Page getBlankPage() {
@@ -315,6 +319,11 @@ public class BasicScore implements Score {
     @Override
     public Collection<Instrument> getInstruments() {
         return instruments.values();
+    }
+
+    @Override
+    public Collection<Instrument> getScoreInstruments() {
+        return scoreInstruments;
     }
 
     public Instrument getInstrument(String name) {
@@ -849,6 +858,7 @@ public class BasicScore implements Score {
         int nextBeatNo = beatNo + beatOffset;
         Id instrumentId = beatId.getInstrumentId();
         List<BeatId> beatIds = instrumentBeats.get(instrumentId);
+
         tempBeatId.reset();
         tempBeatId.setBeatNo(nextBeatNo);
 

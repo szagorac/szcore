@@ -687,9 +687,14 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     @Override
     public void onOpenModWindow(InstrumentId instId, Page page) {
-        LOG.info("onOpenModWindow: currentBeat: {} instrument {} page: {}", currentBeatNo, instId.getName(), page.getPageNo());
+
         this.isUpdateWindowOpen = true;
         ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
+
+        //TODO remove
+        Transport transport = szcore.getInstrumentTransport(instId);
+        BeatId beatId = szcore.getInstrumentBeatIds(transport.getId(), instId, currentBeatNo);
+        LOG.info("onOpenModWindow: instrument {} page: {} currentBeat: {}", instId.getName(), page.getPageNo(), beatId);
 
         boolean isInRange = strategy.isInRange(instId, page);
         boolean isRecalcTime = strategy.isRecalcTime();
@@ -713,8 +718,13 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     @Override
     public void onCloseModWindow(InstrumentId instId, Page page) {
-        LOG.info("onCloseModWindow: currentBeat: {}  instrument {} page: {}", currentBeatNo, instId.getName(), page.getPageNo());
         this.isUpdateWindowOpen = false;
+
+        //TODO remove
+        Transport transport = szcore.getInstrumentTransport(instId);
+        BeatId beatId = szcore.getInstrumentBeatIds(transport.getId(), instId, currentBeatNo);
+        LOG.info("onCloseModWindow: instrument {} page: {} currentBeat: {}", instId.getName(), page.getPageNo(), beatId);
+
         ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
 
         boolean isInRange = strategy.isInRange(instId, page);
@@ -802,11 +812,15 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             szcore.addOneOffBaseBeatEvent(transportId, pageMapDisplayEvent);
         }
 
+        LOG.info("Open Window Event beatId: {} ", activatePageBeat);
         ModWindowEvent openWindowEvent = createModWindowEvent(activatePageBeat, page, true);
         szcore.addOneOffBaseBeatEvent(transportId, openWindowEvent);
 
-        Beat firstBeat = page.getFirstBeat();
-        Beat lastBeat = page.getLastBeat();
+        PageId currentPageId = (PageId) activatePageBeat.getPageId();
+        Page currentPage = szcore.getPage(currentPageId);
+
+        Beat firstBeat = currentPage.getFirstBeat();
+        Beat lastBeat = currentPage.getLastBeat();
         int first = firstBeat.getBeatNo();
         int last = lastBeat.getBeatNo();
         int half = (last - first) / 2 + 1;
@@ -816,7 +830,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         if (closeWindowBeat != null) {
             closeWindowBeatId = closeWindowBeat.getBeatId();
         }
-        LOG.info("Close Window Event page first beat: {} last: {}, calculated: {} ", first, last, closeWindowBeatId);
+        LOG.info("Close Window Event page first beat: {} last: {}, calculated beatId: {} ", first, last, closeWindowBeatId);
         ModWindowEvent closeWindowEvent = createModWindowEvent(closeWindowBeatId, page, false);
         szcore.addOneOffBaseBeatEvent(transportId, closeWindowEvent);
     }

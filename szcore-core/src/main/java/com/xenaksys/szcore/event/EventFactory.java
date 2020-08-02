@@ -3,6 +3,7 @@ package com.xenaksys.szcore.event;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.Stave;
 import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.TimeSignature;
 import com.xenaksys.szcore.model.Transition;
@@ -63,8 +64,8 @@ public class EventFactory {
         return new StopEvent(lastEvent, transportId, creationTime);
     }
 
-    public ModWindowEvent createModWindowEvent(BeatId beatId, Page nextPage, boolean isOpen, long creationTime) {
-        return new ModWindowEvent(beatId, nextPage, isOpen, creationTime);
+    public ModWindowEvent createModWindowEvent(BeatId beatId, Page nextPage, Stave stave, boolean isOpen, long creationTime) {
+        return new ModWindowEvent(beatId, nextPage, stave, isOpen, creationTime);
     }
 
     public TimeSigChangeEvent createTimeSigChangeEvent(TimeSignature timeSignature,

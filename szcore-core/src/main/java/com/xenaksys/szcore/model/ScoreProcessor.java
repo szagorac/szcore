@@ -85,8 +85,8 @@ public interface  ScoreProcessor extends Processor {
 
     void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst);
 
-    void onOpenModWindow(InstrumentId instId, Page nextPage);
+    void onOpenModWindow(InstrumentId instId, Stave nextStave, Page nextPage);
 
-    void onCloseModWindow(InstrumentId instId, Page nextPage);
+    void onCloseModWindow(InstrumentId instId, Stave nextStave, Page nextPage);
 
 }

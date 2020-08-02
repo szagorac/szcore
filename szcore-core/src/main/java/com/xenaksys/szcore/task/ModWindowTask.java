@@ -3,6 +3,7 @@ package com.xenaksys.szcore.task;
 import com.xenaksys.szcore.event.ModWindowEvent;
 import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.ScoreProcessor;
+import com.xenaksys.szcore.model.Stave;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.InstrumentId;
@@ -31,11 +32,12 @@ public class ModWindowTask extends EventMusicTask {
         BeatId beatId = modWindowEvent.getEventBaseBeat();
         InstrumentId instId = (InstrumentId) beatId.getInstrumentId();
         Page nextPage = modWindowEvent.getNextPage();
+        Stave nextStave = modWindowEvent.getNextStave();
 
         if (isOpenWindow) {
-            scoreProcessor.onOpenModWindow(instId, nextPage);
+            scoreProcessor.onOpenModWindow(instId, nextStave, nextPage);
         } else {
-            scoreProcessor.onCloseModWindow(instId, nextPage);
+            scoreProcessor.onCloseModWindow(instId, nextStave, nextPage);
         }
 
     }

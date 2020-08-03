@@ -53,6 +53,7 @@ public class WebScore {
     private final List<WebAction> currentActions = new ArrayList<>();
     private final List<Tile> tilesAll = new ArrayList<>(64);
     private final List<Tile> playingTiles = new ArrayList<>(4);
+    private final List<Tile> activeTiles = new ArrayList<>(8);
     private final List<Tile> playingNextTiles = new ArrayList<>(4);
     private final boolean[] visibleRows = new boolean[8];
     private final boolean[] activeRows = new boolean[8];
@@ -80,6 +81,7 @@ public class WebScore {
         playingNextTiles.clear();
         tileIdPageIdMap.clear();
         elementStates.clear();
+        activeTiles.clear();
         tiles = new Tile[8][8];
         zoomLevel = WEB_ZOOM_DEFAULT;
 
@@ -245,47 +247,39 @@ public class WebScore {
 
             TileText txt = t.getTileText();
             txt.setVisible(false);
+        }
+        recalcActiveTiles();
+    }
 
-            tilesAll.remove(t);
+    private void recalcActiveTiles() {
+        activeTiles.clear();
+        for (Tile tile : tilesAll) {
+            if (tile.getState().isActive()) {
+                activeTiles.add(tile);
+            }
         }
     }
 
     public void setSelectedElement(String elementId, boolean isSelected) {
         if (isTileId(elementId)) {
-            Tile in = parseTileId(elementId);
-            if (in == null) {
+            Tile tile = getTile(elementId);
+            if (tile == null) {
                 return;
             }
-            if (!isInActiveRow(in)) {
-                LOG.info("Selected tile {} is not in active row", in.getId());
+            if (!isInActiveRow(tile)) {
+                LOG.info("setSelectedElement: Selected tile {} is not in active row", tile.getId());
                 return;
             }
-            WebElementState state = in.getState();
+
+            WebElementState state = tile.getState();
             if (state.isPlaying() || state.isPlayingNext() || state.isPlayed() || !state.isVisible()) {
                 return;
             }
 
-            int i = in.getRow() - 1;
-            int j = in.getColumn() - 1;
-            if (i < 0 || i > tiles.length) {
-                LOG.error("setSelectedElement: invalid i: {}", i);
-                return;
-            }
-            if (j < 0 || j > tiles.length) {
-                LOG.error("setSelectedElement: invalid j: {}", j);
-                return;
-            }
-
-            Tile tile = tiles[i][j];
-            if (!tile.getId().equals(in.getId())) {
-                LOG.error("setSelectedElement: retrieved invalid element: {}", tile);
-                return;
-            }
-
-            if (isSelected) {
+            if (!isSelected) {
                 state.setSelected(true);
                 state.incrementClickCount();
-                tilesAll.sort(CLICK_COMPARATOR);
+                activeTiles.sort(CLICK_COMPARATOR);
             }
         }
     }
@@ -301,7 +295,7 @@ public class WebScore {
     public List<String> getTopSelectedTiles(int quantity) {
         List<String> topSelected = new ArrayList<>();
         int count = 1;
-        for (Tile t : tilesAll) {
+        for (Tile t : activeTiles) {
             if (count <= quantity) {
                 topSelected.add(t.getId());
                 count++;
@@ -309,6 +303,24 @@ public class WebScore {
         }
         LOG.info("Selected tiles to play next: {}", Arrays.toString(topSelected.toArray()));
         return topSelected;
+    }
+
+    public List<Integer> getTopSelectedPages(int pageQuantity) {
+        List<String> topTiles = getTopSelectedTiles(pageQuantity);
+        List<Integer> pageIds = new ArrayList<>(topTiles.size());
+        if (topTiles.size() != pageQuantity) {
+            LOG.warn("getTopSelectedPage: received unexpected number of pages: {} expected: {}", topTiles.size(), pageQuantity);
+        }
+        for (String tileId : topTiles) {
+            Integer pageNo = tileIdPageIdMap.get(tileId);
+            if (pageNo == null) {
+                LOG.error("getTopSelectedPage: Failed to find pageId for tile id: {}", tileId);
+            } else {
+                pageIds.add(pageNo);
+            }
+            LOG.info("getTopSelectedPage: Found pageId: {} for tile id: {}", pageNo, tileId);
+        }
+        return pageIds;
     }
 
     public void resetClickCounts() {
@@ -415,51 +427,21 @@ public class WebScore {
     }
 
     public void setPlayingTile(String tileId) {
-        Tile t = parseTileId(tileId);
+        Tile t = getTile(tileId);
         if (t == null) {
             LOG.error("setPlayedTile: invalid tileId: {}", tileId);
             return;
         }
-        setPlayingTile(t.getRow(), t.getColumn());
-    }
-
-    public void setPlayingTile(int row, int col) {
-        int i = row - 1;
-        int j = col - 1;
-        if (i < 0 || i >= tiles.length) {
-            LOG.error("setPlayedTile: invalid row: {}", i);
-            return;
-        }
-        if (j < 0 || j >= tiles[0].length) {
-            LOG.error("setPlayedTile: invalid col: {}", i);
-            return;
-        }
-        Tile t = tiles[row - 1][col - 1];
         t.getState().setPlaying(true);
         playingTiles.add(t);
     }
 
     public void setTileText(String tileId, String value) {
-        Tile t = parseTileId(tileId);
+        Tile t = getTile(tileId);
         if (t == null) {
             LOG.error("setTileText: invalid tileId: {}", tileId);
             return;
         }
-        setTileText(t.getRow(), t.getColumn(), value);
-    }
-
-    private void setTileText(int row, int col, String value) {
-        int i = row - 1;
-        int j = col - 1;
-        if (i < 0 || i >= tiles.length) {
-            LOG.error("setTileText: invalid row: {}", i);
-            return;
-        }
-        if (j < 0 || j >= tiles[0].length) {
-            LOG.error("setTileText: invalid col: {}", i);
-            return;
-        }
-        Tile t = tiles[row - 1][col - 1];
         t.setText(value);
     }
 
@@ -479,26 +461,11 @@ public class WebScore {
     }
 
     public void setPlayingNextTile(String tileId) {
-        Tile t = parseTileId(tileId);
+        Tile t = getTile(tileId);
         if (t == null) {
             LOG.error("setPlayedNextTile: invalid tileId: {}", tileId);
             return;
         }
-        setPlayingNextTile(t.getRow(), t.getColumn());
-    }
-
-    public void setPlayingNextTile(int row, int col) {
-        int i = row - 1;
-        int j = col - 1;
-        if (i < 0 || i >= tiles.length) {
-            LOG.error("setPlayedNextTile: invalid row: {}", i);
-            return;
-        }
-        if (j < 0 || j >= tiles[0].length) {
-            LOG.error("setPlayedNextTile: invalid col: {}", i);
-            return;
-        }
-        Tile t = tiles[row - 1][col - 1];
         t.getState().setPlayingNext(true);
         playingNextTiles.add(t);
     }
@@ -515,6 +482,7 @@ public class WebScore {
                 ts.setActive(activeRows[i]);
             }
         }
+        recalcActiveTiles();
     }
 
     public void resetActions() {
@@ -755,7 +723,7 @@ public class WebScore {
         return Consts.WEB_TILE_PREFIX + row + Consts.WEB_ELEMENT_NAME_DELIMITER + column;
     }
 
-    private Tile parseTileId(String tileId) {
+    private Tile getTile(String tileId) {
         try {
             int start = tileId.indexOf(Consts.WEB_TILE_PREFIX) + 1;
             int end = tileId.indexOf(Consts.WEB_ELEMENT_NAME_DELIMITER);
@@ -764,10 +732,21 @@ public class WebScore {
             start = end + 1;
             s = tileId.substring(start);
             int column = Integer.parseInt(s);
-            String id = Consts.WEB_TILE_PREFIX + row + Consts.WEB_ELEMENT_NAME_DELIMITER + column;
-            return new Tile(row, column, id);
+
+            int i = row - 1;
+            int j = column - 1;
+            if (i < 0 || i >= tiles.length) {
+                LOG.error("parseTileId: invalid row: {}", i);
+                return null;
+            }
+            if (j < 0 || j >= tiles[0].length) {
+                LOG.error("parseTileId: invalid col: {}", i);
+                return null;
+            }
+
+            return tiles[i][j];
         } catch (Exception e) {
-            LOG.error("Failed to parse tileId: {}", tileId, e);
+            LOG.error("parseTileId: Failed to parse tileId: {}", tileId, e);
         }
         return null;
     }

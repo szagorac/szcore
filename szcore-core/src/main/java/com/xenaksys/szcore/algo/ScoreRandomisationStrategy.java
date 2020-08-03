@@ -29,6 +29,7 @@ public class ScoreRandomisationStrategy {
     private final MutablePageId tempPageId = new MutablePageId(0, null, null);
 
     private long lastRecalc = 0L;
+    private long lastPageRecalc = 0L;
     private final List<InstrumentId> instruments = new ArrayList<>();
     private final List<InstrumentId> optOutInstruments = new ArrayList<>();
     private final Map<InstrumentId, Integer> instrumentPage = new HashMap<>();
@@ -106,11 +107,17 @@ public class ScoreRandomisationStrategy {
         return diff > 0;
     }
 
+    public boolean isPageRecalcTime() {
+        long now = System.currentTimeMillis();
+        long diff = now - (lastPageRecalc + RECALC_TIME_LIMIT);
+        return diff > 0;
+    }
+
     public void recalcStrategy(Page page) {
         reset();
         int rndNo = assignmentStrategy.size();
         int[] rndNos = new int[rndNo];
-        IntRange range = config.getSelectionRangeFor(page);
+        IntRange range = config.getSelectionRange(page);
         if (range == null) {
             return;
         }
@@ -148,6 +155,10 @@ public class ScoreRandomisationStrategy {
         lastRecalc = System.currentTimeMillis();
     }
 
+    public int getNumberOfRequiredPages() {
+        return assignmentStrategy.size();
+    }
+
     public Page getPage(int pageNo, Id instrumentId) {
         tempPageId.setInstrumentId(instrumentId);
         tempPageId.setScoreId(szcore.getId());
@@ -155,6 +166,30 @@ public class ScoreRandomisationStrategy {
         Page next = szcore.getPage(tempPageId);
         tempPageId.reset();
         return next;
+    }
+
+    public void setPageSelection(List<Integer> pageIds) {
+        Map<Integer, List<InstrumentId>> pageAssigments = getPageAssigments();
+        Map<InstrumentId, Integer> instrumentAssignments = getInstrumentAssignments();
+        List<Integer> assignedPages = new ArrayList<>(pageAssigments.keySet());
+        for (int i = 0; i < pageIds.size(); i++) {
+            if (i >= assignedPages.size()) {
+                LOG.error("setPageSelection: unexpected page index {}, assignedPages size: {}", i, assignedPages.size());
+                break;
+            }
+            Integer assignedPage = assignedPages.get(i);
+            Integer selectedPage = pageIds.get(i);
+            List<InstrumentId> assignedInstruments = pageAssigments.get(assignedPage);
+            for (InstrumentId insId : assignedInstruments) {
+                Integer asp = instrumentAssignments.get(insId);
+                if (!asp.equals(assignedPage)) {
+                    LOG.error("setPageSelection: unexpected assigned page {}, expected: {}", asp, assignedPage);
+                }
+                LOG.error("setPageSelection: replacing page {}, with page: {} for instrument: {}", asp, selectedPage, insId);
+                instrumentAssignments.put(insId, selectedPage);
+            }
+        }
+        lastPageRecalc = System.currentTimeMillis();
     }
 
     public void optOutInstrument(Instrument instrument, Instrument replaceInst, boolean isOptOut) {
@@ -235,14 +270,28 @@ public class ScoreRandomisationStrategy {
     }
 
     public List<InstrumentId> getAssignedInstruments() {
-        List<InstrumentId> unassignedInsts = new ArrayList<>();
+        List<InstrumentId> assignedInsts = new ArrayList<>();
         for (InstrumentId instId : instrumentPage.keySet()) {
             Integer pNo = instrumentPage.get(instId);
             if (pNo != 0) {
-                unassignedInsts.add(instId);
+                assignedInsts.add(instId);
             }
         }
-        return unassignedInsts;
+        return assignedInsts;
+    }
+
+    public Map<Integer, List<InstrumentId>> getPageAssigments() {
+        Map<Integer, List<InstrumentId>> assignedPages = new HashMap<>();
+        for (InstrumentId instId : instrumentPage.keySet()) {
+            Integer pageNo = instrumentPage.get(instId);
+            if (pageNo != 0) {
+                List<InstrumentId> instrumentIds = assignedPages.computeIfAbsent(pageNo, k -> new ArrayList<>());
+                if (!instrumentIds.contains(instId)) {
+                    instrumentIds.add(instId);
+                }
+            }
+        }
+        return assignedPages;
     }
 
     public void setInstrumentAssignments(Map<InstrumentId, Integer> pageAssignments) {

@@ -694,6 +694,12 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         boolean isInRange = strategy.isInRange(instId, page);
         if (isInRange) {
+            if (strategy.isPageRecalcTime()) {
+                int pageQuantity = strategy.getNumberOfRequiredPages();
+                List<Integer> pageIds = webScore.getTopSelectedPages(pageQuantity);
+                strategy.setPageSelection(pageIds);
+            }
+
             sendRndPageFileUpdate(page, stave, instId);
         } else {
             sendPageFileUpdate(page, stave);

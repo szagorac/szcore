@@ -30,7 +30,7 @@ public class ScoreRandomisationStrategyConfig {
         pageRangeConfigs.add(pageRangeConfig);
     }
 
-    public IntRange getSelectionRangeFor(Page page) {
+    public IntRange getSelectionRange(Page page) {
         if (page == null) {
             return null;
         }

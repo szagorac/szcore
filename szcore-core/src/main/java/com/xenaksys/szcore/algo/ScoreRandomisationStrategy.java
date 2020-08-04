@@ -163,9 +163,9 @@ public class ScoreRandomisationStrategy {
         tempPageId.setInstrumentId(instrumentId);
         tempPageId.setScoreId(szcore.getId());
         tempPageId.setPageNo(pageNo);
-        Page next = szcore.getPage(tempPageId);
+        Page page = szcore.getPage(tempPageId);
         tempPageId.reset();
-        return next;
+        return page;
     }
 
     public void setPageSelection(List<Integer> pageIds) {
@@ -185,7 +185,7 @@ public class ScoreRandomisationStrategy {
                 if (!asp.equals(assignedPage)) {
                     LOG.error("setPageSelection: unexpected assigned page {}, expected: {}", asp, assignedPage);
                 }
-                LOG.error("setPageSelection: replacing page {}, with page: {} for instrument: {}", asp, selectedPage, insId);
+                LOG.info("setPageSelection: replacing page {}, with page: {} for instrument: {}", asp, selectedPage, insId);
                 instrumentAssignments.put(insId, selectedPage);
             }
         }

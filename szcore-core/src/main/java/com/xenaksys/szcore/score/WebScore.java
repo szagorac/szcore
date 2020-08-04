@@ -29,6 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static com.xenaksys.szcore.Consts.EMPTY;
 import static com.xenaksys.szcore.Consts.WEB_TEXT_BACKGROUND_COLOUR;
@@ -168,7 +169,7 @@ public class WebScore {
         // row 1 : col - 1
         // row 2 : the same
         // row 3 :
-        return 0;
+        return ThreadLocalRandom.current().nextInt(1, 3 + 1);
     }
 
     public void init() {
@@ -261,6 +262,7 @@ public class WebScore {
     }
 
     public void setSelectedElement(String elementId, boolean isSelected) {
+        LOG.info("setSelectedElement: Received elementId: {} isSelected: {}", elementId, isSelected);
         if (isTileId(elementId)) {
             Tile tile = getTile(elementId);
             if (tile == null) {
@@ -276,11 +278,18 @@ public class WebScore {
                 return;
             }
 
-            if (!isSelected) {
+            if (isSelected) {
                 state.setSelected(true);
                 state.incrementClickCount();
-                activeTiles.sort(CLICK_COMPARATOR);
+                LOG.info("setSelectedElement: Received elementId: {} tile: {} click count: {} isSelected: true", elementId, tile.getId(), state.getClickCount());
+            } else {
+                if (state.getClickCount() <= 0) {
+                    state.setSelected(false);
+                }
+                state.decrementClickCount();
+                LOG.info("setSelectedElement: Received elementId: {} tile: {} click count: {} isSelected: {}", elementId, tile.getId(), state.getClickCount(), state.isSelected());
             }
+            activeTiles.sort(CLICK_COMPARATOR);
         }
     }
 
@@ -292,26 +301,29 @@ public class WebScore {
         return visibleRows[tile.getRow() - 1];
     }
 
-    public List<String> getTopSelectedTiles(int quantity) {
-        List<String> topSelected = new ArrayList<>();
+    public List<Tile> getTopSelectedTiles(int quantity) {
+        List<Tile> topSelected = new ArrayList<>();
         int count = 1;
         for (Tile t : activeTiles) {
             if (count <= quantity) {
-                topSelected.add(t.getId());
+                topSelected.add(t);
                 count++;
             }
         }
-        LOG.info("Selected tiles to play next: {}", Arrays.toString(topSelected.toArray()));
+        for (Tile tile : topSelected) {
+            LOG.info("getTopSelectedTiles: found tile: {} click count: {}", tile.getId(), tile.getState().getClickCount());
+        }
         return topSelected;
     }
 
     public List<Integer> getTopSelectedPages(int pageQuantity) {
-        List<String> topTiles = getTopSelectedTiles(pageQuantity);
+        List<Tile> topTiles = getTopSelectedTiles(pageQuantity);
         List<Integer> pageIds = new ArrayList<>(topTiles.size());
         if (topTiles.size() != pageQuantity) {
             LOG.warn("getTopSelectedPage: received unexpected number of pages: {} expected: {}", topTiles.size(), pageQuantity);
         }
-        for (String tileId : topTiles) {
+        for (Tile tile : topTiles) {
+            String tileId = tile.getId();
             Integer pageNo = tileIdPageIdMap.get(tileId);
             if (pageNo == null) {
                 LOG.error("getTopSelectedPage: Failed to find pageId for tile id: {}", tileId);

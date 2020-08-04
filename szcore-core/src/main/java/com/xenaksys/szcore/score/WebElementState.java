@@ -27,7 +27,11 @@ public class WebElementState {
     }
 
     public void incrementClickCount() {
-        this.clickCount ++;
+        this.clickCount++;
+    }
+
+    public void decrementClickCount() {
+        this.clickCount--;
     }
 
     public boolean isActive() {

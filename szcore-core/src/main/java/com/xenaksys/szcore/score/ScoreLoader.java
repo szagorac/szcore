@@ -59,7 +59,7 @@ public class ScoreLoader {
 
     public static volatile String workingDir;
 
-    private static String[] expextedHeaders = {
+    private static final String[] expextedHeaders = {
             "scoreName",            //0
             "instrumentName",       //1
             "pageName",             //2
@@ -435,14 +435,14 @@ public class ScoreLoader {
             int end = script.indexOf(SCRIPT_DELIMITER);
             String beatNoStr = script.substring(0, end);
             script = script.substring(end);
-            int scriptBeatNo = Integer.parseInt(beatNoStr);
-            if (scriptBeatNo != beatNo) {
-                if(scriptBeatNo < 0) {
-                    scriptBeatNo = beatNo + scriptBeatNo;
-                }
-                BeatId instrumentBeatId = score.getInstrumentBeat(instrumentId, scriptBeatNo);
+            int scriptBarOffsetBeatNo = Integer.parseInt(beatNoStr);
+            if (scriptBarOffsetBeatNo != beatNo) {
+                int offsetMod = (scriptBarOffsetBeatNo < 0) ? 0 : -1;
+                scriptBarOffsetBeatNo = beatNo + scriptBarOffsetBeatNo + offsetMod;
+
+                BeatId instrumentBeatId = score.getInstrumentBeat(instrumentId, scriptBarOffsetBeatNo);
                 if (instrumentBeatId == null) {
-                    LOG.warn("processWebScoreElement: Could not find instrument beat: {}", scriptBeatNo);
+                    LOG.warn("processWebScoreElement: Could not find instrument beat: {}", scriptBarOffsetBeatNo);
                 } else {
                     beatId = instrumentBeatId;
                 }

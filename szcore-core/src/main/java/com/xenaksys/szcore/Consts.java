@@ -265,6 +265,8 @@ public interface Consts {
     int WEB_SLICES_PER_PAGE = 10;
     int WEB_MAX_MEMORY_SIZE = 1024 * 1024 * 100;
 
+    double WEB_TILE_PLAY_PAGE_DURATION_FACTOR = 0.8;
+
     String WEB_PATH_SSE = "/sse";
     String WEB_PATH_WEBSOCKETS = "/wsoc";
     String WEB_PATH_HTTP = "/htp";
@@ -294,15 +296,46 @@ public interface Consts {
     String WEB_SCORE_SUFFIX = "_webscore";
     String WEB_TEXT_BACKGROUND_COLOUR = "rgba(225, 225, 225, 0.65)";
 
+    String WEB_SCORE_ID = "webScore";
+    String WEB_GRANULATOR = "granulator";
+    String WEB_ACTION_ID_CONFIG = "config";
+    String WEB_ACTION_ID_START = "start";
+    String WEB_ACTION_ID_RESET = "reset";
+
+    String WEB_CONFIG_DURATION = "duration";
+    String WEB_CONFIG_GRAIN = "grain";
+    String WEB_CONFIG_ENVELOPE = "envelope";
+    String WEB_CONFIG_PANNER = "panner";
+    String WEB_CONFIG_IS_USE_PANNER = "isUsePanner";
+    String WEB_CONFIG_PANNING_MODEL = "panningModel";
+    String WEB_CONFIG_DISTANCE_MODEL = "distanceModel";
+    String WEB_CONFIG_MAX_PAN_ANGLE = "maxPanAngle";
+    String WEB_CONFIG_SIZE_MS = "sizeMs";
+    String WEB_CONFIG_PITCH_RATE = "pitchRate";
+    String WEB_CONFIG_MAX_POSITION_OFFSET_RANGE_MS = "maxPositionOffsetRangeMs";
+    String WEB_CONFIG_MAX_PITCH_RATE_RANGE = "maxPitchRateRange";
+    String WEB_CONFIG_TIME_OFFSET_STEPS_MS = "timeOffsetStepMs";
+    String WEB_CONFIG_ATTACK_TIME = "attackTime";
+    String WEB_CONFIG_DECAY_TIME = "decayTime";
+    String WEB_CONFIG_SUSTAIN_TIME = "sustainTime";
+    String WEB_CONFIG_RELEASE_TIME = "releaseTime";
+    String WEB_CONFIG_SUSTAIN_LEVEL = "sustainLevel";
+    String WEB_CONFIG_MASTER_GAIN_VAL = "masterGainVal";
+    String WEB_CONFIG_PLAY_DURATION_SEC = "playDurationSec";
+    String WEB_CONFIG_PLAY_START_OFFSET_SEC = "playStartOffsetSec";
+    String WEB_CONFIG_MAX_GRAINS = "maxGrains";
+    String WEB_CONFIG_BUFFER_POSITION_PLAY_RATE = "bufferPositionPlayRate";
+    String WEB_CONFIG_AUDIO_STOP_TOLERANCE_MS = "audioStopToleranceMs";
+
     String NAME_FULL_SCORE = "FullScore";
 
     int DEFAULT_THREAD_SLEEP_MILLIS = 10;
 
     Double[] TEMPO_MULTIPLIERS = {0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85,
-                                                        0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99,
-                                                        1.0,
-                                                        1.01, 1.02, 1.03, 1.04, 1.05, 1.06, 1.07, 1.08, 1.09,
-                                                        1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5,
+            0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99,
+            1.0,
+            1.01, 1.02, 1.03, 1.04, 1.05, 1.06, 1.07, 1.08, 1.09,
+            1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5,
                                                         1.6, 1.7, 1.8, 1.9, 2.0};
 
     String RND_STRATEGY_1 = "1";

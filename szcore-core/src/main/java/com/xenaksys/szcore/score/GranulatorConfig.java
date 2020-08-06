@@ -3,6 +3,13 @@ package com.xenaksys.szcore.score;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_AUDIO_STOP_TOLERANCE_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_BUFFER_POSITION_PLAY_RATE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MASTER_GAIN_VAL;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_GRAINS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PLAY_DURATION_SEC;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PLAY_START_OFFSET_SEC;
+
 public class GranulatorConfig {
     private double masterGainVal;
     private double playDurationSec;
@@ -92,12 +99,12 @@ public class GranulatorConfig {
 
     public Map<String, Object> toJsMap() {
         Map<String, Object> config = new HashMap<>();
-        config.put("masterGainVal", getMasterGainVal());
-        config.put("playDurationSec", getPlayDurationSec());
-        config.put("playStartOffsetSec", getPlayStartOffsetSec());
-        config.put("maxGrains", getMaxGrains());
-        config.put("bufferPositionPlayRate", getBufferPositionPlayRate());
-        config.put("audioStopToleranceMs", getAudioStopToleranceMs());
+        config.put(WEB_CONFIG_MASTER_GAIN_VAL, getMasterGainVal());
+        config.put(WEB_CONFIG_PLAY_DURATION_SEC, getPlayDurationSec());
+        config.put(WEB_CONFIG_PLAY_START_OFFSET_SEC, getPlayStartOffsetSec());
+        config.put(WEB_CONFIG_MAX_GRAINS, getMaxGrains());
+        config.put(WEB_CONFIG_BUFFER_POSITION_PLAY_RATE, getBufferPositionPlayRate());
+        config.put(WEB_CONFIG_AUDIO_STOP_TOLERANCE_MS, getAudioStopToleranceMs());
         config.putAll(grain.toJsMap());
         config.putAll(envelope.toJsMap());
         config.putAll(panner.toJsMap());

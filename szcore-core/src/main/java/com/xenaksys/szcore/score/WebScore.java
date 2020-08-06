@@ -6,8 +6,13 @@ import com.xenaksys.szcore.event.OutgoingWebEvent;
 import com.xenaksys.szcore.event.OutgoingWebEventType;
 import com.xenaksys.szcore.event.WebScoreEvent;
 import com.xenaksys.szcore.model.Clock;
+import com.xenaksys.szcore.model.Instrument;
+import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.Score;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.id.BeatId;
+import com.xenaksys.szcore.model.id.MutablePageId;
+import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.web.WebAction;
 import com.xenaksys.szcore.web.WebActionType;
 import com.xenaksys.szcore.web.WebScoreState;
@@ -22,6 +27,7 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -32,13 +38,38 @@ import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_CONFIG;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_RESET;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_START;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_ATTACK_TIME;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_DECAY_TIME;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_DISTANCE_MODEL;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_DURATION;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_ENVELOPE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_GRAIN;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_IS_USE_PANNER;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_PAN_ANGLE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_PITCH_RATE_RANGE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_POSITION_OFFSET_RANGE_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PANNER;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PANNING_MODEL;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PITCH_RATE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_RELEASE_TIME;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_SIZE_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_SUSTAIN_LEVEL;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_SUSTAIN_TIME;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_TIME_OFFSET_STEPS_MS;
+import static com.xenaksys.szcore.Consts.WEB_GRANULATOR;
+import static com.xenaksys.szcore.Consts.WEB_SCORE_ID;
 import static com.xenaksys.szcore.Consts.WEB_TEXT_BACKGROUND_COLOUR;
+import static com.xenaksys.szcore.Consts.WEB_TILE_PLAY_PAGE_DURATION_FACTOR;
 import static com.xenaksys.szcore.Consts.WEB_ZOOM_DEFAULT;
 
 public class WebScore {
     static final Logger LOG = LoggerFactory.getLogger(WebScore.class);
 
     public static final Comparator<Tile> CLICK_COMPARATOR = (t, t1) -> t1.getState().getClickCount() - t.getState().getClickCount();
+    private static final long INTERNAL_EVENT_TIME_LIMIT = 1000 * 3;
 
     private final ScoreProcessor scoreProcessor;
     private final EventFactory eventFactory;
@@ -67,12 +98,28 @@ public class WebScore {
     private final ScriptEngine jsEngine = factory.getEngineByName("nashorn");
     private final TIntObjectHashMap<Preset> presets = new TIntObjectHashMap<>();
 
+    private final MutablePageId tempPageId;
+    private volatile long lastPlayTilesInternalEventTime = 0L;
+    private volatile long lastSelectTilesInternalEventTime = 0L;
+
     private TestScoreRunner testScoreRunner;
 
     public WebScore(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock) {
         this.scoreProcessor = scoreProcessor;
         this.eventFactory = eventFactory;
         this.clock = clock;
+        this.tempPageId = createTempPage();
+    }
+
+    private MutablePageId createTempPage() {
+        int pageNo = 0;
+        Score score = scoreProcessor.getScore();
+        Collection<Instrument> instruments = score.getInstruments();
+        Instrument instrument = null;
+        if (instruments != null || !instruments.isEmpty()) {
+            instrument = instruments.iterator().next();
+        }
+        return new MutablePageId(pageNo, instrument.getId(), score.getId());
     }
 
     public void resetState() {
@@ -174,7 +221,7 @@ public class WebScore {
 
     public void init() {
         loadPresets();
-        jsEngine.put("webScore", this);
+        jsEngine.put(WEB_SCORE_ID, this);
         resetState();
     }
 
@@ -301,26 +348,44 @@ public class WebScore {
         return visibleRows[tile.getRow() - 1];
     }
 
-    public List<Tile> getTopSelectedTiles(int quantity) {
+    public List<Tile> getTopSelectedTiles(int quantity, boolean isIncludePlayed) {
         List<Tile> topSelected = new ArrayList<>();
         int count = 1;
         for (Tile t : activeTiles) {
+            boolean isPlayed = t.getState().isPlayed() || t.getState().isPlaying();
+            if (isPlayed && !isIncludePlayed) {
+                continue;
+            }
             if (count <= quantity) {
                 topSelected.add(t);
                 count++;
+            } else {
+                break;
             }
-        }
-        for (Tile tile : topSelected) {
-            LOG.info("getTopSelectedTiles: found tile: {} click count: {}", tile.getId(), tile.getState().getClickCount());
         }
         return topSelected;
     }
 
-    public List<Integer> getTopSelectedPages(int pageQuantity) {
-        List<Tile> topTiles = getTopSelectedTiles(pageQuantity);
+    public List<Integer> prepareNextTilesToPlay(int pageQuantity) {
+        List<Tile> topTiles = null;
+        if (!playingNextTiles.isEmpty()) {
+            topTiles = new ArrayList<>(playingNextTiles);
+        } else {
+            topTiles = getTopSelectedTiles(pageQuantity, false);
+        }
         List<Integer> pageIds = new ArrayList<>(topTiles.size());
-        if (topTiles.size() != pageQuantity) {
-            LOG.warn("getTopSelectedPage: received unexpected number of pages: {} expected: {}", topTiles.size(), pageQuantity);
+        List<String> tileIds = new ArrayList<>(topTiles.size());
+        if (topTiles.size() < pageQuantity) {
+            LOG.warn("getTopSelectedPage: not enough pages retrieved: {} expected: {}", topTiles.size(), pageQuantity);
+            ArrayList<String> nextTileIds = calculateNextTilesToPlay();
+            LOG.warn("getTopSelectedPage: calculated tiles to play: {}", nextTileIds);
+            for (String tileId : nextTileIds) {
+                if (topTiles.size() < pageQuantity) {
+                    topTiles.add(getTile(tileId));
+                } else {
+                    break;
+                }
+            }
         }
         for (Tile tile : topTiles) {
             String tileId = tile.getId();
@@ -329,9 +394,11 @@ public class WebScore {
                 LOG.error("getTopSelectedPage: Failed to find pageId for tile id: {}", tileId);
             } else {
                 pageIds.add(pageNo);
+                tileIds.add(tileId);
             }
             LOG.info("getTopSelectedPage: Found pageId: {} for tile id: {}", pageNo, tileId);
         }
+        selectNextTilesInternal(tileIds);
         return pageIds;
     }
 
@@ -426,8 +493,110 @@ public class WebScore {
             txt.setVisible(false);
             targets.add(t.getId());
         }
-        setAction("reset", "ROTATE", targets.toArray(new String[0]));
+        setAction(WEB_ACTION_ID_RESET, WebActionType.ROTATE.name(), targets.toArray(new String[0]));
         playingTiles.clear();
+    }
+
+    public boolean isPlayTilesInternalEventTime() {
+        long now = System.currentTimeMillis();
+        long diff = now - (lastPlayTilesInternalEventTime + INTERNAL_EVENT_TIME_LIMIT);
+        return diff > 0;
+    }
+
+    public boolean isSelectTilesInternalEventTime() {
+        long now = System.currentTimeMillis();
+        long diff = now - (lastSelectTilesInternalEventTime + INTERNAL_EVENT_TIME_LIMIT);
+        return diff > 0;
+    }
+
+    public void playNextTilesInternal() {
+        if (!isPlayTilesInternalEventTime()) {
+            return;
+        }
+        resetActions();
+
+        if (playingNextTiles.isEmpty()) {
+            if (playingTiles.isEmpty()) {
+                LOG.warn("playNextTiles: Can not find tiles to play, both playingTiles and playingNextTiles are empty");
+                return;
+            }
+            ArrayList<String> tileIds = calculateNextTilesToPlay();
+            if (!tileIds.isEmpty()) {
+                playTiles(tileIds.toArray(new String[0]));
+            }
+        } else {
+            String[] tileIds = new String[playingNextTiles.size()];
+            for (int i = 0; i < tileIds.length; i++) {
+                Tile tile = playingNextTiles.get(i);
+                tileIds[i] = tile.getId();
+            }
+            playTiles(tileIds);
+        }
+
+        updateServerStateAndPush();
+        lastPlayTilesInternalEventTime = System.currentTimeMillis();
+    }
+
+    public ArrayList<String> calculateNextTilesToPlay() {
+        ArrayList<String> tileIds = new ArrayList<>(playingTiles.size());
+        for (Tile tile : playingTiles) {
+            Tile next = getNextTileToPlay(tile);
+            if (next != null) {
+                tileIds.add(next.getId());
+            }
+        }
+        return tileIds;
+    }
+
+    public void selectNextTilesInternal(List<String> tileIds) {
+        if (!isSelectTilesInternalEventTime()) {
+            return;
+        }
+        resetActions();
+        setPlayingNextTiles(tileIds.toArray(new String[0]));
+        updateServerStateAndPush();
+        lastSelectTilesInternalEventTime = System.currentTimeMillis();
+    }
+
+    public Tile getNextTileToPlay(Tile tile) {
+        int col = tile.getColumn() - 1;
+        int row = tile.getRow() - 1;
+        for (int j = col + 1; j < tiles[row].length; j++) {
+            Tile next = tiles[row][++col];
+            if (!next.getState().isPlayed()) {
+                return next;
+            }
+        }
+        return null;
+    }
+
+    public void playTiles(String[] tileIds) {
+        LOG.info("playTiles: {}", Arrays.toString(tileIds));
+        resetPlayingNextTiles();
+        if (tileIds == null || tileIds.length == 0) {
+            return;
+        }
+        setPlayingTiles(tileIds);
+        setPlayTileActions(tileIds);
+    }
+
+    public void setPlayTileActions(String[] tileIds) {
+        String first = tileIds[0];
+        Integer pageNo = tileIdPageIdMap.get(first);
+        tempPageId.setPageNo(pageNo);
+        Page page = scoreProcessor.getScore().getPage(tempPageId);
+
+        double duration = 0.0;
+        if (page != null) {
+            long durationMs = page.getDurationMs();
+            duration = MathUtil.roundTo2DecimalPlaces(durationMs / 1000.0);
+            LOG.info("setPlayTileActions: calculated duration: {} for page: {}", duration, page.getId());
+            duration = MathUtil.roundTo2DecimalPlaces(duration * WEB_TILE_PLAY_PAGE_DURATION_FACTOR);
+        }
+
+        Map<String, Object> params = new HashMap<>(1);
+        params.put(WEB_CONFIG_DURATION, duration);
+        setAction(WEB_ACTION_ID_START, WebActionType.DISSOLVE.name(), tileIds, params);
     }
 
     public void setPlayingTiles(String[] tileIds) {
@@ -517,9 +686,9 @@ public class WebScore {
     }
 
     public void resetGranulator() {
-        String[] target = {"granulator"};
+        String[] target = {WEB_GRANULATOR};
         Map<String, Object> params = defaultGranulatorConfig.toJsMap();
-        setAction("config", "AUDIO", target, params);
+        setAction(WEB_ACTION_ID_CONFIG, WebActionType.AUDIO.name(), target, params);
     }
 
     public void setGranulatorConfig(Map<String, Object> params) {
@@ -541,13 +710,13 @@ public class WebScore {
                 String l1 = names[0];
                 String l2 = names[1];
                 switch (l1) {
-                    case "grain":
+                    case WEB_CONFIG_GRAIN:
                         setGrainConfig(l2, value);
                         break;
-                    case "envelope":
+                    case WEB_CONFIG_ENVELOPE:
                         setGranulatorEnvelopeConfig(l2, value);
                         break;
-                    case "panner":
+                    case WEB_CONFIG_PANNER:
                         setGranulatorPannerConfig(l2, value);
                         break;
                 }
@@ -566,14 +735,14 @@ public class WebScore {
     private void setGranulatorPannerConfig(String name, Object value) {
         PannerConfig pannerConfig = defaultGranulatorConfig.getPanner();
         switch (name) {
-            case "isUsePanner":
+            case WEB_CONFIG_IS_USE_PANNER:
                 try {
                     pannerConfig.setUsePanner(getBoolean(value));
                 } catch (Exception e) {
                     LOG.error("setGranulatorPannerConfig: Failed to set isUsePanner", e);
                 }
                 break;
-            case "panningModel":
+            case WEB_CONFIG_PANNING_MODEL:
                 try {
                     String v = PanningModel.fromName(getString(value)).getName();
                     pannerConfig.setPanningModel(v);
@@ -581,7 +750,7 @@ public class WebScore {
                     LOG.error("setGranulatorPannerConfig: Failed to set panningModel", e);
                 }
                 break;
-            case "distanceModel":
+            case WEB_CONFIG_DISTANCE_MODEL:
                 try {
                     String v = PannerDistanceModel.fromName(getString(value)).getName();
                     pannerConfig.setDistanceModel(v);
@@ -589,7 +758,7 @@ public class WebScore {
                     LOG.error("setGranulatorPannerConfig: Failed to set distanceModel", e);
                 }
                 break;
-            case "maxPanAngle":
+            case WEB_CONFIG_MAX_PAN_ANGLE:
                 try {
                     pannerConfig.setMaxPanAngle(getInt(value));
                 } catch (Exception e) {
@@ -604,35 +773,35 @@ public class WebScore {
     private void setGrainConfig(String name, Object value) {
         GrainConfig grainConfig = defaultGranulatorConfig.getGrain();
         switch (name) {
-            case "sizeMs":
+            case WEB_CONFIG_SIZE_MS:
                 try {
                     grainConfig.setSizeMs(getInt(value));
                 } catch (Exception e) {
                     LOG.error("setGrainConfig: Failed to set grain size", e);
                 }
                 break;
-            case "pitchRate":
+            case WEB_CONFIG_PITCH_RATE:
                 try {
                     grainConfig.setPitchRate(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGrainConfig: Failed to set pitchRate", e);
                 }
                 break;
-            case "maxPositionOffsetRangeMs":
+            case WEB_CONFIG_MAX_POSITION_OFFSET_RANGE_MS:
                 try {
                     grainConfig.setMaxPositionOffsetRangeMs(getInt(value));
                 } catch (Exception e) {
                     LOG.error("setGrainConfig: Failed to set maxPositionOffsetRangeMs", e);
                 }
                 break;
-            case "maxPitchRateRange":
+            case WEB_CONFIG_MAX_PITCH_RATE_RANGE:
                 try {
                     grainConfig.setMaxPitchRateRange(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGrainConfig: Failed to set maxPitchRateRange", e);
                 }
                 break;
-            case "timeOffsetStepMs":
+            case WEB_CONFIG_TIME_OFFSET_STEPS_MS:
                 try {
                     grainConfig.setTimeOffsetStepMs(getInt(value));
                 } catch (Exception e) {
@@ -687,35 +856,35 @@ public class WebScore {
     private void setGranulatorEnvelopeConfig(String name, Object value) {
         EnvelopeConfig envelopeConfig = defaultGranulatorConfig.getEnvelope();
         switch (name) {
-            case "attackTime":
+            case WEB_CONFIG_ATTACK_TIME:
                 try {
                     envelopeConfig.setAttackTime(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGranulatorEnvelopeConfig: Failed to set attackTime", e);
                 }
                 break;
-            case "decayTime":
+            case WEB_CONFIG_DECAY_TIME:
                 try {
                     envelopeConfig.setDecayTime(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGranulatorEnvelopeConfig: Failed to set decayTime", e);
                 }
                 break;
-            case "sustainTime":
+            case WEB_CONFIG_SUSTAIN_TIME:
                 try {
                     envelopeConfig.setSustainTime(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGranulatorEnvelopeConfig: Failed to set sustainTime", e);
                 }
                 break;
-            case "releaseTime":
+            case WEB_CONFIG_RELEASE_TIME:
                 try {
                     envelopeConfig.setReleaseTime(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGranulatorEnvelopeConfig: Failed to set releaseTime", e);
                 }
                 break;
-            case "sustainLevel":
+            case WEB_CONFIG_SUSTAIN_LEVEL:
                 try {
                     envelopeConfig.setSustainLevel(getDouble(value));
                 } catch (Exception e) {

@@ -656,25 +656,22 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         this.isUpdateWindowOpen = true;
         ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
 
-        //TODO remove
-        Transport transport = szcore.getInstrumentTransport(instId);
-        BeatId beatId = szcore.getInstrumentBeatIds(transport.getId(), instId, currentBeatNo);
-        LOG.info("onOpenModWindow: instrument {} page: {} currentBeat: {}", instId.getName(), page.getPageNo(), beatId);
-
-        boolean isInRange = strategy.isInRange(instId, page);
+        boolean isInRndRange = strategy.isInRange(instId, page);
         boolean isRecalcTime = strategy.isRecalcTime();
         if (isRecalcTime) {
             strategy.recalcStrategy(page);
         }
         String destination = szcore.getOscDestination(instId);
 
-        if (isInRange) {
+        if (isInRndRange) {
             List<InstrumentId> slotInstrumentIds = strategy.getInstrumentSlotIds();
             String instSlotsCsv = ParseUtil.convertToCsv(slotInstrumentIds);
             LOG.info("onOpenModWindow: prepare sending csv: {} to instrument {}", instSlotsCsv, instId.getName());
 
             OscEvent instrumentSlotsEvent = createInstrumentSlotsEvent(destination, instSlotsCsv, null);
             publishOscEvent(instrumentSlotsEvent);
+
+            webScore.playNextTilesInternal();
         } else {
             OscEvent instrumentSlotsEvent = createInstrumentResetSlotsEvent(destination, null);
             publishOscEvent(instrumentSlotsEvent);
@@ -696,7 +693,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         if (isInRange) {
             if (strategy.isPageRecalcTime()) {
                 int pageQuantity = strategy.getNumberOfRequiredPages();
-                List<Integer> pageIds = webScore.getTopSelectedPages(pageQuantity);
+                List<Integer> pageIds = webScore.prepareNextTilesToPlay(pageQuantity);
                 strategy.setPageSelection(pageIds);
             }
 

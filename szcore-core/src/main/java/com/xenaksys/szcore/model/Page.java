@@ -27,4 +27,6 @@ public interface Page extends Identifiable, Comparable<Page> {
     Id getScoreId();
 
     InscorePageMap getInscorePageMap();
+
+    long getDurationMs();
 }

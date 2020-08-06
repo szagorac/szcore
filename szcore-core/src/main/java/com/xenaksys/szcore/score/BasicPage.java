@@ -113,6 +113,16 @@ public class BasicPage implements Page {
         return inscorePageMap;
     }
 
+    @Override
+    public long getDurationMs() {
+        Beat firstBeat = getFirstBeat();
+        Beat lastBeat = getLastBeat();
+
+        long start = firstBeat.getStartTimeMillis();
+        long end = lastBeat.getEndTimeMillis();
+        return end - start;
+    }
+
     public boolean isSendInscoreMap() {
         return isSendInscoreMap;
     }

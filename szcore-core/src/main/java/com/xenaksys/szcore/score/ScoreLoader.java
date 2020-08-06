@@ -356,7 +356,7 @@ public class ScoreLoader {
                 }
                 BeatId instrumentBeatId = score.getInstrumentBeat(instrumentId, scriptBeatNo);
                 if (instrumentBeatId == null) {
-                    LOG.warn("processWebScoreElement: Could not find instrument beat: {}", scriptBeatNo);
+                    LOG.warn("processMaxScoreElement: Could not find instrument beat: {}", scriptBeatNo);
                 } else {
                     beatId = instrumentBeatId;
                 }

@@ -198,7 +198,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         Score score = ScoreLoader.load(file);
         szcore = (BasicScore) score;
         webScore = new WebScore(this, eventFactory, clock);
-        webScore.init();
+        webScore.init(file.getParent());
 
         ScoreRandomisationStrategyConfig strategyConfig = StrategyConfigLoader.loadStrategyConfig(file.getParent(), szcore);
         szcore.setRandomisationStrategyConfig(strategyConfig);
@@ -206,13 +206,13 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         return score;
     }
 
-    public void loadWebScore(LinkedList<WebScoreEvent> events) {
-        webScore.init(events);
+    public void loadWebScore(LinkedList<WebScoreEvent> events, String configDir) {
+        webScore.init(events, configDir);
     }
 
     @Override
     public WebScore loadWebScore(File file) throws Exception {
-        if(scheduler.isActive()){
+        if (scheduler.isActive()) {
             LOG.warn("Scheduler is active, can not perform load web score");
             throw new Exception("Scheduler is active, can not perform load web score");
         }

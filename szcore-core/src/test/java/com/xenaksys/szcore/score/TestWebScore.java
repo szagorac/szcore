@@ -43,7 +43,7 @@ public class TestWebScore {
         addBeat(9, false);
         addBeat(10, false);
 
-        webScore.init();
+        webScore.init(null);
     }
 
     @Test

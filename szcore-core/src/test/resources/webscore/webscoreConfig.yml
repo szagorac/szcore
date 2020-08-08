@@ -1,0 +1,24 @@
+scoreName: "Test Score"
+presets:
+  - id: 1
+    scripts: [
+      "webScore.resetState()",
+      "webScore.resetGranulator()",
+      "webScore.setAction('all', 'RESET', ['elements']);",
+      "webScore.setInstructions('get ready for','<span style=\\'color:blueviolet;\\'>Union Rose</span>', 'performance');"
+    ]
+  - id: 2
+    scripts: [
+      "webScore.setZoomLevel('centreShape'); webScore.setAction('startZoom', 'ZOOM', ['centreShape']);",
+      "webScore.setVisible(['centreShape'], true)",
+      "webScore.setVisible(['innerCircle'], false)",
+      "webScore.setVisible(['outerCircle'], false)",
+      "webScore.setVisibleRows([1, 2, 3, 4, 5, 6, 7, 8]);",
+      "webScore.setActiveRows([1, 2]);"
+    ]
+  - id: 3
+    scripts: [
+      "webScore.setZoomLevel('innerCircle'); webScore.setAction('startZoom', 'ZOOM', ['innerCircle']);",
+      "webScore.setAction('end', 'TIMELINE', ['centreShape']);",
+      "webScore.deactivateRows([1,2,3])"
+    ]

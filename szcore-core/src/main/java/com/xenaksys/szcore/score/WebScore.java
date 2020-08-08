@@ -10,6 +10,7 @@ import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.Score;
 import com.xenaksys.szcore.model.ScoreProcessor;
+import com.xenaksys.szcore.model.ScriptPreset;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.MutablePageId;
 import com.xenaksys.szcore.util.MathUtil;
@@ -18,7 +19,6 @@ import com.xenaksys.szcore.web.WebActionType;
 import com.xenaksys.szcore.web.WebScoreState;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
-import gnu.trove.map.hash.TIntObjectHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,7 +96,7 @@ public class WebScore {
 
     private final ScriptEngineManager factory = new ScriptEngineManager();
     private final ScriptEngine jsEngine = factory.getEngineByName("nashorn");
-    private final TIntObjectHashMap<Preset> presets = new TIntObjectHashMap<>();
+    private WebscorePresetConfig webscorePresetConfig;
 
     private final MutablePageId tempPageId;
     private volatile long lastPlayTilesInternalEventTime = 0L;
@@ -114,6 +114,9 @@ public class WebScore {
     private MutablePageId createTempPage() {
         int pageNo = 0;
         Score score = scoreProcessor.getScore();
+        if (score == null) {
+            return null;
+        }
         Collection<Instrument> instruments = score.getInstruments();
         Instrument instrument = null;
         if (instruments != null || !instruments.isEmpty()) {
@@ -175,7 +178,7 @@ public class WebScore {
 
     public void reset(int presetNo) {
         try {
-            Preset preset = presets.get(presetNo);
+            ScriptPreset preset = webscorePresetConfig.getPreset(presetNo);
             if (preset == null) {
                 LOG.info("resetState: Unknown preset: {}", presetNo);
                 return;
@@ -219,45 +222,26 @@ public class WebScore {
         return ThreadLocalRandom.current().nextInt(1, 3 + 1);
     }
 
-    public void init() {
-        loadPresets();
+    public void init(String configDir) {
+        loadPresets(configDir);
         jsEngine.put(WEB_SCORE_ID, this);
         resetState();
     }
 
-    public void init(LinkedList<WebScoreEvent> events) {
+    public void init(LinkedList<WebScoreEvent> events, String configDir) {
         this.events = events;
-        init();
+        init(configDir);
     }
 
-    private void loadPresets() {
-        String resetServer = "webScore.resetState()";
-        String resetWebGranulator = "webScore.resetGranulator()";
-        String resetClient = "webScore.setAction('all', 'RESET', ['elements']);";
-        String startText = "webScore.setInstructions('get ready for','<span style=\\'color:blueviolet;\\'>Union Rose</span>', 'performance');";
-        ArrayList<String> resetAll = new ArrayList<>(Arrays.asList(resetServer, resetClient, startText, resetWebGranulator));
-        addPreset(1, resetAll);
-
-
-        String zoomCentre = "webScore.setZoomLevel('centreShape'); webScore.setAction('startZoom', 'ZOOM', ['centreShape']);";
-        String visibleCentreShape = "webScore.setVisible(['centreShape'], true)";
-        String invisibleInner = "webScore.setVisible(['innerCircle'], false)";
-        String invisibleOuter = "webScore.setVisible(['outerCircle'], false)";
-        String visibleAllRows = "webScore.setVisibleRows([1, 2, 3, 4, 5, 6, 7, 8]);";
-        String activateCentre = "webScore.setActiveRows([1, 2]);";
-        ArrayList<String> r2 = new ArrayList<>(Arrays.asList(resetServer, invisibleInner, invisibleOuter, visibleCentreShape, visibleAllRows, zoomCentre, activateCentre));
-        addPreset(2, r2);
-
-        String zoomInner = "webScore.setZoomLevel('innerCircle'); webScore.setAction('startZoom', 'ZOOM', ['innerCircle']);";
-        String endTimeline = "webScore.setAction('end', 'TIMELINE', ['centreShape']);";
-        String deactivateCentre = "webScore.deactivateRows([1,2,3])";
-        ArrayList<String> r3 = new ArrayList<>(Arrays.asList(zoomInner, invisibleInner, invisibleOuter, visibleCentreShape, endTimeline, deactivateCentre));
-        addPreset(3, r3);
-    }
-
-    private void addPreset(int presetNo, List<String> scripts) {
-        Preset preset = new Preset(scripts);
-        presets.put(presetNo, preset);
+    private void loadPresets(String configDir) {
+        if (configDir == null) {
+            return;
+        }
+        try {
+            webscorePresetConfig = WebscoreConfigLoader.loadWebScorePresets(configDir);
+        } catch (Exception e) {
+            LOG.error("Failed to load WebScore Presets", e);
+        }
     }
 
     public void initTestScore() {
@@ -1233,17 +1217,5 @@ public class WebScore {
             runner.start();
         }
 
-    }
-
-    public class Preset {
-        private final List<String> scripts;
-
-        public Preset(List<String> scripts) {
-            this.scripts = scripts;
-        }
-
-        public List<String> getScripts() {
-            return scripts;
-        }
     }
 }

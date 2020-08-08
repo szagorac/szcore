@@ -41,6 +41,7 @@ public interface Consts {
     String YAML_FILE_EXTENSION = ".yml";
     String INSCORE_FILE_SUFFIX = "_InScoreMap";
     String STRATEGY_CONFIG_FILE_SUFFIX = "strategyConfig";
+    String WEBSCORE_PRESET_FILE_SUFFIX = "webscoreConfig";
     String INSCORE_ADDR = "INScore";
     String SZCORE_ADDR = "/SZCORE";
     String OSC_INSCORE_ADDRESS_ROOT = "/ITL";
@@ -422,4 +423,7 @@ public interface Consts {
     String CONFIG_START = "start";
     String CONFIG_END = "end";
     String CONFIG_ALL = "all";
+    String CONFIG_PRESETS = "presets";
+    String CONFIG_SCRIPTS = "scripts";
+    String CONFIG_ID = "id";
 }

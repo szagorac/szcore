@@ -5,6 +5,8 @@ import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.OutgoingWebEvent;
 import com.xenaksys.szcore.event.OutgoingWebEventType;
 import com.xenaksys.szcore.event.WebScoreEvent;
+import com.xenaksys.szcore.event.WebScoreEventType;
+import com.xenaksys.szcore.event.WebScorePrecountEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.Page;
@@ -956,14 +958,30 @@ public class WebScore {
 
     public void processWebScoreEvent(WebScoreEvent event) {
         LOG.info("processWebScoreEvent: execute event: {}", event);
+        WebScoreEventType type = event.getWebScoreEventType();
         try {
             resetActions();
-            List<WebScoreScript> jsScripts = event.getScripts();
-            if (jsScripts == null) {
-                return;
+            boolean isStateUpdate = true;
+
+            switch (type) {
+                case PRECOUNT:
+                    isStateUpdate = processPrecountEvent((WebScorePrecountEvent) event);
+                    break;
+                case RESET:
+                case SCRIPT:
+                    List<WebScoreScript> jsScripts = event.getScripts();
+                    if (jsScripts == null) {
+                        return;
+                    }
+                    runWebScoreScripts(jsScripts);
+                    break;
+                default:
+                    LOG.warn("processWebScoreEvent: Ignoring event {}", type);
             }
-            runWebScoreScripts(jsScripts);
-            updateServerStateAndPush();
+
+            if (isStateUpdate) {
+                updateServerStateAndPush();
+            }
         } catch (Exception e) {
             LOG.error("Failed to evaluate script", e);
         }
@@ -1051,6 +1069,23 @@ public class WebScore {
         granulatorConfig.setPanner(pannerConfig);
 
         return granulatorConfig;
+    }
+
+    public boolean processPrecountEvent(WebScorePrecountEvent event) {
+        int count = event.getCount();
+        boolean isOn = event.getIsOn();
+        int colourId = event.getColourId();
+
+        LOG.info("processPrecountEvent: count: {}, isOn: {}, colId: {}", count, isOn, colourId);
+        if (count == 1 && isOn && colourId == 4) {
+            reset(0);
+            return true;
+        } else if (count == 1 && isOn && colourId == 3) {
+            reset(-1);
+            return true;
+        }
+
+        return false;
     }
 
     public class Tile {

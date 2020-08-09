@@ -284,12 +284,16 @@ public class EventFactory {
     }
 
     public WebStartEvent createWebStartEvent(String eventId, String sourceAddr, String requestPath,
-                                                           long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+                                             long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
         return new WebStartEvent(sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
     public WebScoreEvent createWebScoreEvent(BeatId beatId, List<WebScoreScript> scripts, long creationTime) {
         return new WebScoreEvent(beatId, scripts, creationTime);
+    }
+
+    public WebScorePrecountEvent createWebScorePrecountEvent(int count, boolean isOn, int colourId, long creationTime) {
+        return new WebScorePrecountEvent(count, isOn, colourId, creationTime);
     }
 
     public WebScoreResetEvent createWebScoreResetEvent(BeatId beatId, List<WebScoreScript> scripts, long creationTime) {

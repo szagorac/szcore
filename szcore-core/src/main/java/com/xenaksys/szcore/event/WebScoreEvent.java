@@ -25,9 +25,12 @@ public class WebScoreEvent implements SzcoreEvent {
     }
 
     private String initContent() {
+        if (scripts == null) {
+            return null;
+        }
         StringBuilder sb = new StringBuilder();
         String delimiter = EMPTY;
-        for(WebScoreScript script : scripts) {
+        for (WebScoreScript script : scripts) {
             sb.append(delimiter);
             sb.append(script.getContent());
             delimiter = SPACE;

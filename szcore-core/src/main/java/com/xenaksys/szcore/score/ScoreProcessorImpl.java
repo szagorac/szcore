@@ -1728,7 +1728,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         this.startBaseBeat = baseBeatNo;
 
-        initEvents = createRequiredEventsForBaseBeat(beatId.getBaseBeatNo());
+        initEvents = createRequiredEventsForNewPosition(beatId.getBaseBeatNo());
 
         processInitEvents(initEvents);
     }
@@ -1738,7 +1738,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         initEvents.clear();
     }
 
-    private List<SzcoreEvent> createRequiredEventsForBaseBeat(int beatNo) {
+    private List<SzcoreEvent> createRequiredEventsForNewPosition(int beatNo) {
         List<SzcoreEvent> initEvents = new ArrayList<>();
         if (szcore == null) {
             LOG.error("Invalid NULL score");
@@ -1747,7 +1747,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         Collection<Instrument> instruments = szcore.getInstruments();
         List<Id> transportIds = new ArrayList<>();
-        for(Instrument instrument : instruments) {
+        for (Instrument instrument : instruments) {
             Id instrumentId = instrument.getId();
             boolean isAudioOrVideo = instrument.isAv();
             boolean isScoreInstrument = !isAudioOrVideo;
@@ -2137,6 +2137,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         WebScoreEventType eventType = event.getWebScoreEventType();
 
         switch (eventType) {
+            case PRECOUNT:
             case RESET:
                 webScore.processWebScoreEvent(event);
                 break;
@@ -2195,7 +2196,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 PrecountBeatSetupEvent precountBeatSetupEvent = (PrecountBeatSetupEvent) event;
                 Id transportId = precountBeatSetupEvent.getInstrumentId();
                 transport = szcore.getTransport(transportId);
-                task = taskFactory.createPrecountBeatSetupTask(precountBeatSetupEvent, Consts.ALL_DESTINATIONS, transport, scheduler, oscPublisher, eventFactory, clock);
+                task = taskFactory.createPrecountBeatSetupTask(precountBeatSetupEvent, Consts.ALL_DESTINATIONS, transport, scheduler, oscPublisher, eventFactory, taskFactory, webScore, clock);
                 break;
             case TRANSITION:
                 TransitionEvent transitionEvent = (TransitionEvent) event;

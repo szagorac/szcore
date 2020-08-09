@@ -1,5 +1,5 @@
 package com.xenaksys.szcore.event;
 
 public enum WebScoreEventType {
-    RESET, SCRIPT
+    RESET, SCRIPT, PRECOUNT
 }

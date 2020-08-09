@@ -54,8 +54,8 @@ public class TaskFactory {
     }
 
     public PrecountBeatSetupTask createPrecountBeatSetupTask(PrecountBeatSetupEvent precountBeatSetupEvent, String destination, Transport transport, Scheduler scheduler,
-                                                             OscPublisher oscPublisher, EventFactory eventFactory, Clock clock) {
-        return new PrecountBeatSetupTask(precountBeatSetupEvent, destination, transport, scheduler, oscPublisher, eventFactory, clock);
+                                                             OscPublisher oscPublisher, EventFactory eventFactory, TaskFactory taskFactory, WebScore webScore, Clock clock) {
+        return new PrecountBeatSetupTask(precountBeatSetupEvent, destination, transport, scheduler, oscPublisher, eventFactory, taskFactory, webScore, clock);
     }
 
     public TransitionSetupTask createTransitionSetupTask(TransitionEvent transitionEvent, String destination, Scheduler scheduler,

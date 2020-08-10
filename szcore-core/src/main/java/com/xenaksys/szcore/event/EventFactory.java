@@ -292,6 +292,10 @@ public class EventFactory {
         return new WebScoreEvent(beatId, scripts, creationTime);
     }
 
+    public WebScoreInstructionsEvent createWebScoreInstructionsEvent(String l1, String l2, String l3, boolean isVisible, long creationTime) {
+        return new WebScoreInstructionsEvent(l1, l2, l3, isVisible, creationTime);
+    }
+
     public WebScorePrecountEvent createWebScorePrecountEvent(int count, boolean isOn, int colourId, long creationTime) {
         return new WebScorePrecountEvent(count, isOn, colourId, creationTime);
     }

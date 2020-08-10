@@ -5,8 +5,10 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.AddPartsEvent;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.SendServerIpBroadcastEvent;
+import com.xenaksys.szcore.event.WebScoreInstructionsEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Participant;
+import com.xenaksys.szcore.gui.model.WebscoreInstructions;
 import com.xenaksys.szcore.model.Bar;
 import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.Clock;
@@ -43,6 +45,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
@@ -174,6 +177,16 @@ public class ScoreController {
     private CheckBox useContentLineChb;
     @FXML
     private ChoiceBox<String> presetsChob;
+    @FXML
+    private TextField instL1Txt;
+    @FXML
+    private TextField instL2Txt;
+    @FXML
+    private TextField instL3Txt;
+    @FXML
+    private Button sendWebscoreInstructionsBtn;
+    @FXML
+    private Button clearWebscoreInstructionsBtn;
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -195,6 +208,7 @@ public class ScoreController {
     private Map<String, Id> instrumentNameId = new HashMap<>();
     private ObservableList<Participant> selectedParticipants = FXCollections.observableArrayList();
     private ObservableList<Participant> participants;
+    private WebscoreInstructions webscoreInstructions;
     private int tempo;
 
     private long positionMillis = 0L;
@@ -477,6 +491,10 @@ public class ScoreController {
             String out = fixedLengthString(lblVal, 3);
             contentValLbl.setText(out);
         });
+
+        webscoreInstructions.setLine1(EMPTY);
+        webscoreInstructions.setLine2(EMPTY);
+        webscoreInstructions.setLine3(EMPTY);
     }
 
     public void setScoreService(ScoreService scoreService) {
@@ -553,6 +571,11 @@ public class ScoreController {
                 }
             };
         });
+
+        webscoreInstructions = new WebscoreInstructions();
+        instL1Txt.textProperty().bindBidirectional(webscoreInstructions.line1Property());
+        instL2Txt.textProperty().bindBidirectional(webscoreInstructions.line2Property());
+        instL3Txt.textProperty().bindBidirectional(webscoreInstructions.line3Property());
     }
 
     @FXML
@@ -632,6 +655,38 @@ public class ScoreController {
         } finally {
             isPageSetCall = false;
         }
+    }
+
+    @FXML
+    private void sendWebscoreInstructions(ActionEvent event) {
+        webscoreInstructions.setVisible(true);
+        publishWebscoreInstructions();
+    }
+
+    @FXML
+    private void clearWebscoreInstructions(ActionEvent event) {
+        webscoreInstructions.setLine1(EMPTY);
+        webscoreInstructions.setLine2(EMPTY);
+        webscoreInstructions.setLine3(EMPTY);
+        webscoreInstructions.setVisible(false);
+        publishWebscoreInstructions();
+    }
+
+    private void publishWebscoreInstructions() {
+        String l1 = validateWebInstruction(webscoreInstructions.getLine1());
+        String l2 = validateWebInstruction(webscoreInstructions.getLine2());
+        String l3 = validateWebInstruction(webscoreInstructions.getLine3());
+        boolean isVisible = webscoreInstructions.getVisible();
+        EventFactory eventFactory = publisher.getEventFactory();
+        WebScoreInstructionsEvent instructionsEvent = eventFactory.createWebScoreInstructionsEvent(l1, l2, l3, isVisible, clock.getSystemTimeMillis());
+        publisher.receive(instructionsEvent);
+    }
+
+    private String validateWebInstruction(String instruction) {
+        if (instruction == null) {
+            return EMPTY;
+        }
+        return instruction;
     }
 
     private void setPageValue() {

@@ -11,6 +11,7 @@ import com.xenaksys.szcore.event.InstrumentEvent;
 import com.xenaksys.szcore.event.OscEvent;
 import com.xenaksys.szcore.event.ParticipantEvent;
 import com.xenaksys.szcore.event.ParticipantStatsEvent;
+import com.xenaksys.szcore.event.WebScoreEvent;
 import com.xenaksys.szcore.model.ClientInfo;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.SzcoreEvent;
@@ -62,10 +63,13 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
             EventType type = event.getEventType();
             switch (type) {
                 case OSC:
-                    processOscEvent((OscEvent)event);
+                    processOscEvent((OscEvent) event);
                     break;
                 case WEB_IN:
-                    processWebEvent((IncomingWebEvent)event);
+                    processWebEvent((IncomingWebEvent) event);
+                    break;
+                case WEB_SCORE:
+                    processWebScoreEvent((WebScoreEvent) event);
                     break;
             }
 
@@ -79,9 +83,14 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
         server.getWebProcessor().process(event);
     }
 
+    private void processWebScoreEvent(WebScoreEvent event) {
+//        LOG.info("processWebEvent: {}", event);
+        server.getScoreProcessor().process(event);
+    }
+
     private void processOscEvent(OscEvent oscEvent) {
-        if(oscEvent instanceof IncomingOscEvent) {
-            processIncomingOscEvent((IncomingOscEvent)oscEvent);
+        if (oscEvent instanceof IncomingOscEvent) {
+            processIncomingOscEvent((IncomingOscEvent) oscEvent);
         } else {
             LOG.error("Unexpected oscEvent type: {}", oscEvent);
         }

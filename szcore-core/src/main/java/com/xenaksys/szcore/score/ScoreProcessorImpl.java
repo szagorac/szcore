@@ -2139,6 +2139,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         switch (eventType) {
             case PRECOUNT:
             case RESET:
+            case INSTRUCTIONS:
                 webScore.processWebScoreEvent(event);
                 break;
             case SCRIPT:

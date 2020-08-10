@@ -6,6 +6,7 @@ import com.xenaksys.szcore.event.OutgoingWebEvent;
 import com.xenaksys.szcore.event.OutgoingWebEventType;
 import com.xenaksys.szcore.event.WebScoreEvent;
 import com.xenaksys.szcore.event.WebScoreEventType;
+import com.xenaksys.szcore.event.WebScoreInstructionsEvent;
 import com.xenaksys.szcore.event.WebScorePrecountEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Instrument;
@@ -964,6 +965,9 @@ public class WebScore {
             boolean isStateUpdate = true;
 
             switch (type) {
+                case INSTRUCTIONS:
+                    isStateUpdate = processInstructionsEvent((WebScoreInstructionsEvent) event);
+                    break;
                 case PRECOUNT:
                     isStateUpdate = processPrecountEvent((WebScorePrecountEvent) event);
                     break;
@@ -1069,6 +1073,11 @@ public class WebScore {
         granulatorConfig.setPanner(pannerConfig);
 
         return granulatorConfig;
+    }
+
+    private boolean processInstructionsEvent(WebScoreInstructionsEvent event) {
+        setInstructions(event.getL1(), event.getL2(), event.getL3(), event.isVisible());
+        return true;
     }
 
     public boolean processPrecountEvent(WebScorePrecountEvent event) {

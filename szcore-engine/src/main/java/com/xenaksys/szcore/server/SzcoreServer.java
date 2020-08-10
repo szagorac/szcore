@@ -485,6 +485,10 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         return webProcessor;
     }
 
+    public ScoreProcessor getScoreProcessor() {
+        return scoreProcessor;
+    }
+
     public void addInstrumentOutPort(String clientId, String instrument) {
         OSCPortOut outPort = oscEventPublisher.getOutPort(clientId);
         if (outPort == null) {

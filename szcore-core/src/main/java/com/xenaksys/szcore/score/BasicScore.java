@@ -74,7 +74,7 @@ public class BasicScore implements Score {
     private Page blankPage;
     private Map<Id, Page> instrumentContinuousPage = new HashMap<>();
 
-    private boolean isUseContinuousPage = true;
+    private boolean isUseContinuousPage = false;
     public int noContinuousPages = 10;
     private boolean isRandomizeContinuousPageContent = true;
 

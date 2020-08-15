@@ -42,7 +42,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static com.xenaksys.szcore.Consts.EMPTY;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_CONFIG;
-import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_RESET;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_START;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_ATTACK_TIME;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_DECAY_TIME;
@@ -480,7 +479,7 @@ public class WebScore {
             txt.setVisible(false);
             targets.add(t.getId());
         }
-        setAction(WEB_ACTION_ID_RESET, WebActionType.ROTATE.name(), targets.toArray(new String[0]));
+//        setAction(WEB_ACTION_ID_RESET, WebActionType.ROTATE.name(), targets.toArray(new String[0]));
         playingTiles.clear();
     }
 

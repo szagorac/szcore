@@ -295,7 +295,7 @@ public interface Consts {
     String WEB_ZOOM_DEFAULT = "default";
 
     String WEB_SCORE_SUFFIX = "_webscore";
-    String WEB_TEXT_BACKGROUND_COLOUR = "rgba(225, 225, 225, 0.65)";
+    String WEB_TEXT_BACKGROUND_COLOUR = "rgba(225, 225, 225, 0.85)";
 
     String WEB_SCORE_ID = "webScore";
     String WEB_GRANULATOR = "granulator";

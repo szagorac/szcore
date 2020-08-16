@@ -478,8 +478,6 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             return;
         }
 
-        LOG.info("processPrepStaveChange: nextPageId: {}", nextPageId);
-
         BasicStave currentStave = (BasicStave) szcore.getCurrentStave(instrumentId);
         BasicStave nextStave = (BasicStave) szcore.getNextStave(instrumentId);
 
@@ -500,6 +498,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             nextPage = prepareContinuousPage(instrumentId, pageId);
         }
 
+        LOG.info("processPrepStaveChange: nextPage: {}", nextPage);
         ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
         boolean isInRndRange = strategy.isInRange((InstrumentId) instrument.getId(), nextPage);
 
@@ -654,25 +653,27 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     @Override
-    public void onOpenModWindow(InstrumentId instId, Stave stave, Page page) {
+    public void onOpenModWindow(InstrumentId instId, Stave stave, Page nextPage, PageId currentPageId) {
 
+        LOG.info("onOpenModWindow: page: {}", nextPage);
         this.isUpdateWindowOpen = true;
         ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
+        Page currentPage = szcore.getPage(currentPageId);
 
-        boolean isInRndRange = strategy.isInRange(instId, page);
+        boolean isInRndRange = strategy.isInRange(instId, currentPage);
         boolean isRecalcTime = strategy.isRecalcTime();
         if (isRecalcTime) {
-            strategy.recalcStrategy(page);
+            strategy.recalcStrategy(nextPage);
         }
         String destination = szcore.getOscDestination(instId);
 
         if (isInRndRange) {
             List<InstrumentId> slotInstrumentIds = strategy.getInstrumentSlotIds();
             String instSlotsCsv = ParseUtil.convertToCsv(slotInstrumentIds);
-//            LOG.info("onOpenModWindow: prepare sending csv: {} to instrument {}", instSlotsCsv, instId.getName());
-
-            OscEvent instrumentSlotsEvent = createInstrumentSlotsEvent(destination, instSlotsCsv, null);
-            publishOscEvent(instrumentSlotsEvent);
+            if (currentPage != null) {
+                OscEvent instrumentSlotsEvent = createInstrumentSlotsEvent(destination, instSlotsCsv, null);
+                publishOscEvent(instrumentSlotsEvent);
+            }
 
             webScore.playNextTilesInternal();
         } else {
@@ -682,7 +683,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     @Override
-    public void onCloseModWindow(InstrumentId instId, Stave stave, Page page) {
+    public void onCloseModWindow(InstrumentId instId, Stave stave, Page nextPage, PageId currentPageId) {
         this.isUpdateWindowOpen = false;
 
         //TODO remove
@@ -692,7 +693,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
 
-        boolean isInRange = strategy.isInRange(instId, page);
+        boolean isInRange = strategy.isInRange(instId, nextPage);
         if (isInRange) {
             if (strategy.isPageRecalcTime()) {
                 int pageQuantity = strategy.getNumberOfRequiredPages();
@@ -700,9 +701,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 strategy.setPageSelection(pageIds);
             }
 
-            sendRndPageFileUpdate(page, stave, instId);
+            sendRndPageFileUpdate(nextPage, stave, instId);
         } else {
-            sendPageFileUpdate(page, stave);
+            sendPageFileUpdate(nextPage, stave);
         }
 
         String destination = szcore.getOscDestination(instId);
@@ -712,6 +713,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     private void sendRndPageFileUpdate(Page page, Stave stave, InstrumentId instId) {
+        if (page == null) {
+            return;
+        }
         ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
         String pageFileName = strategy.getRandomPageFileName(instId);
         if (pageFileName == null) {
@@ -725,6 +729,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     private void sendPageFileUpdate(Page page, Stave stave) {
+        if (page == null) {
+            return;
+        }
         List<OscEvent> out = createPageChangeEvents(page, page.getFileName(), (BasicStave) stave, null);
         publishOscEvents(out);
     }
@@ -765,12 +772,12 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     private void addOneOffNewPageEvents(Page page, boolean isInRndRange, BasicStave stave, BeatId pageChangeBeat, BeatId activatePageBeat, Id transportId) {
-        if (page == null || stave == null || transportId == null) {
+        if (transportId == null) {
             return;
         }
 
-//        LOG.info("Open Window Event beatId: {} ", activatePageBeat);
-        ModWindowEvent openWindowEvent = createModWindowEvent(activatePageBeat, page, stave, true);
+        LOG.info("addOneOffNewPageEvents: Add Open/Close Window Event beatId: {} ", activatePageBeat);
+        ModWindowEvent openWindowEvent = createModWindowEvent(activatePageBeat, page, (PageId) pageChangeBeat.getPageId(), stave, true);
         szcore.addOneOffBaseBeatEvent(transportId, openWindowEvent);
 
         BeatId closeWindowBeatId = pageChangeBeat;
@@ -789,10 +796,10 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             if (closeWindowBeat != null) {
                 closeWindowBeatId = closeWindowBeat.getBeatId();
             }
-            LOG.info("Close Window Event page first beat: {} last: {}, calculated beatId: {} ", first, last, closeWindowBeatId);
+//            LOG.info("Close Window Event page first beat: {} last: {}, calculated beatId: {} ", first, last, closeWindowBeatId);
         }
 
-        ModWindowEvent closeWindowEvent = createModWindowEvent(closeWindowBeatId, page, stave, false);
+        ModWindowEvent closeWindowEvent = createModWindowEvent(closeWindowBeatId, page, (PageId) pageChangeBeat.getPageId(), stave, false);
         szcore.addOneOffBaseBeatEvent(transportId, closeWindowEvent);
     }
 
@@ -1546,8 +1553,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 //        publishOscEvent(beaterOnEvent);
     }
 
-    private ModWindowEvent createModWindowEvent(BeatId beatId, Page nextPage, Stave stave, boolean isOpen) {
-        return eventFactory.createModWindowEvent(beatId, nextPage, stave, isOpen, clock.getSystemTimeMillis());
+    private ModWindowEvent createModWindowEvent(BeatId beatId, Page nextPage, PageId currentPageId, Stave stave, boolean isOpen) {
+        return eventFactory.createModWindowEvent(beatId, nextPage, currentPageId, stave, isOpen, clock.getSystemTimeMillis());
     }
 
     private OscEvent createDisplayPageEvent(String pageName, BasicStave stave, BeatId eventBeatId) {

@@ -4,6 +4,7 @@ import com.xenaksys.szcore.event.IncomingWebEvent;
 import com.xenaksys.szcore.event.OutgoingWebEvent;
 import com.xenaksys.szcore.event.WebScoreEvent;
 import com.xenaksys.szcore.model.id.InstrumentId;
+import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.score.WebScore;
 import com.xenaksys.szcore.web.WebScoreState;
@@ -85,8 +86,8 @@ public interface  ScoreProcessor extends Processor {
 
     void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst);
 
-    void onOpenModWindow(InstrumentId instId, Stave nextStave, Page nextPage);
+    void onOpenModWindow(InstrumentId instId, Stave nextStave, Page nextPage, PageId currentPageId);
 
-    void onCloseModWindow(InstrumentId instId, Stave nextStave, Page nextPage);
+    void onCloseModWindow(InstrumentId instId, Stave nextStave, Page nextPage, PageId currentPageId);
 
 }

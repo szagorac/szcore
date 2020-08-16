@@ -64,8 +64,8 @@ public class EventFactory {
         return new StopEvent(lastEvent, transportId, creationTime);
     }
 
-    public ModWindowEvent createModWindowEvent(BeatId beatId, Page nextPage, Stave stave, boolean isOpen, long creationTime) {
-        return new ModWindowEvent(beatId, nextPage, stave, isOpen, creationTime);
+    public ModWindowEvent createModWindowEvent(BeatId beatId, Page nextPage, PageId currentPageId, Stave stave, boolean isOpen, long creationTime) {
+        return new ModWindowEvent(beatId, nextPage, currentPageId, stave, isOpen, creationTime);
     }
 
     public TimeSigChangeEvent createTimeSigChangeEvent(TimeSignature timeSignature,

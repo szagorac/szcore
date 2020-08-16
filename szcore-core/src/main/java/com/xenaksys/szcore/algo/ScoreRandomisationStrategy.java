@@ -114,6 +114,9 @@ public class ScoreRandomisationStrategy {
     }
 
     public void recalcStrategy(Page page) {
+        if (page == null) {
+            return;
+        }
         reset();
         int rndNo = assignmentStrategy.size();
         int[] rndNos = new int[rndNo];

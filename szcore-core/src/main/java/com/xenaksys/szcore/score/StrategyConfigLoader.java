@@ -16,11 +16,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import static com.xenaksys.szcore.Consts.CONFIG_ACTIVE_RANGE;
-import static com.xenaksys.szcore.Consts.CONFIG_ACTIVE_RANGES;
 import static com.xenaksys.szcore.Consts.CONFIG_ALL;
 import static com.xenaksys.szcore.Consts.CONFIG_END;
 import static com.xenaksys.szcore.Consts.CONFIG_INSTRUMENTS;
+import static com.xenaksys.szcore.Consts.CONFIG_IS_RND_ACTIVE;
+import static com.xenaksys.szcore.Consts.CONFIG_PAGE_RANGES;
+import static com.xenaksys.szcore.Consts.CONFIG_RANGE;
 import static com.xenaksys.szcore.Consts.CONFIG_RND_STRATEGY;
 import static com.xenaksys.szcore.Consts.CONFIG_SCORE_NAME;
 import static com.xenaksys.szcore.Consts.CONFIG_SELECTION_RANGE;
@@ -67,7 +68,7 @@ public class StrategyConfigLoader extends YamlLoader {
             }
         }
 
-        List<Map<String, Object>> instActiveRangesConfigs = getListOfMaps(CONFIG_ACTIVE_RANGES, rndStrategyConfig);
+        List<Map<String, Object>> instActiveRangesConfigs = getListOfMaps(CONFIG_PAGE_RANGES, rndStrategyConfig);
         for (Map<String, Object> instConfig : instActiveRangesConfigs) {
             List<InstrumentId> participatingInsts = new ArrayList<>();
             List<String> configInstruments = getStrList(CONFIG_INSTRUMENTS, instConfig);
@@ -83,18 +84,21 @@ public class StrategyConfigLoader extends YamlLoader {
                 }
             }
 
-            Map<String, Object> activeRangeConfig = getMap(CONFIG_ACTIVE_RANGE, instConfig);
+            Map<String, Object> activeRangeConfig = getMap(CONFIG_RANGE, instConfig);
             int start = getInteger(CONFIG_START, activeRangeConfig);
             int end = getInteger(CONFIG_END, activeRangeConfig);
             IntRange activeRange = new IntRange(start, end);
 
-            Map<String, Object> selectionRangeConfig = getMap(CONFIG_SELECTION_RANGE, instConfig);
-            int selStart = getInteger(CONFIG_START, selectionRangeConfig);
-            int selEnd = getInteger(CONFIG_END, selectionRangeConfig);
-            IntRange selRange = new IntRange(selStart, selEnd);
+            Boolean isActive = getBoolean(CONFIG_IS_RND_ACTIVE, instConfig);
+            IntRange selRange = activeRange;
+            if (isActive) {
+                Map<String, Object> selectionRangeConfig = getMap(CONFIG_SELECTION_RANGE, instConfig);
+                int selStart = getInteger(CONFIG_START, selectionRangeConfig);
+                int selEnd = getInteger(CONFIG_END, selectionRangeConfig);
+                selRange = new IntRange(selStart, selEnd);
+            }
 
-
-            RndPageRangeConfig pageRangeConfig = new RndPageRangeConfig(participatingInsts, activeRange, selRange);
+            RndPageRangeConfig pageRangeConfig = new RndPageRangeConfig(isActive, participatingInsts, activeRange, selRange);
 
             config.addPageRangeConfig(pageRangeConfig);
         }

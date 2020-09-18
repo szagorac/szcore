@@ -93,7 +93,7 @@ public class ScoreRandomisationStrategy {
         return null;
     }
 
-    public boolean isInRange(InstrumentId instId, Page page) {
+    public boolean isInActiveRange(InstrumentId instId, Page page) {
         if (page == null || instId == null) {
             return false;
         }
@@ -149,7 +149,7 @@ public class ScoreRandomisationStrategy {
                     break;
                 }
                 InstrumentId instrumentId = rndInst.get(j);
-                LOG.debug("recalcStrategy() instrumentId: {}, pageNo: {}", instrumentId, pageNo);
+                LOG.info("recalcStrategy() instrumentId: {}, pageNo: {}", instrumentId, pageNo);
                 instrumentPage.put(instrumentId, pageNo);
             }
             instStart = instEnd;

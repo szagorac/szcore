@@ -1,5 +1,7 @@
 package com.xenaksys.szcore.algo;
 
+import java.util.Objects;
+
 public class IntRange {
     private final int start;
     private final int end;
@@ -23,5 +25,19 @@ public class IntRange {
             max = end;
         }
         return value >= start && value <= max;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        IntRange range = (IntRange) o;
+        return start == range.start &&
+                end == range.end;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(start, end);
     }
 }

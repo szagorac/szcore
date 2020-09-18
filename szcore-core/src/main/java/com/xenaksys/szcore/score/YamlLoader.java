@@ -99,6 +99,21 @@ public class YamlLoader {
         return (Integer) val;
     }
 
+    public static Boolean getBoolean(String key, Map<String, Object> scoreMap) {
+        Object val = scoreMap.get(key);
+        if (val == null) {
+            LOG.warn("Could not find boolean value for key {}", key);
+            return null;
+        }
+
+        if (!(val instanceof Boolean)) {
+            LOG.warn("Unexpected type for boolean value, key {}, value {}", key, val);
+            return null;
+        }
+
+        return (Boolean) val;
+    }
+
     public static List<String> getStrList(String key, Map<String, Object> scoreMap) {
         List<Object> ls = getList(key, scoreMap);
         if (ls == null) {

@@ -35,7 +35,7 @@ public class ScoreRandomisationStrategyConfig {
             return null;
         }
 
-        RndPageRangeConfig rangeConfig = getActiveRangeConfig(page);
+        RndPageRangeConfig rangeConfig = getPageRangeConfig(page);
         if (rangeConfig == null) {
             return null;
         }
@@ -43,14 +43,14 @@ public class ScoreRandomisationStrategyConfig {
         return rangeConfig.getSelectionPageRange();
     }
 
-    public RndPageRangeConfig getActiveRangeConfig(Page page) {
+    public RndPageRangeConfig getPageRangeConfig(Page page) {
         if (page == null) {
             return null;
         }
 
         int pageNo = page.getPageNo();
         for (RndPageRangeConfig rangeConfig : pageRangeConfigs) {
-            IntRange range = rangeConfig.getActivePageRange();
+            IntRange range = rangeConfig.getRange();
             if (range.isInRange(pageNo)) {
                 return rangeConfig;
             }
@@ -65,7 +65,10 @@ public class ScoreRandomisationStrategyConfig {
 
         int pageNo = page.getPageNo();
         for (RndPageRangeConfig rangeConfig : pageRangeConfigs) {
-            IntRange range = rangeConfig.getActivePageRange();
+            if (!rangeConfig.isRangeActive()) {
+                continue;
+            }
+            IntRange range = rangeConfig.getRange();
             if (range.isInRange(pageNo)) {
                 return true;
             }

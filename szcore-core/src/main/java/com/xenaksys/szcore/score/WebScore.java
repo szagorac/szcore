@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.algo.ScoreRandomisationStrategyConfig;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.OutgoingWebEvent;
 import com.xenaksys.szcore.event.OutgoingWebEventType;
@@ -98,7 +99,7 @@ public class WebScore {
 
     private final ScriptEngineManager factory = new ScriptEngineManager();
     private final ScriptEngine jsEngine = factory.getEngineByName("nashorn");
-    private WebscorePresetConfig webscorePresetConfig;
+    private WebscoreConfig webscoreConfig;
 
     private final MutablePageId tempPageId;
     private volatile long lastPlayTilesInternalEventTime = 0L;
@@ -127,7 +128,7 @@ public class WebScore {
         return new MutablePageId(pageNo, instrument.getId(), score.getId());
     }
 
-    public void resetState() {
+    public void resetState(BasicScore score) {
         currentActions.clear();
         tilesAll.clear();
         playingTiles.clear();
@@ -158,8 +159,8 @@ public class WebScore {
                 txt.setValue(EMPTY);
                 tiles[i][j] = t;
                 tilesAll.add(t);
-                int pageNo = getPageNo(row, col);
-                tileIdPageIdMap.put(id, pageNo);
+
+                populateTilePageMap(row, col, id, score);
             }
         }
 
@@ -178,9 +179,17 @@ public class WebScore {
         updateServerState();
     }
 
+    private void populateTilePageMap(int row, int col, String tileId, BasicScore score) {
+        if (score == null) {
+            return;
+        }
+        int pageNo = getPageNo(row, col, score);
+        tileIdPageIdMap.put(tileId, pageNo);
+    }
+
     public void reset(int presetNo) {
         try {
-            ScriptPreset preset = webscorePresetConfig.getPreset(presetNo);
+            ScriptPreset preset = webscoreConfig.getPreset(presetNo);
             if (preset == null) {
                 LOG.info("resetState: Unknown preset: {}", presetNo);
                 return;
@@ -217,22 +226,27 @@ public class WebScore {
         }
     }
 
-    private int getPageNo(int row, int col) {
+    private int getPageNo(int row, int col, BasicScore score) {
         // row 1 : col - 1
         // row 2 : the same
         // row 3 :
+
+        int pageNo = (row - 1) * 8 + col;
+        if (score == null) {
+            return pageNo;
+        }
+
+        ScoreRandomisationStrategyConfig randomisationStrategyConfig = score.getRandomisationStrategyConfig();
+        if (randomisationStrategyConfig == null) {
+            return pageNo;
+        }
         return ThreadLocalRandom.current().nextInt(1, 3 + 1);
     }
 
-    public void init(String configDir) {
+    public void init(String configDir, BasicScore score) {
         loadPresets(configDir);
         jsEngine.put(WEB_SCORE_ID, this);
-        resetState();
-    }
-
-    public void init(LinkedList<WebScoreEvent> events, String configDir) {
-        this.events = events;
-        init(configDir);
+        resetState(score);
     }
 
     private void loadPresets(String configDir) {
@@ -240,7 +254,7 @@ public class WebScore {
             return;
         }
         try {
-            webscorePresetConfig = WebscoreConfigLoader.loadWebScorePresets(configDir);
+            webscoreConfig = WebscoreConfigLoader.load(configDir);
         } catch (Exception e) {
             LOG.error("Failed to load WebScore Presets", e);
         }
@@ -362,9 +376,9 @@ public class WebScore {
         List<Integer> pageIds = new ArrayList<>(topTiles.size());
         List<String> tileIds = new ArrayList<>(topTiles.size());
         if (topTiles.size() < pageQuantity) {
-            LOG.warn("getTopSelectedPage: not enough pages retrieved: {} expected: {}", topTiles.size(), pageQuantity);
+            LOG.warn("prepareNextTilesToPlay: not enough pages retrieved: {} expected: {}", topTiles.size(), pageQuantity);
             ArrayList<String> nextTileIds = calculateNextTilesToPlay();
-            LOG.warn("getTopSelectedPage: calculated tiles to play: {}", nextTileIds);
+            LOG.warn("prepareNextTilesToPlay: calculated tiles to play: {}", nextTileIds);
             for (String tileId : nextTileIds) {
                 if (topTiles.size() < pageQuantity) {
                     topTiles.add(getTile(tileId));
@@ -377,12 +391,12 @@ public class WebScore {
             String tileId = tile.getId();
             Integer pageNo = tileIdPageIdMap.get(tileId);
             if (pageNo == null) {
-                LOG.error("getTopSelectedPage: Failed to find pageId for tile id: {}", tileId);
+                LOG.error("prepareNextTilesToPlay: Failed to find pageId for tile id: {}", tileId);
             } else {
                 pageIds.add(pageNo);
                 tileIds.add(tileId);
             }
-            LOG.info("getTopSelectedPage: Found pageId: {} for tile id: {}", pageNo, tileId);
+            LOG.info("prepareNextTilesToPlay: Found pageId: {} for tile id: {}", pageNo, tileId);
         }
         selectNextTilesInternal(tileIds);
         return pageIds;

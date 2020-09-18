@@ -55,7 +55,7 @@ public class TestRandomStrategyConfig {
         assertEquals(score.getName(), config.getScoreName());
 
         List<RndPageRangeConfig> pageRangeConfigs = config.getPageRangeConfigs();
-        assertEquals(2, pageRangeConfigs.size());
+        assertEquals(5, pageRangeConfigs.size());
 
         RndPageRangeConfig first = pageRangeConfigs.get(0);
         List<InstrumentId> instrumentIds = first.getInstruments();
@@ -64,28 +64,46 @@ public class TestRandomStrategyConfig {
         assertTrue(instrumentIds.contains((InstrumentId) viola.getId()));
         assertTrue(instrumentIds.contains((InstrumentId) cello.getId()));
 
-        IntRange range = first.getActivePageRange();
-        assertEquals(4, range.getStart());
-        assertEquals(0, range.getEnd());
+        IntRange range = first.getRange();
+        assertEquals(1, range.getStart());
+        assertEquals(8, range.getEnd());
 
         IntRange selection = first.getSelectionPageRange();
         assertEquals(1, selection.getStart());
-        assertEquals(3, selection.getEnd());
+        assertEquals(8, selection.getEnd());
+
+        Boolean isActive = first.isRangeActive();
+        assertFalse(isActive);
 
         RndPageRangeConfig second = pageRangeConfigs.get(1);
-        instrumentIds = second.getInstruments();
+        range = second.getRange();
+        assertEquals(9, range.getStart());
+        assertEquals(16, range.getEnd());
+
+        selection = second.getSelectionPageRange();
+        assertEquals(1, selection.getStart());
+        assertEquals(8, selection.getEnd());
+
+        isActive = second.isRangeActive();
+        assertTrue(isActive);
+
+        RndPageRangeConfig fourth = pageRangeConfigs.get(3);
+        instrumentIds = fourth.getInstruments();
         assertFalse(instrumentIds.contains((InstrumentId) violin1.getId()));
         assertFalse(instrumentIds.contains((InstrumentId) violin2.getId()));
         assertTrue(instrumentIds.contains((InstrumentId) viola.getId()));
         assertTrue(instrumentIds.contains((InstrumentId) cello.getId()));
 
-        range = second.getActivePageRange();
-        assertEquals(50, range.getStart());
-        assertEquals(52, range.getEnd());
+        range = fourth.getRange();
+        assertEquals(25, range.getStart());
+        assertEquals(32, range.getEnd());
 
-        selection = second.getSelectionPageRange();
-        assertEquals(1, selection.getStart());
-        assertEquals(3, selection.getEnd());
+        selection = fourth.getSelectionPageRange();
+        assertEquals(17, selection.getStart());
+        assertEquals(24, selection.getEnd());
+
+        isActive = fourth.isRangeActive();
+        assertTrue(isActive);
     }
 
 }

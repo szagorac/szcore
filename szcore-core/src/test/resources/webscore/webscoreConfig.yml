@@ -22,3 +22,36 @@ presets:
       "webScore.setAction('end', 'TIMELINE', ['centreShape']);",
       "webScore.deactivateRows([1,2,3])"
     ]
+pageRangeMapping:
+  - tileRow: 1
+    tileCols: { start: 1, end: 8 }
+    pageRange: { start: 1, end: 8 }
+    assignmentType: SEQ
+  - tileRow: 2
+    tileCols: { start: 1, end: 8 }
+    pageRange: { start: 1, end: 8 }
+    assignmentType: SEQ
+  - tileRow: 3
+    tileCols: { start: 1, end: 8 }
+    pageRange: { start: 1, end: 8 }
+    assignmentType: SEQ
+  - tileRow: 4
+    tileCols: { start: 1, end: 8 }
+    pageRange: { start: 17, end: 24 }
+    assignmentType: SEQ
+  - tileRow: 5
+    tileCols: { start: 1, end: 8 }
+    pageRange: { start: 17, end: 24 }
+    assignmentType: SEQ
+  - tileRow: 6
+    tileCols: { start: 1, end: 8 }
+    pageRange: { start: 1, end: 8 }
+    assignmentType: RND
+  - tileRow: 7
+    tileCols: { start: 1, end: 8 }
+    pageRange: { start: 17, end: 24 }
+    assignmentType: RND
+  - tileRow: 8
+    tileCols: { start: 1, end: 8 }
+    pageRange: { start: 17, end: 24 }
+    assignmentType: RND

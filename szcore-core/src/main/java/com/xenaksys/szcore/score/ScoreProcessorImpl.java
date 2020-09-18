@@ -92,7 +92,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -197,17 +196,14 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         reset();
         Score score = ScoreLoader.load(file);
         szcore = (BasicScore) score;
-        webScore = new WebScore(this, eventFactory, clock);
-        webScore.init(file.getParent());
 
-        ScoreRandomisationStrategyConfig strategyConfig = StrategyConfigLoader.loadStrategyConfig(file.getParent(), szcore);
-        szcore.setRandomisationStrategyConfig(strategyConfig);
+        ScoreRandomisationStrategyConfig randomisationStrategyConfig = StrategyConfigLoader.loadStrategyConfig(file.getParent(), szcore);
+        szcore.setRandomisationStrategyConfig(randomisationStrategyConfig);
+
+        webScore = new WebScore(this, eventFactory, clock);
+        webScore.init(file.getParent(), szcore);
 
         return score;
-    }
-
-    public void loadWebScore(LinkedList<WebScoreEvent> events, String configDir) {
-        webScore.init(events, configDir);
     }
 
     @Override
@@ -500,7 +496,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         LOG.info("processPrepStaveChange: nextPage: {}", nextPage);
         ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
-        boolean isInRndRange = strategy.isInRange((InstrumentId) instrument.getId(), nextPage);
+        boolean isInRndRange = strategy.isInActiveRange((InstrumentId) instrument.getId(), nextPage);
 
         if (!szcore.isRandomizeContinuousPageContent()) {
             isInRndRange = false;
@@ -660,7 +656,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
         Page currentPage = szcore.getPage(currentPageId);
 
-        boolean isInRndRange = strategy.isInRange(instId, currentPage);
+        boolean isInRndRange = strategy.isInActiveRange(instId, currentPage);
         boolean isRecalcTime = strategy.isRecalcTime();
         if (isRecalcTime) {
             strategy.recalcStrategy(nextPage);
@@ -672,6 +668,12 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             String instSlotsCsv = ParseUtil.convertToCsv(slotInstrumentIds);
             if (currentPage != null) {
                 OscEvent instrumentSlotsEvent = createInstrumentSlotsEvent(destination, instSlotsCsv, null);
+                if (instrumentSlotsEvent == null) {
+                    LOG.error("onOpenModWindow: Invalid instrumentSlotsEvent, isInRndRange: true, destination: {} instSlotsCsv: {}", destination, instSlotsCsv);
+                    instrumentSlotsEvent = createInstrumentResetSlotsEvent(destination, null);
+                    publishOscEvent(instrumentSlotsEvent);
+                    return;
+                }
                 publishOscEvent(instrumentSlotsEvent);
             }
 
@@ -693,7 +695,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
 
-        boolean isInRange = strategy.isInRange(instId, nextPage);
+        boolean isInRange = strategy.isInActiveRange(instId, nextPage);
         if (isInRange) {
             if (strategy.isPageRecalcTime()) {
                 int pageQuantity = strategy.getNumberOfRequiredPages();
@@ -2060,7 +2062,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void processWebStart(WebStartEvent webEvent) {
         LOG.info("processWebStart: ");
-        webScore.resetState();
+        webScore.resetState(szcore);
         webScore.pushServerState();
         webScore.initTestScore();
         webScore.startScore();

@@ -78,7 +78,7 @@ public class BasicScore implements Score {
     public int noContinuousPages = 10;
     private boolean isRandomizeContinuousPageContent = true;
 
-    private ScoreRandomisationStrategyConfig config;
+    private ScoreRandomisationStrategyConfig randomisationStrategyConfig;
     private ScoreRandomisationStrategy randomisationStrategy;
 
     private String workingDir;
@@ -88,11 +88,11 @@ public class BasicScore implements Score {
     }
 
     public void initRandomisation() {
-        if (config == null) {
+        if (randomisationStrategyConfig == null) {
             LOG.info("initRandomisation: no config, ignoring ...");
             return;
         }
-        randomisationStrategy = new ScoreRandomisationStrategy(this, config);
+        randomisationStrategy = new ScoreRandomisationStrategy(this, randomisationStrategyConfig);
         randomisationStrategy.init();
     }
 
@@ -885,7 +885,10 @@ public class BasicScore implements Score {
     }
 
     public void setRandomisationStrategyConfig(ScoreRandomisationStrategyConfig config) {
-        this.config = config;
+        this.randomisationStrategyConfig = config;
     }
 
+    public ScoreRandomisationStrategyConfig getRandomisationStrategyConfig() {
+        return randomisationStrategyConfig;
+    }
 }

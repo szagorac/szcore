@@ -1,9 +1,21 @@
 scoreName: "Test Score"
 rndStrategy:
-  activePageRanges:
-    - instruments: [all]
-      activeRange: { start: 4, end: 0}
-      selectionRange: { start: 1, end: 3}
-    - instruments: ["Cello", "Viola"]
-      activeRange: { start: 50, end: 52}
-      selectionRange: { start: 1, end: 3}
+  pageRanges:
+    - range: { start: 1, end: 8 }
+      isRndActive: false
+      instruments: [ all ]
+    - range: { start: 9, end: 16 }
+      isRndActive: true
+      selectionRange: { start: 1, end: 8 }
+      instruments: [ all ]
+    - range: { start: 17, end: 24 }
+      isRndActive: false
+      instruments: [ all ]
+    - range: { start: 25, end: 32 }
+      isRndActive: true
+      selectionRange: { start: 17, end: 24 }
+      instruments: [ "Cello", "Viola" ]
+    - range: { start: 33, end: 0 }
+      isRndActive: true
+      selectionRange: { start: 1, end: 3 }
+      instruments: [ all ]

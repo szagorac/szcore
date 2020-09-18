@@ -417,8 +417,13 @@ public interface Consts {
     String CONFIG_SCORE_NAME = "scoreName";
     String CONFIG_RND_STRATEGY = "rndStrategy";
     String CONFIG_ACTIVE_RANGES = "activePageRanges";
+    String CONFIG_PAGE_RANGE_MAPPING = "pageRangeMapping";
+    String CONFIG_PAGE_RANGE = "pageRange";
+    String CONFIG_PAGE_RANGES = "pageRanges";
     String CONFIG_INSTRUMENTS = "instruments";
     String CONFIG_ACTIVE_RANGE = "activeRange";
+    String CONFIG_RANGE = "range";
+    String CONFIG_IS_RND_ACTIVE = "isRndActive";
     String CONFIG_SELECTION_RANGE = "selectionRange";
     String CONFIG_START = "start";
     String CONFIG_END = "end";
@@ -426,4 +431,7 @@ public interface Consts {
     String CONFIG_PRESETS = "presets";
     String CONFIG_SCRIPTS = "scripts";
     String CONFIG_ID = "id";
+    String CONFIG_TILE_ROW = "tileRow";
+    String CONFIG_TILE_COLS = "tileCols";
+    String CONFIG_ASSIGNMENT_TYPE = "assignmentType";
 }

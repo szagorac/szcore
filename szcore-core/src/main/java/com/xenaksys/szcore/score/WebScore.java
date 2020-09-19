@@ -74,6 +74,7 @@ public class WebScore {
 
     private final ScoreProcessor scoreProcessor;
     private final EventFactory eventFactory;
+    private final Score score;
     private final Clock clock;
 
     private Tile[][] tiles;
@@ -109,12 +110,12 @@ public class WebScore {
         this.scoreProcessor = scoreProcessor;
         this.eventFactory = eventFactory;
         this.clock = clock;
+        this.score = scoreProcessor.getScore();
         this.tempPageId = createTempPage();
     }
 
     private MutablePageId createTempPage() {
         int pageNo = 0;
-        Score score = scoreProcessor.getScore();
         if (score == null) {
             return null;
         }
@@ -126,7 +127,7 @@ public class WebScore {
         return new MutablePageId(pageNo, instrument.getId(), score.getId());
     }
 
-    public void resetState(BasicScore score) {
+    public void resetState() {
         currentActions.clear();
         tilesAll.clear();
         playingTiles.clear();
@@ -158,7 +159,7 @@ public class WebScore {
                 tiles[i][j] = t;
                 tilesAll.add(t);
 
-                populateTilePageMap(row, col, id, score);
+                populateTilePageMap(row, col, id);
             }
         }
 
@@ -177,11 +178,11 @@ public class WebScore {
         updateServerState();
     }
 
-    private void populateTilePageMap(int row, int col, String tileId, BasicScore score) {
+    private void populateTilePageMap(int row, int col, String tileId) {
         if (score == null) {
             return;
         }
-        int pageNo = getPageNo(row, col, score);
+        int pageNo = getPageNo(row, col);
         tileIdPageIdMap.put(tileId, pageNo);
     }
 
@@ -224,7 +225,7 @@ public class WebScore {
         }
     }
 
-    private int getPageNo(int row, int col, BasicScore score) {
+    private int getPageNo(int row, int col) {
 
         int pageNo = (row - 1) * 8 + col;
         if (score == null || webscoreConfig == null) {
@@ -239,10 +240,10 @@ public class WebScore {
         return configPageNo;
     }
 
-    public void init(String configDir, BasicScore score) {
+    public void init(String configDir) {
         loadConfig(configDir);
         jsEngine.put(WEB_SCORE_ID, this);
-        resetState(score);
+        resetState();
     }
 
     private void loadConfig(String configDir) {

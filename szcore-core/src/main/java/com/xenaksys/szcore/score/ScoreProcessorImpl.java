@@ -201,7 +201,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         szcore.setRandomisationStrategyConfig(randomisationStrategyConfig);
 
         webScore = new WebScore(this, eventFactory, clock);
-        webScore.init(file.getParent(), szcore);
+        webScore.init(file.getParent());
 
         return score;
     }
@@ -2062,7 +2062,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void processWebStart(WebStartEvent webEvent) {
         LOG.info("processWebStart: ");
-        webScore.resetState(szcore);
+        webScore.resetState();
         webScore.pushServerState();
         webScore.initTestScore();
         webScore.startScore();

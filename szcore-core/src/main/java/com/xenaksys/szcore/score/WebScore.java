@@ -1,7 +1,6 @@
 package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.algo.ScoreRandomisationStrategyConfig;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.OutgoingWebEvent;
 import com.xenaksys.szcore.event.OutgoingWebEventType;
@@ -39,7 +38,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static com.xenaksys.szcore.Consts.EMPTY;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_CONFIG;
@@ -227,29 +225,27 @@ public class WebScore {
     }
 
     private int getPageNo(int row, int col, BasicScore score) {
-        // row 1 : col - 1
-        // row 2 : the same
-        // row 3 :
 
         int pageNo = (row - 1) * 8 + col;
-        if (score == null) {
+        if (score == null || webscoreConfig == null) {
             return pageNo;
         }
 
-        ScoreRandomisationStrategyConfig randomisationStrategyConfig = score.getRandomisationStrategyConfig();
-        if (randomisationStrategyConfig == null) {
+        int configPageNo = webscoreConfig.getPageNo(row, col);
+        if (configPageNo < 0) {
             return pageNo;
         }
-        return ThreadLocalRandom.current().nextInt(1, 3 + 1);
+
+        return configPageNo;
     }
 
     public void init(String configDir, BasicScore score) {
-        loadPresets(configDir);
+        loadConfig(configDir);
         jsEngine.put(WEB_SCORE_ID, this);
         resetState(score);
     }
 
-    private void loadPresets(String configDir) {
+    private void loadConfig(String configDir) {
         if (configDir == null) {
             return;
         }

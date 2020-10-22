@@ -1760,7 +1760,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         Collection<Instrument> instruments = szcore.getInstruments();
         List<Id> transportIds = new ArrayList<>();
         for (Instrument instrument : instruments) {
-            Id instrumentId = instrument.getId();
+            InstrumentId instrumentId = (InstrumentId) instrument.getId();
             boolean isAudioOrVideo = instrument.isAv();
             boolean isScoreInstrument = !isAudioOrVideo;
             Transport transport = szcore.getInstrumentTransport(instrumentId);
@@ -1846,6 +1846,26 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 addInitStaveStartMarkEvent(currentStave, startBaseBeatNo, initEvents);
                 addInitStaveDyEvent(currentStave, initEvents);
                 addNewPageInstrumentEvents(instrument, null, initEvents);
+
+                ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
+                boolean isInRange = strategy.isInActiveRange(instrumentId, page);
+                if (isInRange) {
+                    if (strategy.isPageRecalcTime()) {
+                        strategy.recalcStrategy(page);
+                        int pageQuantity = strategy.getNumberOfRequiredPages();
+                        List<Integer> pageIds = webScore.prepareNextTilesToPlay(pageQuantity);
+                        strategy.setPageSelection(pageIds);
+                    }
+                    String pageFileName = strategy.getRandomPageFileName(instrumentId);
+                    if (pageFileName == null) {
+                        pageFileName = page.getFileName();
+                        LOG.info("createRequiredEventsForNewPosition: Invalid random page file name, using: {}", pageFileName);
+                    } else {
+                        LOG.info("createRequiredEventsForNewPosition: Using random page file name: {} for instrument: {}", pageFileName, instrumentId);
+                    }
+                    List<OscEvent> pageChangeEvents = createPageChangeEvents(page, pageFileName, currentStave, null);
+                    initEvents.addAll(pageChangeEvents);
+                }
             } else {
                 addInitAvEvent(transport, instrument, initEvents);
                 addInitWebScoreEvent(transport, initEvents, startBeatId);

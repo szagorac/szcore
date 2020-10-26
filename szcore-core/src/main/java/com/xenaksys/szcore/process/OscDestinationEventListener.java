@@ -87,6 +87,7 @@ public class OscDestinationEventListener implements SzcoreEngineEventListener {
             //arg0 command
             args.add(OSC_CMD_SET_TEMPO);
             args.add(tempo.getBpm());
+            args.add(tempo.getTempoModifier().getMultiplier());
 
             LOG.info("onTransportTempoChange: Sending tempo change bpm: {}", tempo.getBpm());
             OscScriptEvent oscScriptEvent = eventFactory.createOscScriptEvent(destination.getName(), beatId, ADDR_BEAT_INFO, args, clock.getSystemTimeMillis());

@@ -54,6 +54,7 @@ import com.xenaksys.szcore.model.Scheduler;
 import com.xenaksys.szcore.model.Score;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.Script;
+import com.xenaksys.szcore.model.ScriptEventPreset;
 import com.xenaksys.szcore.model.ScriptType;
 import com.xenaksys.szcore.model.Stave;
 import com.xenaksys.szcore.model.SzcoreEvent;
@@ -148,6 +149,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private ValueScaler contentValueScaler = new ValueScaler(0.0, 100.0, 0.0, CONTENT_LINE_Y_MAX);
 
     private WebScore webScore = null;
+    private MaxScoreConfig maxConfig = null;
 
     private volatile boolean isUpdateWindowOpen = false;
     private volatile int currentBeatNo = 0;
@@ -202,6 +204,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         webScore = new WebScore(this, eventFactory, clock);
         webScore.init(file.getParent());
+
+        maxConfig = new MaxScoreConfig();
+        maxConfig.setScoreName(szcore.getName());
 
         return score;
     }
@@ -404,14 +409,40 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 webScore.addBeatScript(beatId, (WebScoreScript) script);
                 break;
             case MAX:
-                addOscScriptEvent(beatId, script, transportId);
+                addOscScriptEvent(beatId, (OscScript) script, transportId);
                 break;
         }
     }
 
-    private void addOscScriptEvent(BeatId beatId, Script script, Id transportId) {
+    private void addOscScriptEvent(BeatId beatId, OscScript script, Id transportId) {
+
+        if (script.isReset()) {
+            try {
+                addMaxPreset(beatId, script);
+            } catch (Exception e) {
+                LOG.error("addOscScriptEvent: failed to add max preset: " + script, e);
+            }
+        } else {
+            OscEvent beatScriptEvent = createOscBeatScriptEvent(script, beatId);
+            szcore.addScoreBaseBeatEvent(transportId, beatScriptEvent);
+        }
+    }
+
+    public void addMaxPreset(BeatId beatId, OscScript script) throws Exception {
+        if (script == null || !script.isReset()) {
+            return;
+        }
+
+        int beatNo = beatId.getBaseBeatNo();
         OscEvent beatScriptEvent = createOscBeatScriptEvent(script, beatId);
-        szcore.addScoreBaseBeatEvent(transportId, beatScriptEvent);
+
+        ScriptEventPreset scriptPreset = maxConfig.getPresetScripts(beatNo);
+        if (scriptPreset == null) {
+            scriptPreset = new ScriptEventPreset(beatNo);
+            maxConfig.addPreset(scriptPreset);
+        }
+
+        scriptPreset.addScriptEvent(beatScriptEvent);
     }
 
     private void addBeatScriptEvent(BeatId beatId, Script script, Id transportId) {
@@ -448,14 +479,19 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
     }
 
-    private void addInitAvEvent(Transport transport, Instrument instrument, List<SzcoreEvent> initEvents){
+    private void addInitAvEvent(Transport transport, Instrument instrument, List<SzcoreEvent> initEvents, BeatId startBeatId) {
 
         OscEvent resetInstrumentEvent = createResetInstrumentEvent(instrument.getName());
-
+        ScriptEventPreset eventPreset = maxConfig.getBeatResetScripts(startBeatId);
+        List<OscEvent> presetEvents = eventPreset.getScriptEvents();
         if (initEvents == null) {
             szcore.addScoreBaseBeatEvent(transport.getId(), resetInstrumentEvent);
+            for (OscEvent presetEvent : presetEvents) {
+                szcore.addScoreBaseBeatEvent(transport.getId(), presetEvent);
+            }
         } else {
             initEvents.add(resetInstrumentEvent);
+            initEvents.addAll(presetEvents);
         }
     }
 
@@ -1867,7 +1903,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                     initEvents.addAll(pageChangeEvents);
                 }
             } else {
-                addInitAvEvent(transport, instrument, initEvents);
+                addInitAvEvent(transport, instrument, initEvents, startBeatId);
                 addInitWebScoreEvent(transport, initEvents, startBeatId);
             }
         }
@@ -2113,6 +2149,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 processMusicEvent((MusicEvent) event, beatNo, tickNo);
                 break;
             case WEB_SCORE:
+                processWebScoreEvent((WebScoreEvent) event, beatNo, tickNo);
                 processWebScoreEvent((WebScoreEvent) event, beatNo, tickNo);
                 break;
             default:

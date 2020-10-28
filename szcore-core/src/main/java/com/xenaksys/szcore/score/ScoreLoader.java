@@ -331,6 +331,7 @@ public class ScoreLoader {
         String script = resource;
         String target = Consts.OSC_ADDRESS_ZSCORE;
         List<Object> args = new ArrayList<>();
+        boolean isReset = false;
 
         if (script.startsWith(RESOURCE_MAX)) {
             script = script.substring(RESOURCE_MAX.length());
@@ -368,6 +369,24 @@ public class ScoreLoader {
             }
         }
 
+        if (script.startsWith(IS_RESET_POINT)) {
+            script = script.substring(IS_RESET_POINT.length());
+            if (script.startsWith(NAME_VAL_DELIMITER)) {
+                script = script.substring(NAME_VAL_DELIMITER.length());
+            }
+
+            int end = script.indexOf(SCRIPT_DELIMITER);
+            String resetPointType = script.substring(0, end);
+            script = script.substring(end);
+
+            isReset = true;
+
+            if (script.startsWith(SCRIPT_DELIMITER)) {
+                script = script.substring(SCRIPT_DELIMITER.length());
+            }
+
+        }
+
         if (script.contains(SCRIPT_COMMA_REPLACE_CHAR)) {
             script = script.replace(SCRIPT_COMMA_REPLACE_CHAR, COMMA);
         }
@@ -393,7 +412,7 @@ public class ScoreLoader {
             }
         }
 
-        Script scriptObj = new OscScript(id, beatId, target, args);
+        Script scriptObj = new OscScript(id, beatId, target, args, isReset);
         LOG.info("processMaxScoreElement: Created script: {}", scriptObj);
         score.addScript(scriptObj);
     }

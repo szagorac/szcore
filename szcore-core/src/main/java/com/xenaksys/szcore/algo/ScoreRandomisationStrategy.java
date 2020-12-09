@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -72,6 +73,16 @@ public class ScoreRandomisationStrategy {
         LOG.debug("setAssignmentStrategy() {}", Arrays.toString(strategy.toArray()));
         assignmentStrategy.clear();
         assignmentStrategy.addAll(strategy);
+    }
+
+    public int getFirstRandomPageNo() {
+        Collection<Integer> pageNos = instrumentPage.values();
+        if (pageNos.isEmpty()) {
+            return 0;
+        }
+
+        Optional<Integer> optPageNo = pageNos.stream().findFirst();
+        return optPageNo.get();
     }
 
     public String getRandomPageFileName(InstrumentId instrumentId) {

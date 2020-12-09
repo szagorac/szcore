@@ -26,6 +26,7 @@ import com.xenaksys.szcore.event.OscStopEvent;
 import com.xenaksys.szcore.event.OutgoingWebEvent;
 import com.xenaksys.szcore.event.PrecountBeatSetupEvent;
 import com.xenaksys.szcore.event.PrepStaveChangeEvent;
+import com.xenaksys.szcore.event.ScriptingEngineEvent;
 import com.xenaksys.szcore.event.StaveActiveChangeEvent;
 import com.xenaksys.szcore.event.StaveClockTickEvent;
 import com.xenaksys.szcore.event.StaveDateTickEvent;
@@ -74,6 +75,7 @@ import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.model.id.StrId;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.process.OscDestinationEventListener;
+import com.xenaksys.szcore.task.ScriptingEngineEventTask;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.task.WebScoreEventTask;
 import com.xenaksys.szcore.time.TransportFactory;
@@ -149,7 +151,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private ValueScaler contentValueScaler = new ValueScaler(0.0, 100.0, 0.0, CONTENT_LINE_Y_MAX);
 
     private WebScore webScore = null;
-    private MaxScoreConfig maxConfig = null;
+    private MaxMspScoreConfig maxMspConfig = null;
+    private ScoreScriptingEngine scriptingEngine;
 
     private volatile boolean isUpdateWindowOpen = false;
     private volatile int currentBeatNo = 0;
@@ -205,8 +208,11 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         webScore = new WebScore(this, eventFactory, clock);
         webScore.init(file.getParent());
 
-        maxConfig = new MaxScoreConfig();
-        maxConfig.setScoreName(szcore.getName());
+        maxMspConfig = new MaxMspScoreConfig();
+        maxMspConfig.setScoreName(szcore.getName());
+
+        scriptingEngine = new ScoreScriptingEngine(this, eventFactory, clock);
+        scriptingEngine.init(file.getParent());
 
         return score;
     }
@@ -273,7 +279,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         int precountBeatNo = 4;
         szcore.setPrecount(precountMillis, precountBeatNo);
 
-        Collection<Instrument> maxClients = szcore.getMaxClients();
+        Collection<Instrument> maxClients = szcore.getOscPlayers();
         oscDestinationEventListener.reloadDestinations(maxClients);
 
         isScoreLoaded = true;
@@ -408,7 +414,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             case WEB_SCORE:
                 webScore.addBeatScript(beatId, (WebScoreScript) script);
                 break;
-            case MAX:
+            case OSC_PLAYER:
                 addOscScriptEvent(beatId, (OscScript) script, transportId);
                 break;
         }
@@ -420,7 +426,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             try {
                 addMaxPreset(beatId, script);
             } catch (Exception e) {
-                LOG.error("addOscScriptEvent: failed to add max preset: " + script, e);
+                LOG.error("addOscScriptEvent: failed to add maxmsp preset: " + script, e);
             }
         } else {
             OscEvent beatScriptEvent = createOscBeatScriptEvent(script, beatId);
@@ -436,10 +442,10 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         int beatNo = beatId.getBaseBeatNo();
         OscEvent beatScriptEvent = createOscBeatScriptEvent(script, beatId);
 
-        ScriptEventPreset scriptPreset = maxConfig.getPresetScripts(beatNo);
+        ScriptEventPreset scriptPreset = maxMspConfig.getPresetScripts(beatNo);
         if (scriptPreset == null) {
             scriptPreset = new ScriptEventPreset(beatNo);
-            maxConfig.addPreset(scriptPreset);
+            maxMspConfig.addPreset(scriptPreset);
         }
 
         scriptPreset.addScriptEvent(beatScriptEvent);
@@ -460,7 +466,12 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         szcore.addScoreBaseBeatEvent(transportId, webScoreEvent);
     }
 
-    private void addTransportInitEvents(Tempo tempo, TimeSignature timeSignature, int startBaseBeatNo, int transportBeatNo, int tickNo, long positionMillis, Id transportId, List<SzcoreEvent> initEvents){
+    private void addScriptingEngineEvent(BeatId beatId, List<ScriptingEngineScript> scripts, Id transportId) {
+        ScriptingEngineEvent webScoreEvent = createScriptingEngineEvent(scripts, beatId);
+        szcore.addScoreBaseBeatEvent(transportId, webScoreEvent);
+    }
+
+    private void addTransportInitEvents(Tempo tempo, TimeSignature timeSignature, int startBaseBeatNo, int transportBeatNo, int tickNo, long positionMillis, Id transportId, List<SzcoreEvent> initEvents) {
         addTransportPositionEvent(transportId, startBaseBeatNo, transportBeatNo, tickNo, positionMillis, initEvents);
         addTempoChangeInitEvent(tempo, null, transportId, false, initEvents);
         addTimeSigChangeInitEvent(timeSignature, null, transportId, initEvents);
@@ -482,7 +493,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private void addInitAvEvent(Transport transport, Instrument instrument, List<SzcoreEvent> initEvents, BeatId startBeatId) {
 
         OscEvent resetInstrumentEvent = createResetInstrumentEvent(instrument.getName());
-        ScriptEventPreset eventPreset = maxConfig.getBeatResetScripts(startBeatId);
+        ScriptEventPreset eventPreset = maxMspConfig.getBeatResetScripts(startBeatId);
         List<OscEvent> presetEvents = eventPreset.getScriptEvents();
         if (initEvents == null) {
             szcore.addScoreBaseBeatEvent(transport.getId(), resetInstrumentEvent);
@@ -733,13 +744,15 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         boolean isInRange = strategy.isInActiveRange(instId, nextPage);
         if (isInRange) {
+            List<Integer> selectedPageIds = null;
             if (strategy.isPageRecalcTime()) {
                 int pageQuantity = strategy.getNumberOfRequiredPages();
-                List<Integer> pageIds = webScore.prepareNextTilesToPlay(pageQuantity);
-                strategy.setPageSelection(pageIds);
+                selectedPageIds = webScore.prepareNextTilesToPlay(pageQuantity);
+                strategy.setPageSelection(selectedPageIds);
             }
 
             sendRndPageFileUpdate(nextPage, stave, instId);
+//          remove this  sendOscPlayerRndPageUpdate(instId, beatId, selectedPageIds, nextPage, transport);
         } else {
             sendPageFileUpdate(nextPage, stave);
         }
@@ -747,7 +760,6 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String destination = szcore.getOscDestination(instId);
         OscEvent instrumentSlotsEvent = createInstrumentResetSlotsEvent(destination, null);
         publishOscEvent(instrumentSlotsEvent);
-
     }
 
     private void sendRndPageFileUpdate(Page page, Stave stave, InstrumentId instId) {
@@ -764,6 +776,31 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
         List<OscEvent> out = createPageChangeEvents(page, pageFileName, (BasicStave) stave, null);
         publishOscEvents(out);
+    }
+
+    private void sendOscPlayerRndPageUpdate(InstrumentId instId, BeatId beatId, List<Integer> selectedPageIds, Page nextPage, Transport transport) {
+        if (!szcore.isOscPlayer(instId)) {
+            return;
+        }
+
+        ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
+        int pageNo = strategy.getFirstRandomPageNo();
+//        int pageNo = nextPage.getPageNo();
+//        if(selectedPageIds != null && !selectedPageIds.isEmpty()) {
+//            pageNo = selectedPageIds.get(0);
+//        }
+        LOG.info("sendOscPlayerRndPageUpdate: MAXMSP Using RND page no: {} for instrument: {}", pageNo, instId);
+
+        //Send setFile in buffer to be played next
+        OscScript setFileScript = maxMspConfig.createSetFileInNextBufferScript(beatId, pageNo);
+        OscEvent setFileEvent = createOscBeatScriptEvent(setFileScript, beatId);
+        publishOscEvent(setFileEvent);
+
+        //Add play buffer event for next page
+        Beat nextPageBeat = nextPage.getFirstBeat();
+        OscScript playNextBufferScript = maxMspConfig.createPlayNextBufferScript(nextPageBeat.getBeatId());
+        OscEvent playBufferEvent = createOscBeatScriptEvent(playNextBufferScript, nextPageBeat.getBeatId());
+        szcore.addScoreBaseBeatEvent(transport.getId(), playBufferEvent);
     }
 
     private void sendPageFileUpdate(Page page, Stave stave) {
@@ -1649,7 +1686,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         return eventFactory.createTransitionEvent(destination, eventBeatId, transition, clock.getSystemTimeMillis());
     }
 
-    private WebScoreEvent createWebScoreEvent(List<WebScoreScript> scripts, BeatId eventBeatId){
+    private WebScoreEvent createWebScoreEvent(List<WebScoreScript> scripts, BeatId eventBeatId) {
         if (scripts == null || eventBeatId == null) {
             return null;
         }
@@ -1657,7 +1694,15 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         return eventFactory.createWebScoreEvent(eventBeatId, scripts, clock.getSystemTimeMillis());
     }
 
-    private OscEvent createResetScoreEvent(String instrument){
+    private ScriptingEngineEvent createScriptingEngineEvent(List<ScriptingEngineScript> scripts, BeatId eventBeatId) {
+        if (scripts == null || eventBeatId == null) {
+            return null;
+        }
+
+        return eventFactory.createScriptingEngineEvent(eventBeatId, scripts, clock.getSystemTimeMillis());
+    }
+
+    private OscEvent createResetScoreEvent(String instrument) {
         if (instrument == null) {
             return null;
         }
@@ -1665,7 +1710,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         return eventFactory.createResetScoreEvent(instrument, clock.getSystemTimeMillis());
     }
 
-    private OscEvent createResetInstrumentEvent(String instrument){
+    private OscEvent createResetInstrumentEvent(String instrument) {
         if (instrument == null) {
             return null;
         }
@@ -2152,6 +2197,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 processWebScoreEvent((WebScoreEvent) event, beatNo, tickNo);
                 processWebScoreEvent((WebScoreEvent) event, beatNo, tickNo);
                 break;
+            case SCRIPTING_ENGINE:
+                processScriptingEngineEvent((ScriptingEngineEvent) event, beatNo, tickNo);
+                break;
             default:
                 LOG.error("Unknown event type " + type);
         }
@@ -2196,11 +2244,17 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     private void notifyListenersOnTick(Id transportId, int beatNo, int baseBeatNo, int tickNo) {
-        for(SzcoreEngineEventListener listener : scoreEventListeners){
+        for (SzcoreEngineEventListener listener : scoreEventListeners) {
             listener.onTransportTickEvent(transportId, beatNo, baseBeatNo, tickNo);
         }
     }
 
+    private void processScriptingEngineEvent(ScriptingEngineEvent event, int beatNo, int tickNo) {
+        ScriptingEngineEventTask task = taskFactory.createScriptingEngineEventTask(0, event, scriptingEngine);
+        if (task != null) {
+            scheduler.add(task);
+        }
+    }
 
     private void processWebScoreEvent(WebScoreEvent event, int beatNo, int tickNo) {
         WebScoreEventType eventType = event.getWebScoreEventType();
@@ -2218,7 +2272,6 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                     scheduler.add(task);
                 }
         }
-
     }
 
     private void processMusicEvent(MusicEvent event, int beatNo, int tickNo) {

@@ -4,6 +4,7 @@ import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.ModWindowEvent;
 import com.xenaksys.szcore.event.PrecountBeatSetupEvent;
 import com.xenaksys.szcore.event.PrepStaveChangeEvent;
+import com.xenaksys.szcore.event.ScriptingEngineEvent;
 import com.xenaksys.szcore.event.StaveActiveChangeEvent;
 import com.xenaksys.szcore.event.StopEvent;
 import com.xenaksys.szcore.event.TempoChangeEvent;
@@ -19,6 +20,7 @@ import com.xenaksys.szcore.model.Stave;
 import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.Transport;
 import com.xenaksys.szcore.score.ScoreProcessorImpl;
+import com.xenaksys.szcore.score.ScoreScriptingEngine;
 import com.xenaksys.szcore.score.WebScore;
 
 public class TaskFactory {
@@ -59,7 +61,7 @@ public class TaskFactory {
     }
 
     public TransitionSetupTask createTransitionSetupTask(TransitionEvent transitionEvent, String destination, Scheduler scheduler,
-                                                             OscPublisher oscPublisher, EventFactory eventFactory, Clock clock) {
+                                                         OscPublisher oscPublisher, EventFactory eventFactory, Clock clock) {
         return new TransitionSetupTask(transitionEvent, destination, scheduler, oscPublisher, eventFactory, clock);
     }
 
@@ -67,5 +69,7 @@ public class TaskFactory {
         return new WebScoreEventTask(playTime, event, webScore);
     }
 
-
+    public ScriptingEngineEventTask createScriptingEngineEventTask(long playTime, ScriptingEngineEvent event, ScoreScriptingEngine scriptingEngine) {
+        return new ScriptingEngineEventTask(playTime, event, scriptingEngine);
+    }
 }

@@ -10,6 +10,7 @@ import com.xenaksys.szcore.model.Transition;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
+import com.xenaksys.szcore.score.ScriptingEngineScript;
 import com.xenaksys.szcore.score.WebScoreScript;
 import com.xenaksys.szcore.web.WebConnection;
 
@@ -290,6 +291,10 @@ public class EventFactory {
 
     public WebScoreEvent createWebScoreEvent(BeatId beatId, List<WebScoreScript> scripts, long creationTime) {
         return new WebScoreEvent(beatId, scripts, creationTime);
+    }
+
+    public ScriptingEngineEvent createScriptingEngineEvent(BeatId beatId, List<ScriptingEngineScript> scripts, long creationTime) {
+        return new ScriptingEngineEvent(beatId, scripts, creationTime);
     }
 
     public WebScoreInstructionsEvent createWebScoreInstructionsEvent(String l1, String l2, String l3, boolean isVisible, long creationTime) {

@@ -61,7 +61,7 @@ public class BasicScore implements Score {
     private Map<Id, OSCPortOut> instrumentOscPortMap = new HashMap<>();
     private Map<Id, Stave> staves = new HashMap<>();
     private Map<Id, List<Stave>> instrumentStaves = new HashMap<>();
-    private Map<Id, Instrument> maxClients = new HashMap<>();
+    private Map<Id, Instrument> oscPlayers = new HashMap<>();
 
     private boolean isPrecount = true;
     private int precountBeatNo = 4;
@@ -339,12 +339,16 @@ public class BasicScore implements Score {
         return null;
     }
 
-    public Collection<Instrument> getMaxClients() {
-        return maxClients.values();
+    public Collection<Instrument> getOscPlayers() {
+        return oscPlayers.values();
     }
 
-    public void addMaxClient(Instrument instrument) {
-        maxClients.put(instrument.getId(), instrument);
+    public void addOscPlayer(Instrument instrument) {
+        oscPlayers.put(instrument.getId(), instrument);
+    }
+
+    public boolean isOscPlayer(InstrumentId instrumentId) {
+        return oscPlayers.containsKey(instrumentId);
     }
 
     @Override

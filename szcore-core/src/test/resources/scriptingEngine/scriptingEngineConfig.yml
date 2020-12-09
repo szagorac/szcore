@@ -1,0 +1,6 @@
+scoreName: "Test Score"
+presets:
+  - id: 1
+    scripts: [
+        "sce.resetState()",
+    ]

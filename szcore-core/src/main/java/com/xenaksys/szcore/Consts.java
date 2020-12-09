@@ -36,12 +36,14 @@ public interface Consts {
     String UNDERSCORE = "_";
     String DOUBLE_UNDERSCORE = "__";
     String INSCORE_FILE_EXTENSION = ".inscore";
+    String WAV_FILE_EXTENSION = ".wav";
     String PNG_FILE_EXTENSION = ".png";
     String TXT_FILE_EXTENSION = ".txt";
     String YAML_FILE_EXTENSION = ".yml";
     String INSCORE_FILE_SUFFIX = "_InScoreMap";
     String STRATEGY_CONFIG_FILE_SUFFIX = "strategyConfig";
     String WEBSCORE_PRESET_FILE_SUFFIX = "webscoreConfig";
+    String SCRIPTING_ENGINE_PRESET_FILE_SUFFIX = "scriptingEngine";
     String INSCORE_ADDR = "INScore";
     String SZCORE_ADDR = "/SZCORE";
     String OSC_INSCORE_ADDRESS_ROOT = "/ITL";
@@ -434,4 +436,14 @@ public interface Consts {
     String CONFIG_TILE_ROW = "tileRow";
     String CONFIG_TILE_COLS = "tileCols";
     String CONFIG_ASSIGNMENT_TYPE = "assignmentType";
+
+    String MAXMSP_CMD_SET_FILE = "setFile";
+    String MAXMSP_CMD_PLAY = "play";
+
+    String MAXMSP_BAR_PREFIX = "b";
+
+    String MAXMSP_BUFFER_NO_TOKEN = "$BUFNO";
+    String MAXMSP_BUFFER_TARGET = "b" + MAXMSP_BUFFER_NO_TOKEN;
+
+    String SCRIPTING_ENGINE_ID = "sce";
 }

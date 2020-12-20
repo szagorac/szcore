@@ -43,7 +43,7 @@ public interface Consts {
     String INSCORE_FILE_SUFFIX = "_InScoreMap";
     String STRATEGY_CONFIG_FILE_SUFFIX = "strategyConfig";
     String WEBSCORE_PRESET_FILE_SUFFIX = "webscoreConfig";
-    String SCRIPTING_ENGINE_PRESET_FILE_SUFFIX = "scriptingEngine";
+    String SCRIPTING_ENGINE_PRESET_FILE_SUFFIX = "scriptingEngineConfig";
     String INSCORE_ADDR = "INScore";
     String SZCORE_ADDR = "/SZCORE";
     String OSC_INSCORE_ADDRESS_ROOT = "/ITL";
@@ -437,6 +437,7 @@ public interface Consts {
     String CONFIG_TILE_COLS = "tileCols";
     String CONFIG_ASSIGNMENT_TYPE = "assignmentType";
 
+    String MAXMSP_ID = "max";
     String MAXMSP_CMD_SET_FILE = "setFile";
     String MAXMSP_CMD_PLAY = "play";
 

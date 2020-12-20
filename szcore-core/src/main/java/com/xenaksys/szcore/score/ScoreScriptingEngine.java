@@ -1,18 +1,24 @@
 package com.xenaksys.szcore.score;
 
+import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.ScriptingEngineEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Score;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.ScriptPreset;
+import com.xenaksys.szcore.model.id.BeatId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.xenaksys.szcore.Consts.SCRIPTING_ENGINE_ID;
 
@@ -27,6 +33,8 @@ public class ScoreScriptingEngine {
     private ScriptingEngineConfig config;
     private final ScriptEngineManager factory = new ScriptEngineManager();
     private final ScriptEngine jsEngine = factory.getEngineByName("nashorn");
+    private final Map<BeatId, List<ScriptingEngineScript>> beatScripts = new HashMap<>();
+    private final Map<BeatId, List<ScriptingEngineScript>> beatResetScripts = new HashMap<>();
 
     public ScoreScriptingEngine(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock) {
         this.scoreProcessor = scoreProcessor;
@@ -113,4 +121,75 @@ public class ScoreScriptingEngine {
     public void setConfig(ScriptingEngineConfig config) {
         this.config = config;
     }
+
+    public void addBeatScript(BeatId beatId, ScriptingEngineScript script) {
+        if (beatId == null || script == null) {
+            return;
+        }
+
+        List<ScriptingEngineScript> scripts = beatScripts.computeIfAbsent(beatId, k -> new ArrayList<>());
+
+        if (script.isReset()) {
+            addResetScript(beatId, script);
+        } else {
+            scripts.add(script);
+        }
+    }
+
+    public void addResetScript(BeatId beatId, ScriptingEngineScript script) {
+        if (beatId == null || script == null) {
+            return;
+        }
+
+        List<ScriptingEngineScript> scripts = beatResetScripts.computeIfAbsent(beatId, k -> new ArrayList<>());
+        scripts.add(script);
+    }
+
+    public List<ScriptingEngineScript> getBeatScripts(BeatId beatId) {
+        return beatScripts.get(beatId);
+    }
+
+    public List<ScriptingEngineScript> getBeatResetScripts(BeatId beatId) {
+        if (beatResetScripts.containsKey(beatId)) {
+            return beatResetScripts.get(beatId);
+        }
+
+        ArrayList<BeatId> beats = new ArrayList<>(beatResetScripts.keySet());
+        if (beats.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Collections.sort(beats);
+        int outIndex = Collections.binarySearch(beats, beatId);
+        int idx = outIndex;
+        if (outIndex < 0) {
+            idx += 1;
+            idx *= (-1);
+            idx -= 1;
+        }
+        BeatId outId = beats.get(idx);
+        return beatResetScripts.get(outId);
+    }
+
+    public void sendRndPageUpdates(String target) {
+        LOG.info("sendRndPageUpdates: target: {}", target);
+        try {
+            if (Consts.MAXMSP_ID.equals(target)) {
+                scoreProcessor.sendOscInstrumentRndPageUpdate(0);
+            } else {
+                LOG.error("sendRndPageUpdates: Unknown target: {}", target);
+            }
+        } catch (Exception e) {
+            LOG.error("Failed to process sendRndPageUpdates()", e);
+        }
+    }
+
+    public void sendMaxMspRndPageUpdates(int buffer) {
+        LOG.info("sendMaxMspRndPageUpdates: buffer: {}", buffer);
+        try {
+            scoreProcessor.sendOscInstrumentRndPageUpdate(buffer);
+        } catch (Exception e) {
+            LOG.error("Failed to process sendMaxMspRndPageUpdates()", e);
+        }
+    }
+
 }

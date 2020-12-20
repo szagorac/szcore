@@ -86,4 +86,7 @@ public interface  ScoreProcessor extends Processor {
 
     void onCloseModWindow(InstrumentId instId, Stave nextStave, Page nextPage, PageId currentPageId);
 
+    public int getCurrentBeatNo();
+
+    void sendOscInstrumentRndPageUpdate(int bufferNo);
 }

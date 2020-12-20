@@ -537,8 +537,7 @@ public class ScoreLoader {
         IntId id = new IntId(Consts.ID_SOURCE.incrementAndGet());
 
         String script = resource;
-        boolean isResetPoint = false;
-        boolean isResetOnly = false;
+        boolean isReset = false;
 
         if (script.startsWith(RESOURCE_SCRIPT_ENGINE)) {
             script = script.substring(RESOURCE_SCRIPT_ENGINE.length());
@@ -585,16 +584,7 @@ public class ScoreLoader {
             String resetPointType = script.substring(0, end);
             script = script.substring(end);
 
-            isResetPoint = true;
-            switch (resetPointType) {
-                case ONLY:
-                    isResetOnly = true;
-                    break;
-                case BOTH:
-                    isResetOnly = false;
-                    break;
-            }
-
+            isReset = true;
             if (script.startsWith(SCRIPT_DELIMITER)) {
                 script = script.substring(SCRIPT_DELIMITER.length());
             }
@@ -608,7 +598,7 @@ public class ScoreLoader {
             script = script.replace(CURLY_QUOTE, SINGLE_QUOTE);
         }
 
-        Script scriptObj = new ScriptingEngineScript(id, beatId, script, isResetPoint, isResetOnly);
+        Script scriptObj = new ScriptingEngineScript(id, beatId, script, isReset);
         LOG.info("Created ScriptingEngineScript script: {}", scriptObj);
         score.addScript(scriptObj);
     }

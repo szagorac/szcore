@@ -297,6 +297,10 @@ public class EventFactory {
         return new ScriptingEngineEvent(beatId, scripts, creationTime);
     }
 
+    public ScriptingEngineResetEvent createScriptingEngineResetEvent(BeatId beatId, List<ScriptingEngineScript> scripts, long creationTime) {
+        return new ScriptingEngineResetEvent(beatId, scripts, creationTime);
+    }
+
     public WebScoreInstructionsEvent createWebScoreInstructionsEvent(String l1, String l2, String l3, boolean isVisible, long creationTime) {
         return new WebScoreInstructionsEvent(l1, l2, l3, isVisible, creationTime);
     }

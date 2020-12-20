@@ -104,14 +104,17 @@ public class MaxMspScoreConfig {
         return presets.get(outId);
     }
 
-    public OscScript createSetFileInNextBufferScript(BeatId beatId, int pageNo) {
-        int bufferNo = getNextPageBufferNo();
+    public OscScript createSetFileInNextBufferScript(BeatId beatId, int pageNo, int buffer) {
+        int bufferNo = buffer;
+        if (buffer == 0) {
+            bufferNo = getNextPageBufferNo();
+        }
         String target = Consts.OSC_ADDRESS_ZSCORE + Consts.MAXMSP_BUFFER_TARGET.replace(Consts.MAXMSP_BUFFER_NO_TOKEN, "" + bufferNo);
 
-        //args 0 = cmd, 1 = target, other args ...
+        //args 0 = cmd, other args ...
         List<Object> args = new ArrayList<>();
         args.add(Consts.MAXMSP_CMD_SET_FILE);
-        args.add(target);
+//        args.add(target);
 
         String fileName = audioFilePrefix;
         fileName += Consts.MAXMSP_BAR_PREFIX;
@@ -123,14 +126,17 @@ public class MaxMspScoreConfig {
         return new OscScript(id, beatId, target, args, false);
     }
 
-    public OscScript createPlayNextBufferScript(BeatId beatId) {
-        int bufferNo = getNextPageBufferNo();
+    public OscScript createPlayNextBufferScript(BeatId beatId, int buffer) {
+        int bufferNo = buffer;
+        if (buffer == 0) {
+            bufferNo = getNextPageBufferNo();
+        }
         String target = Consts.OSC_ADDRESS_ZSCORE + Consts.MAXMSP_BUFFER_TARGET.replace(Consts.MAXMSP_BUFFER_NO_TOKEN, "" + bufferNo);
 
-        //args 0 = cmd, 1 = target, other args ...
+        //args 0 = cmd, other args ...
         List<Object> args = new ArrayList<>();
         args.add(Consts.MAXMSP_CMD_PLAY);
-        args.add(target);
+//        args.add(target);
 
         IntId id = new IntId(Consts.ID_SOURCE.incrementAndGet());
         return new OscScript(id, beatId, target, args, false);

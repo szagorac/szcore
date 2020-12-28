@@ -2273,7 +2273,6 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 break;
             case WEB_SCORE:
                 processWebScoreEvent((WebScoreEvent) event, beatNo, tickNo);
-                processWebScoreEvent((WebScoreEvent) event, beatNo, tickNo);
                 break;
             case SCRIPTING_ENGINE:
                 processScriptingEngineEvent((ScriptingEngineEvent) event, beatNo, tickNo);

@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TestWebScore {
     private static final String TEST_SCRIPT_PREFIX = "Test script";
@@ -61,8 +62,10 @@ public class TestWebScore {
     @Test
     public void testGranulatorConfigAsString() {
         Map<String, Object> params = new HashMap<>();
-        GranulatorConfig granulatorConfig = webScore.getGranulatorConfig();
+        WebGranulatorConfig granulatorConfig = webScore.getGranulatorConfig();
 
+        params.put("masterGainVal", "0.5");
+        params.put("maxGrains", "32");
         params.put("grain.sizeMs", "88");
         params.put("panner.isUsePanner", "true");
         params.put("panner.panningModel", "HRTF");
@@ -73,6 +76,9 @@ public class TestWebScore {
         params.put("envelope.releaseTime", "0.4");
 
         webScore.setGranulatorConfig(params);
+
+        assertEquals(0.5, granulatorConfig.getMasterGainVal(), 10E-5);
+        assertEquals(32, granulatorConfig.getMaxGrains());
 
         int size = granulatorConfig.getGrain().getSizeMs();
         assertEquals(88, size);
@@ -93,8 +99,10 @@ public class TestWebScore {
     @Test
     public void testGranulatorConfigAsObject() {
         Map<String, Object> params = new HashMap<>();
-        GranulatorConfig granulatorConfig = webScore.getGranulatorConfig();
+        WebGranulatorConfig granulatorConfig = webScore.getGranulatorConfig();
 
+        params.put("masterGainVal", "0.5");
+        params.put("maxGrains", "32");
         params.put("grain.sizeMs", 88);
         params.put("panner.isUsePanner", true);
         params.put("panner.panningModel", "HRTF");
@@ -105,6 +113,9 @@ public class TestWebScore {
         params.put("envelope.releaseTime", 0.4);
 
         webScore.setGranulatorConfig(params);
+
+        assertEquals(0.5, granulatorConfig.getMasterGainVal(), 10E-5);
+        assertEquals(32, granulatorConfig.getMaxGrains());
 
         int size = granulatorConfig.getGrain().getSizeMs();
         assertEquals(88, size);
@@ -120,6 +131,31 @@ public class TestWebScore {
         assertEquals(0.6, attack, 10e-5);
         double release = envelopeConfig.getReleaseTime();
         assertEquals(0.4, release, 10e-5);
+    }
+
+    @Test
+    public void testSpeechSynthConfigAsObject() {
+        Map<String, Object> params = new HashMap<>();
+        params.put("volume", 0.5);
+        params.put("pitch", 2.6);
+        params.put("rate", 0.2);
+        params.put("lang", "rubbish");
+        params.put("maxVoiceLoadAttempts", 7);
+        params.put("maxUtterances", 44);
+        params.put("utteranceTimeoutSec", 40);
+        params.put("isInterrupt", true);
+        params.put("interruptTimeout", 123);
+
+        webScore.setSpeechSynthConfig(params);
+        WebSpeechSynthConfig speechSynthConfigAfter = webScore.getSpeechSynthConfig();
+        assertEquals(0.5, speechSynthConfigAfter.getVolume(), 10e-5);
+        assertEquals(2.0, speechSynthConfigAfter.getPitch(), 10e-5);
+        assertEquals(0.2, speechSynthConfigAfter.getRate(), 10e-5);
+        assertEquals("en-GB", speechSynthConfigAfter.getLang());
+        assertEquals(5, speechSynthConfigAfter.getMaxUtterances());
+        assertEquals(40, speechSynthConfigAfter.getUtteranceTimeoutSec());
+        assertTrue(speechSynthConfigAfter.isInterrupt());
+        assertEquals(123, speechSynthConfigAfter.getInterruptTimeout());
     }
 
     private void checkResetBeat(int beatNo, int resetBeatNo) {

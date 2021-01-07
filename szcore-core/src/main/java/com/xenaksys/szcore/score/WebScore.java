@@ -41,27 +41,50 @@ import java.util.Objects;
 
 import static com.xenaksys.szcore.Consts.EMPTY;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_CONFIG;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_PLAY;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_START;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_STATE;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_STOP;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_ATTACK_TIME;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_AUDIO_STOP_TOLERANCE_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_BUFFER_POSITION_PLAY_RATE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_DECAY_TIME;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_DISTANCE_MODEL;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_DURATION;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_ENVELOPE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_GRAIN;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_INTERRUPT_TIMEOUT_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_IS_INTERRUPT;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_IS_PLAY_SPEECH_ON_CLICK;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_IS_USE_PANNER;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_LANG;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MASTER_GAIN_VAL;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_GRAINS;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_PAN_ANGLE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_PITCH_RATE_RANGE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_POSITION_OFFSET_RANGE_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_UTTERANCES;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_VOICE_LOAD_ATTEMPTS;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_PANNER;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_PANNING_MODEL;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PITCH;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_PITCH_RATE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PLAY_DURATION_SEC;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PLAY_START_OFFSET_SEC;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_RATE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_RELEASE_TIME;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_SIZE_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_SPEECH_IS_INTERRUPT;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_SPEECH_TEXT;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_SPEECH_VOICE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_SUSTAIN_LEVEL;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_SUSTAIN_TIME;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_TIME_OFFSET_STEPS_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_UTTERANCE_TIMEOUT_SEC;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_VOLUME;
 import static com.xenaksys.szcore.Consts.WEB_GRANULATOR;
 import static com.xenaksys.szcore.Consts.WEB_SCORE_ID;
+import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_TEXT_BACKGROUND_COLOUR;
 import static com.xenaksys.szcore.Consts.WEB_TILE_PLAY_PAGE_DURATION_FACTOR;
 import static com.xenaksys.szcore.Consts.WEB_ZOOM_DEFAULT;
@@ -82,7 +105,9 @@ public class WebScore {
     private final List<WebScoreEvent> playedEvents = new ArrayList<>();
     private final Map<String, WebElementState> elementStates = new HashMap<>();
     private WebTextState instructions;
-    private GranulatorConfig defaultGranulatorConfig;
+    private WebGranulatorConfig granulatorConfig;
+    private WebSpeechSynthConfig speechSynthConfig;
+    private WebSpeechSynthState speechSynthState;
 
     private final List<WebAction> currentActions = new ArrayList<>();
     private final List<Tile> tilesAll = new ArrayList<>(64);
@@ -173,7 +198,9 @@ public class WebScore {
         instructions.setLine3("awaiting performance start ...");
         instructions.setVisible(true);
 
-        defaultGranulatorConfig = createDefaultGranulatorConfig();
+        granulatorConfig = createDefaultGranulatorConfig();
+        speechSynthConfig = createDefaultSpeechSynthConfig();
+        speechSynthState = createDefaultSpeechSynthState();
 
         updateServerState();
     }
@@ -682,10 +709,312 @@ public class WebScore {
         }
     }
 
-    public void resetGranulator() {
+    public void sendGranulatorConfig() {
         String[] target = {WEB_GRANULATOR};
-        Map<String, Object> params = defaultGranulatorConfig.toJsMap();
+        Map<String, Object> params = granulatorConfig.toJsMap();
         setAction(WEB_ACTION_ID_CONFIG, WebActionType.AUDIO.name(), target, params);
+    }
+
+    public void playGranulator() {
+        String[] target = {WEB_GRANULATOR};
+        setAction(WEB_ACTION_ID_PLAY, WebActionType.AUDIO.name(), target, null);
+    }
+
+    public void stopGranulator() {
+        String[] target = {WEB_GRANULATOR};
+        Map<String, Object> params = granulatorConfig.toJsMap();
+        setAction(WEB_ACTION_ID_STOP, WebActionType.AUDIO.name(), target, null);
+    }
+
+    public void sendSpeechSynthConfig() {
+        String[] target = {WEB_SPEECH_SYNTH};
+        Map<String, Object> params = speechSynthConfig.toJsMap();
+        setAction(WEB_ACTION_ID_CONFIG, WebActionType.AUDIO.name(), target, params);
+    }
+
+    public void sendSpeechSynthState() {
+        String[] target = {WEB_SPEECH_SYNTH};
+        Map<String, Object> params = speechSynthState.toJsMap();
+        setAction(WEB_ACTION_ID_STATE, WebActionType.AUDIO.name(), target, params);
+    }
+
+    public void enableSpeechSynth() {
+        speechSynthState.setPlaySpeechSynthOnClick(true);
+        sendSpeechSynthState();
+    }
+
+    public void disableSpeechSynth() {
+        speechSynthState.setPlaySpeechSynthOnClick(false);
+        sendSpeechSynthState();
+    }
+
+    public void setSpeechText(String text) {
+        speechSynthState.setSpeechText(text);
+        sendSpeechSynthState();
+    }
+
+    public void setSpeechVoice(String voice) {
+        speechSynthState.setSpeechVoice(voice);
+        sendSpeechSynthState();
+    }
+
+    public void setSpeechInterrupt(boolean isInterrupt) {
+        speechSynthState.setSpeechIsInterrupt(isInterrupt);
+        sendSpeechSynthState();
+    }
+
+    public void speak() {
+        String[] target = {WEB_SPEECH_SYNTH};
+        Map<String, Object> params = speechSynthState.toJsMap();
+        setAction(WEB_ACTION_ID_PLAY, WebActionType.AUDIO.name(), target, params);
+    }
+
+    public void speak(String text) {
+        if (text != null && !text.isEmpty()) {
+            LOG.warn("speak: Invalid text to speak: {}", text);
+        }
+        String[] target = {WEB_SPEECH_SYNTH};
+        Map<String, Object> params = speechSynthState.toJsMap();
+        params.put(WEB_CONFIG_SPEECH_TEXT, text);
+        setAction(WEB_ACTION_ID_PLAY, WebActionType.AUDIO.name(), target, params);
+    }
+
+    public void stopSpeech() {
+        String[] target = {WEB_SPEECH_SYNTH};
+        Map<String, Object> params = speechSynthState.toJsMap();
+        setAction(WEB_ACTION_ID_STOP, WebActionType.AUDIO.name(), target, params);
+    }
+
+    public void setSpeechSynthConfigParam(String name, Object value) {
+        try {
+            LOG.info("setSpeechSynthConfigParam: setting config param: {} value: {}", name, value);
+            WebSpeechSynthConfig config = this.speechSynthConfig;
+            switch (name) {
+                case WEB_CONFIG_VOLUME:
+                    try {
+                        config.setVolume(getDouble(value));
+                    } catch (Exception e) {
+                        LOG.error("setSpeechSynthConfigParam: Failed to set volume", e);
+                    }
+                    break;
+                case WEB_CONFIG_PITCH:
+                    try {
+                        config.setPitch(getDouble(value));
+                    } catch (Exception e) {
+                        LOG.error("setSpeechSynthConfigParam: Failed to set pitch", e);
+                    }
+                    break;
+                case WEB_CONFIG_RATE:
+                    try {
+                        config.setRate(getDouble(value));
+                    } catch (Exception e) {
+                        LOG.error("setSpeechSynthConfigParam: Failed to set rate", e);
+                    }
+                    break;
+                case WEB_CONFIG_LANG:
+                    try {
+                        config.setLang(getString(value));
+                    } catch (Exception e) {
+                        LOG.error("setSpeechSynthConfigParam: Failed to set lang", e);
+                    }
+                    break;
+                case WEB_CONFIG_MAX_VOICE_LOAD_ATTEMPTS:
+                    try {
+                        config.setMaxVoiceLoadAttempts(getInt(value));
+                    } catch (Exception e) {
+                        LOG.error("setSpeechSynthConfigParam: Failed to set MaxVoiceLoadAttempts", e);
+                    }
+                    break;
+                case WEB_CONFIG_MAX_UTTERANCES:
+                    try {
+                        config.setMaxUtterances(getInt(value));
+                    } catch (Exception e) {
+                        LOG.error("setSpeechSynthConfigParam: Failed to set MaxUtterances", e);
+                    }
+                    break;
+                case WEB_CONFIG_UTTERANCE_TIMEOUT_SEC:
+                    try {
+                        config.setUtteranceTimeoutSec(getInt(value));
+                    } catch (Exception e) {
+                        LOG.error("setSpeechSynthConfigParam: Failed to set UtteranceTimeoutSec", e);
+                    }
+                    break;
+                case WEB_CONFIG_IS_INTERRUPT:
+                    try {
+                        config.setInterrupt(getBoolean(value));
+                    } catch (Exception e) {
+                        LOG.error("setSpeechSynthConfigParam: Failed to set isInterrupt", e);
+                    }
+                    break;
+                case WEB_CONFIG_INTERRUPT_TIMEOUT_MS:
+                    try {
+                        config.setInterruptTimeout(getInt(value));
+                    } catch (Exception e) {
+                        LOG.error("setSpeechSynthConfigParam: Failed to set InterruptTimeout", e);
+                    }
+                    break;
+                default:
+                    LOG.error("setSpeechSynthConfigParam: Invalid Speech Synth Config Param: {}", name);
+            }
+        } catch (Exception e) {
+            LOG.error("setSpeechSynthConfigParam: failed to set speech synth config for name: {}, value: {}", name, value, e);
+        }
+    }
+
+    public void setSpeechSynthConfig(Map<String, Object> params) {
+        if (params == null) {
+            LOG.error("setSpeechSynthConfig: invalid params");
+            return;
+        }
+        for (String param : params.keySet()) {
+            Object value = params.get(param);
+            setSpeechSynthConfigParam(param, value);
+        }
+        this.speechSynthConfig.validate();
+        LOG.info("setSpeechSynthConfig: new config: {}", speechSynthConfig);
+    }
+
+    public WebSpeechSynthConfig getSpeechSynthConfig() {
+        return speechSynthConfig;
+    }
+
+    public void setSpeechSynthStateParam(String name, Object value) {
+        try {
+            LOG.info("setSpeechSynthStateParam: setting config param: {} value: {}", name, value);
+            WebSpeechSynthState state = this.speechSynthState;
+            switch (name) {
+                case WEB_CONFIG_IS_PLAY_SPEECH_ON_CLICK:
+                    try {
+                        state.setPlaySpeechSynthOnClick(getBoolean(value));
+                    } catch (Exception e) {
+                        LOG.error("setSpeechSynthStateParam: Failed to set PlaySpeechSynthOnClick", e);
+                    }
+                    break;
+                case WEB_CONFIG_SPEECH_TEXT:
+                    try {
+                        state.setSpeechText(getString(value));
+                    } catch (Exception e) {
+                        LOG.error("setSpeechSynthStateParam: Failed to set SpeechText", e);
+                    }
+                    break;
+                case WEB_CONFIG_SPEECH_VOICE:
+                    try {
+                        state.setSpeechVoice(getString(value));
+                    } catch (Exception e) {
+                        LOG.error("setSpeechSynthStateParam: Failed to set SpeechVoice", e);
+                    }
+                    break;
+                case WEB_CONFIG_SPEECH_IS_INTERRUPT:
+                    try {
+                        state.setSpeechIsInterrupt(getBoolean(value));
+                    } catch (Exception e) {
+                        LOG.error("setSpeechSynthStateParam: Failed to set SpeechIsInterrupt", e);
+                    }
+                    break;
+                default:
+                    LOG.error("setSpeechSynthStateParam: Invalid Speech Synth Config Param: {}", name);
+            }
+        } catch (Exception e) {
+            LOG.error("setSpeechSynthStateParam: failed to set speech synth state for name: {}, value: {}", name, value, e);
+        }
+    }
+
+    public void setSpeechSynthState(Map<String, Object> params) {
+        if (params == null) {
+            LOG.error("setSpeechSynthState: invalid params");
+            return;
+        }
+        for (String param : params.keySet()) {
+            Object value = params.get(param);
+            setSpeechSynthStateParam(param, value);
+        }
+        this.speechSynthState.validate();
+        LOG.info("setSpeechSynthState: new config: {}", speechSynthState);
+    }
+
+    public WebSpeechSynthState getSpeechSynthState() {
+        return speechSynthState;
+    }
+
+    public void setGranulatorConfigParam(String name, Object value) {
+        try {
+            LOG.info("setGranulatorConfig: setting config param: {} value: {}", name, value);
+            String[] names = name.split("\\.");
+            if (names.length == 1) {
+                setGranulatorBaseConfig(names[0], value);
+                return;
+            }
+            if (names.length != 2) {
+                LOG.error("setGranulatorConfig: invalid param names {}, will not use", Arrays.toString(names));
+                return;
+            }
+            String l1 = names[0];
+            String l2 = names[1];
+            switch (l1) {
+                case WEB_CONFIG_GRAIN:
+                    setGrainConfig(l2, value);
+                    break;
+                case WEB_CONFIG_ENVELOPE:
+                    setGranulatorEnvelopeConfig(l2, value);
+                    break;
+                case WEB_CONFIG_PANNER:
+                    setGranulatorPannerConfig(l2, value);
+                    break;
+            }
+        } catch (Exception e) {
+            LOG.error("setGranulatorConfigParam: failed to set granulator config for name: {}, value: {}", name, value, e);
+        }
+    }
+
+    public void setGranulatorBaseConfig(String name, Object value) {
+        LOG.info("setGranulatorBaseConfig: setting config param: {} value: {}", name, value);
+        WebGranulatorConfig config = this.granulatorConfig;
+        switch (name) {
+            case WEB_CONFIG_MASTER_GAIN_VAL:
+                try {
+                    config.setMasterGainVal(getDouble(value));
+                } catch (Exception e) {
+                    LOG.error("setGranulatorBaseConfig: Failed to set MasterGainVal", e);
+                }
+                break;
+            case WEB_CONFIG_PLAY_DURATION_SEC:
+                try {
+                    config.setPlayDurationSec(getDouble(value));
+                } catch (Exception e) {
+                    LOG.error("setGranulatorBaseConfig: Failed to set PlayDurationSec", e);
+                }
+                break;
+            case WEB_CONFIG_PLAY_START_OFFSET_SEC:
+                try {
+                    config.setPlayStartOffsetSec(getDouble(value));
+                } catch (Exception e) {
+                    LOG.error("setGranulatorBaseConfig: Failed to set PlayStartOffsetSec", e);
+                }
+                break;
+            case WEB_CONFIG_MAX_GRAINS:
+                try {
+                    config.setMaxGrains(getInt(value));
+                } catch (Exception e) {
+                    LOG.error("setGranulatorBaseConfig: Failed to set MaxGrains", e);
+                }
+                break;
+            case WEB_CONFIG_BUFFER_POSITION_PLAY_RATE:
+                try {
+                    config.setBufferPositionPlayRate(getDouble(value));
+                } catch (Exception e) {
+                    LOG.error("setGranulatorBaseConfig: Failed to set BufferPositionPlayRate", e);
+                }
+                break;
+            case WEB_CONFIG_AUDIO_STOP_TOLERANCE_MS:
+                try {
+                    config.setAudioStopToleranceMs(getInt(value));
+                } catch (Exception e) {
+                    LOG.error("setGranulatorBaseConfig: Failed to set BufferPositionPlayRate", e);
+                }
+                break;
+            default:
+                LOG.error("setGranulatorBaseConfig: Invalid Speech Synth Config Param: {}", name);
+        }
     }
 
     public void setGranulatorConfig(Map<String, Object> params) {
@@ -693,48 +1022,24 @@ public class WebScore {
             LOG.error("setGranulatorConfig: invalid params");
             return;
         }
-
-        try {
-            for (String param : params.keySet()) {
-                Object value = params.get(param);
-                LOG.info("setGranulatorConfig: setting config param: {} value: {}", param, value);
-
-                String[] names = param.split("\\.");
-                if (names.length != 2) {
-                    LOG.error("setGranulatorConfig: invalid param names {}, will not use", Arrays.toString(names));
-                    continue;
-                }
-                String l1 = names[0];
-                String l2 = names[1];
-                switch (l1) {
-                    case WEB_CONFIG_GRAIN:
-                        setGrainConfig(l2, value);
-                        break;
-                    case WEB_CONFIG_ENVELOPE:
-                        setGranulatorEnvelopeConfig(l2, value);
-                        break;
-                    case WEB_CONFIG_PANNER:
-                        setGranulatorPannerConfig(l2, value);
-                        break;
-                }
-            }
-        } catch (Exception e) {
-            LOG.error("setGranulatorConfig: failed to set granulator config", e);
+        for (String param : params.keySet()) {
+            Object value = params.get(param);
+            setGranulatorConfigParam(param, value);
         }
-
-        LOG.info("setGranulatorConfig: new config: {}", defaultGranulatorConfig);
+        this.granulatorConfig.validate();
+        LOG.info("setGranulatorConfig: new config: {}", granulatorConfig);
     }
 
-    public GranulatorConfig getGranulatorConfig() {
-        return defaultGranulatorConfig;
+    public WebGranulatorConfig getGranulatorConfig() {
+        return granulatorConfig;
     }
 
     private void setGranulatorPannerConfig(String name, Object value) {
-        PannerConfig pannerConfig = defaultGranulatorConfig.getPanner();
+        PannerConfig config = granulatorConfig.getPanner();
         switch (name) {
             case WEB_CONFIG_IS_USE_PANNER:
                 try {
-                    pannerConfig.setUsePanner(getBoolean(value));
+                    config.setUsePanner(getBoolean(value));
                 } catch (Exception e) {
                     LOG.error("setGranulatorPannerConfig: Failed to set isUsePanner", e);
                 }
@@ -742,7 +1047,7 @@ public class WebScore {
             case WEB_CONFIG_PANNING_MODEL:
                 try {
                     String v = PanningModel.fromName(getString(value)).getName();
-                    pannerConfig.setPanningModel(v);
+                    config.setPanningModel(v);
                 } catch (Exception e) {
                     LOG.error("setGranulatorPannerConfig: Failed to set panningModel", e);
                 }
@@ -750,14 +1055,14 @@ public class WebScore {
             case WEB_CONFIG_DISTANCE_MODEL:
                 try {
                     String v = PannerDistanceModel.fromName(getString(value)).getName();
-                    pannerConfig.setDistanceModel(v);
+                    config.setDistanceModel(v);
                 } catch (Exception e) {
                     LOG.error("setGranulatorPannerConfig: Failed to set distanceModel", e);
                 }
                 break;
             case WEB_CONFIG_MAX_PAN_ANGLE:
                 try {
-                    pannerConfig.setMaxPanAngle(getInt(value));
+                    config.setMaxPanAngle(getInt(value));
                 } catch (Exception e) {
                     LOG.error("setGranulatorPannerConfig: Failed to set maxPanAngle", e);
                 }
@@ -768,39 +1073,39 @@ public class WebScore {
     }
 
     private void setGrainConfig(String name, Object value) {
-        GrainConfig grainConfig = defaultGranulatorConfig.getGrain();
+        GrainConfig config = this.granulatorConfig.getGrain();
         switch (name) {
             case WEB_CONFIG_SIZE_MS:
                 try {
-                    grainConfig.setSizeMs(getInt(value));
+                    config.setSizeMs(getInt(value));
                 } catch (Exception e) {
                     LOG.error("setGrainConfig: Failed to set grain size", e);
                 }
                 break;
             case WEB_CONFIG_PITCH_RATE:
                 try {
-                    grainConfig.setPitchRate(getDouble(value));
+                    config.setPitchRate(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGrainConfig: Failed to set pitchRate", e);
                 }
                 break;
             case WEB_CONFIG_MAX_POSITION_OFFSET_RANGE_MS:
                 try {
-                    grainConfig.setMaxPositionOffsetRangeMs(getInt(value));
+                    config.setMaxPositionOffsetRangeMs(getInt(value));
                 } catch (Exception e) {
                     LOG.error("setGrainConfig: Failed to set maxPositionOffsetRangeMs", e);
                 }
                 break;
             case WEB_CONFIG_MAX_PITCH_RATE_RANGE:
                 try {
-                    grainConfig.setMaxPitchRateRange(getDouble(value));
+                    config.setMaxPitchRateRange(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGrainConfig: Failed to set maxPitchRateRange", e);
                 }
                 break;
             case WEB_CONFIG_TIME_OFFSET_STEPS_MS:
                 try {
-                    grainConfig.setTimeOffsetStepMs(getInt(value));
+                    config.setTimeOffsetStepMs(getInt(value));
                 } catch (Exception e) {
                     LOG.error("setGrainConfig: Failed to set timeOffsetStepMs", e);
                 }
@@ -851,39 +1156,39 @@ public class WebScore {
     }
 
     private void setGranulatorEnvelopeConfig(String name, Object value) {
-        EnvelopeConfig envelopeConfig = defaultGranulatorConfig.getEnvelope();
+        EnvelopeConfig config = granulatorConfig.getEnvelope();
         switch (name) {
             case WEB_CONFIG_ATTACK_TIME:
                 try {
-                    envelopeConfig.setAttackTime(getDouble(value));
+                    config.setAttackTime(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGranulatorEnvelopeConfig: Failed to set attackTime", e);
                 }
                 break;
             case WEB_CONFIG_DECAY_TIME:
                 try {
-                    envelopeConfig.setDecayTime(getDouble(value));
+                    config.setDecayTime(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGranulatorEnvelopeConfig: Failed to set decayTime", e);
                 }
                 break;
             case WEB_CONFIG_SUSTAIN_TIME:
                 try {
-                    envelopeConfig.setSustainTime(getDouble(value));
+                    config.setSustainTime(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGranulatorEnvelopeConfig: Failed to set sustainTime", e);
                 }
                 break;
             case WEB_CONFIG_RELEASE_TIME:
                 try {
-                    envelopeConfig.setReleaseTime(getDouble(value));
+                    config.setReleaseTime(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGranulatorEnvelopeConfig: Failed to set releaseTime", e);
                 }
                 break;
             case WEB_CONFIG_SUSTAIN_LEVEL:
                 try {
-                    envelopeConfig.setSustainLevel(getDouble(value));
+                    config.setSustainLevel(getDouble(value));
                 } catch (Exception e) {
                     LOG.error("setGranulatorEnvelopeConfig: Failed to set sustainLevel", e);
                 }
@@ -1049,39 +1354,18 @@ public class WebScore {
         return beatResetScripts.get(outId);
     }
 
-    private GranulatorConfig createDefaultGranulatorConfig() {
-        GranulatorConfig granulatorConfig = new GranulatorConfig();
+    private WebSpeechSynthConfig createDefaultSpeechSynthConfig() {
+        WebSpeechSynthConfig speechSynthConfig = new WebSpeechSynthConfig();
+        return speechSynthConfig;
+    }
 
-        granulatorConfig.setMasterGainVal(1.0);
-        granulatorConfig.setMaxGrains(12);
-        granulatorConfig.setPlayDurationSec(10);
-        granulatorConfig.setPlayStartOffsetSec(0.0);
-        granulatorConfig.setBufferPositionPlayRate(1.0);
-        granulatorConfig.setAudioStopToleranceMs(5);
+    private WebSpeechSynthState createDefaultSpeechSynthState() {
+        WebSpeechSynthState webSpeechSynthState = new WebSpeechSynthState();
+        return webSpeechSynthState;
+    }
 
-        GrainConfig grainConfig = new GrainConfig();
-        grainConfig.setMaxPitchRateRange(0.0);
-        grainConfig.setMaxPositionOffsetRangeMs(10);
-        grainConfig.setPitchRate(1.0);
-        grainConfig.setSizeMs(100);
-        grainConfig.setTimeOffsetStepMs(10);
-        granulatorConfig.setGrain(grainConfig);
-
-        EnvelopeConfig envelopeConfig = new EnvelopeConfig();
-        envelopeConfig.setAttackTime(0.4);
-        envelopeConfig.setDecayTime(0.0);
-        envelopeConfig.setSustainTime(0.2);
-        envelopeConfig.setReleaseTime(0.4);
-        envelopeConfig.setSustainLevel(1.0);
-        granulatorConfig.setEnvelope(envelopeConfig);
-
-        PannerConfig pannerConfig = new PannerConfig();
-        pannerConfig.setUsePanner(false);
-        pannerConfig.setPanningModel(PanningModel.EQUAL_POWER.getName());
-        pannerConfig.setDistanceModel(PannerDistanceModel.LINEAR.getName());
-        pannerConfig.setMaxPanAngle(45);
-        granulatorConfig.setPanner(pannerConfig);
-
+    private WebGranulatorConfig createDefaultGranulatorConfig() {
+        WebGranulatorConfig granulatorConfig = new WebGranulatorConfig();
         return granulatorConfig;
     }
 

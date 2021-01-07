@@ -301,9 +301,16 @@ public interface Consts {
 
     String WEB_SCORE_ID = "webScore";
     String WEB_GRANULATOR = "granulator";
+    String WEB_SPEECH_SYNTH = "speechSynth";
+    String WEB_SPEECH_VOICE_RANDOM = "random";
+    String WEB_SPEECH_VOICE_DEFAULT = "default";
+
     String WEB_ACTION_ID_CONFIG = "config";
     String WEB_ACTION_ID_START = "start";
     String WEB_ACTION_ID_RESET = "reset";
+    String WEB_ACTION_ID_PLAY = "play";
+    String WEB_ACTION_ID_STOP = "stop";
+    String WEB_ACTION_ID_STATE = "state";
 
     String WEB_CONFIG_DURATION = "duration";
     String WEB_CONFIG_GRAIN = "grain";
@@ -329,6 +336,19 @@ public interface Consts {
     String WEB_CONFIG_MAX_GRAINS = "maxGrains";
     String WEB_CONFIG_BUFFER_POSITION_PLAY_RATE = "bufferPositionPlayRate";
     String WEB_CONFIG_AUDIO_STOP_TOLERANCE_MS = "audioStopToleranceMs";
+    String WEB_CONFIG_VOLUME = "volume";
+    String WEB_CONFIG_PITCH = "pitch";
+    String WEB_CONFIG_RATE = "rate";
+    String WEB_CONFIG_LANG = "lang";
+    String WEB_CONFIG_MAX_VOICE_LOAD_ATTEMPTS = "maxVoiceLoadAttempts";
+    String WEB_CONFIG_MAX_UTTERANCES = "maxUtterances";
+    String WEB_CONFIG_UTTERANCE_TIMEOUT_SEC = "utteranceTimeoutSec";
+    String WEB_CONFIG_IS_INTERRUPT = "isInterrupt";
+    String WEB_CONFIG_INTERRUPT_TIMEOUT_MS = "interruptTimeout";
+    String WEB_CONFIG_IS_PLAY_SPEECH_ON_CLICK = "isPlaySpeechSynthOnClick";
+    String WEB_CONFIG_SPEECH_TEXT = "speechText";
+    String WEB_CONFIG_SPEECH_VOICE = "speechVoice";
+    String WEB_CONFIG_SPEECH_IS_INTERRUPT = "speechIsInterrupt";
 
     String NAME_FULL_SCORE = "FullScore";
 

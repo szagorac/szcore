@@ -11,10 +11,15 @@ public class PannerConfig {
 
     private static final int MAX_PAN_ANGLE = 90;
 
-    private boolean isUsePanner;
-    private String panningModel;
-    private String distanceModel;
-    private int maxPanAngle;
+    private static final boolean DEFAULT_IS_USE_PANNER = false;
+    private static final String DEFAULT_PANNING_MODEL = PanningModel.EQUAL_POWER.getName();
+    private static final String DEFAULT_DISTANCE_MODEL = PannerDistanceModel.LINEAR.getName();
+    private static final int DEFAULT_MAX_PAN_ANGLE = 45;
+
+    private boolean isUsePanner = DEFAULT_IS_USE_PANNER;
+    private String panningModel = DEFAULT_PANNING_MODEL;
+    private String distanceModel = DEFAULT_DISTANCE_MODEL;
+    private int maxPanAngle = DEFAULT_MAX_PAN_ANGLE;
 
     public boolean isUsePanner() {
         return isUsePanner;
@@ -67,6 +72,17 @@ public class PannerConfig {
         config.put("panner.distanceModel", getDistanceModel());
         config.put("panner.maxPanAngle", getMaxPanAngle());
         return config;
+    }
+
+    public PannerConfig copy(PannerConfig to) {
+        if (to == null) {
+            to = new PannerConfig();
+        }
+        to.setUsePanner(this.isUsePanner);
+        to.setPanningModel(this.panningModel);
+        to.setDistanceModel(this.distanceModel);
+        to.setMaxPanAngle(this.maxPanAngle);
+        return to;
     }
 
     @Override

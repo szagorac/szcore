@@ -16,11 +16,17 @@ public class GrainConfig {
     private static final double MAX_PITCH_RATE_RANGE = 1.0;
     private static final int MIN_TIME_OFFSET_STEP = 0;
 
-    private int sizeMs;
-    private double pitchRate;
-    private int maxPositionOffsetRangeMs;
-    private double maxPitchRateRange;
-    private int timeOffsetStepMs;
+    private static final int DEFAULT_GRAIN_SIZE_MS = 100;
+    private static final double DEFAULT_PITCH_RATE = 1.0;
+    private static final int DEFAULT_MAX_POSITION_OFFSET_RANGE_MS = 10;
+    private static final double DEFAULT_MAX_PITCH_RATE_RANGE = 0.0;
+    private static final int DEFAULT_TIME_OFFSET_STEP_MS = 10;
+
+    private int sizeMs = DEFAULT_GRAIN_SIZE_MS;
+    private double pitchRate = DEFAULT_PITCH_RATE;
+    private int maxPositionOffsetRangeMs = DEFAULT_MAX_POSITION_OFFSET_RANGE_MS;
+    private double maxPitchRateRange = DEFAULT_MAX_PITCH_RATE_RANGE;
+    private int timeOffsetStepMs = DEFAULT_TIME_OFFSET_STEP_MS;
 
     public int getSizeMs() {
         return sizeMs;
@@ -102,6 +108,18 @@ public class GrainConfig {
         return config;
     }
 
+    public GrainConfig copy(GrainConfig to) {
+        if (to == null) {
+            to = new GrainConfig();
+        }
+        to.setSizeMs(this.sizeMs);
+        to.setPitchRate(this.pitchRate);
+        to.setMaxPositionOffsetRangeMs(this.maxPositionOffsetRangeMs);
+        to.setMaxPitchRateRange(this.maxPitchRateRange);
+        to.setTimeOffsetStepMs(this.timeOffsetStepMs);
+        return to;
+    }
+
     @Override
     public String toString() {
         return "GrainConfig{" +
@@ -112,4 +130,5 @@ public class GrainConfig {
                 ", timeOffsetStepMs=" + timeOffsetStepMs +
                 '}';
     }
+
 }

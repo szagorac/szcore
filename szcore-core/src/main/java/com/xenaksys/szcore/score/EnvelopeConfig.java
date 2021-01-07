@@ -12,12 +12,18 @@ public class EnvelopeConfig {
     private static final double MIN_VALUE = 0.0;
     private static final double MAX_VALUE = 1.0;
 
+    private static final double DEFAULT_ATTACK_TIME = 0.4;
+    private static final double DEFAULT_DECAY_TIME = 0.0;
+    private static final double DEFAULT_SUSTAIN_TIME = 0.2;
+    private static final double DEFAULT_RELEASE_TIME = 0.4;
+    private static final double DEFAULT_SUSTAIN_LEVEL = 1.0;
+
     // All values 0 ->1. time values are a fraction of total envelope time = 1
-    private double attackTime;
-    private double decayTime;
-    private double sustainTime;
-    private double releaseTime;
-    private double sustainLevel;
+    private double attackTime = DEFAULT_ATTACK_TIME;
+    private double decayTime = DEFAULT_DECAY_TIME;
+    private double sustainTime = DEFAULT_SUSTAIN_TIME;
+    private double releaseTime = DEFAULT_RELEASE_TIME;
+    private double sustainLevel = DEFAULT_SUSTAIN_LEVEL;
 
     public double getAttackTime() {
         return attackTime;
@@ -68,11 +74,12 @@ public class EnvelopeConfig {
 
         double totalTime = attackTime + decayTime + sustainTime + releaseTime;
         if(totalTime > 1.0) {
-            LOG.info("validate: max envelope time breach, setting default adsr 0.5, 0.0. 0.0. 0.5");
-            attackTime = 0.5;
-            decayTime = 0.0;
-            sustainTime = 0.0;
-            releaseTime = 0.5;
+            LOG.info("validate: max envelope time breach, setting default adsr a: {} d: {} s: {} r: {}",
+                    DEFAULT_ATTACK_TIME, DEFAULT_DECAY_TIME, DEFAULT_SUSTAIN_TIME, DEFAULT_RELEASE_TIME);
+            attackTime = DEFAULT_ATTACK_TIME;
+            decayTime = DEFAULT_DECAY_TIME;
+            sustainTime = DEFAULT_SUSTAIN_TIME;
+            releaseTime = DEFAULT_RELEASE_TIME;
         }
 
         return true;
@@ -80,10 +87,10 @@ public class EnvelopeConfig {
 
     public double validateMinMax(double value, String valueName) {
         if (value < MIN_VALUE) {
-            LOG.info("validate: invalid {}, setting to {}", valueName, MIN_VALUE);
+            LOG.info("validate: invalid {} value: {}, setting to {}", valueName, value, MIN_VALUE);
             return MIN_VALUE;
         } else if (value > MAX_VALUE) {
-            LOG.info("validate: invalid {}, setting to {}", valueName, MAX_VALUE);
+            LOG.info("validate: invalid {} value: {}, setting to {}", valueName, value, MAX_VALUE);
             return MAX_VALUE;
         }
         return value;
@@ -97,6 +104,18 @@ public class EnvelopeConfig {
         config.put("envelope.releaseTime", getReleaseTime());
         config.put("envelope.sustainLevel", getSustainLevel());
         return config;
+    }
+
+    public EnvelopeConfig copy(EnvelopeConfig to) {
+        if (to == null) {
+            to = new EnvelopeConfig();
+        }
+        to.setAttackTime(this.attackTime);
+        to.setDecayTime(this.decayTime);
+        to.setSustainTime(this.sustainTime);
+        to.setReleaseTime(this.releaseTime);
+        to.setSustainLevel(this.sustainLevel);
+        return to;
     }
 
     @Override

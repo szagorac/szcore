@@ -8,6 +8,7 @@ import com.xenaksys.szcore.event.WebScoreEvent;
 import com.xenaksys.szcore.event.WebScoreEventType;
 import com.xenaksys.szcore.event.WebScoreInstructionsEvent;
 import com.xenaksys.szcore.event.WebScorePrecountEvent;
+import com.xenaksys.szcore.event.WebScoreStopEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.Page;
@@ -20,6 +21,7 @@ import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.web.WebAction;
 import com.xenaksys.szcore.web.WebActionType;
 import com.xenaksys.szcore.web.WebScoreState;
+import com.xenaksys.szcore.web.WebScoreStateDelta;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import org.slf4j.Logger;
@@ -42,16 +44,21 @@ import java.util.Objects;
 import static com.xenaksys.szcore.Consts.EMPTY;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_CONFIG;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_PLAY;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_RAMP_LINEAR;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_RAMP_SIN;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_START;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_STATE;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_STOP;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_AMPLITUDE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_ATTACK_TIME;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_AUDIO_STOP_TOLERANCE_MS;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_BUFFER_POSITION_PLAY_RATE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_DECAY_TIME;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_DISTANCE_MODEL;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_DURATION;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_END_VALUE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_ENVELOPE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_FREQUENCY;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_GRAIN;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_INTERRUPT_TIMEOUT_MS;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_IS_INTERRUPT;
@@ -67,6 +74,7 @@ import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_UTTERANCES;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_VOICE_LOAD_ATTEMPTS;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_PANNER;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_PANNING_MODEL;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PARAM_NAME;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_PITCH;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_PITCH_RATE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_PLAY_DURATION_SEC;
@@ -85,6 +93,7 @@ import static com.xenaksys.szcore.Consts.WEB_CONFIG_VOLUME;
 import static com.xenaksys.szcore.Consts.WEB_GRANULATOR;
 import static com.xenaksys.szcore.Consts.WEB_SCORE_ID;
 import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
+import static com.xenaksys.szcore.Consts.WEB_TARGET_ALL;
 import static com.xenaksys.szcore.Consts.WEB_TEXT_BACKGROUND_COLOUR;
 import static com.xenaksys.szcore.Consts.WEB_TILE_PLAY_PAGE_DURATION_FACTOR;
 import static com.xenaksys.szcore.Consts.WEB_ZOOM_DEFAULT;
@@ -444,6 +453,11 @@ public class WebScore {
         pushServerState();
     }
 
+    public void updateServerStateDeltaAndPush(WebScoreStateDelta webScoreStateDelta) {
+        updateServerStateDelta(webScoreStateDelta);
+        pushServerStateDelta();
+    }
+
     public void setVisibleRows(int[] rows) {
         TIntList tintRows = new TIntArrayList(rows);
         for (int i = 0; i < 8; i++) {
@@ -701,12 +715,26 @@ public class WebScore {
     public void setAction(String actionId, String type, String[] targetIds, Map<String, Object> params) {
         LOG.info("setAction: {} target: {}", actionId, Arrays.toString(targetIds));
         try {
-            WebActionType t = WebActionType.valueOf(type.toUpperCase());
-            WebAction action = new WebAction(actionId, t, Arrays.asList(targetIds), params);
+            WebAction action = createAction(actionId, type, targetIds, params);
             currentActions.add(action);
         } catch (IllegalArgumentException e) {
             LOG.error("Failed to setAction id: {} type: {}", actionId, type);
         }
+    }
+
+    public WebAction createAction(String actionId, String type, String[] targetIds, Map<String, Object> params) {
+        WebActionType t = WebActionType.valueOf(type.toUpperCase());
+        return new WebAction(actionId, t, Arrays.asList(targetIds), params);
+    }
+
+    public boolean processStopAll(WebScoreStopEvent event) {
+        sendStopAll();
+        return true;
+    }
+
+    public void sendStopAll() {
+        String[] target = {WEB_TARGET_ALL};
+        setAction(WEB_ACTION_ID_STOP, WebActionType.STOP.name(), target, null);
     }
 
     public void sendGranulatorConfig() {
@@ -717,13 +745,39 @@ public class WebScore {
 
     public void playGranulator() {
         String[] target = {WEB_GRANULATOR};
-        setAction(WEB_ACTION_ID_PLAY, WebActionType.AUDIO.name(), target, null);
+        WebAction action = createAction(WEB_ACTION_ID_PLAY, WebActionType.AUDIO.name(), target, null);
+        List<WebAction> actions = new ArrayList<>(1);
+        actions.add(action);
+        WebScoreStateDelta webScoreStateDelta = createServerStateDelta();
+        webScoreStateDelta.setActions(actions);
     }
 
     public void stopGranulator() {
         String[] target = {WEB_GRANULATOR};
-        Map<String, Object> params = granulatorConfig.toJsMap();
         setAction(WEB_ACTION_ID_STOP, WebActionType.AUDIO.name(), target, null);
+    }
+
+    public void validateGranulatorConfig() {
+        granulatorConfig.validate();
+    }
+
+    public void granulatorRampLinear(String paramName, Object endValue, int durationMs) {
+        String[] target = {WEB_GRANULATOR};
+        Map<String, Object> params = granulatorConfig.toJsMap();
+        params.put(WEB_CONFIG_PARAM_NAME, paramName);
+        params.put(WEB_CONFIG_END_VALUE, endValue);
+        params.put(WEB_CONFIG_DURATION, durationMs);
+        setAction(WEB_ACTION_ID_RAMP_LINEAR, WebActionType.AUDIO.name(), target, null);
+    }
+
+    public void granulatorRampSin(String paramName, Double amplitude, Double frequency, int durationMs) {
+        String[] target = {WEB_GRANULATOR};
+        Map<String, Object> params = granulatorConfig.toJsMap();
+        params.put(WEB_CONFIG_PARAM_NAME, paramName);
+        params.put(WEB_CONFIG_AMPLITUDE, amplitude);
+        params.put(WEB_CONFIG_FREQUENCY, frequency);
+        params.put(WEB_CONFIG_DURATION, durationMs);
+        setAction(WEB_ACTION_ID_RAMP_SIN, WebActionType.AUDIO.name(), target, null);
     }
 
     public void sendSpeechSynthConfig() {
@@ -732,10 +786,18 @@ public class WebScore {
         setAction(WEB_ACTION_ID_CONFIG, WebActionType.AUDIO.name(), target, params);
     }
 
+    public void validateSpeechSynthConfig() {
+        speechSynthConfig.validate();
+    }
+
     public void sendSpeechSynthState() {
         String[] target = {WEB_SPEECH_SYNTH};
         Map<String, Object> params = speechSynthState.toJsMap();
         setAction(WEB_ACTION_ID_STATE, WebActionType.AUDIO.name(), target, params);
+    }
+
+    public void validateSpeechSynthState() {
+        speechSynthState.validate();
     }
 
     public void enableSpeechSynth() {
@@ -1115,46 +1177,6 @@ public class WebScore {
         }
     }
 
-    private double getDouble(Object value) {
-        double v;
-        if (value instanceof String) {
-            v = Double.parseDouble((String) value);
-        } else {
-            v = (Double) value;
-        }
-        return v;
-    }
-
-    private int getInt(Object value) {
-        int v;
-        if (value instanceof String) {
-            v = Integer.parseInt((String) value);
-        } else {
-            v = (Integer) value;
-        }
-        return v;
-    }
-
-    private String getString(Object value) {
-        String v;
-        if (value instanceof String) {
-            v = (String) value;
-        } else {
-            v = value.toString();
-        }
-        return v;
-    }
-
-    private boolean getBoolean(Object value) {
-        boolean v;
-        if (value instanceof String) {
-            v = Boolean.parseBoolean((String) value);
-        } else {
-            v = (Boolean) value;
-        }
-        return v;
-    }
-
     private void setGranulatorEnvelopeConfig(String name, Object value) {
         EnvelopeConfig config = granulatorConfig.getEnvelope();
         switch (name) {
@@ -1251,24 +1273,41 @@ public class WebScore {
         return new WebScoreState(ts, currentActions, centreShape, innerCircle, outerCircle, zoomLevel, instructions);
     }
 
+    public WebScoreStateDelta createServerStateDelta() {
+        return new WebScoreStateDelta();
+    }
+
     public void updateServerState() {
         try {
             scoreProcessor.onWebScoreStateChange(exportState());
         } catch (Exception e) {
-            LOG.error("Failed to process pushServerState", e);
+            LOG.error("Failed to process updateServerState", e);
+        }
+    }
+
+    public void updateServerStateDelta(WebScoreStateDelta webScoreStateDelta) {
+        try {
+            scoreProcessor.onWebScoreStateDeltaChange(webScoreStateDelta);
+        } catch (Exception e) {
+            LOG.error("Failed to process updateServerStateDelta", e);
         }
     }
 
     public void pushServerState() {
+        sendOutgoingWebEvent(OutgoingWebEventType.PUSH_SERVER_STATE);
+    }
+
+    public void pushServerStateDelta() {
+        sendOutgoingWebEvent(OutgoingWebEventType.PUSH_SERVER_STATE_DELTA);
+    }
+
+    public void sendOutgoingWebEvent(OutgoingWebEventType eventType) {
         try {
-            BeatId beatId = null;
-            String eventId = null;
-            OutgoingWebEventType eventType = OutgoingWebEventType.PUSH_SERVER_STATE;
             long creationTime = clock.getSystemTimeMillis();
-            OutgoingWebEvent outgoingWebEvent = eventFactory.createOutgoingWebEvent(beatId, eventId, eventType, creationTime);
+            OutgoingWebEvent outgoingWebEvent = eventFactory.createOutgoingWebEvent(null, null, eventType, creationTime);
             scoreProcessor.onOutgoingWebEvent(outgoingWebEvent);
         } catch (Exception e) {
-            LOG.error("Failed to process pushServerState", e);
+            LOG.error("Failed to process sendOutgoingWebEvent, type: {}", eventType, e);
         }
     }
 
@@ -1277,14 +1316,16 @@ public class WebScore {
         WebScoreEventType type = event.getWebScoreEventType();
         try {
             resetActions();
-            boolean isStateUpdate = true;
-
+            boolean isSendStateUpdate = false;
             switch (type) {
                 case INSTRUCTIONS:
-                    isStateUpdate = processInstructionsEvent((WebScoreInstructionsEvent) event);
+                    isSendStateUpdate = processInstructionsEvent((WebScoreInstructionsEvent) event);
                     break;
                 case PRECOUNT:
-                    isStateUpdate = processPrecountEvent((WebScorePrecountEvent) event);
+                    isSendStateUpdate = processPrecountEvent((WebScorePrecountEvent) event);
+                    break;
+                case STOP:
+                    isSendStateUpdate = processStopAll((WebScoreStopEvent) event);
                     break;
                 case RESET:
                 case SCRIPT:
@@ -1298,7 +1339,7 @@ public class WebScore {
                     LOG.warn("processWebScoreEvent: Ignoring event {}", type);
             }
 
-            if (isStateUpdate) {
+            if (isSendStateUpdate) {
                 updateServerStateAndPush();
             }
         } catch (Exception e) {
@@ -1389,6 +1430,46 @@ public class WebScore {
         }
 
         return false;
+    }
+
+    private double getDouble(Object value) {
+        double v;
+        if (value instanceof String) {
+            v = Double.parseDouble((String) value);
+        } else {
+            v = (Double) value;
+        }
+        return v;
+    }
+
+    private int getInt(Object value) {
+        int v;
+        if (value instanceof String) {
+            v = Integer.parseInt((String) value);
+        } else {
+            v = (Integer) value;
+        }
+        return v;
+    }
+
+    private String getString(Object value) {
+        String v;
+        if (value instanceof String) {
+            v = (String) value;
+        } else {
+            v = value.toString();
+        }
+        return v;
+    }
+
+    private boolean getBoolean(Object value) {
+        boolean v;
+        if (value instanceof String) {
+            v = Boolean.parseBoolean((String) value);
+        } else {
+            v = (Boolean) value;
+        }
+        return v;
     }
 
     public class Tile {

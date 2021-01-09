@@ -54,6 +54,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     private final Map<String, WebClientInfo> clientInfos = new ConcurrentHashMap<>();
 
     private volatile String currentWebScoreState;
+    private volatile String currentWebScoreStateDelta;
     private volatile long stateUpdateTime = 0;
 
     public WebProcessor(ScoreService scoreService, EventService eventService, Clock clock, EventFactory eventFactory) {
@@ -282,19 +283,52 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         this.stateUpdateTime = getClock().getSystemTimeMillis();
     }
 
+    @Override
+    public void onWebScoreStateDeltaChange(WebScoreStateDelta webScoreStateDelta) {
+        if (webScoreStateDelta == null) {
+            return;
+        }
+        String out = GSON.toJson(webScoreStateDelta);
+        int stringLenBytes = Util.getStringLengthUtf8(out);
+        long stringLenKb = stringLenBytes / 1024;
+        LOG.info("onWebScoreStateDeltaChange: WebState size: {}Kb json: {}", stringLenKb, out);
+        if (stringLenKb > 64) {
+            LOG.error("onWebScoreStateDeltaChange: ### WARNING ### WebState size {}Kb larger than 64Kb", stringLenKb);
+        }
+        this.currentWebScoreStateDelta = out;
+    }
 
     public void onOutgoingWebEvent(OutgoingWebEvent webEvent) {
         if (webEvent == null) {
             return;
         }
-
         OutgoingWebEventType type = webEvent.getWebEventType();
         switch (type) {
             case PUSH_SERVER_STATE:
-                String out = createStateWebString(currentWebScoreState);
-                scoreService.pushToWebClients(out);
+                pushWebScoreState();
+                break;
+            case PUSH_SERVER_STATE_DELTA:
+                pushWebScoreStateDelta();
                 break;
         }
+    }
+
+    private void pushWebScoreState() {
+        if (currentWebScoreState == null) {
+            return;
+        }
+        String out = createStateWebString(currentWebScoreState);
+        scoreService.pushToWebClients(out);
+    }
+
+    private void pushWebScoreStateDelta() {
+        if (currentWebScoreStateDelta == null) {
+            return;
+        }
+        String delta = createStateWebString(currentWebScoreStateDelta);
+        scoreService.pushToWebClients(delta);
+        //reset delta - is that smart?
+        currentWebScoreState = null;
     }
 
     public Clock getClock() {

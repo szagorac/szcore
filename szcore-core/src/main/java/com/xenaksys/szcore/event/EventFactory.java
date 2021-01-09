@@ -313,6 +313,10 @@ public class EventFactory {
         return new WebScoreResetEvent(beatId, scripts, creationTime);
     }
 
+    public WebScoreStopEvent createWebScoreStopEvent(long creationTime) {
+        return new WebScoreStopEvent(null, null, creationTime);
+    }
+
     public OutgoingWebEvent createOutgoingWebEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, long creationTime) {
         return new OutgoingWebEvent(beatId, eventId, eventType, creationTime);
     }

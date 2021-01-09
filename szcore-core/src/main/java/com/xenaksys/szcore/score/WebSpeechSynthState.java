@@ -60,10 +60,10 @@ public class WebSpeechSynthState {
 
     public boolean validate() {
         if (speechText != null && speechText.isEmpty()) {
-            return false;
+            speechText = DEFAULT_SPEECH_TEXT;
         }
         if (speechVoice != null && speechVoice.isEmpty()) {
-            return false;
+            speechVoice = DEFAULT_SPEECH_VOICE;
         }
         return true;
     }

@@ -17,9 +17,9 @@ public class GrainConfig {
     private static final int MIN_TIME_OFFSET_STEP = 0;
 
     private static final int DEFAULT_GRAIN_SIZE_MS = 100;
-    private static final double DEFAULT_PITCH_RATE = 1.0;
+    private static final double DEFAULT_PITCH_RATE = 3.0;
     private static final int DEFAULT_MAX_POSITION_OFFSET_RANGE_MS = 10;
-    private static final double DEFAULT_MAX_PITCH_RATE_RANGE = 0.0;
+    private static final double DEFAULT_MAX_PITCH_RATE_RANGE = 0.02;
     private static final int DEFAULT_TIME_OFFSET_STEP_MS = 10;
 
     private int sizeMs = DEFAULT_GRAIN_SIZE_MS;

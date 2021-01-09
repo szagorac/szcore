@@ -304,6 +304,7 @@ public interface Consts {
     String WEB_SPEECH_SYNTH = "speechSynth";
     String WEB_SPEECH_VOICE_RANDOM = "random";
     String WEB_SPEECH_VOICE_DEFAULT = "default";
+    String WEB_TARGET_ALL = "all";
 
     String WEB_ACTION_ID_CONFIG = "config";
     String WEB_ACTION_ID_START = "start";
@@ -311,6 +312,8 @@ public interface Consts {
     String WEB_ACTION_ID_PLAY = "play";
     String WEB_ACTION_ID_STOP = "stop";
     String WEB_ACTION_ID_STATE = "state";
+    String WEB_ACTION_ID_RAMP_LINEAR = "rampLinear";
+    String WEB_ACTION_ID_RAMP_SIN = "rampSin";
 
     String WEB_CONFIG_DURATION = "duration";
     String WEB_CONFIG_GRAIN = "grain";
@@ -349,6 +352,10 @@ public interface Consts {
     String WEB_CONFIG_SPEECH_TEXT = "speechText";
     String WEB_CONFIG_SPEECH_VOICE = "speechVoice";
     String WEB_CONFIG_SPEECH_IS_INTERRUPT = "speechIsInterrupt";
+    String WEB_CONFIG_PARAM_NAME = "paramName";
+    String WEB_CONFIG_END_VALUE = "endValue";
+    String WEB_CONFIG_AMPLITUDE = "amplitude";
+    String WEB_CONFIG_FREQUENCY = "frequency";
 
     String NAME_FULL_SCORE = "FullScore";
 

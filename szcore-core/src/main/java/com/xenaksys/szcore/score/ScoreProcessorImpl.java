@@ -43,6 +43,7 @@ import com.xenaksys.szcore.event.TransportPositionEvent;
 import com.xenaksys.szcore.event.WebScoreEvent;
 import com.xenaksys.szcore.event.WebScoreEventType;
 import com.xenaksys.szcore.event.WebScoreResetEvent;
+import com.xenaksys.szcore.event.WebScoreStopEvent;
 import com.xenaksys.szcore.event.WebStartEvent;
 import com.xenaksys.szcore.model.Bar;
 import com.xenaksys.szcore.model.Beat;
@@ -84,6 +85,7 @@ import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.ParseUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
 import com.xenaksys.szcore.web.WebScoreState;
+import com.xenaksys.szcore.web.WebScoreStateDelta;
 import com.xenaksys.szcore.web.WebScoreStateListener;
 import gnu.trove.map.TIntObjectMap;
 import org.slf4j.Logger;
@@ -1658,35 +1660,15 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     private void sendStopToClients() {
-        if(szcore == null){
+        if (szcore == null) {
             return;
         }
 
         OscStopEvent oscStopEvent = eventFactory.createOscStopEvent(Consts.ALL_DESTINATIONS, clock.getSystemTimeMillis());
         publishOscEvent(oscStopEvent);
-//
-//        int beaterNo = szcore.getPrecountBeatNo();
-//
-//        Collection<Instrument> instruments = szcore.getInstruments();
-//        for(Instrument instrument : instruments) {
-//            Id instrumentId = instrument.getId();
-//            List<Stave> staves = szcore.getInstrumentStaves(instrumentId);
-//            for(Stave stave : staves) {
-//                StaveId id = (StaveId)stave.getId();
-//                String destination = szcore.getOscDestination(instrumentId);
-//                DateTickEvent dateTickEvent = eventFactory.createDateTickEvent(destination, id.getStaveNo(), 1, clock.getSystemTimeMillis());
-//                dateTickEvent.addCommandArg();
-//                publishOscEvent(dateTickEvent);
-//            }
-//        }
-//
-//        PrecountBeatOffEvent beaterOffEvent = eventFactory.createPrecountBeatOffEvent(Consts.ALL_DESTINATIONS, clock.getSystemTimeMillis());
-//        beaterOffEvent.addCommandArg(beaterNo);
-//        publishOscEvent(beaterOffEvent);
-//
-//        PrecountBeatOnEvent beaterOnEvent = eventFactory.createPrecountBeatOnEvent(Consts.ALL_DESTINATIONS, clock.getSystemTimeMillis());
-//        beaterOnEvent.addCommandArg(1, Consts.OSC_COLOUR_RED);
-//        publishOscEvent(beaterOnEvent);
+
+        WebScoreStopEvent webStopEvent = eventFactory.createWebScoreStopEvent(clock.getSystemTimeMillis());
+        process(webStopEvent);
     }
 
     private ModWindowEvent createModWindowEvent(BeatId beatId, Page nextPage, PageId currentPageId, Stave stave, boolean isOpen) {
@@ -2227,6 +2209,11 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     @Override
+    public void onWebScoreStateDeltaChange(WebScoreStateDelta webScoreStatedelta) throws Exception {
+        notifyListeners(webScoreStatedelta);
+    }
+
+    @Override
     public void onOutgoingWebEvent(OutgoingWebEvent webEvent) throws Exception {
         publishWebEvent(webEvent);
     }
@@ -2285,21 +2272,27 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     private void notifyListeners(SzcoreEvent event, int beatNo, int tickNo) {
-        for(SzcoreEngineEventListener listener : scoreEventListeners){
+        for (SzcoreEngineEventListener listener : scoreEventListeners) {
             listener.onEvent(event, beatNo, tickNo);
         }
     }
 
     private void notifyListeners(WebScoreState webScoreState) {
-        for(WebScoreStateListener listener : webScoreStateListeners){
+        for (WebScoreStateListener listener : webScoreStateListeners) {
             listener.onWebScoreStateChange(webScoreState);
+        }
+    }
+
+    private void notifyListeners(WebScoreStateDelta webScoreStateDelta) {
+        for (WebScoreStateListener listener : webScoreStateListeners) {
+            listener.onWebScoreStateDeltaChange(webScoreStateDelta);
         }
     }
 
     private void notifyListenersOnBeat(Id transportId, int beatNo, int baseBeatNo) {
 //LOG.info("Sending beat event beatNo: " + beatNo + " baseBeatNo: " + baseBeatNo);
 
-        for(SzcoreEngineEventListener listener : scoreEventListeners){
+        for (SzcoreEngineEventListener listener : scoreEventListeners) {
             listener.onTransportBeatEvent(transportId, beatNo, baseBeatNo);
         }
     }
@@ -2339,6 +2332,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         switch (eventType) {
             case PRECOUNT:
             case RESET:
+            case STOP:
             case INSTRUCTIONS:
                 webScore.processWebScoreEvent(event);
                 break;

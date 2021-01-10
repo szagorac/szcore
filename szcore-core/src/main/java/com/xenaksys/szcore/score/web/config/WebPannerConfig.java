@@ -1,13 +1,22 @@
-package com.xenaksys.szcore.score;
+package com.xenaksys.szcore.score.web.config;
 
+import com.xenaksys.szcore.score.PannerDistanceModel;
+import com.xenaksys.szcore.score.PanningModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.beans.PropertyChangeSupport;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PannerConfig {
-    static final Logger LOG = LoggerFactory.getLogger(PannerConfig.class);
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_DISTANCE_MODEL;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_IS_USE_PANNER;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_PAN_ANGLE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PANNING_MODEL;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRAIN_PANNER;
+
+public class WebPannerConfig {
+    static final Logger LOG = LoggerFactory.getLogger(WebPannerConfig.class);
 
     private static final int MAX_PAN_ANGLE = 90;
 
@@ -21,12 +30,19 @@ public class PannerConfig {
     private String distanceModel = DEFAULT_DISTANCE_MODEL;
     private int maxPanAngle = DEFAULT_MAX_PAN_ANGLE;
 
+    private final PropertyChangeSupport pcs;
+
+    public WebPannerConfig(PropertyChangeSupport pcs) {
+        this.pcs = pcs;
+    }
+
     public boolean isUsePanner() {
         return isUsePanner;
     }
 
     public void setUsePanner(boolean usePanner) {
         isUsePanner = usePanner;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN_PANNER, WEB_CONFIG_IS_USE_PANNER, usePanner);
     }
 
     public String getPanningModel() {
@@ -35,6 +51,7 @@ public class PannerConfig {
 
     public void setPanningModel(String panningModel) {
         this.panningModel = panningModel;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN_PANNER, WEB_CONFIG_PANNING_MODEL, panningModel);
     }
 
     public String getDistanceModel() {
@@ -43,6 +60,7 @@ public class PannerConfig {
 
     public void setDistanceModel(String distanceModel) {
         this.distanceModel = distanceModel;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN_PANNER, WEB_CONFIG_DISTANCE_MODEL, distanceModel);
     }
 
     public int getMaxPanAngle() {
@@ -51,16 +69,17 @@ public class PannerConfig {
 
     public void setMaxPanAngle(int maxPanAngle) {
         this.maxPanAngle = maxPanAngle;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN_PANNER, WEB_CONFIG_MAX_PAN_ANGLE, maxPanAngle);
     }
 
     public boolean validate() {
         if (maxPanAngle > MAX_PAN_ANGLE) {
             LOG.info("validate: invalid maxPanAngle, setting to {}", MAX_PAN_ANGLE);
-            maxPanAngle = MAX_PAN_ANGLE;
+            setMaxPanAngle(MAX_PAN_ANGLE);
         }
 
-        distanceModel = PannerDistanceModel.fromName(getDistanceModel()).getName();
-        panningModel = PanningModel.fromName(getPanningModel()).getName();
+        setDistanceModel(PannerDistanceModel.fromName(getDistanceModel()).getName());
+        setPanningModel(PanningModel.fromName(getPanningModel()).getName());
 
         return true;
     }
@@ -74,9 +93,9 @@ public class PannerConfig {
         return config;
     }
 
-    public PannerConfig copy(PannerConfig to) {
+    public WebPannerConfig copy(WebPannerConfig to) {
         if (to == null) {
-            to = new PannerConfig();
+            to = new WebPannerConfig(pcs);
         }
         to.setUsePanner(this.isUsePanner);
         to.setPanningModel(this.panningModel);
@@ -87,7 +106,7 @@ public class PannerConfig {
 
     @Override
     public String toString() {
-        return "PannerConfig{" +
+        return "WebPannerConfig{" +
                 "isUsePanner=" + isUsePanner +
                 ", panningModel='" + panningModel + '\'' +
                 ", distanceModel='" + distanceModel + '\'' +

@@ -1,7 +1,8 @@
-package com.xenaksys.szcore.score;
+package com.xenaksys.szcore.score.web.config;
 
 import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.model.ScriptPreset;
+import com.xenaksys.szcore.score.web.WebscorePageRangeAssignmentType;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.ArrayList;

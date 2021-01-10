@@ -36,4 +36,14 @@ public class WebAction {
     public Map<String, Object> getParams() {
         return params;
     }
+
+    @Override
+    public String toString() {
+        return "WebAction{" +
+                "id='" + id + '\'' +
+                ", actionType=" + actionType +
+                ", elementIds=" + elementIds +
+                ", params=" + params +
+                '}';
+    }
 }

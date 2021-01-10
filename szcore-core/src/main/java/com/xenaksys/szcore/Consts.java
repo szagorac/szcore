@@ -306,6 +306,24 @@ public interface Consts {
     String WEB_SPEECH_VOICE_DEFAULT = "default";
     String WEB_TARGET_ALL = "all";
 
+    String WEB_OBJ_ELEMENT_STATE = "webElementState";
+    String WEB_OBJ_TILE_TEXT = "tileText";
+    String WEB_OBJ_WEB_TEXT = "webText";
+    String WEB_OBJ_CENTRE_SHAPE = "centreShape";
+    String WEB_OBJ_INNER_CIRCLE = "innerCircle";
+    String WEB_OBJ_OUTER_CIRCLE = "outerCircle";
+    String WEB_OBJ_INSTRUCTIONS = "instructions";
+    String WEB_OBJ_TILES = "tiles";
+    String WEB_OBJ_TILE = "tile";
+    String WEB_OBJ_ACTIONS = "actions";
+    String WEB_OBJ_ZOOM_LEVEL = "zoomLevel";
+    String WEB_OBJ_CONFIG_GRANULATOR = "granulatorConfig";
+    String WEB_OBJ_CONFIG_SPEECH_SYNTH = "speechSynthConfig";
+    String WEB_OBJ_STATE_SPEECH_SYNTH = "speechSynthState";
+    String WEB_OBJ_CONFIG_GRAIN = "grain";
+    String WEB_OBJ_CONFIG_GRAIN_ENVELOPE = "envelope";
+    String WEB_OBJ_CONFIG_GRAIN_PANNER = "panner";
+
     String WEB_ACTION_ID_CONFIG = "config";
     String WEB_ACTION_ID_START = "start";
     String WEB_ACTION_ID_RESET = "reset";

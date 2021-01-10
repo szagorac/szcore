@@ -2,7 +2,7 @@ package com.xenaksys.szcore.model;
 
 import com.xenaksys.szcore.event.IncomingWebEvent;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
-import com.xenaksys.szcore.score.WebScore;
+import com.xenaksys.szcore.score.web.WebScore;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.web.WebConnection;
 import com.xenaksys.szcore.web.WebConnectionType;

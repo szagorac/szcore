@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.score;
+package com.xenaksys.szcore.score.web;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
@@ -17,11 +17,26 @@ import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.ScriptPreset;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.MutablePageId;
+import com.xenaksys.szcore.score.PannerDistanceModel;
+import com.xenaksys.szcore.score.PanningModel;
+import com.xenaksys.szcore.score.web.config.WebEnvelopeConfig;
+import com.xenaksys.szcore.score.web.config.WebGrainConfig;
+import com.xenaksys.szcore.score.web.config.WebGranulatorConfig;
+import com.xenaksys.szcore.score.web.config.WebPannerConfig;
+import com.xenaksys.szcore.score.web.config.WebSpeechSynthConfig;
+import com.xenaksys.szcore.score.web.config.WebSpeechSynthState;
+import com.xenaksys.szcore.score.web.config.WebscoreConfig;
+import com.xenaksys.szcore.score.web.config.WebscoreConfigLoader;
+import com.xenaksys.szcore.score.web.export.TileExport;
+import com.xenaksys.szcore.score.web.export.WebElementStateExport;
+import com.xenaksys.szcore.score.web.export.WebGranulatorConfigExport;
+import com.xenaksys.szcore.score.web.export.WebInstructionsExport;
+import com.xenaksys.szcore.score.web.export.WebScoreStateExport;
+import com.xenaksys.szcore.score.web.export.WebSpeechSynthConfigExport;
+import com.xenaksys.szcore.score.web.export.WebSpeechSynthStateExport;
 import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.web.WebAction;
 import com.xenaksys.szcore.web.WebActionType;
-import com.xenaksys.szcore.web.WebScoreState;
-import com.xenaksys.szcore.web.WebScoreStateDelta;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import org.slf4j.Logger;
@@ -30,13 +45,15 @@ import org.slf4j.LoggerFactory;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -91,6 +108,20 @@ import static com.xenaksys.szcore.Consts.WEB_CONFIG_TIME_OFFSET_STEPS_MS;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_UTTERANCE_TIMEOUT_SEC;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_VOLUME;
 import static com.xenaksys.szcore.Consts.WEB_GRANULATOR;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_ACTIONS;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CENTRE_SHAPE;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRANULATOR;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_SPEECH_SYNTH;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_ELEMENT_STATE;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_INNER_CIRCLE;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_INSTRUCTIONS;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_OUTER_CIRCLE;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_STATE_SPEECH_SYNTH;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_TILE;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_TILES;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_TILE_TEXT;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_WEB_TEXT;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_ZOOM_LEVEL;
 import static com.xenaksys.szcore.Consts.WEB_SCORE_ID;
 import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_TARGET_ALL;
@@ -108,17 +139,10 @@ public class WebScore {
     private final EventFactory eventFactory;
     private final Score score;
     private final Clock clock;
+    private final WebScoreServerState state;
 
-    private Tile[][] tiles;
-    private LinkedList<WebScoreEvent> events;
-    private final List<WebScoreEvent> playedEvents = new ArrayList<>();
-    private final Map<String, WebElementState> elementStates = new HashMap<>();
-    private WebTextState instructions;
-    private WebGranulatorConfig granulatorConfig;
-    private WebSpeechSynthConfig speechSynthConfig;
-    private WebSpeechSynthState speechSynthState;
+    private PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
-    private final List<WebAction> currentActions = new ArrayList<>();
     private final List<Tile> tilesAll = new ArrayList<>(64);
     private final List<Tile> playingTiles = new ArrayList<>(4);
     private final List<Tile> activeTiles = new ArrayList<>(8);
@@ -128,7 +152,6 @@ public class WebScore {
     private final Map<String, Integer> tileIdPageIdMap = new HashMap<>();
     private final Map<BeatId, List<WebScoreScript>> beatScripts = new HashMap<>();
     private final Map<BeatId, List<WebScoreScript>> beatResetScripts = new HashMap<>();
-    private String zoomLevel = WEB_ZOOM_DEFAULT;
 
     private final ScriptEngineManager factory = new ScriptEngineManager();
     private final ScriptEngine jsEngine = factory.getEngineByName("nashorn");
@@ -138,14 +161,28 @@ public class WebScore {
     private volatile long lastPlayTilesInternalEventTime = 0L;
     private volatile long lastSelectTilesInternalEventTime = 0L;
 
-    private TestScoreRunner testScoreRunner;
-
     public WebScore(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock) {
         this.scoreProcessor = scoreProcessor;
         this.eventFactory = eventFactory;
         this.clock = clock;
         this.score = scoreProcessor.getScore();
         this.tempPageId = createTempPage();
+        this.state = initState();
+    }
+
+    private WebScoreServerState initState() {
+        pcs.addPropertyChangeListener(new WebScoreChangeListener());
+
+        Tile[][] tiles = new Tile[8][8];
+        List<WebAction> currentActions = new ArrayList<>();
+        Map<String, WebElementState> elementStates = new HashMap<>();
+        WebTextState instructions = new WebTextState(WEB_OBJ_INSTRUCTIONS, 3);
+        WebGranulatorConfig granulatorConfig = createDefaultGranulatorConfig();
+        WebSpeechSynthConfig speechSynthConfig = createDefaultSpeechSynthConfig();
+        WebSpeechSynthState speechSynthState = createDefaultSpeechSynthState();
+
+        return new WebScoreServerState(tiles, currentActions, elementStates, WEB_ZOOM_DEFAULT, instructions, granulatorConfig,
+                speechSynthConfig, speechSynthState);
     }
 
     private MutablePageId createTempPage() {
@@ -162,15 +199,16 @@ public class WebScore {
     }
 
     public void resetState() {
-        currentActions.clear();
+        state.clearActions();
+        state.clearElementStates();
+        state.setTiles(new Tile[8][8]);
+        state.setZoomLevel(WEB_ZOOM_DEFAULT);
+
         tilesAll.clear();
         playingTiles.clear();
         playingNextTiles.clear();
         tileIdPageIdMap.clear();
-        elementStates.clear();
         activeTiles.clear();
-        tiles = new Tile[8][8];
-        zoomLevel = WEB_ZOOM_DEFAULT;
 
         for (int i = 0; i < 8; i++) {
             int row = i + 1;
@@ -190,26 +228,26 @@ public class WebScore {
                 TileText txt = t.getTileText();
                 txt.setVisible(false);
                 txt.setValue(EMPTY);
-                tiles[i][j] = t;
+                state.setTile(t, i, j);
                 tilesAll.add(t);
 
                 populateTilePageMap(row, col, id);
             }
         }
 
-        elementStates.put("centreShape", new WebElementState("centreShape"));
-        elementStates.put("innerCircle", new WebElementState("innerCircle"));
-        elementStates.put("outerCircle", new WebElementState("outerCircle"));
+        state.addElementState(WEB_OBJ_CENTRE_SHAPE, new WebElementState(WEB_OBJ_CENTRE_SHAPE));
+        state.addElementState(WEB_OBJ_INNER_CIRCLE, new WebElementState(WEB_OBJ_INNER_CIRCLE));
+        state.addElementState(WEB_OBJ_OUTER_CIRCLE, new WebElementState(WEB_OBJ_OUTER_CIRCLE));
 
-        instructions = new WebTextState("instructions");
-        instructions.setLine1("Welcome to");
-        instructions.setLine2("<span style='color:blueviolet;'>ZScore</span>");
-        instructions.setLine3("awaiting performance start ...");
-        instructions.setVisible(true);
 
-        granulatorConfig = createDefaultGranulatorConfig();
-        speechSynthConfig = createDefaultSpeechSynthConfig();
-        speechSynthState = createDefaultSpeechSynthState();
+        state.setInstructions("Welcome to", 1);
+        state.setInstructions("<span style='color:blueviolet;'>ZScore</span>", 2);
+        state.setInstructions("awaiting performance start ...", 3);
+        state.setInstructionsVisible(true);
+
+        state.setGranulatorConfig(createDefaultGranulatorConfig());
+        state.setSpeechSynthConfig(createDefaultSpeechSynthConfig());
+        state.setSpeechSynthState(createDefaultSpeechSynthState());
 
         updateServerState();
     }
@@ -293,15 +331,6 @@ public class WebScore {
         }
     }
 
-    public void initTestScore() {
-        if (events.isEmpty()) {
-            events.addAll(playedEvents);
-            playedEvents.clear();
-        }
-        testScoreRunner = new TestScoreRunner(events);
-        testScoreRunner.init();
-    }
-
     public void deactivateRows(int[] rows) {
         for (int row : rows) {
             deactivateRow(row);
@@ -309,6 +338,7 @@ public class WebScore {
     }
 
     public void deactivateRow(int row) {
+        Tile[][] tiles = state.getTiles();
         if (row < 1 || row > tiles.length) {
             LOG.warn("deactivateTiles: invalid row: " + row);
         }
@@ -443,9 +473,6 @@ public class WebScore {
 
     public void startScore() {
         LOG.info("startScore: ");
-        if (testScoreRunner != null) {
-            testScoreRunner.start();
-        }
     }
 
     public void updateServerStateAndPush() {
@@ -453,12 +480,8 @@ public class WebScore {
         pushServerState();
     }
 
-    public void updateServerStateDeltaAndPush(WebScoreStateDelta webScoreStateDelta) {
-        updateServerStateDelta(webScoreStateDelta);
-        pushServerStateDelta();
-    }
-
     public void setVisibleRows(int[] rows) {
+        Tile[][] tiles = state.getTiles();
         TIntList tintRows = new TIntArrayList(rows);
         for (int i = 0; i < 8; i++) {
             int row = i + 1;
@@ -472,7 +495,7 @@ public class WebScore {
     }
 
     public void setZoomLevel(String zoomLevel) {
-        this.zoomLevel = zoomLevel;
+        state.setZoomLevel(zoomLevel);
     }
 
     public void setInstructions(String l1, String l2, String l3) {
@@ -488,19 +511,19 @@ public class WebScore {
     }
 
     public void setInstructions(String l1, String l2, String l3, String colour, boolean isVisible) {
-        this.instructions.setLine1(l1);
-        this.instructions.setLine2(l2);
-        this.instructions.setLine3(l3);
-        this.instructions.setColour(colour);
-        this.instructions.setVisible(isVisible);
+        state.setInstructions(l1, 1);
+        state.setInstructions(l2, 2);
+        state.setInstructions(l3, 3);
+        state.setInstructionsColour(colour);
+        state.setInstructionsVisible(isVisible);
     }
 
     public void setVisible(String[] elementIds, boolean isVisible) {
         LOG.info("setVisible: {}", Arrays.toString(elementIds));
         for (String elementId : elementIds) {
-            WebElementState state = elementStates.get(elementId);
-            if (state != null) {
-                state.setVisible(isVisible);
+            WebElementState elementState = state.getElementState(elementId);
+            if (elementState != null) {
+                elementState.setVisible(isVisible);
             }
         }
     }
@@ -599,6 +622,7 @@ public class WebScore {
     public Tile getNextTileToPlay(Tile tile) {
         int col = tile.getColumn() - 1;
         int row = tile.getRow() - 1;
+        Tile[][] tiles = state.getTiles();
         for (int j = col + 1; j < tiles[row].length; j++) {
             Tile next = tiles[row][++col];
             if (!next.getState().isPlayed()) {
@@ -691,6 +715,7 @@ public class WebScore {
 
     public void setActiveRows(int[] rows) {
         LOG.info("setActiveRows: {}", Arrays.toString(rows));
+        Tile[][] tiles = state.getTiles();
         TIntList tintRows = new TIntArrayList(rows);
         for (int i = 0; i < 8; i++) {
             int row = i + 1;
@@ -705,7 +730,7 @@ public class WebScore {
     }
 
     public void resetActions() {
-        currentActions.clear();
+        state.clearActions();
     }
 
     public void setAction(String actionId, String type, String[] targetIds) {
@@ -716,7 +741,7 @@ public class WebScore {
         LOG.info("setAction: {} target: {}", actionId, Arrays.toString(targetIds));
         try {
             WebAction action = createAction(actionId, type, targetIds, params);
-            currentActions.add(action);
+            state.addAction(action);
         } catch (IllegalArgumentException e) {
             LOG.error("Failed to setAction id: {} type: {}", actionId, type);
         }
@@ -739,17 +764,14 @@ public class WebScore {
 
     public void sendGranulatorConfig() {
         String[] target = {WEB_GRANULATOR};
-        Map<String, Object> params = granulatorConfig.toJsMap();
+        Map<String, Object> params = state.getGranulatorConfig().toJsMap();
         setAction(WEB_ACTION_ID_CONFIG, WebActionType.AUDIO.name(), target, params);
     }
 
     public void playGranulator() {
         String[] target = {WEB_GRANULATOR};
         WebAction action = createAction(WEB_ACTION_ID_PLAY, WebActionType.AUDIO.name(), target, null);
-        List<WebAction> actions = new ArrayList<>(1);
-        actions.add(action);
-        WebScoreStateDelta webScoreStateDelta = createServerStateDelta();
-        webScoreStateDelta.setActions(actions);
+        state.addAction(action);
     }
 
     public void stopGranulator() {
@@ -758,12 +780,12 @@ public class WebScore {
     }
 
     public void validateGranulatorConfig() {
-        granulatorConfig.validate();
+        state.getGranulatorConfig().validate();
     }
 
     public void granulatorRampLinear(String paramName, Object endValue, int durationMs) {
         String[] target = {WEB_GRANULATOR};
-        Map<String, Object> params = granulatorConfig.toJsMap();
+        Map<String, Object> params = state.getGranulatorConfig().toJsMap();
         params.put(WEB_CONFIG_PARAM_NAME, paramName);
         params.put(WEB_CONFIG_END_VALUE, endValue);
         params.put(WEB_CONFIG_DURATION, durationMs);
@@ -772,7 +794,7 @@ public class WebScore {
 
     public void granulatorRampSin(String paramName, Double amplitude, Double frequency, int durationMs) {
         String[] target = {WEB_GRANULATOR};
-        Map<String, Object> params = granulatorConfig.toJsMap();
+        Map<String, Object> params = state.getGranulatorConfig().toJsMap();
         params.put(WEB_CONFIG_PARAM_NAME, paramName);
         params.put(WEB_CONFIG_AMPLITUDE, amplitude);
         params.put(WEB_CONFIG_FREQUENCY, frequency);
@@ -782,52 +804,52 @@ public class WebScore {
 
     public void sendSpeechSynthConfig() {
         String[] target = {WEB_SPEECH_SYNTH};
-        Map<String, Object> params = speechSynthConfig.toJsMap();
+        Map<String, Object> params = state.getGranulatorConfig().toJsMap();
         setAction(WEB_ACTION_ID_CONFIG, WebActionType.AUDIO.name(), target, params);
     }
 
     public void validateSpeechSynthConfig() {
-        speechSynthConfig.validate();
+        state.getGranulatorConfig().validate();
     }
 
     public void sendSpeechSynthState() {
         String[] target = {WEB_SPEECH_SYNTH};
-        Map<String, Object> params = speechSynthState.toJsMap();
+        Map<String, Object> params = state.getSpeechSynthState().toJsMap();
         setAction(WEB_ACTION_ID_STATE, WebActionType.AUDIO.name(), target, params);
     }
 
     public void validateSpeechSynthState() {
-        speechSynthState.validate();
+        state.getSpeechSynthState().validate();
     }
 
     public void enableSpeechSynth() {
-        speechSynthState.setPlaySpeechSynthOnClick(true);
+        state.getSpeechSynthState().setPlaySpeechSynthOnClick(true);
         sendSpeechSynthState();
     }
 
     public void disableSpeechSynth() {
-        speechSynthState.setPlaySpeechSynthOnClick(false);
+        state.getSpeechSynthState().setPlaySpeechSynthOnClick(false);
         sendSpeechSynthState();
     }
 
     public void setSpeechText(String text) {
-        speechSynthState.setSpeechText(text);
+        state.getSpeechSynthState().setSpeechText(text);
         sendSpeechSynthState();
     }
 
     public void setSpeechVoice(String voice) {
-        speechSynthState.setSpeechVoice(voice);
+        state.getSpeechSynthState().setSpeechVoice(voice);
         sendSpeechSynthState();
     }
 
     public void setSpeechInterrupt(boolean isInterrupt) {
-        speechSynthState.setSpeechIsInterrupt(isInterrupt);
+        state.getSpeechSynthState().setSpeechIsInterrupt(isInterrupt);
         sendSpeechSynthState();
     }
 
     public void speak() {
         String[] target = {WEB_SPEECH_SYNTH};
-        Map<String, Object> params = speechSynthState.toJsMap();
+        Map<String, Object> params = state.getSpeechSynthState().toJsMap();
         setAction(WEB_ACTION_ID_PLAY, WebActionType.AUDIO.name(), target, params);
     }
 
@@ -836,21 +858,21 @@ public class WebScore {
             LOG.warn("speak: Invalid text to speak: {}", text);
         }
         String[] target = {WEB_SPEECH_SYNTH};
-        Map<String, Object> params = speechSynthState.toJsMap();
+        Map<String, Object> params = state.getSpeechSynthState().toJsMap();
         params.put(WEB_CONFIG_SPEECH_TEXT, text);
         setAction(WEB_ACTION_ID_PLAY, WebActionType.AUDIO.name(), target, params);
     }
 
     public void stopSpeech() {
         String[] target = {WEB_SPEECH_SYNTH};
-        Map<String, Object> params = speechSynthState.toJsMap();
+        Map<String, Object> params = state.getSpeechSynthState().toJsMap();
         setAction(WEB_ACTION_ID_STOP, WebActionType.AUDIO.name(), target, params);
     }
 
     public void setSpeechSynthConfigParam(String name, Object value) {
         try {
             LOG.info("setSpeechSynthConfigParam: setting config param: {} value: {}", name, value);
-            WebSpeechSynthConfig config = this.speechSynthConfig;
+            WebSpeechSynthConfig config = state.getSpeechSynthConfig();
             switch (name) {
                 case WEB_CONFIG_VOLUME:
                     try {
@@ -932,43 +954,43 @@ public class WebScore {
             Object value = params.get(param);
             setSpeechSynthConfigParam(param, value);
         }
-        this.speechSynthConfig.validate();
-        LOG.info("setSpeechSynthConfig: new config: {}", speechSynthConfig);
+        state.getSpeechSynthConfig().validate();
+        LOG.info("setSpeechSynthConfig: new config: {}", state.getSpeechSynthConfig());
     }
 
     public WebSpeechSynthConfig getSpeechSynthConfig() {
-        return speechSynthConfig;
+        return state.getSpeechSynthConfig();
     }
 
     public void setSpeechSynthStateParam(String name, Object value) {
         try {
             LOG.info("setSpeechSynthStateParam: setting config param: {} value: {}", name, value);
-            WebSpeechSynthState state = this.speechSynthState;
+            WebSpeechSynthState speechSynthState = state.getSpeechSynthState();
             switch (name) {
                 case WEB_CONFIG_IS_PLAY_SPEECH_ON_CLICK:
                     try {
-                        state.setPlaySpeechSynthOnClick(getBoolean(value));
+                        speechSynthState.setPlaySpeechSynthOnClick(getBoolean(value));
                     } catch (Exception e) {
                         LOG.error("setSpeechSynthStateParam: Failed to set PlaySpeechSynthOnClick", e);
                     }
                     break;
                 case WEB_CONFIG_SPEECH_TEXT:
                     try {
-                        state.setSpeechText(getString(value));
+                        speechSynthState.setSpeechText(getString(value));
                     } catch (Exception e) {
                         LOG.error("setSpeechSynthStateParam: Failed to set SpeechText", e);
                     }
                     break;
                 case WEB_CONFIG_SPEECH_VOICE:
                     try {
-                        state.setSpeechVoice(getString(value));
+                        speechSynthState.setSpeechVoice(getString(value));
                     } catch (Exception e) {
                         LOG.error("setSpeechSynthStateParam: Failed to set SpeechVoice", e);
                     }
                     break;
                 case WEB_CONFIG_SPEECH_IS_INTERRUPT:
                     try {
-                        state.setSpeechIsInterrupt(getBoolean(value));
+                        speechSynthState.setSpeechIsInterrupt(getBoolean(value));
                     } catch (Exception e) {
                         LOG.error("setSpeechSynthStateParam: Failed to set SpeechIsInterrupt", e);
                     }
@@ -990,12 +1012,8 @@ public class WebScore {
             Object value = params.get(param);
             setSpeechSynthStateParam(param, value);
         }
-        this.speechSynthState.validate();
-        LOG.info("setSpeechSynthState: new config: {}", speechSynthState);
-    }
-
-    public WebSpeechSynthState getSpeechSynthState() {
-        return speechSynthState;
+        state.getSpeechSynthState().validate();
+        LOG.info("setSpeechSynthState: new config: {}", state.getSpeechSynthState());
     }
 
     public void setGranulatorConfigParam(String name, Object value) {
@@ -1030,7 +1048,7 @@ public class WebScore {
 
     public void setGranulatorBaseConfig(String name, Object value) {
         LOG.info("setGranulatorBaseConfig: setting config param: {} value: {}", name, value);
-        WebGranulatorConfig config = this.granulatorConfig;
+        WebGranulatorConfig config = state.getGranulatorConfig();
         switch (name) {
             case WEB_CONFIG_MASTER_GAIN_VAL:
                 try {
@@ -1088,16 +1106,16 @@ public class WebScore {
             Object value = params.get(param);
             setGranulatorConfigParam(param, value);
         }
-        this.granulatorConfig.validate();
-        LOG.info("setGranulatorConfig: new config: {}", granulatorConfig);
+        state.getGranulatorConfig().validate();
+        LOG.info("setGranulatorConfig: new config: {}", state.getGranulatorConfig());
     }
 
     public WebGranulatorConfig getGranulatorConfig() {
-        return granulatorConfig;
+        return state.getGranulatorConfig();
     }
 
     private void setGranulatorPannerConfig(String name, Object value) {
-        PannerConfig config = granulatorConfig.getPanner();
+        WebPannerConfig config = state.getGranulatorConfig().getPanner();
         switch (name) {
             case WEB_CONFIG_IS_USE_PANNER:
                 try {
@@ -1135,7 +1153,7 @@ public class WebScore {
     }
 
     private void setGrainConfig(String name, Object value) {
-        GrainConfig config = this.granulatorConfig.getGrain();
+        WebGrainConfig config = state.getGranulatorConfig().getGrain();
         switch (name) {
             case WEB_CONFIG_SIZE_MS:
                 try {
@@ -1178,7 +1196,7 @@ public class WebScore {
     }
 
     private void setGranulatorEnvelopeConfig(String name, Object value) {
-        EnvelopeConfig config = granulatorConfig.getEnvelope();
+        WebEnvelopeConfig config = state.getGranulatorConfig().getEnvelope();
         switch (name) {
             case WEB_CONFIG_ATTACK_TIME:
                 try {
@@ -1230,6 +1248,7 @@ public class WebScore {
 
     private Tile getTile(String tileId) {
         try {
+            Tile[][] tiles = state.getTiles();
             int start = tileId.indexOf(Consts.WEB_TILE_PREFIX) + 1;
             int end = tileId.indexOf(Consts.WEB_ELEMENT_NAME_DELIMITER);
             String s = tileId.substring(start, end);
@@ -1256,25 +1275,48 @@ public class WebScore {
         return null;
     }
 
-    public WebScoreState exportState() {
-        Tile[][] ts = new Tile[tiles.length][tiles[0].length];
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                Tile t = tiles[i][j];
-                Tile ot = new Tile(t.getRow(), t.getColumn(), t.getId());
-                t.copyTo(ot);
-                ts[i][j] = ot;
-            }
-        }
-        WebElementState centreShape = elementStates.get("centreShape");
-        WebElementState innerCircle = elementStates.get("innerCircle");
-        WebElementState outerCircle = elementStates.get("outerCircle");
-
-        return new WebScoreState(ts, currentActions, centreShape, innerCircle, outerCircle, zoomLevel, instructions);
+    public WebScoreStateExport createExportDelta() {
+        return null;
     }
 
-    public WebScoreStateDelta createServerStateDelta() {
-        return new WebScoreStateDelta();
+    public WebScoreStateExport exportState() {
+        Tile[][] tiles = state.getTiles();
+        TileExport[][] tes = new TileExport[tiles.length][tiles[0].length];
+        for (int i = 0; i < tiles.length; i++) {
+            for (int j = 0; j < tiles[0].length; j++) {
+                Tile t = tiles[i][j];
+                TileExport te = new TileExport();
+                te.populate(t);
+                tes[i][j] = te;
+            }
+        }
+
+        WebElementStateExport centreShape = new WebElementStateExport();
+        centreShape.populate(state.getElementState(WEB_OBJ_CENTRE_SHAPE));
+
+        WebElementStateExport innerCircle = new WebElementStateExport();
+        innerCircle.populate(state.getElementState(WEB_OBJ_INNER_CIRCLE));
+
+        WebElementStateExport outerCircle = new WebElementStateExport();
+        outerCircle.populate(state.getElementState(WEB_OBJ_OUTER_CIRCLE));
+
+        WebInstructionsExport instructions = new WebInstructionsExport();
+        instructions.populate(state.getInstructions());
+
+        WebGranulatorConfigExport granulatorConfig = new WebGranulatorConfigExport();
+        granulatorConfig.populate(state.getGranulatorConfig());
+
+        WebSpeechSynthConfigExport speechSynthConfigExport = new WebSpeechSynthConfigExport();
+        speechSynthConfigExport.populate(state.getSpeechSynthConfig());
+
+        WebSpeechSynthStateExport speechSynthStateExport = new WebSpeechSynthStateExport();
+        speechSynthStateExport.populate(state.getSpeechSynthState());
+
+        List<WebAction> actions = state.getActions();
+        LOG.info("WebScoreStateExport sending actions: {}", actions);
+
+        return new WebScoreStateExport(tes, actions, centreShape, innerCircle, outerCircle, state.getZoomLevel(),
+                instructions, granulatorConfig, speechSynthConfigExport, speechSynthStateExport);
     }
 
     public void updateServerState() {
@@ -1282,14 +1324,6 @@ public class WebScore {
             scoreProcessor.onWebScoreStateChange(exportState());
         } catch (Exception e) {
             LOG.error("Failed to process updateServerState", e);
-        }
-    }
-
-    public void updateServerStateDelta(WebScoreStateDelta webScoreStateDelta) {
-        try {
-            scoreProcessor.onWebScoreStateDeltaChange(webScoreStateDelta);
-        } catch (Exception e) {
-            LOG.error("Failed to process updateServerStateDelta", e);
         }
     }
 
@@ -1316,7 +1350,7 @@ public class WebScore {
         WebScoreEventType type = event.getWebScoreEventType();
         try {
             resetActions();
-            boolean isSendStateUpdate = false;
+            boolean isSendStateUpdate = true;
             switch (type) {
                 case INSTRUCTIONS:
                     isSendStateUpdate = processInstructionsEvent((WebScoreInstructionsEvent) event);
@@ -1396,17 +1430,17 @@ public class WebScore {
     }
 
     private WebSpeechSynthConfig createDefaultSpeechSynthConfig() {
-        WebSpeechSynthConfig speechSynthConfig = new WebSpeechSynthConfig();
+        WebSpeechSynthConfig speechSynthConfig = new WebSpeechSynthConfig(pcs);
         return speechSynthConfig;
     }
 
     private WebSpeechSynthState createDefaultSpeechSynthState() {
-        WebSpeechSynthState webSpeechSynthState = new WebSpeechSynthState();
+        WebSpeechSynthState webSpeechSynthState = new WebSpeechSynthState(pcs);
         return webSpeechSynthState;
     }
 
     private WebGranulatorConfig createDefaultGranulatorConfig() {
-        WebGranulatorConfig granulatorConfig = new WebGranulatorConfig();
+        WebGranulatorConfig granulatorConfig = new WebGranulatorConfig(pcs);
         return granulatorConfig;
     }
 
@@ -1484,7 +1518,7 @@ public class WebScore {
             this.row = row;
             this.column = column;
             this.state = new WebElementState(id);
-            this.tileText = new TileText(EMPTY, false);
+            this.tileText = new TileText(EMPTY, false, this);
         }
 
         public WebElementState getState() {
@@ -1493,15 +1527,18 @@ public class WebScore {
 
         public void setState(WebElementState state) {
             state.copyTo(this.state);
+            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, state.getId(), this);
         }
 
         public void setText(TileText txt) {
             txt.copyTo(this.tileText);
+            pcs.firePropertyChange(WEB_OBJ_TILE_TEXT, this.id, this);
         }
 
         public void setText(String txt) {
             tileText.setValue(txt);
             tileText.setVisible(true);
+            pcs.firePropertyChange(WEB_OBJ_TILE_TEXT, this.id, this);
         }
 
         public String getId() {
@@ -1512,8 +1549,16 @@ public class WebScore {
             return row;
         }
 
+        public int getRowIndex() {
+            return row - 1;
+        }
+
         public int getColumn() {
             return column;
+        }
+
+        public int getColumnIndex() {
+            return column - 1;
         }
 
         public TileText getTileText() {
@@ -1552,10 +1597,12 @@ public class WebScore {
     public class TileText {
         private String value;
         private boolean isVisible;
+        private final Tile parent;
 
-        public TileText(String value, boolean isVisible) {
+        public TileText(String value, boolean isVisible, Tile parent) {
             this.value = value;
             this.isVisible = isVisible;
+            this.parent = parent;
         }
 
         public String getValue() {
@@ -1568,10 +1615,16 @@ public class WebScore {
 
         public void setValue(String value) {
             this.value = value;
+            pcs.firePropertyChange(WEB_OBJ_TILE_TEXT, parent.getId(), parent);
         }
 
         public void setVisible(boolean visible) {
             isVisible = visible;
+            pcs.firePropertyChange(WEB_OBJ_TILE_TEXT, parent.getId(), parent);
+        }
+
+        public Tile getParent() {
+            return parent;
         }
 
         public void copyTo(TileText other) {
@@ -1580,61 +1633,349 @@ public class WebScore {
         }
     }
 
-    public class Grid {
+    public class WebElementState {
         private final String id;
-        private final WebElementState state;
+        private boolean isActive;
+        private boolean isPlaying;
+        private boolean isPlayingNext;
+        private boolean isPlayed;
+        private boolean isVisible;
+        private boolean isSelected;
+        private int clickCount;
 
-        public Grid(String id) {
+        public WebElementState(String id) {
             this.id = id;
-            state = new WebElementState(id);
-        }
-
-        public WebElementState getState() {
-            return state;
         }
 
         public String getId() {
             return id;
         }
+
+        public int getClickCount() {
+            return clickCount;
+        }
+
+        public void setClickCount(int clickCount) {
+            this.clickCount = clickCount;
+            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+        }
+
+        public void incrementClickCount() {
+            this.clickCount++;
+            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+        }
+
+        public void decrementClickCount() {
+            this.clickCount--;
+            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+        }
+
+        public boolean isActive() {
+            return isActive;
+        }
+
+        public void setActive(boolean active) {
+            isActive = active;
+            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+        }
+
+        public boolean isVisible() {
+            return isVisible;
+        }
+
+        public void setVisible(boolean visible) {
+            isVisible = visible;
+            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+        }
+
+        public boolean isPlaying() {
+            return isPlaying;
+        }
+
+        public void setPlaying(boolean playing) {
+            isPlaying = playing;
+            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+        }
+
+        public boolean isSelected() {
+            return isSelected;
+        }
+
+        public void setSelected(boolean selected) {
+            isSelected = selected;
+            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+        }
+
+        public boolean isPlayingNext() {
+            return isPlayingNext;
+        }
+
+        public void setPlayingNext(boolean playingNext) {
+            isPlayingNext = playingNext;
+            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+        }
+
+        public boolean isPlayed() {
+            return isPlayed;
+        }
+
+        public void setPlayed(boolean played) {
+            isPlayed = played;
+            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+        }
+
+        public void copyTo(WebElementState other) {
+            other.setClickCount(getClickCount());
+            other.setActive(isActive());
+            other.setVisible(isVisible());
+            other.setPlaying(isPlaying());
+            other.setPlayingNext(isPlayingNext());
+            other.setPlayed(isPlayed());
+        }
+
+        @Override
+        public String toString() {
+            return "WebElementState{" +
+                    "id='" + id + '\'' +
+                    ", isActive=" + isActive +
+                    ", isPlaying=" + isPlaying +
+                    ", isPlayingNext=" + isPlayingNext +
+                    ", isPlayed=" + isPlayed +
+                    ", isVisible=" + isVisible +
+                    ", clickCount=" + clickCount +
+                    '}';
+        }
     }
 
-    public class TestScoreRunner {
-        private Thread runner;
-        private final LinkedList<WebScoreEvent> events;
-        private volatile boolean isRunning;
+    public class WebTextState {
+        private final String id;
+        private boolean isVisible = false;
+        private String colour = WEB_TEXT_BACKGROUND_COLOUR;
+        private String[] lines;
 
-        public TestScoreRunner(LinkedList<WebScoreEvent> events) {
-            this.events = events;
+        public WebTextState(String id, int lineNo) {
+            this.id = id;
+            this.lines = new String[lineNo];
+            initLines();
         }
 
-        public void init() {
-            runner = new Thread(() -> {
-                isRunning = true;
-                LOG.info("TestScoreRunner START");
-                try {
-                    Thread.sleep(3000);
-
-                    while (!events.isEmpty()) {
-                        WebScoreEvent event = events.remove();
-                        processWebScoreEvent(event);
-                        playedEvents.add(event);
-                        Thread.sleep(3000);
-                    }
-
-                } catch (Exception e) {
-                    LOG.error("Interrupted TestScoreRunner", e);
-                }
-                LOG.info("TestScoreRunner END");
-                isRunning = false;
-            });
+        private void initLines() {
+            Arrays.fill(lines, EMPTY);
         }
 
-        public void start() {
-            if (isRunning) {
+        public String getId() {
+            return id;
+        }
+
+        public boolean isVisible() {
+            return isVisible;
+        }
+
+        public void setVisible(boolean visible) {
+            isVisible = visible;
+            pcs.firePropertyChange(WEB_OBJ_WEB_TEXT, id, this);
+        }
+
+        public int getLineNo() {
+            return lines.length;
+        }
+
+        public String[] getLines() {
+            return lines;
+        }
+
+        public String getLine(int lineNo) {
+            if (lineNo < 0 || lineNo > lines.length) {
+                return null;
+            }
+            return lines[lineNo - 1];
+        }
+
+        public void setLine(String line, int lineNo) {
+            if (lineNo < 0 || lineNo > lines.length) {
+                LOG.error("WebTextState setLine: Invalid line No: {}", lineNo);
                 return;
             }
-            runner.start();
+            this.lines[lineNo - 1] = line;
+            pcs.firePropertyChange(WEB_OBJ_WEB_TEXT, id, this);
         }
 
+        public String getColour() {
+            return colour;
+        }
+
+        public void setColour(String colour) {
+            this.colour = colour;
+            pcs.firePropertyChange(WEB_OBJ_WEB_TEXT, id, this);
+        }
+
+        public void copyTo(WebTextState other) {
+            other.setVisible(isVisible());
+            other.setColour(getColour());
+            for (int i = 0; i < lines.length; i++) {
+                other.setLine(this.lines[i], i + 1);
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "WebTextState{" +
+                    "id='" + id + '\'' +
+                    ", isVisible = " + isVisible +
+                    ", colour = " + colour +
+                    ", lines = " + Arrays.toString(lines) +
+                    '}';
+        }
+    }
+
+    public class WebScoreServerState {
+        private volatile WebScore.Tile[][] tiles;
+        private final List<WebAction> actions;
+        private volatile String zoomLevel;
+        private final Map<String, WebElementState> elementStates;
+        private final WebTextState instructions;
+        private volatile WebGranulatorConfig granulatorConfig;
+        private volatile WebSpeechSynthConfig speechSynthConfig;
+        private volatile WebSpeechSynthState speechSynthState;
+
+        public WebScoreServerState(WebScore.Tile[][] tiles, List<WebAction> currentActions, Map<String, WebElementState> elementStates,
+                                   String zoomLevel, WebTextState instructions, WebGranulatorConfig granulatorConfig,
+                                   WebSpeechSynthConfig speechSynthConfig, WebSpeechSynthState speechSynthState) {
+            this.tiles = tiles;
+            this.actions = currentActions;
+            this.elementStates = elementStates;
+            this.zoomLevel = zoomLevel;
+            this.instructions = instructions;
+            this.granulatorConfig = granulatorConfig;
+            this.speechSynthConfig = speechSynthConfig;
+            this.speechSynthState = speechSynthState;
+        }
+
+        public WebScore.Tile[][] getTiles() {
+            return tiles;
+        }
+
+        public void setTiles(WebScore.Tile[][] tiles) {
+            this.tiles = tiles;
+            pcs.firePropertyChange(WEB_OBJ_TILES, WEB_OBJ_TILES, tiles);
+        }
+
+        public void setTile(WebScore.Tile tile, int i, int j) {
+            this.tiles[i][j] = tile;
+            pcs.firePropertyChange(WEB_OBJ_TILE, tile.getId(), tile);
+        }
+
+        public List<WebAction> getActions() {
+            return actions;
+        }
+
+        public void clearActions() {
+            actions.clear();
+            pcs.firePropertyChange(WEB_OBJ_ACTIONS, WEB_OBJ_ACTIONS, null);
+        }
+
+        public void addAction(WebAction action) {
+            if (action == null) {
+                return;
+            }
+            LOG.info("WebScoreServerState addAction: {}", action);
+            actions.add(action);
+            pcs.firePropertyChange(WEB_OBJ_ACTIONS, action.getId(), action);
+        }
+
+        public Map<String, WebElementState> getElementStates() {
+            return elementStates;
+        }
+
+        public void clearElementStates() {
+            elementStates.clear();
+            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, WEB_OBJ_ELEMENT_STATE, null);
+        }
+
+        public WebElementState getElementState(String key) {
+            return elementStates.get(key);
+        }
+
+        public void addElementState(String key, WebElementState elementState) {
+            elementStates.put(key, elementState);
+            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, key, elementState);
+        }
+
+        public WebElementState getCentreShape() {
+            return elementStates.get(WEB_OBJ_CENTRE_SHAPE);
+        }
+
+        public WebElementState getInnerCircle() {
+            return elementStates.get(WEB_OBJ_INNER_CIRCLE);
+        }
+
+        public WebElementState getOuterCircle() {
+            return elementStates.get(WEB_OBJ_OUTER_CIRCLE);
+        }
+
+        public String getZoomLevel() {
+            return zoomLevel;
+        }
+
+        public void setZoomLevel(String zoomLevel) {
+            this.zoomLevel = zoomLevel;
+            pcs.firePropertyChange(WEB_OBJ_ZOOM_LEVEL, WEB_OBJ_ZOOM_LEVEL, zoomLevel);
+        }
+
+        public WebTextState getInstructions() {
+            return instructions;
+        }
+
+        public void setInstructions(String value, int lineNo) {
+            instructions.setLine(value, lineNo);
+            pcs.firePropertyChange(WEB_OBJ_INSTRUCTIONS, instructions.getId(), value);
+        }
+
+        public void setInstructionsVisible(boolean isVisible) {
+            instructions.setVisible(isVisible);
+            pcs.firePropertyChange(WEB_OBJ_INSTRUCTIONS, instructions.getId(), isVisible);
+        }
+
+        public void setInstructionsColour(String colour) {
+            instructions.setColour(colour);
+            pcs.firePropertyChange(WEB_OBJ_INSTRUCTIONS, instructions.getId(), colour);
+        }
+
+        public WebGranulatorConfig getGranulatorConfig() {
+            return granulatorConfig;
+        }
+
+        public WebSpeechSynthConfig getSpeechSynthConfig() {
+            return speechSynthConfig;
+        }
+
+        public WebSpeechSynthState getSpeechSynthState() {
+            return speechSynthState;
+        }
+
+        public void setGranulatorConfig(WebGranulatorConfig granulatorConfig) {
+            this.granulatorConfig = granulatorConfig;
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_OBJ_CONFIG_GRANULATOR, granulatorConfig);
+        }
+
+        public void setSpeechSynthConfig(WebSpeechSynthConfig speechSynthConfig) {
+            this.speechSynthConfig = speechSynthConfig;
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_OBJ_CONFIG_SPEECH_SYNTH, speechSynthConfig);
+        }
+
+        public void setSpeechSynthState(WebSpeechSynthState speechSynthState) {
+            this.speechSynthState = speechSynthState;
+            pcs.firePropertyChange(WEB_OBJ_STATE_SPEECH_SYNTH, WEB_OBJ_STATE_SPEECH_SYNTH, speechSynthState);
+        }
+    }
+
+    public class WebScoreChangeListener implements PropertyChangeListener {
+        public void propertyChange(PropertyChangeEvent e) {
+            String propertyName = e.getPropertyName();
+            Object id = e.getOldValue();
+            Object newValue = e.getNewValue();
+            Object propagationId = e.getPropagationId();
+            LOG.info("WebScoreChangeListener: received propertyName: {} id: {} newValue: {} propagationId: {}", propertyName, id, newValue, propagationId);
+        }
     }
 }

@@ -2,6 +2,10 @@ package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.model.ScriptPreset;
+import com.xenaksys.szcore.score.web.WebscorePageRangeAssignmentType;
+import com.xenaksys.szcore.score.web.config.WebscoreConfig;
+import com.xenaksys.szcore.score.web.config.WebscoreConfigLoader;
+import com.xenaksys.szcore.score.web.config.WebscorePageRangeConfig;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import org.junit.Before;
 import org.junit.Test;

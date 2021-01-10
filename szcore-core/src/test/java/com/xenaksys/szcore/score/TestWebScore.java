@@ -6,6 +6,11 @@ import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.IntId;
+import com.xenaksys.szcore.score.web.WebScore;
+import com.xenaksys.szcore.score.web.WebScoreScript;
+import com.xenaksys.szcore.score.web.config.WebEnvelopeConfig;
+import com.xenaksys.szcore.score.web.config.WebGranulatorConfig;
+import com.xenaksys.szcore.score.web.config.WebSpeechSynthConfig;
 import com.xenaksys.szcore.time.TstClock;
 import org.junit.Before;
 import org.junit.Test;
@@ -89,7 +94,7 @@ public class TestWebScore {
         PannerDistanceModel distanceModel = PannerDistanceModel.fromName(granulatorConfig.getPanner().getPanningModel());
         assertEquals(PannerDistanceModel.LINEAR, distanceModel);
 
-        EnvelopeConfig envelopeConfig = granulatorConfig.getEnvelope();
+        WebEnvelopeConfig envelopeConfig = granulatorConfig.getEnvelope();
         double attack = envelopeConfig.getAttackTime();
         assertEquals(0.6, attack, 10e-5);
         double release = envelopeConfig.getReleaseTime();
@@ -126,7 +131,7 @@ public class TestWebScore {
         PannerDistanceModel distanceModel = PannerDistanceModel.fromName(granulatorConfig.getPanner().getPanningModel());
         assertEquals(PannerDistanceModel.LINEAR, distanceModel);
 
-        EnvelopeConfig envelopeConfig = granulatorConfig.getEnvelope();
+        WebEnvelopeConfig envelopeConfig = granulatorConfig.getEnvelope();
         double attack = envelopeConfig.getAttackTime();
         assertEquals(0.6, attack, 10e-5);
         double release = envelopeConfig.getReleaseTime();

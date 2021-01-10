@@ -1,9 +1,9 @@
 package com.xenaksys.szcore.web;
 
+import com.xenaksys.szcore.score.web.export.WebScoreStateExport;
+
 public interface WebScoreStateListener {
 
-    void onWebScoreStateChange(WebScoreState webScoreState);
-
-    void onWebScoreStateDeltaChange(WebScoreStateDelta webScoreStateDelta);
+    void onWebScoreStateChange(WebScoreStateExport webScoreStateExport);
 
 }

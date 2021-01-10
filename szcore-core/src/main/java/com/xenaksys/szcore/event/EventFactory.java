@@ -11,7 +11,7 @@ import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.score.ScriptingEngineScript;
-import com.xenaksys.szcore.score.WebScoreScript;
+import com.xenaksys.szcore.score.web.WebScoreScript;
 import com.xenaksys.szcore.web.WebConnection;
 
 import java.net.InetAddress;

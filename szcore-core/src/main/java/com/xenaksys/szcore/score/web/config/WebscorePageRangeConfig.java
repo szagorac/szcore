@@ -1,6 +1,7 @@
-package com.xenaksys.szcore.score;
+package com.xenaksys.szcore.score.web.config;
 
 import com.xenaksys.szcore.algo.IntRange;
+import com.xenaksys.szcore.score.web.WebscorePageRangeAssignmentType;
 
 public class WebscorePageRangeConfig {
 

@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.score;
+package com.xenaksys.szcore.score.web;
 
 
 public class WebScoreElement {

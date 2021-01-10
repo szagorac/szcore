@@ -11,7 +11,7 @@ import com.xenaksys.szcore.model.OscPublisher;
 import com.xenaksys.szcore.model.Scheduler;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.Transport;
-import com.xenaksys.szcore.score.WebScore;
+import com.xenaksys.szcore.score.web.WebScore;
 
 public class PrecountBeatSetupTask extends EventMusicTask {
     private final Transport transport;

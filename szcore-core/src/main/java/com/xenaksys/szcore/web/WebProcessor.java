@@ -16,6 +16,7 @@ import com.xenaksys.szcore.model.Processor;
 import com.xenaksys.szcore.model.ScoreService;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.ZsResponseType;
+import com.xenaksys.szcore.score.web.export.WebScoreStateExport;
 import com.xenaksys.szcore.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -268,11 +269,11 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     }
 
     @Override
-    public void onWebScoreStateChange(WebScoreState webScoreState) {
-        if (webScoreState == null) {
+    public void onWebScoreStateChange(WebScoreStateExport webScoreStateExport) {
+        if (webScoreStateExport == null) {
             return;
         }
-        String out = GSON.toJson(webScoreState);
+        String out = GSON.toJson(webScoreStateExport);
         int stringLenBytes = Util.getStringLengthUtf8(out);
         long stringLenKb = stringLenBytes / 1024;
         LOG.info("onWebScoreEvent: WebState size: {}Kb json: {}", stringLenKb, out);
@@ -281,21 +282,6 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         }
         this.currentWebScoreState = out;
         this.stateUpdateTime = getClock().getSystemTimeMillis();
-    }
-
-    @Override
-    public void onWebScoreStateDeltaChange(WebScoreStateDelta webScoreStateDelta) {
-        if (webScoreStateDelta == null) {
-            return;
-        }
-        String out = GSON.toJson(webScoreStateDelta);
-        int stringLenBytes = Util.getStringLengthUtf8(out);
-        long stringLenKb = stringLenBytes / 1024;
-        LOG.info("onWebScoreStateDeltaChange: WebState size: {}Kb json: {}", stringLenKb, out);
-        if (stringLenKb > 64) {
-            LOG.error("onWebScoreStateDeltaChange: ### WARNING ### WebState size {}Kb larger than 64Kb", stringLenKb);
-        }
-        this.currentWebScoreStateDelta = out;
     }
 
     public void onOutgoingWebEvent(OutgoingWebEvent webEvent) {

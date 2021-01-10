@@ -1,8 +1,9 @@
-package com.xenaksys.szcore.score;
+package com.xenaksys.szcore.score.web.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.beans.PropertyChangeSupport;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,6 +11,7 @@ import static com.xenaksys.szcore.Consts.WEB_CONFIG_IS_PLAY_SPEECH_ON_CLICK;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_SPEECH_IS_INTERRUPT;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_SPEECH_TEXT;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_SPEECH_VOICE;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_STATE_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_SPEECH_VOICE_RANDOM;
 
 public class WebSpeechSynthState {
@@ -26,12 +28,19 @@ public class WebSpeechSynthState {
     private String speechVoice = DEFAULT_SPEECH_VOICE;
     private boolean speechIsInterrupt = DEFAULT_SPEECH_IS_INTERRUPT;
 
+    private final PropertyChangeSupport pcs;
+
+    public WebSpeechSynthState(PropertyChangeSupport pcs) {
+        this.pcs = pcs;
+    }
+
     public boolean isPlaySpeechSynthOnClick() {
         return isPlaySpeechSynthOnClick;
     }
 
     public void setPlaySpeechSynthOnClick(boolean playSpeechSynthOnClick) {
         isPlaySpeechSynthOnClick = playSpeechSynthOnClick;
+        pcs.firePropertyChange(WEB_OBJ_STATE_SPEECH_SYNTH, WEB_CONFIG_IS_PLAY_SPEECH_ON_CLICK, playSpeechSynthOnClick);
     }
 
     public String getSpeechText() {
@@ -40,6 +49,7 @@ public class WebSpeechSynthState {
 
     public void setSpeechText(String speechText) {
         this.speechText = speechText;
+        pcs.firePropertyChange(WEB_OBJ_STATE_SPEECH_SYNTH, WEB_CONFIG_SPEECH_TEXT, speechText);
     }
 
     public String getSpeechVoice() {
@@ -48,6 +58,7 @@ public class WebSpeechSynthState {
 
     public void setSpeechVoice(String speechVoice) {
         this.speechVoice = speechVoice;
+        pcs.firePropertyChange(WEB_OBJ_STATE_SPEECH_SYNTH, WEB_CONFIG_SPEECH_VOICE, speechVoice);
     }
 
     public boolean isSpeechIsInterrupt() {
@@ -56,14 +67,15 @@ public class WebSpeechSynthState {
 
     public void setSpeechIsInterrupt(boolean speechIsInterrupt) {
         this.speechIsInterrupt = speechIsInterrupt;
+        pcs.firePropertyChange(WEB_OBJ_STATE_SPEECH_SYNTH, WEB_CONFIG_SPEECH_IS_INTERRUPT, speechIsInterrupt);
     }
 
     public boolean validate() {
         if (speechText != null && speechText.isEmpty()) {
-            speechText = DEFAULT_SPEECH_TEXT;
+            setSpeechText(DEFAULT_SPEECH_TEXT);
         }
         if (speechVoice != null && speechVoice.isEmpty()) {
-            speechVoice = DEFAULT_SPEECH_VOICE;
+            setSpeechVoice(DEFAULT_SPEECH_VOICE);
         }
         return true;
     }
@@ -79,7 +91,7 @@ public class WebSpeechSynthState {
 
     public WebSpeechSynthState copy(WebSpeechSynthState to) {
         if (to == null) {
-            to = new WebSpeechSynthState();
+            to = new WebSpeechSynthState(pcs);
         }
         to.setPlaySpeechSynthOnClick(this.isPlaySpeechSynthOnClick);
         to.setSpeechText(this.speechText);

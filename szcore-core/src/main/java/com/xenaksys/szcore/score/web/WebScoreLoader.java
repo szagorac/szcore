@@ -1,18 +1,8 @@
-package com.xenaksys.szcore.score;
+package com.xenaksys.szcore.score.web;
 
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.instrument.BasicInstrument;
 import com.xenaksys.szcore.model.Id;
-import com.xenaksys.szcore.model.Instrument;
-import com.xenaksys.szcore.model.NoteDuration;
-import com.xenaksys.szcore.model.Tempo;
-import com.xenaksys.szcore.model.TempoImpl;
-import com.xenaksys.szcore.model.TimeSignature;
-import com.xenaksys.szcore.model.TimeSignatureImpl;
-import com.xenaksys.szcore.model.id.BarId;
-import com.xenaksys.szcore.model.id.BeatId;
-import com.xenaksys.szcore.model.id.PageId;
-import com.xenaksys.szcore.model.id.StrId;
+import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 
@@ -36,17 +25,17 @@ public class WebScoreLoader {
             "unitBeatNo",       //1
     };
 
-    static WebScore load(String path) throws Exception {
-        if(path != null) {
+    public static WebScore load(String path) throws Exception {
+        if (path != null) {
             File file = FileUtil.getFileFromClassPath(path);
             return load(file);
         }
         return null;
     }
 
-    static WebScore load(File file) throws Exception {
-        if(file == null) {
-           return null;
+    public static WebScore load(File file) throws Exception {
+        if (file == null) {
+            return null;
         }
 
         workingDir = file.getParent();
@@ -55,7 +44,7 @@ public class WebScoreLoader {
         return loadLines(lines);
     }
 
-    static WebScore loadLines(List<String> lines) throws Exception {
+    public static WebScore loadLines(List<String> lines) throws Exception {
         if (lines == null || lines.isEmpty()) {
             return null;
         }

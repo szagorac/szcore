@@ -2,7 +2,7 @@ package com.xenaksys.szcore.task;
 
 import com.xenaksys.szcore.event.WebScoreEvent;
 import com.xenaksys.szcore.model.SzcoreEvent;
-import com.xenaksys.szcore.score.WebScore;
+import com.xenaksys.szcore.score.web.WebScore;
 
 public class WebScoreEventTask extends EventMusicTask {
     private WebScore webScore;

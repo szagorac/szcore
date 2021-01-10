@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.score;
+package com.xenaksys.szcore.score.web;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.model.Id;

@@ -77,6 +77,10 @@ import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.model.id.StrId;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.process.OscDestinationEventListener;
+import com.xenaksys.szcore.score.web.WebScore;
+import com.xenaksys.szcore.score.web.WebScoreLoader;
+import com.xenaksys.szcore.score.web.WebScoreScript;
+import com.xenaksys.szcore.score.web.export.WebScoreStateExport;
 import com.xenaksys.szcore.task.ScriptingEngineEventTask;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.task.WebScoreEventTask;
@@ -84,8 +88,6 @@ import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.ParseUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
-import com.xenaksys.szcore.web.WebScoreState;
-import com.xenaksys.szcore.web.WebScoreStateDelta;
 import com.xenaksys.szcore.web.WebScoreStateListener;
 import gnu.trove.map.TIntObjectMap;
 import org.slf4j.Logger;
@@ -2204,13 +2206,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     @Override
-    public void onWebScoreStateChange(WebScoreState webScoreState) throws Exception {
-        notifyListeners(webScoreState);
-    }
-
-    @Override
-    public void onWebScoreStateDeltaChange(WebScoreStateDelta webScoreStatedelta) throws Exception {
-        notifyListeners(webScoreStatedelta);
+    public void onWebScoreStateChange(WebScoreStateExport webScoreStateExport) throws Exception {
+        notifyListeners(webScoreStateExport);
     }
 
     @Override
@@ -2230,7 +2227,6 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         LOG.info("processWebStart: ");
         webScore.resetState();
         webScore.pushServerState();
-        webScore.initTestScore();
         webScore.startScore();
     }
 
@@ -2277,15 +2273,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
     }
 
-    private void notifyListeners(WebScoreState webScoreState) {
+    private void notifyListeners(WebScoreStateExport webScoreStateExport) {
         for (WebScoreStateListener listener : webScoreStateListeners) {
-            listener.onWebScoreStateChange(webScoreState);
-        }
-    }
-
-    private void notifyListeners(WebScoreStateDelta webScoreStateDelta) {
-        for (WebScoreStateListener listener : webScoreStateListeners) {
-            listener.onWebScoreStateDeltaChange(webScoreStateDelta);
+            listener.onWebScoreStateChange(webScoreStateExport);
         }
     }
 

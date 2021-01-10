@@ -1,8 +1,9 @@
-package com.xenaksys.szcore.score;
+package com.xenaksys.szcore.score.web.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.beans.PropertyChangeSupport;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -17,6 +18,7 @@ import static com.xenaksys.szcore.Consts.WEB_CONFIG_PITCH;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_RATE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_UTTERANCE_TIMEOUT_SEC;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_VOLUME;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_SPEECH_SYNTH;
 
 public class WebSpeechSynthConfig {
     static final Logger LOG = LoggerFactory.getLogger(WebSpeechSynthConfig.class);
@@ -47,12 +49,19 @@ public class WebSpeechSynthConfig {
     private boolean isInterrupt = DEFAULT_IS_INTERRUPT;
     private int interruptTimeout = DEFAULT_INTERRUPT_TIMEOUT_MS;
 
+    private final PropertyChangeSupport pcs;
+
+    public WebSpeechSynthConfig(PropertyChangeSupport pcs) {
+        this.pcs = pcs;
+    }
+
     public double getVolume() {
         return volume;
     }
 
     public void setVolume(double volume) {
         this.volume = volume;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_VOLUME, volume);
     }
 
     public double getPitch() {
@@ -61,6 +70,7 @@ public class WebSpeechSynthConfig {
 
     public void setPitch(double pitch) {
         this.pitch = pitch;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_PITCH, pitch);
     }
 
     public double getRate() {
@@ -69,6 +79,7 @@ public class WebSpeechSynthConfig {
 
     public void setRate(double rate) {
         this.rate = rate;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_RATE, rate);
     }
 
     public String getLang() {
@@ -77,6 +88,7 @@ public class WebSpeechSynthConfig {
 
     public void setLang(String lang) {
         this.lang = lang;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_LANG, lang);
     }
 
     public int getMaxVoiceLoadAttempts() {
@@ -85,6 +97,7 @@ public class WebSpeechSynthConfig {
 
     public void setMaxVoiceLoadAttempts(int maxVoiceLoadAttempts) {
         this.maxVoiceLoadAttempts = maxVoiceLoadAttempts;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_MAX_VOICE_LOAD_ATTEMPTS, maxVoiceLoadAttempts);
     }
 
     public int getMaxUtterances() {
@@ -93,6 +106,7 @@ public class WebSpeechSynthConfig {
 
     public void setMaxUtterances(int maxUtterances) {
         this.maxUtterances = maxUtterances;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_MAX_UTTERANCES, maxUtterances);
     }
 
     public int getUtteranceTimeoutSec() {
@@ -101,6 +115,7 @@ public class WebSpeechSynthConfig {
 
     public void setUtteranceTimeoutSec(int utteranceTimeoutSec) {
         this.utteranceTimeoutSec = utteranceTimeoutSec;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_UTTERANCE_TIMEOUT_SEC, utteranceTimeoutSec);
     }
 
     public boolean isInterrupt() {
@@ -109,6 +124,7 @@ public class WebSpeechSynthConfig {
 
     public void setInterrupt(boolean interrupt) {
         isInterrupt = interrupt;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_IS_INTERRUPT, interrupt);
     }
 
     public int getInterruptTimeout() {
@@ -117,49 +133,50 @@ public class WebSpeechSynthConfig {
 
     public void setInterruptTimeout(int interruptTimeout) {
         this.interruptTimeout = interruptTimeout;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_INTERRUPT_TIMEOUT_MS, interruptTimeout);
     }
 
     public boolean validate() {
         if (volume < MIN_VOLUME) {
             LOG.info("validate: invalid volume, setting to {}", MIN_VOLUME);
-            volume = MIN_VOLUME;
+            setVolume(MIN_VOLUME);
         } else if (volume > MAX_VOLUME) {
             LOG.info("validate: invalid volume, setting to {}", MAX_VOLUME);
-            volume = MAX_VOLUME;
+            setVolume(MAX_VOLUME);
         }
         if (pitch < MIN_PITCH) {
             LOG.info("validate: invalid pitch, setting to {}", MIN_PITCH);
-            pitch = MIN_PITCH;
+            setPitch(MIN_PITCH);
         } else if (pitch > MAX_PITCH) {
             LOG.info("validate: invalid pitch, setting to {}", MAX_PITCH);
-            pitch = MAX_PITCH;
+            setPitch(MAX_PITCH);
         }
         if (rate < MIN_RATE) {
             LOG.info("validate: invalid rate, setting to {}", MIN_RATE);
-            rate = MIN_RATE;
+            setRate(MIN_RATE);
         } else if (rate > MAX_RATE) {
             LOG.info("validate: invalid rate, setting to {}", MAX_RATE);
-            rate = MAX_RATE;
+            setRate(MAX_RATE);
         }
         if (!isValidLang(lang)) {
             LOG.info("validate: invalid lang, setting to {}", DEFAULT_LANG);
-            lang = DEFAULT_LANG;
+            setLang(DEFAULT_LANG);
         }
         if (maxVoiceLoadAttempts < 1 || maxVoiceLoadAttempts > 10) {
             LOG.info("validate: invalid maxVoiceLoadAttempts, setting to {}", DEFAULT_MAX_VOICE_LOAD_ATTEMPTS);
-            maxVoiceLoadAttempts = DEFAULT_MAX_VOICE_LOAD_ATTEMPTS;
+            setMaxVoiceLoadAttempts(DEFAULT_MAX_VOICE_LOAD_ATTEMPTS);
         }
         if (maxUtterances < 1 || maxUtterances > 10) {
             LOG.info("validate: invalid maxUtterances, setting to {}", DEFAULT_MAX_UTTERANCES);
-            maxUtterances = DEFAULT_MAX_UTTERANCES;
+            setMaxUtterances(DEFAULT_MAX_UTTERANCES);
         }
         if (utteranceTimeoutSec < 1 || utteranceTimeoutSec > 60) {
             LOG.info("validate: invalid utteranceTimeoutSec, setting to {}", DEFAULT_UTTERANCE_TIMEOUT_SEC);
-            utteranceTimeoutSec = DEFAULT_UTTERANCE_TIMEOUT_SEC;
+            setUtteranceTimeoutSec(DEFAULT_UTTERANCE_TIMEOUT_SEC);
         }
         if (interruptTimeout < 10 || interruptTimeout > 1000) {
             LOG.info("validate: invalid interruptTimeout, setting to {}", DEFAULT_INTERRUPT_TIMEOUT_MS);
-            interruptTimeout = DEFAULT_INTERRUPT_TIMEOUT_MS;
+            setInterruptTimeout(DEFAULT_INTERRUPT_TIMEOUT_MS);
         }
 
         return true;
@@ -193,7 +210,7 @@ public class WebSpeechSynthConfig {
 
     public WebSpeechSynthConfig copy(WebSpeechSynthConfig to) {
         if (to == null) {
-            to = new WebSpeechSynthConfig();
+            to = new WebSpeechSynthConfig(pcs);
         }
         to.setVolume(this.volume);
         to.setPitch(this.pitch);

@@ -40,7 +40,7 @@ import com.xenaksys.szcore.receive.OscReceiveProcessor;
 import com.xenaksys.szcore.receive.SzcoreIncomingEventListener;
 import com.xenaksys.szcore.score.ScoreProcessorImpl;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
-import com.xenaksys.szcore.score.WebScore;
+import com.xenaksys.szcore.score.web.WebScore;
 import com.xenaksys.szcore.server.processor.InEventContainerDisruptorProcessor;
 import com.xenaksys.szcore.server.processor.ServerLogProcessor;
 import com.xenaksys.szcore.server.receive.ServerEventReceiver;

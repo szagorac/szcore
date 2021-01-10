@@ -1,17 +1,22 @@
-package com.xenaksys.szcore.score;
+package com.xenaksys.szcore.score.web.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.beans.PropertyChangeSupport;
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_AUDIO_STOP_TOLERANCE_MS;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_BUFFER_POSITION_PLAY_RATE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_ENVELOPE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_GRAIN;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_MASTER_GAIN_VAL;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_GRAINS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PANNER;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_PLAY_DURATION_SEC;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_PLAY_START_OFFSET_SEC;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRANULATOR;
 
 public class WebGranulatorConfig {
     static final Logger LOG = LoggerFactory.getLogger(WebGranulatorConfig.class);
@@ -43,9 +48,19 @@ public class WebGranulatorConfig {
     private double bufferPositionPlayRate = DEFAULT_BUFFER_POSITION_PLAY_RATE;
     private int audioStopToleranceMs = DEFAULT_AUDIO_STOP_TOLERANCE_MS;
 
-    private GrainConfig grain = new GrainConfig();
-    private EnvelopeConfig envelope = new EnvelopeConfig();
-    private PannerConfig panner = new PannerConfig();
+    private WebGrainConfig grain;
+    private WebEnvelopeConfig envelope;
+    private WebPannerConfig panner;
+
+    private final PropertyChangeSupport pcs;
+
+    public WebGranulatorConfig(PropertyChangeSupport pcs) {
+        this.pcs = pcs;
+        this.grain = new WebGrainConfig(pcs);
+        this.envelope = new WebEnvelopeConfig(pcs);
+        this.panner = new WebPannerConfig(pcs);
+
+    }
 
     public double getMasterGainVal() {
         return masterGainVal;
@@ -53,6 +68,7 @@ public class WebGranulatorConfig {
 
     public void setMasterGainVal(double masterGainVal) {
         this.masterGainVal = masterGainVal;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_MASTER_GAIN_VAL, masterGainVal);
     }
 
     public double getPlayDurationSec() {
@@ -61,6 +77,7 @@ public class WebGranulatorConfig {
 
     public void setPlayDurationSec(double playDurationSec) {
         this.playDurationSec = playDurationSec;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_PLAY_DURATION_SEC, playDurationSec);
     }
 
     public double getPlayStartOffsetSec() {
@@ -69,6 +86,7 @@ public class WebGranulatorConfig {
 
     public void setPlayStartOffsetSec(double playStartOffsetSec) {
         this.playStartOffsetSec = playStartOffsetSec;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_PLAY_START_OFFSET_SEC, playStartOffsetSec);
     }
 
     public int getMaxGrains() {
@@ -77,6 +95,7 @@ public class WebGranulatorConfig {
 
     public void setMaxGrains(int maxGrains) {
         this.maxGrains = maxGrains;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_MAX_GRAINS, maxGrains);
     }
 
     public double getBufferPositionPlayRate() {
@@ -85,6 +104,7 @@ public class WebGranulatorConfig {
 
     public void setBufferPositionPlayRate(double bufferPositionPlayRate) {
         this.bufferPositionPlayRate = bufferPositionPlayRate;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_BUFFER_POSITION_PLAY_RATE, bufferPositionPlayRate);
     }
 
     public int getAudioStopToleranceMs() {
@@ -93,80 +113,84 @@ public class WebGranulatorConfig {
 
     public void setAudioStopToleranceMs(int audioStopToleranceMs) {
         this.audioStopToleranceMs = audioStopToleranceMs;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_AUDIO_STOP_TOLERANCE_MS, audioStopToleranceMs);
     }
 
-    public GrainConfig getGrain() {
+    public WebGrainConfig getGrain() {
         return grain;
     }
 
-    public void setGrain(GrainConfig grain) {
+    public void setGrain(WebGrainConfig grain) {
         this.grain = grain;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_GRAIN, grain);
     }
 
-    public EnvelopeConfig getEnvelope() {
+    public WebEnvelopeConfig getEnvelope() {
         return envelope;
     }
 
-    public void setEnvelope(EnvelopeConfig envelope) {
+    public void setEnvelope(WebEnvelopeConfig envelope) {
         this.envelope = envelope;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_ENVELOPE, envelope);
     }
 
-    public PannerConfig getPanner() {
+    public WebPannerConfig getPanner() {
         return panner;
     }
 
-    public void setPanner(PannerConfig panner) {
+    public void setPanner(WebPannerConfig panner) {
         this.panner = panner;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_PANNER, panner);
     }
 
     public boolean validate() {
         if (masterGainVal > MAX_GAIN) {
             LOG.info("validate: invalid masterGainVal {}, setting to {}", masterGainVal, MAX_GAIN);
-            masterGainVal = MAX_GAIN;
+            setMasterGainVal(MAX_GAIN);
         }
         if (masterGainVal < MIN_GAIN) {
             LOG.info("validate: invalid masterGainVal: {}, setting to {}", masterGainVal, MIN_GAIN);
-            masterGainVal = MIN_GAIN;
+            setMasterGainVal(MIN_GAIN);
         }
         if (playDurationSec > MAX_PLAY_DURATION_SEC) {
             LOG.info("validate: invalid playDurationSec {}, setting to {}", playDurationSec, MAX_PLAY_DURATION_SEC);
-            playDurationSec = MAX_PLAY_DURATION_SEC;
+            setPlayDurationSec(MAX_PLAY_DURATION_SEC);
         }
         if (playDurationSec < MIN_PLAY_DURATION_SEC) {
             LOG.info("validate: invalid playDurationSec {}, setting to {}", playDurationSec, MIN_PLAY_DURATION_SEC);
-            playDurationSec = MIN_PLAY_DURATION_SEC;
+            setPlayDurationSec(MIN_PLAY_DURATION_SEC);
         }
         if (playStartOffsetSec > MAX_PLAY_START_OFFSET_SEC) {
             LOG.info("validate: invalid playStartOffsetSec {}, setting to {}", playStartOffsetSec, MAX_PLAY_START_OFFSET_SEC);
-            playStartOffsetSec = MAX_PLAY_START_OFFSET_SEC;
+            setPlayStartOffsetSec(MAX_PLAY_START_OFFSET_SEC);
         }
         if (playStartOffsetSec < MIN_PLAY_START_OFFSET_SEC) {
             LOG.info("validate: invalid playStartOffsetSec {}, setting to {}", playStartOffsetSec, MIN_PLAY_START_OFFSET_SEC);
-            playStartOffsetSec = MIN_PLAY_START_OFFSET_SEC;
+            setPlayStartOffsetSec(MIN_PLAY_START_OFFSET_SEC);
         }
         if (maxGrains > MAX_GRAINS) {
             LOG.info("validate: invalid maxGrains {}, setting to {}", maxGrains, MAX_GRAINS);
-            maxGrains = MAX_GRAINS;
+            setMaxGrains(MAX_GRAINS);
         }
         if (maxGrains < MIN_GRAINS) {
             LOG.info("validate: invalid maxGrains {}, setting to {}", maxGrains, MIN_GRAINS);
-            maxGrains = MIN_GRAINS;
+            setMaxGrains(MIN_GRAINS);
         }
         if (bufferPositionPlayRate > MAX_BUFFER_POSITION_PLAY_RATE) {
             LOG.info("validate: invalid bufferPositionPlayRate {}, setting to {}", bufferPositionPlayRate, MAX_BUFFER_POSITION_PLAY_RATE);
-            bufferPositionPlayRate = MAX_BUFFER_POSITION_PLAY_RATE;
+            setBufferPositionPlayRate(MAX_BUFFER_POSITION_PLAY_RATE);
         }
         if (bufferPositionPlayRate < MIN_BUFFER_POSITION_PLAY_RATE) {
             LOG.info("validate: invalid bufferPositionPlayRate {}, setting to {}", bufferPositionPlayRate, MIN_BUFFER_POSITION_PLAY_RATE);
-            bufferPositionPlayRate = MIN_BUFFER_POSITION_PLAY_RATE;
+            setBufferPositionPlayRate(MIN_BUFFER_POSITION_PLAY_RATE);
         }
         if (audioStopToleranceMs > MAX_AUDIO_STOP_TOLERANCE_MS) {
             LOG.info("validate: invalid audioStopToleranceMs {}, setting to {}", audioStopToleranceMs, MAX_AUDIO_STOP_TOLERANCE_MS);
-            audioStopToleranceMs = MAX_AUDIO_STOP_TOLERANCE_MS;
+            setAudioStopToleranceMs(MAX_AUDIO_STOP_TOLERANCE_MS);
         }
         if (audioStopToleranceMs < MIN_AUDIO_STOP_TOLERANCE_MS) {
             LOG.info("validate: invalid audioStopToleranceMs {}, setting to {}", audioStopToleranceMs, MIN_AUDIO_STOP_TOLERANCE_MS);
-            audioStopToleranceMs = MIN_AUDIO_STOP_TOLERANCE_MS;
+            setAudioStopToleranceMs(MIN_AUDIO_STOP_TOLERANCE_MS);
         }
         return grain.validate() && envelope.validate() && panner.validate();
     }
@@ -187,7 +211,7 @@ public class WebGranulatorConfig {
 
     public WebGranulatorConfig copy(WebGranulatorConfig to) {
         if (to == null) {
-            to = new WebGranulatorConfig();
+            to = new WebGranulatorConfig(pcs);
         }
         to.setMasterGainVal(this.masterGainVal);
         to.setPlayDurationSec(this.playDurationSec);

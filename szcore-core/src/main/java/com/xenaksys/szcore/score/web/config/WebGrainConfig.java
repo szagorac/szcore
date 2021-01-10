@@ -1,13 +1,21 @@
-package com.xenaksys.szcore.score;
+package com.xenaksys.szcore.score.web.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.beans.PropertyChangeSupport;
 import java.util.HashMap;
 import java.util.Map;
 
-public class GrainConfig {
-    static final Logger LOG = LoggerFactory.getLogger(GrainConfig.class);
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_PITCH_RATE_RANGE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_POSITION_OFFSET_RANGE_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PITCH_RATE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_SIZE_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_TIME_OFFSET_STEPS_MS;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRAIN;
+
+public class WebGrainConfig {
+    static final Logger LOG = LoggerFactory.getLogger(WebGrainConfig.class);
 
     private static final int MIN_GRAIN_SIZE = 5;
     private static final double MIN_PITCH_RATE = 0.0;
@@ -28,12 +36,19 @@ public class GrainConfig {
     private double maxPitchRateRange = DEFAULT_MAX_PITCH_RATE_RANGE;
     private int timeOffsetStepMs = DEFAULT_TIME_OFFSET_STEP_MS;
 
+    private final PropertyChangeSupport pcs;
+
+    public WebGrainConfig(PropertyChangeSupport pcs) {
+        this.pcs = pcs;
+    }
+
     public int getSizeMs() {
         return sizeMs;
     }
 
     public void setSizeMs(int sizeMs) {
         this.sizeMs = sizeMs;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN, WEB_CONFIG_SIZE_MS, sizeMs);
     }
 
     public double getPitchRate() {
@@ -42,6 +57,7 @@ public class GrainConfig {
 
     public void setPitchRate(double pitchRate) {
         this.pitchRate = pitchRate;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN, WEB_CONFIG_PITCH_RATE, pitchRate);
     }
 
     public int getMaxPositionOffsetRangeMs() {
@@ -50,6 +66,7 @@ public class GrainConfig {
 
     public void setMaxPositionOffsetRangeMs(int maxPositionOffsetRangeMs) {
         this.maxPositionOffsetRangeMs = maxPositionOffsetRangeMs;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN, WEB_CONFIG_MAX_POSITION_OFFSET_RANGE_MS, maxPositionOffsetRangeMs);
     }
 
     public double getMaxPitchRateRange() {
@@ -58,6 +75,7 @@ public class GrainConfig {
 
     public void setMaxPitchRateRange(double maxPitchRateRange) {
         this.maxPitchRateRange = maxPitchRateRange;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN, WEB_CONFIG_MAX_PITCH_RATE_RANGE, maxPitchRateRange);
     }
 
     public int getTimeOffsetStepMs() {
@@ -66,33 +84,34 @@ public class GrainConfig {
 
     public void setTimeOffsetStepMs(int timeOffsetStepMs) {
         this.timeOffsetStepMs = timeOffsetStepMs;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN, WEB_CONFIG_TIME_OFFSET_STEPS_MS, timeOffsetStepMs);
     }
 
     public boolean validate() {
         if (sizeMs < MIN_GRAIN_SIZE) {
             LOG.info("validate: invalid sizeMs, setting to {}", MIN_GRAIN_SIZE);
-            sizeMs = MIN_GRAIN_SIZE;
+            setSizeMs(MIN_GRAIN_SIZE);
         }
         if (pitchRate < MIN_PITCH_RATE) {
             LOG.info("validate: invalid pitchRate, setting to {}", MIN_PITCH_RATE);
-            pitchRate = MIN_PITCH_RATE;
+            setPitchRate(MIN_PITCH_RATE);
         }
         if (maxPositionOffsetRangeMs < MIN_POSITION_OFFSET_RANGE) {
             LOG.info("validate: invalid maxPositionOffsetRangeMs, setting to {}", MIN_POSITION_OFFSET_RANGE);
-            maxPositionOffsetRangeMs = MIN_POSITION_OFFSET_RANGE;
+            setMaxPositionOffsetRangeMs(MIN_POSITION_OFFSET_RANGE);
         }
         if (maxPitchRateRange < MIN_PITCH_RATE_RANGE) {
             LOG.info("validate: invalid maxPitchRateRange, setting to {}", MIN_PITCH_RATE_RANGE);
-            maxPitchRateRange = MIN_PITCH_RATE_RANGE;
+            setMaxPitchRateRange(MIN_PITCH_RATE_RANGE);
         }
         if (maxPitchRateRange > MAX_PITCH_RATE_RANGE) {
             LOG.info("validate: invalid maxPitchRateRange, setting to {}", MAX_PITCH_RATE_RANGE);
-            maxPitchRateRange = MAX_PITCH_RATE_RANGE;
+            setMaxPitchRateRange(MAX_PITCH_RATE_RANGE);
         }
         if (timeOffsetStepMs < MIN_TIME_OFFSET_STEP) {
             LOG.info("validate: invalid timeOffsetStepMs, setting to {}", MIN_PITCH_RATE);
             LOG.info("validate: invalid pitchRate, setting to {}", MIN_PITCH_RATE);
-            timeOffsetStepMs = MIN_TIME_OFFSET_STEP;
+            setTimeOffsetStepMs(MIN_TIME_OFFSET_STEP);
         }
 
         return true;
@@ -108,9 +127,9 @@ public class GrainConfig {
         return config;
     }
 
-    public GrainConfig copy(GrainConfig to) {
+    public WebGrainConfig copy(WebGrainConfig to) {
         if (to == null) {
-            to = new GrainConfig();
+            to = new WebGrainConfig(pcs);
         }
         to.setSizeMs(this.sizeMs);
         to.setPitchRate(this.pitchRate);
@@ -122,7 +141,7 @@ public class GrainConfig {
 
     @Override
     public String toString() {
-        return "GrainConfig{" +
+        return "WebGrainConfig{" +
                 "sizeMs=" + sizeMs +
                 ", pitchRate=" + pitchRate +
                 ", maxPositionOffsetRangeMs=" + maxPositionOffsetRangeMs +

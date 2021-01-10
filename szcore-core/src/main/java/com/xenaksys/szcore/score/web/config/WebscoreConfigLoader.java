@@ -1,8 +1,10 @@
-package com.xenaksys.szcore.score;
+package com.xenaksys.szcore.score.web.config;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.model.ScriptPreset;
+import com.xenaksys.szcore.score.YamlLoader;
+import com.xenaksys.szcore.score.web.WebscorePageRangeAssignmentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

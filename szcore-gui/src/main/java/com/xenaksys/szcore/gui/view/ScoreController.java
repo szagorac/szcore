@@ -23,7 +23,7 @@ import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.id.BarId;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
-import com.xenaksys.szcore.score.WebScore;
+import com.xenaksys.szcore.score.web.WebScore;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.Util;
 import javafx.application.Platform;

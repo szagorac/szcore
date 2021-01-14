@@ -33,6 +33,7 @@ public class WebGranulatorConfig {
     private static final double MAX_BUFFER_POSITION_PLAY_RATE = 100.0;
     private static final int MIN_AUDIO_STOP_TOLERANCE_MS = 0;
     private static final int MAX_AUDIO_STOP_TOLERANCE_MS = 100;
+    private static final double CHANGE_THRESHOLD = 10E-3;
 
     private static final double DEFAULT_GAIN = 0.5;
     private static final double DEFAULT_PLAY_DURATION_SEC = 30.0;
@@ -59,7 +60,6 @@ public class WebGranulatorConfig {
         this.grain = new WebGrainConfig(pcs);
         this.envelope = new WebEnvelopeConfig(pcs);
         this.panner = new WebPannerConfig(pcs);
-
     }
 
     public double getMasterGainVal() {
@@ -67,8 +67,11 @@ public class WebGranulatorConfig {
     }
 
     public void setMasterGainVal(double masterGainVal) {
+        double old = this.masterGainVal;
         this.masterGainVal = masterGainVal;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_MASTER_GAIN_VAL, masterGainVal);
+        if (Math.abs(old - this.masterGainVal) > CHANGE_THRESHOLD) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_MASTER_GAIN_VAL, masterGainVal);
+        }
     }
 
     public double getPlayDurationSec() {
@@ -76,8 +79,11 @@ public class WebGranulatorConfig {
     }
 
     public void setPlayDurationSec(double playDurationSec) {
+        double old = this.playDurationSec;
         this.playDurationSec = playDurationSec;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_PLAY_DURATION_SEC, playDurationSec);
+        if (Math.abs(old - this.playDurationSec) > CHANGE_THRESHOLD) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_PLAY_DURATION_SEC, playDurationSec);
+        }
     }
 
     public double getPlayStartOffsetSec() {
@@ -85,8 +91,11 @@ public class WebGranulatorConfig {
     }
 
     public void setPlayStartOffsetSec(double playStartOffsetSec) {
+        double old = this.playStartOffsetSec;
         this.playStartOffsetSec = playStartOffsetSec;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_PLAY_START_OFFSET_SEC, playStartOffsetSec);
+        if (Math.abs(old - this.playStartOffsetSec) > CHANGE_THRESHOLD) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_PLAY_START_OFFSET_SEC, playStartOffsetSec);
+        }
     }
 
     public int getMaxGrains() {
@@ -94,8 +103,11 @@ public class WebGranulatorConfig {
     }
 
     public void setMaxGrains(int maxGrains) {
+        int old = this.maxGrains;
         this.maxGrains = maxGrains;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_MAX_GRAINS, maxGrains);
+        if (old != this.maxGrains) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_MAX_GRAINS, maxGrains);
+        }
     }
 
     public double getBufferPositionPlayRate() {
@@ -103,8 +115,11 @@ public class WebGranulatorConfig {
     }
 
     public void setBufferPositionPlayRate(double bufferPositionPlayRate) {
+        double old = this.bufferPositionPlayRate;
         this.bufferPositionPlayRate = bufferPositionPlayRate;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_BUFFER_POSITION_PLAY_RATE, bufferPositionPlayRate);
+        if (Math.abs(old - this.bufferPositionPlayRate) > CHANGE_THRESHOLD) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_BUFFER_POSITION_PLAY_RATE, bufferPositionPlayRate);
+        }
     }
 
     public int getAudioStopToleranceMs() {
@@ -112,8 +127,11 @@ public class WebGranulatorConfig {
     }
 
     public void setAudioStopToleranceMs(int audioStopToleranceMs) {
+        int old = this.audioStopToleranceMs;
         this.audioStopToleranceMs = audioStopToleranceMs;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_AUDIO_STOP_TOLERANCE_MS, audioStopToleranceMs);
+        if (old != this.audioStopToleranceMs) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_AUDIO_STOP_TOLERANCE_MS, audioStopToleranceMs);
+        }
     }
 
     public WebGrainConfig getGrain() {
@@ -121,8 +139,12 @@ public class WebGranulatorConfig {
     }
 
     public void setGrain(WebGrainConfig grain) {
+        WebGrainConfig old = new WebGrainConfig(null);
+        this.grain.copy(old);
         this.grain = grain;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_GRAIN, grain);
+        if (!this.grain.equals(old)) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_GRAIN, grain);
+        }
     }
 
     public WebEnvelopeConfig getEnvelope() {
@@ -130,8 +152,12 @@ public class WebGranulatorConfig {
     }
 
     public void setEnvelope(WebEnvelopeConfig envelope) {
+        WebEnvelopeConfig old = new WebEnvelopeConfig(null);
+        this.envelope.copy(old);
         this.envelope = envelope;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_ENVELOPE, envelope);
+        if (!this.envelope.equals(old)) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_ENVELOPE, envelope);
+        }
     }
 
     public WebPannerConfig getPanner() {
@@ -139,8 +165,12 @@ public class WebGranulatorConfig {
     }
 
     public void setPanner(WebPannerConfig panner) {
+        WebPannerConfig old = new WebPannerConfig(null);
+        this.panner.copy(old);
         this.panner = panner;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_PANNER, panner);
+        if (!this.panner.equals(old)) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_CONFIG_PANNER, panner);
+        }
     }
 
     public boolean validate() {

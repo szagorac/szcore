@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.beans.PropertyChangeSupport;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_ATTACK_TIME;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_DECAY_TIME;
@@ -19,6 +20,7 @@ public class WebEnvelopeConfig {
 
     private static final double MIN_VALUE = 0.0;
     private static final double MAX_VALUE = 1.0;
+    private static final double CHANGE_THRESHOLD = 10E-3;
 
     private static final double DEFAULT_ATTACK_TIME = 0.4;
     private static final double DEFAULT_DECAY_TIME = 0.0;
@@ -44,8 +46,11 @@ public class WebEnvelopeConfig {
     }
 
     public void setAttackTime(double attackTime) {
+        double old = this.attackTime;
         this.attackTime = attackTime;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN_ENVELOPE, WEB_CONFIG_ATTACK_TIME, attackTime);
+        if (Math.abs(old - this.attackTime) > CHANGE_THRESHOLD) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN_ENVELOPE, WEB_CONFIG_ATTACK_TIME, attackTime);
+        }
     }
 
     public double getDecayTime() {
@@ -53,8 +58,11 @@ public class WebEnvelopeConfig {
     }
 
     public void setDecayTime(double decayTime) {
+        double old = this.decayTime;
         this.decayTime = decayTime;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN_ENVELOPE, WEB_CONFIG_DECAY_TIME, decayTime);
+        if (Math.abs(old - this.decayTime) > CHANGE_THRESHOLD) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN_ENVELOPE, WEB_CONFIG_DECAY_TIME, decayTime);
+        }
     }
 
     public double getSustainTime() {
@@ -62,8 +70,11 @@ public class WebEnvelopeConfig {
     }
 
     public void setSustainTime(double sustainTime) {
+        double old = this.sustainTime;
         this.sustainTime = sustainTime;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN_ENVELOPE, WEB_CONFIG_SUSTAIN_TIME, sustainTime);
+        if (Math.abs(old - this.sustainTime) > CHANGE_THRESHOLD) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN_ENVELOPE, WEB_CONFIG_SUSTAIN_TIME, sustainTime);
+        }
     }
 
     public double getReleaseTime() {
@@ -71,8 +82,11 @@ public class WebEnvelopeConfig {
     }
 
     public void setReleaseTime(double releaseTime) {
+        double old = this.sustainTime;
         this.releaseTime = releaseTime;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN_ENVELOPE, WEB_CONFIG_RELEASE_TIME, releaseTime);
+        if (Math.abs(old - this.sustainTime) > CHANGE_THRESHOLD) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN_ENVELOPE, WEB_CONFIG_RELEASE_TIME, releaseTime);
+        }
     }
 
     public double getSustainLevel() {
@@ -80,8 +94,11 @@ public class WebEnvelopeConfig {
     }
 
     public void setSustainLevel(double sustainLevel) {
+        double old = this.sustainLevel;
         this.sustainLevel = sustainLevel;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN_ENVELOPE, WEB_CONFIG_SUSTAIN_LEVEL, sustainLevel);
+        if (Math.abs(old - this.sustainLevel) > CHANGE_THRESHOLD) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN_ENVELOPE, WEB_CONFIG_SUSTAIN_LEVEL, sustainLevel);
+        }
     }
 
     public boolean validate() {
@@ -135,6 +152,19 @@ public class WebEnvelopeConfig {
         to.setReleaseTime(this.releaseTime);
         to.setSustainLevel(this.sustainLevel);
         return to;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WebEnvelopeConfig that = (WebEnvelopeConfig) o;
+        return Double.compare(that.attackTime, attackTime) == 0 && Double.compare(that.decayTime, decayTime) == 0 && Double.compare(that.sustainTime, sustainTime) == 0 && Double.compare(that.releaseTime, releaseTime) == 0 && Double.compare(that.sustainLevel, sustainLevel) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(attackTime, decayTime, sustainTime, releaseTime, sustainLevel);
     }
 
     @Override

@@ -42,6 +42,7 @@ import com.xenaksys.szcore.event.TransportEvent;
 import com.xenaksys.szcore.event.TransportPositionEvent;
 import com.xenaksys.szcore.event.WebScoreEvent;
 import com.xenaksys.szcore.event.WebScoreEventType;
+import com.xenaksys.szcore.event.WebScorePlayTilesEvent;
 import com.xenaksys.szcore.event.WebScoreResetEvent;
 import com.xenaksys.szcore.event.WebScoreStopEvent;
 import com.xenaksys.szcore.event.WebStartEvent;
@@ -763,7 +764,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 publishOscEvent(instrumentSlotsEvent);
             }
 
-            webScore.playNextTilesInternal();
+            WebScorePlayTilesEvent playTilesEvent = eventFactory.createWebScorePlayTilesEvent(clock.getSystemTimeMillis());
+            processWebScoreEvent(playTilesEvent);
         } else {
             OscEvent instrumentSlotsEvent = createInstrumentResetSlotsEvent(destination, null);
             publishOscEvent(instrumentSlotsEvent);
@@ -2316,6 +2318,10 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
     }
 
+    private void processWebScoreEvent(WebScoreEvent event) {
+        processWebScoreEvent(event, 0, 0);
+    }
+
     private void processWebScoreEvent(WebScoreEvent event, int beatNo, int tickNo) {
         WebScoreEventType eventType = event.getWebScoreEventType();
 
@@ -2323,6 +2329,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             case PRECOUNT:
             case RESET:
             case STOP:
+            case PLAY_TILES:
+            case SELECT_TILES:
             case INSTRUCTIONS:
                 webScore.processWebScoreEvent(event);
                 break;

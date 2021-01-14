@@ -2,6 +2,8 @@ package com.xenaksys.szcore.score.web.export;
 
 import com.xenaksys.szcore.score.web.WebScore;
 
+import java.util.Objects;
+
 public class TileExport {
     private String id;
     private int row;
@@ -40,6 +42,19 @@ public class TileExport {
         this.state.populate(from.getState());
         this.tileText = new TileTextExport();
         this.tileText.populate(from.getTileText());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TileExport that = (TileExport) o;
+        return id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
     @Override

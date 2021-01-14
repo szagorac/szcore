@@ -119,11 +119,6 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         scoreService.onIncomingWebEvent(webEvent);
     }
 
-    public String onWsRequest(ZsWebRequest data) {
-
-        return currentWebScoreState;
-    }
-
     public WebClientInfo getOrCreateClientInfo(String sourceAddr) {
         if(sourceAddr == null) {
             return null;

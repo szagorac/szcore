@@ -39,8 +39,11 @@ public class WebSpeechSynthState {
     }
 
     public void setPlaySpeechSynthOnClick(boolean playSpeechSynthOnClick) {
-        isPlaySpeechSynthOnClick = playSpeechSynthOnClick;
-        pcs.firePropertyChange(WEB_OBJ_STATE_SPEECH_SYNTH, WEB_CONFIG_IS_PLAY_SPEECH_ON_CLICK, playSpeechSynthOnClick);
+        boolean old = this.isPlaySpeechSynthOnClick;
+        this.isPlaySpeechSynthOnClick = playSpeechSynthOnClick;
+        if (old != this.isPlaySpeechSynthOnClick) {
+            pcs.firePropertyChange(WEB_OBJ_STATE_SPEECH_SYNTH, WEB_CONFIG_IS_PLAY_SPEECH_ON_CLICK, playSpeechSynthOnClick);
+        }
     }
 
     public String getSpeechText() {
@@ -48,8 +51,11 @@ public class WebSpeechSynthState {
     }
 
     public void setSpeechText(String speechText) {
+        String old = this.speechText;
         this.speechText = speechText;
-        pcs.firePropertyChange(WEB_OBJ_STATE_SPEECH_SYNTH, WEB_CONFIG_SPEECH_TEXT, speechText);
+        if (!this.speechText.equals(old)) {
+            pcs.firePropertyChange(WEB_OBJ_STATE_SPEECH_SYNTH, WEB_CONFIG_SPEECH_TEXT, speechText);
+        }
     }
 
     public String getSpeechVoice() {
@@ -57,8 +63,11 @@ public class WebSpeechSynthState {
     }
 
     public void setSpeechVoice(String speechVoice) {
+        String old = this.speechVoice;
         this.speechVoice = speechVoice;
-        pcs.firePropertyChange(WEB_OBJ_STATE_SPEECH_SYNTH, WEB_CONFIG_SPEECH_VOICE, speechVoice);
+        if (!this.speechVoice.equals(old)) {
+            pcs.firePropertyChange(WEB_OBJ_STATE_SPEECH_SYNTH, WEB_CONFIG_SPEECH_VOICE, speechVoice);
+        }
     }
 
     public boolean isSpeechIsInterrupt() {
@@ -66,8 +75,11 @@ public class WebSpeechSynthState {
     }
 
     public void setSpeechIsInterrupt(boolean speechIsInterrupt) {
+        boolean old = this.speechIsInterrupt;
         this.speechIsInterrupt = speechIsInterrupt;
-        pcs.firePropertyChange(WEB_OBJ_STATE_SPEECH_SYNTH, WEB_CONFIG_SPEECH_IS_INTERRUPT, speechIsInterrupt);
+        if (old != this.speechIsInterrupt) {
+            pcs.firePropertyChange(WEB_OBJ_STATE_SPEECH_SYNTH, WEB_CONFIG_SPEECH_IS_INTERRUPT, speechIsInterrupt);
+        }
     }
 
     public boolean validate() {

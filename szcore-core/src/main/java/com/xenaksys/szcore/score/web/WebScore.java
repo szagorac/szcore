@@ -7,7 +7,9 @@ import com.xenaksys.szcore.event.OutgoingWebEventType;
 import com.xenaksys.szcore.event.WebScoreEvent;
 import com.xenaksys.szcore.event.WebScoreEventType;
 import com.xenaksys.szcore.event.WebScoreInstructionsEvent;
+import com.xenaksys.szcore.event.WebScorePlayTilesEvent;
 import com.xenaksys.szcore.event.WebScorePrecountEvent;
+import com.xenaksys.szcore.event.WebScoreSelectTilesEvent;
 import com.xenaksys.szcore.event.WebScoreStopEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Instrument;
@@ -31,10 +33,12 @@ import com.xenaksys.szcore.score.web.export.TileExport;
 import com.xenaksys.szcore.score.web.export.WebElementStateExport;
 import com.xenaksys.szcore.score.web.export.WebGranulatorConfigExport;
 import com.xenaksys.szcore.score.web.export.WebInstructionsExport;
+import com.xenaksys.szcore.score.web.export.WebScoreStateDeltaExport;
 import com.xenaksys.szcore.score.web.export.WebScoreStateExport;
 import com.xenaksys.szcore.score.web.export.WebSpeechSynthConfigExport;
 import com.xenaksys.szcore.score.web.export.WebSpeechSynthStateExport;
 import com.xenaksys.szcore.util.MathUtil;
+import com.xenaksys.szcore.util.ScoreUtil;
 import com.xenaksys.szcore.web.WebAction;
 import com.xenaksys.szcore.web.WebActionType;
 import gnu.trove.list.TIntList;
@@ -120,7 +124,6 @@ import static com.xenaksys.szcore.Consts.WEB_OBJ_STATE_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_TILE;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_TILES;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_TILE_TEXT;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_WEB_TEXT;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_ZOOM_LEVEL;
 import static com.xenaksys.szcore.Consts.WEB_SCORE_ID;
 import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
@@ -140,6 +143,7 @@ public class WebScore {
     private final Score score;
     private final Clock clock;
     private final WebScoreServerState state;
+    private final WebScoreStateDeltaTracker stateDeltaTracker;
 
     private PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
@@ -168,6 +172,7 @@ public class WebScore {
         this.score = scoreProcessor.getScore();
         this.tempPageId = createTempPage();
         this.state = initState();
+        this.stateDeltaTracker = new WebScoreStateDeltaTracker(state);
     }
 
     private WebScoreServerState initState() {
@@ -218,7 +223,7 @@ public class WebScore {
 
             for (int j = 0; j < 8; j++) {
                 int col = j + 1;
-                String id = createTileId(row, col);
+                String id = ScoreUtil.createTileId(row, col);
                 Tile t = new Tile(row, col, id);
                 WebElementState ts = t.getState();
                 ts.setVisible(visibleRows[i]);
@@ -373,7 +378,7 @@ public class WebScore {
 
     public void setSelectedElement(String elementId, boolean isSelected) {
         LOG.info("setSelectedElement: Received elementId: {} isSelected: {}", elementId, isSelected);
-        if (isTileId(elementId)) {
+        if (ScoreUtil.isTileId(elementId)) {
             Tile tile = getTile(elementId);
             if (tile == null) {
                 return;
@@ -461,7 +466,10 @@ public class WebScore {
             }
             LOG.info("prepareNextTilesToPlay: Found pageId: {} for tile id: {}", pageNo, tileId);
         }
-        selectNextTilesInternal(tileIds);
+
+        WebScoreSelectTilesEvent playTilesEvent = eventFactory.createWebScoreSelectTilesEvent(tileIds, clock.getSystemTimeMillis());
+        processWebScoreEvent(playTilesEvent);
+
         return pageIds;
     }
 
@@ -570,16 +578,15 @@ public class WebScore {
         return diff > 0;
     }
 
-    public void playNextTilesInternal() {
+    public boolean playNextTilesInternal(WebScorePlayTilesEvent event) {
         if (!isPlayTilesInternalEventTime()) {
-            return;
+            return false;
         }
-        resetActions();
 
         if (playingNextTiles.isEmpty()) {
             if (playingTiles.isEmpty()) {
                 LOG.warn("playNextTiles: Can not find tiles to play, both playingTiles and playingNextTiles are empty");
-                return;
+                return false;
             }
             ArrayList<String> tileIds = calculateNextTilesToPlay();
             if (!tileIds.isEmpty()) {
@@ -594,8 +601,8 @@ public class WebScore {
             playTiles(tileIds);
         }
 
-        updateServerStateAndPush();
         lastPlayTilesInternalEventTime = System.currentTimeMillis();
+        return true;
     }
 
     public ArrayList<String> calculateNextTilesToPlay() {
@@ -609,14 +616,14 @@ public class WebScore {
         return tileIds;
     }
 
-    public void selectNextTilesInternal(List<String> tileIds) {
+    public boolean selectNextTilesInternal(WebScoreSelectTilesEvent event) {
         if (!isSelectTilesInternalEventTime()) {
-            return;
+            return false;
         }
-        resetActions();
-        setPlayingNextTiles(tileIds.toArray(new String[0]));
-        updateServerStateAndPush();
+        List<String> tileIds = event.getTileIds();
+        setPlayingNextTiles(tileIds);
         lastSelectTilesInternalEventTime = System.currentTimeMillis();
+        return true;
     }
 
     public Tile getNextTileToPlay(Tile tile) {
@@ -695,8 +702,8 @@ public class WebScore {
         playingNextTiles.clear();
     }
 
-    public void setPlayingNextTiles(String[] tileIds) {
-        LOG.info("setPlayingNextTiles: {}", Arrays.toString(tileIds));
+    public void setPlayingNextTiles(List<String> tileIds) {
+        LOG.info("setPlayingNextTiles: {}", tileIds);
         resetPlayingNextTiles();
         for (String tileId : tileIds) {
             setPlayingNextTile(tileId);
@@ -729,8 +736,9 @@ public class WebScore {
         recalcActiveTiles();
     }
 
-    public void resetActions() {
-        state.clearActions();
+    public void resetStateDelta() {
+        state.resetDelta();
+        stateDeltaTracker.reset();
     }
 
     public void setAction(String actionId, String type, String[] targetIds) {
@@ -804,12 +812,12 @@ public class WebScore {
 
     public void sendSpeechSynthConfig() {
         String[] target = {WEB_SPEECH_SYNTH};
-        Map<String, Object> params = state.getGranulatorConfig().toJsMap();
+        Map<String, Object> params = state.getSpeechSynthConfig().toJsMap();
         setAction(WEB_ACTION_ID_CONFIG, WebActionType.AUDIO.name(), target, params);
     }
 
     public void validateSpeechSynthConfig() {
-        state.getGranulatorConfig().validate();
+        state.getSpeechSynthConfig().validate();
     }
 
     public void sendSpeechSynthState() {
@@ -1238,14 +1246,6 @@ public class WebScore {
         }
     }
 
-    public boolean isTileId(String elementId) {
-        return elementId.startsWith(Consts.WEB_TILE_PREFIX);
-    }
-
-    private String createTileId(int row, int column) {
-        return Consts.WEB_TILE_PREFIX + row + Consts.WEB_ELEMENT_NAME_DELIMITER + column;
-    }
-
     private Tile getTile(String tileId) {
         try {
             Tile[][] tiles = state.getTiles();
@@ -1349,7 +1349,7 @@ public class WebScore {
         LOG.info("processWebScoreEvent: execute event: {}", event);
         WebScoreEventType type = event.getWebScoreEventType();
         try {
-            resetActions();
+            resetStateDelta();
             boolean isSendStateUpdate = true;
             switch (type) {
                 case INSTRUCTIONS:
@@ -1360,6 +1360,12 @@ public class WebScore {
                     break;
                 case STOP:
                     isSendStateUpdate = processStopAll((WebScoreStopEvent) event);
+                    break;
+                case PLAY_TILES:
+                    isSendStateUpdate = playNextTilesInternal((WebScorePlayTilesEvent) event);
+                    break;
+                case SELECT_TILES:
+                    isSendStateUpdate = selectNextTilesInternal((WebScoreSelectTilesEvent) event);
                     break;
                 case RESET:
                 case SCRIPT:
@@ -1372,7 +1378,6 @@ public class WebScore {
                 default:
                     LOG.warn("processWebScoreEvent: Ignoring event {}", type);
             }
-
             if (isSendStateUpdate) {
                 updateServerStateAndPush();
             }
@@ -1466,6 +1471,11 @@ public class WebScore {
         return false;
     }
 
+    public WebScoreStateDeltaExport getStateDeltaExport() {
+        return stateDeltaTracker.getDeltaExport();
+    }
+
+
     private double getDouble(Object value) {
         double v;
         if (value instanceof String) {
@@ -1525,20 +1535,30 @@ public class WebScore {
             return state;
         }
 
-        public void setState(WebElementState state) {
-            state.copyTo(this.state);
-            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, state.getId(), this);
+        public void setState(WebElementState newState) {
+            WebElementState old = new WebElementState(this.state.id);
+            this.state.copyTo(old);
+            newState.copyTo(this.state);
+            if (!this.state.equals(old)) {
+                pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, this.id, this);
+            }
         }
 
         public void setText(TileText txt) {
+            TileText old = new TileText(this.tileText.getValue(), this.tileText.isVisible(), this.tileText.getParent());
             txt.copyTo(this.tileText);
-            pcs.firePropertyChange(WEB_OBJ_TILE_TEXT, this.id, this);
+            if (!this.tileText.equals(old)) {
+                pcs.firePropertyChange(WEB_OBJ_TILE_TEXT, this.id, this);
+            }
         }
 
         public void setText(String txt) {
-            tileText.setValue(txt);
-            tileText.setVisible(true);
-            pcs.firePropertyChange(WEB_OBJ_TILE_TEXT, this.id, this);
+            TileText old = new TileText(this.tileText.getValue(), this.tileText.isVisible(), this.tileText.getParent());
+            this.tileText.setValue(txt);
+            this.tileText.setVisible(true);
+            if (!this.tileText.equals(old)) {
+                pcs.firePropertyChange(WEB_OBJ_TILE_TEXT, this.id, this);
+            }
         }
 
         public String getId() {
@@ -1614,13 +1634,19 @@ public class WebScore {
         }
 
         public void setValue(String value) {
+            String old = this.value;
             this.value = value;
-            pcs.firePropertyChange(WEB_OBJ_TILE_TEXT, parent.getId(), parent);
+            if (!this.value.equals(old)) {
+                pcs.firePropertyChange(WEB_OBJ_TILE_TEXT, parent.getId(), parent);
+            }
         }
 
         public void setVisible(boolean visible) {
-            isVisible = visible;
-            pcs.firePropertyChange(WEB_OBJ_TILE_TEXT, parent.getId(), parent);
+            boolean old = this.isVisible;
+            this.isVisible = visible;
+            if (old != this.isVisible) {
+                pcs.firePropertyChange(WEB_OBJ_TILE_TEXT, parent.getId(), parent);
+            }
         }
 
         public Tile getParent() {
@@ -1630,6 +1656,19 @@ public class WebScore {
         public void copyTo(TileText other) {
             other.setVisible(isVisible());
             other.setValue(getValue());
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            TileText tileText = (TileText) o;
+            return isVisible == tileText.isVisible && Objects.equals(value, tileText.value) && Objects.equals(parent, tileText.parent);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(value, isVisible, parent);
         }
     }
 
@@ -1656,8 +1695,11 @@ public class WebScore {
         }
 
         public void setClickCount(int clickCount) {
+            int old = this.clickCount;
             this.clickCount = clickCount;
-            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+            if (old != this.clickCount) {
+                pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+            }
         }
 
         public void incrementClickCount() {
@@ -1675,8 +1717,11 @@ public class WebScore {
         }
 
         public void setActive(boolean active) {
-            isActive = active;
-            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+            boolean old = this.isActive;
+            this.isActive = active;
+            if (old != this.isActive) {
+                pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+            }
         }
 
         public boolean isVisible() {
@@ -1684,8 +1729,11 @@ public class WebScore {
         }
 
         public void setVisible(boolean visible) {
-            isVisible = visible;
-            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+            boolean old = this.isVisible;
+            this.isVisible = visible;
+            if (old != this.isVisible) {
+                pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+            }
         }
 
         public boolean isPlaying() {
@@ -1693,8 +1741,11 @@ public class WebScore {
         }
 
         public void setPlaying(boolean playing) {
-            isPlaying = playing;
-            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+            boolean old = this.isPlaying;
+            this.isPlaying = playing;
+            if (old != this.isPlaying) {
+                pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+            }
         }
 
         public boolean isSelected() {
@@ -1702,8 +1753,11 @@ public class WebScore {
         }
 
         public void setSelected(boolean selected) {
-            isSelected = selected;
-            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+            boolean old = this.isSelected;
+            this.isSelected = selected;
+            if (old != this.isSelected) {
+                pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+            }
         }
 
         public boolean isPlayingNext() {
@@ -1711,8 +1765,11 @@ public class WebScore {
         }
 
         public void setPlayingNext(boolean playingNext) {
-            isPlayingNext = playingNext;
-            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+            boolean old = this.isPlayingNext;
+            this.isPlayingNext = playingNext;
+            if (old != this.isPlayingNext) {
+                pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+            }
         }
 
         public boolean isPlayed() {
@@ -1720,8 +1777,11 @@ public class WebScore {
         }
 
         public void setPlayed(boolean played) {
-            isPlayed = played;
-            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+            boolean old = this.isPlayed;
+            this.isPlayed = played;
+            if (old != this.isPlayed) {
+                pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
+            }
         }
 
         public void copyTo(WebElementState other) {
@@ -1731,6 +1791,19 @@ public class WebScore {
             other.setPlaying(isPlaying());
             other.setPlayingNext(isPlayingNext());
             other.setPlayed(isPlayed());
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            WebElementState that = (WebElementState) o;
+            return isActive == that.isActive && isPlaying == that.isPlaying && isPlayingNext == that.isPlayingNext && isPlayed == that.isPlayed && isVisible == that.isVisible && isSelected == that.isSelected && clickCount == that.clickCount && id.equals(that.id);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(id, isActive, isPlaying, isPlayingNext, isPlayed, isVisible, isSelected, clickCount);
         }
 
         @Override
@@ -1772,8 +1845,7 @@ public class WebScore {
         }
 
         public void setVisible(boolean visible) {
-            isVisible = visible;
-            pcs.firePropertyChange(WEB_OBJ_WEB_TEXT, id, this);
+            this.isVisible = visible;
         }
 
         public int getLineNo() {
@@ -1797,7 +1869,6 @@ public class WebScore {
                 return;
             }
             this.lines[lineNo - 1] = line;
-            pcs.firePropertyChange(WEB_OBJ_WEB_TEXT, id, this);
         }
 
         public String getColour() {
@@ -1806,7 +1877,6 @@ public class WebScore {
 
         public void setColour(String colour) {
             this.colour = colour;
-            pcs.firePropertyChange(WEB_OBJ_WEB_TEXT, id, this);
         }
 
         public void copyTo(WebTextState other) {
@@ -1851,8 +1921,28 @@ public class WebScore {
             this.speechSynthState = speechSynthState;
         }
 
+        public void resetDelta() {
+            clearActions();
+        }
+
         public WebScore.Tile[][] getTiles() {
             return tiles;
+        }
+
+        public WebScore.Tile getTile(int row, int col) {
+            int i = row - 1;
+            int j = col - 1;
+            if (i < 0 || i >= tiles.length) {
+                return null;
+            }
+            if (j < 0 || j >= tiles[0].length) {
+                return null;
+            }
+            return tiles[i][j];
+        }
+
+        public WebScore.Tile getTile(String id) {
+            return null;
         }
 
         public void setTiles(WebScore.Tile[][] tiles) {
@@ -1897,8 +1987,11 @@ public class WebScore {
         }
 
         public void addElementState(String key, WebElementState elementState) {
+            WebElementState old = elementStates.get(key);
             elementStates.put(key, elementState);
-            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, key, elementState);
+            if (!elementState.equals(old)) {
+                pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, key, elementState);
+            }
         }
 
         public WebElementState getCentreShape() {
@@ -1918,8 +2011,11 @@ public class WebScore {
         }
 
         public void setZoomLevel(String zoomLevel) {
+            String old = this.zoomLevel;
             this.zoomLevel = zoomLevel;
-            pcs.firePropertyChange(WEB_OBJ_ZOOM_LEVEL, WEB_OBJ_ZOOM_LEVEL, zoomLevel);
+            if (!this.zoomLevel.equals(old)) {
+                pcs.firePropertyChange(WEB_OBJ_ZOOM_LEVEL, WEB_OBJ_ZOOM_LEVEL, zoomLevel);
+            }
         }
 
         public WebTextState getInstructions() {
@@ -1927,18 +2023,30 @@ public class WebScore {
         }
 
         public void setInstructions(String value, int lineNo) {
+            if (value == null) {
+                value = EMPTY;
+            }
+            String old = instructions.getLine(lineNo);
             instructions.setLine(value, lineNo);
-            pcs.firePropertyChange(WEB_OBJ_INSTRUCTIONS, instructions.getId(), value);
+            if (!value.equals(old)) {
+                pcs.firePropertyChange(WEB_OBJ_INSTRUCTIONS, instructions.getId(), instructions);
+            }
         }
 
         public void setInstructionsVisible(boolean isVisible) {
+            boolean old = this.instructions.isVisible();
             instructions.setVisible(isVisible);
-            pcs.firePropertyChange(WEB_OBJ_INSTRUCTIONS, instructions.getId(), isVisible);
+            if (old != isVisible) {
+                pcs.firePropertyChange(WEB_OBJ_INSTRUCTIONS, instructions.getId(), instructions);
+            }
         }
 
         public void setInstructionsColour(String colour) {
+            String old = instructions.getColour();
             instructions.setColour(colour);
-            pcs.firePropertyChange(WEB_OBJ_INSTRUCTIONS, instructions.getId(), colour);
+            if (!colour.equals(old)) {
+                pcs.firePropertyChange(WEB_OBJ_INSTRUCTIONS, instructions.getId(), instructions);
+            }
         }
 
         public WebGranulatorConfig getGranulatorConfig() {
@@ -1970,12 +2078,17 @@ public class WebScore {
     }
 
     public class WebScoreChangeListener implements PropertyChangeListener {
-        public void propertyChange(PropertyChangeEvent e) {
-            String propertyName = e.getPropertyName();
-            Object id = e.getOldValue();
-            Object newValue = e.getNewValue();
-            Object propagationId = e.getPropagationId();
-            LOG.info("WebScoreChangeListener: received propertyName: {} id: {} newValue: {} propagationId: {}", propertyName, id, newValue, propagationId);
+        public void propertyChange(PropertyChangeEvent changeEvent) {
+            if (changeEvent == null) {
+                return;
+            }
+            Object idObj = changeEvent.getOldValue();
+            if (!(idObj instanceof String)) {
+                LOG.error("propertyChange: invalid object id type, expected String");
+                return;
+            }
+            String objId = (String) idObj;
+            stateDeltaTracker.processUpdate(changeEvent.getPropertyName(), objId, changeEvent.getNewValue());
         }
     }
 }

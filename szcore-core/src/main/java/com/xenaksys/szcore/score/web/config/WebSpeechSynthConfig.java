@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
+import java.util.Objects;
 
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_INTERRUPT_TIMEOUT_MS;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_IS_INTERRUPT;
@@ -38,6 +39,7 @@ public class WebSpeechSynthConfig {
     private static final int DEFAULT_UTTERANCE_TIMEOUT_SEC = 30;
     private static final int DEFAULT_INTERRUPT_TIMEOUT_MS = 250;
     private static final boolean DEFAULT_IS_INTERRUPT = false;
+    private static final double CHANGE_THRESHOLD = 10E-3;
 
     private double volume = DEFAULT_VOLUME;
     private double pitch = DEFAULT_PITCH;
@@ -60,8 +62,11 @@ public class WebSpeechSynthConfig {
     }
 
     public void setVolume(double volume) {
+        double old = this.volume;
         this.volume = volume;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_VOLUME, volume);
+        if (Math.abs(old - this.volume) > CHANGE_THRESHOLD) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_VOLUME, volume);
+        }
     }
 
     public double getPitch() {
@@ -69,8 +74,11 @@ public class WebSpeechSynthConfig {
     }
 
     public void setPitch(double pitch) {
+        double old = this.pitch;
         this.pitch = pitch;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_PITCH, pitch);
+        if (Math.abs(old - this.pitch) > CHANGE_THRESHOLD) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_PITCH, pitch);
+        }
     }
 
     public double getRate() {
@@ -78,8 +86,11 @@ public class WebSpeechSynthConfig {
     }
 
     public void setRate(double rate) {
+        double old = this.rate;
         this.rate = rate;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_RATE, rate);
+        if (Math.abs(old - this.rate) > CHANGE_THRESHOLD) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_RATE, rate);
+        }
     }
 
     public String getLang() {
@@ -87,8 +98,11 @@ public class WebSpeechSynthConfig {
     }
 
     public void setLang(String lang) {
+        String old = this.lang;
         this.lang = lang;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_LANG, lang);
+        if (!this.lang.equals(old)) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_LANG, lang);
+        }
     }
 
     public int getMaxVoiceLoadAttempts() {
@@ -96,8 +110,11 @@ public class WebSpeechSynthConfig {
     }
 
     public void setMaxVoiceLoadAttempts(int maxVoiceLoadAttempts) {
+        int old = this.maxVoiceLoadAttempts;
         this.maxVoiceLoadAttempts = maxVoiceLoadAttempts;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_MAX_VOICE_LOAD_ATTEMPTS, maxVoiceLoadAttempts);
+        if (this.maxVoiceLoadAttempts != old) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_MAX_VOICE_LOAD_ATTEMPTS, maxVoiceLoadAttempts);
+        }
     }
 
     public int getMaxUtterances() {
@@ -105,8 +122,11 @@ public class WebSpeechSynthConfig {
     }
 
     public void setMaxUtterances(int maxUtterances) {
+        int old = this.maxUtterances;
         this.maxUtterances = maxUtterances;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_MAX_UTTERANCES, maxUtterances);
+        if (this.maxUtterances != old) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_MAX_UTTERANCES, maxUtterances);
+        }
     }
 
     public int getUtteranceTimeoutSec() {
@@ -114,8 +134,11 @@ public class WebSpeechSynthConfig {
     }
 
     public void setUtteranceTimeoutSec(int utteranceTimeoutSec) {
+        int old = this.utteranceTimeoutSec;
         this.utteranceTimeoutSec = utteranceTimeoutSec;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_UTTERANCE_TIMEOUT_SEC, utteranceTimeoutSec);
+        if (this.utteranceTimeoutSec != old) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_UTTERANCE_TIMEOUT_SEC, utteranceTimeoutSec);
+        }
     }
 
     public boolean isInterrupt() {
@@ -123,8 +146,11 @@ public class WebSpeechSynthConfig {
     }
 
     public void setInterrupt(boolean interrupt) {
-        isInterrupt = interrupt;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_IS_INTERRUPT, interrupt);
+        boolean old = this.isInterrupt;
+        this.isInterrupt = interrupt;
+        if (old != this.isInterrupt) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_IS_INTERRUPT, interrupt);
+        }
     }
 
     public int getInterruptTimeout() {
@@ -132,8 +158,11 @@ public class WebSpeechSynthConfig {
     }
 
     public void setInterruptTimeout(int interruptTimeout) {
+        int old = this.interruptTimeout;
         this.interruptTimeout = interruptTimeout;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_INTERRUPT_TIMEOUT_MS, interruptTimeout);
+        if (this.interruptTimeout != old) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_CONFIG_INTERRUPT_TIMEOUT_MS, interruptTimeout);
+        }
     }
 
     public boolean validate() {
@@ -222,6 +251,19 @@ public class WebSpeechSynthConfig {
         to.setInterrupt(this.isInterrupt);
         to.setInterruptTimeout(this.interruptTimeout);
         return to;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WebSpeechSynthConfig that = (WebSpeechSynthConfig) o;
+        return Double.compare(that.volume, volume) == 0 && Double.compare(that.pitch, pitch) == 0 && Double.compare(that.rate, rate) == 0 && maxVoiceLoadAttempts == that.maxVoiceLoadAttempts && maxUtterances == that.maxUtterances && utteranceTimeoutSec == that.utteranceTimeoutSec && isInterrupt == that.isInterrupt && interruptTimeout == that.interruptTimeout && Objects.equals(lang, that.lang);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(volume, pitch, rate, lang, maxVoiceLoadAttempts, maxUtterances, utteranceTimeoutSec, isInterrupt, interruptTimeout);
     }
 
     @Override

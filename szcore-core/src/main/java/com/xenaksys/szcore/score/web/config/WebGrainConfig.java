@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.beans.PropertyChangeSupport;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_PITCH_RATE_RANGE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_POSITION_OFFSET_RANGE_MS;
@@ -23,6 +24,7 @@ public class WebGrainConfig {
     private static final double MIN_PITCH_RATE_RANGE = 0;
     private static final double MAX_PITCH_RATE_RANGE = 1.0;
     private static final int MIN_TIME_OFFSET_STEP = 0;
+    private static final double CHANGE_THRESHOLD = 10E-5;
 
     private static final int DEFAULT_GRAIN_SIZE_MS = 100;
     private static final double DEFAULT_PITCH_RATE = 3.0;
@@ -47,8 +49,11 @@ public class WebGrainConfig {
     }
 
     public void setSizeMs(int sizeMs) {
+        int old = this.sizeMs;
         this.sizeMs = sizeMs;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN, WEB_CONFIG_SIZE_MS, sizeMs);
+        if (old != this.sizeMs) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN, WEB_CONFIG_SIZE_MS, sizeMs);
+        }
     }
 
     public double getPitchRate() {
@@ -56,8 +61,11 @@ public class WebGrainConfig {
     }
 
     public void setPitchRate(double pitchRate) {
+        double old = this.pitchRate;
         this.pitchRate = pitchRate;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN, WEB_CONFIG_PITCH_RATE, pitchRate);
+        if (Math.abs(old - this.pitchRate) > CHANGE_THRESHOLD) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN, WEB_CONFIG_PITCH_RATE, pitchRate);
+        }
     }
 
     public int getMaxPositionOffsetRangeMs() {
@@ -65,8 +73,11 @@ public class WebGrainConfig {
     }
 
     public void setMaxPositionOffsetRangeMs(int maxPositionOffsetRangeMs) {
+        int old = this.maxPositionOffsetRangeMs;
         this.maxPositionOffsetRangeMs = maxPositionOffsetRangeMs;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN, WEB_CONFIG_MAX_POSITION_OFFSET_RANGE_MS, maxPositionOffsetRangeMs);
+        if (old != this.maxPositionOffsetRangeMs) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN, WEB_CONFIG_MAX_POSITION_OFFSET_RANGE_MS, maxPositionOffsetRangeMs);
+        }
     }
 
     public double getMaxPitchRateRange() {
@@ -74,8 +85,11 @@ public class WebGrainConfig {
     }
 
     public void setMaxPitchRateRange(double maxPitchRateRange) {
+        double old = this.maxPitchRateRange;
         this.maxPitchRateRange = maxPitchRateRange;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN, WEB_CONFIG_MAX_PITCH_RATE_RANGE, maxPitchRateRange);
+        if (Math.abs(old - this.maxPitchRateRange) > CHANGE_THRESHOLD) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN, WEB_CONFIG_MAX_PITCH_RATE_RANGE, maxPitchRateRange);
+        }
     }
 
     public int getTimeOffsetStepMs() {
@@ -83,8 +97,11 @@ public class WebGrainConfig {
     }
 
     public void setTimeOffsetStepMs(int timeOffsetStepMs) {
+        int old = this.timeOffsetStepMs;
         this.timeOffsetStepMs = timeOffsetStepMs;
-        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN, WEB_CONFIG_TIME_OFFSET_STEPS_MS, timeOffsetStepMs);
+        if (old != this.timeOffsetStepMs) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRAIN, WEB_CONFIG_TIME_OFFSET_STEPS_MS, timeOffsetStepMs);
+        }
     }
 
     public boolean validate() {
@@ -137,6 +154,19 @@ public class WebGrainConfig {
         to.setMaxPitchRateRange(this.maxPitchRateRange);
         to.setTimeOffsetStepMs(this.timeOffsetStepMs);
         return to;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WebGrainConfig that = (WebGrainConfig) o;
+        return sizeMs == that.sizeMs && Double.compare(that.pitchRate, pitchRate) == 0 && maxPositionOffsetRangeMs == that.maxPositionOffsetRangeMs && Double.compare(that.maxPitchRateRange, maxPitchRateRange) == 0 && timeOffsetStepMs == that.timeOffsetStepMs;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(sizeMs, pitchRate, maxPositionOffsetRangeMs, maxPitchRateRange, timeOffsetStepMs);
     }
 
     @Override

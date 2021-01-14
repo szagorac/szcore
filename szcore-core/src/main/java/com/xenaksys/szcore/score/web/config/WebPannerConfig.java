@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.beans.PropertyChangeSupport;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_DISTANCE_MODEL;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_IS_USE_PANNER;
@@ -102,6 +103,19 @@ public class WebPannerConfig {
         to.setDistanceModel(this.distanceModel);
         to.setMaxPanAngle(this.maxPanAngle);
         return to;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WebPannerConfig that = (WebPannerConfig) o;
+        return isUsePanner == that.isUsePanner && maxPanAngle == that.maxPanAngle && Objects.equals(panningModel, that.panningModel) && Objects.equals(distanceModel, that.distanceModel);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(isUsePanner, panningModel, distanceModel, maxPanAngle);
     }
 
     @Override

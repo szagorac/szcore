@@ -317,6 +317,14 @@ public class EventFactory {
         return new WebScoreStopEvent(null, null, creationTime);
     }
 
+    public WebScorePlayTilesEvent createWebScorePlayTilesEvent(long creationTime) {
+        return new WebScorePlayTilesEvent(null, null, creationTime);
+    }
+
+    public WebScoreSelectTilesEvent createWebScoreSelectTilesEvent(List<String> tileIds, long creationTime) {
+        return new WebScoreSelectTilesEvent(null, null, tileIds, creationTime);
+    }
+
     public OutgoingWebEvent createOutgoingWebEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, long creationTime) {
         return new OutgoingWebEvent(beatId, eventId, eventType, creationTime);
     }

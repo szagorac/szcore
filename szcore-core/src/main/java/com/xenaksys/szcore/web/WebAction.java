@@ -3,6 +3,7 @@ package com.xenaksys.szcore.web;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class WebAction {
     private final String id;
@@ -29,12 +30,25 @@ public class WebAction {
         return actionType;
     }
 
-    public List<String> getElementId() {
+    public List<String> getElementIds() {
         return elementIds;
     }
 
     public Map<String, Object> getParams() {
         return params;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WebAction webAction = (WebAction) o;
+        return id.equals(webAction.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
     @Override

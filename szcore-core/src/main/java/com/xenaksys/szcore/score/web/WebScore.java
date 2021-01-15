@@ -255,6 +255,7 @@ public class WebScore {
         state.setSpeechSynthState(createDefaultSpeechSynthState());
 
         updateServerState();
+        pushServerState();
     }
 
     private void populateTilePageMap(int row, int col, String tileId) {
@@ -485,7 +486,9 @@ public class WebScore {
 
     public void updateServerStateAndPush() {
         updateServerState();
-        pushServerState();
+        updateServerStateDelta();
+//        pushServerState();
+        pushServerStateDelta();
     }
 
     public void setVisibleRows(int[] rows) {
@@ -1322,6 +1325,16 @@ public class WebScore {
     public void updateServerState() {
         try {
             scoreProcessor.onWebScoreStateChange(exportState());
+        } catch (Exception e) {
+            LOG.error("Failed to process updateServerState", e);
+        }
+    }
+
+    public void updateServerStateDelta() {
+        try {
+            if (stateDeltaTracker.hasChanges()) {
+                scoreProcessor.onWebScoreStateDeltaChange(stateDeltaTracker.getDeltaExport());
+            }
         } catch (Exception e) {
             LOG.error("Failed to process updateServerState", e);
         }

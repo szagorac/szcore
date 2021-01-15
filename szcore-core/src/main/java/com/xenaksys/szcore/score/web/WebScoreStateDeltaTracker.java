@@ -59,6 +59,10 @@ public class WebScoreStateDeltaTracker {
         delta.clear();
     }
 
+    public boolean hasChanges() {
+        return !delta.isEmpty();
+    }
+
     public void processUpdate(String propertyName, String id, Object newValue) {
         if (propertyName == null) {
             LOG.error("processUpdate: invalid propertyName (null) id: {} newValue: {}", id, newValue);

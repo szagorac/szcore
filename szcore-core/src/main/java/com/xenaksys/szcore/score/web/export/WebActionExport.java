@@ -37,7 +37,9 @@ public class WebActionExport {
         this.id = from.getId();
         this.actionType = from.getActionType();
         this.elementIds = new ArrayList<>(from.getElementIds());
-        this.params = new HashMap<>(from.getParams());
+        if (from.getParams() != null) {
+            this.params = new HashMap<>(from.getParams());
+        }
     }
 
     @Override

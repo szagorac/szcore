@@ -81,6 +81,7 @@ import com.xenaksys.szcore.process.OscDestinationEventListener;
 import com.xenaksys.szcore.score.web.WebScore;
 import com.xenaksys.szcore.score.web.WebScoreLoader;
 import com.xenaksys.szcore.score.web.WebScoreScript;
+import com.xenaksys.szcore.score.web.export.WebScoreStateDeltaExport;
 import com.xenaksys.szcore.score.web.export.WebScoreStateExport;
 import com.xenaksys.szcore.task.ScriptingEngineEventTask;
 import com.xenaksys.szcore.task.TaskFactory;
@@ -2213,6 +2214,11 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     @Override
+    public void onWebScoreStateDeltaChange(WebScoreStateDeltaExport webScoreStateDeltaExport) throws Exception {
+        notifyListeners(webScoreStateDeltaExport);
+    }
+
+    @Override
     public void onOutgoingWebEvent(OutgoingWebEvent webEvent) throws Exception {
         publishWebEvent(webEvent);
     }
@@ -2278,6 +2284,12 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private void notifyListeners(WebScoreStateExport webScoreStateExport) {
         for (WebScoreStateListener listener : webScoreStateListeners) {
             listener.onWebScoreStateChange(webScoreStateExport);
+        }
+    }
+
+    private void notifyListeners(WebScoreStateDeltaExport deltaExport) {
+        for (WebScoreStateListener listener : webScoreStateListeners) {
+            listener.onWebScoreStateDeltaChange(deltaExport);
         }
     }
 

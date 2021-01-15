@@ -16,6 +16,7 @@ import com.xenaksys.szcore.model.Processor;
 import com.xenaksys.szcore.model.ScoreService;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.ZsResponseType;
+import com.xenaksys.szcore.score.web.export.WebScoreStateDeltaExport;
 import com.xenaksys.szcore.score.web.export.WebScoreStateExport;
 import com.xenaksys.szcore.util.Util;
 import org.slf4j.Logger;
@@ -57,6 +58,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     private volatile String currentWebScoreState;
     private volatile String currentWebScoreStateDelta;
     private volatile long stateUpdateTime = 0;
+    private volatile long stateDeltaUpdateTime = 0;
 
     public WebProcessor(ScoreService scoreService, EventService eventService, Clock clock, EventFactory eventFactory) {
         this.scoreService = scoreService;
@@ -181,6 +183,14 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         return GSON.toJson(dataContainer);
     }
 
+    private String createStateDeltaWebString(String state) {
+        WebDataContainer dataContainer = new WebDataContainer();
+        dataContainer.addParam(WEB_RESPONSE_TYPE, WebResponseType.STATE_DELTA.name());
+        dataContainer.addParam(WEB_RESPONSE_STATE, state);
+        dataContainer.addParam(WEB_RESPONSE_TIME, "" + getClock().getSystemTimeMillis());
+        return GSON.toJson(dataContainer);
+    }
+
     private String processIncomingWebEvent(String eventName, ZsWebRequest zsRequest) throws Exception {
         if (eventName == null) {
             return createErrorWebString("InvalidEventName");
@@ -279,6 +289,22 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         this.stateUpdateTime = getClock().getSystemTimeMillis();
     }
 
+    @Override
+    public void onWebScoreStateDeltaChange(WebScoreStateDeltaExport webScoreStateDeltaExport) {
+        if (webScoreStateDeltaExport == null) {
+            return;
+        }
+        String out = GSON.toJson(webScoreStateDeltaExport);
+        int stringLenBytes = Util.getStringLengthUtf8(out);
+        long stringLenKb = stringLenBytes / 1024;
+        LOG.info("onWebScoreStateDeltaChange: WebState size: {}Kb json: {}", stringLenKb, out);
+        if (stringLenKb > 64) {
+            LOG.error("onWebScoreStateDeltaChange: ### WARNING ### WebState size {}Kb larger than 64Kb", stringLenKb);
+        }
+        this.currentWebScoreStateDelta = out;
+        this.stateDeltaUpdateTime = getClock().getSystemTimeMillis();
+    }
+
     public void onOutgoingWebEvent(OutgoingWebEvent webEvent) {
         if (webEvent == null) {
             return;
@@ -306,7 +332,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         if (currentWebScoreStateDelta == null) {
             return;
         }
-        String delta = createStateWebString(currentWebScoreStateDelta);
+        String delta = createStateDeltaWebString(currentWebScoreStateDelta);
         scoreService.pushToWebClients(delta);
         //reset delta - is that smart?
         currentWebScoreState = null;

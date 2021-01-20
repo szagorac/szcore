@@ -164,6 +164,7 @@ public class WebScore {
     private final MutablePageId tempPageId;
     private volatile long lastPlayTilesInternalEventTime = 0L;
     private volatile long lastSelectTilesInternalEventTime = 0L;
+    private volatile boolean isSortByClickCount = true;
 
     public WebScore(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock) {
         this.scoreProcessor = scoreProcessor;
@@ -405,7 +406,9 @@ public class WebScore {
                 state.decrementClickCount();
                 LOG.info("setSelectedElement: Received elementId: {} tile: {} click count: {} isSelected: {}", elementId, tile.getId(), state.getClickCount(), state.isSelected());
             }
-            activeTiles.sort(CLICK_COMPARATOR);
+            if (isSortByClickCount) {
+                activeTiles.sort(CLICK_COMPARATOR);
+            }
         }
     }
 
@@ -724,7 +727,12 @@ public class WebScore {
     }
 
     public void setActiveRows(int[] rows) {
+        setActiveRows(rows, true);
+    }
+
+    public void setActiveRows(int[] rows, boolean isSortByClickCount) {
         LOG.info("setActiveRows: {}", Arrays.toString(rows));
+        this.isSortByClickCount = isSortByClickCount;
         Tile[][] tiles = state.getTiles();
         TIntList tintRows = new TIntArrayList(rows);
         for (int i = 0; i < 8; i++) {

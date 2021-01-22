@@ -888,6 +888,15 @@ public class WebScore {
         setAction(WEB_ACTION_ID_STOP, WebActionType.AUDIO.name(), target, params);
     }
 
+    public void rampLinearSpeechParam(String name, Object endValue, double durationSec) {
+        String[] target = {WEB_SPEECH_SYNTH};
+        Map<String, Object> params = new HashMap<>();
+        params.put(WEB_CONFIG_PARAM_NAME, name);
+        params.put(WEB_CONFIG_END_VALUE, endValue);
+        params.put(WEB_CONFIG_DURATION, durationSec);
+        setAction(WEB_ACTION_ID_RAMP_LINEAR, WebActionType.AUDIO.name(), target, params);
+    }
+
     public void setSpeechSynthConfigParam(String name, Object value) {
         try {
             LOG.info("setSpeechSynthConfigParam: setting config param: {} value: {}", name, value);

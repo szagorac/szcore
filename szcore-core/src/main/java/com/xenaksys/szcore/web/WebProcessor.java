@@ -335,7 +335,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         String delta = createStateDeltaWebString(currentWebScoreStateDelta);
         scoreService.pushToWebClients(delta);
         //reset delta - is that smart?
-        currentWebScoreState = null;
+        currentWebScoreStateDelta = null;
     }
 
     public Clock getClock() {

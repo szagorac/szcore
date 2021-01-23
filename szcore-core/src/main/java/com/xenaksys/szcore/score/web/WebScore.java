@@ -70,6 +70,9 @@ import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_RAMP_SIN;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_START;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_STATE;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_STOP;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_PARAM_LEVEL;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_PARAM_TIME_MS;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_VOLUME;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_AMPLITUDE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_ATTACK_TIME;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_AUDIO_STOP_TOLERANCE_MS;
@@ -808,7 +811,7 @@ public class WebScore {
         params.put(WEB_CONFIG_PARAM_NAME, paramName);
         params.put(WEB_CONFIG_END_VALUE, endValue);
         params.put(WEB_CONFIG_DURATION, durationMs);
-        setAction(WEB_ACTION_ID_RAMP_LINEAR, WebActionType.AUDIO.name(), target, null);
+        setAction(WEB_ACTION_ID_RAMP_LINEAR, WebActionType.AUDIO.name(), target, params);
     }
 
     public void granulatorRampSin(String paramName, Double amplitude, Double frequency, int durationMs) {
@@ -818,7 +821,15 @@ public class WebScore {
         params.put(WEB_CONFIG_AMPLITUDE, amplitude);
         params.put(WEB_CONFIG_FREQUENCY, frequency);
         params.put(WEB_CONFIG_DURATION, durationMs);
-        setAction(WEB_ACTION_ID_RAMP_SIN, WebActionType.AUDIO.name(), target, null);
+        setAction(WEB_ACTION_ID_RAMP_SIN, WebActionType.AUDIO.name(), target, params);
+    }
+
+    public void setGranulatorVolume(Double level, int millis) {
+        String[] target = {WEB_GRANULATOR};
+        Map<String, Object> params = new HashMap<>();
+        params.put(WEB_ACTION_PARAM_LEVEL, level);
+        params.put(WEB_ACTION_PARAM_TIME_MS, millis);
+        setAction(WEB_ACTION_VOLUME, WebActionType.AUDIO.name(), target, params);
     }
 
     public void sendSpeechSynthConfig() {

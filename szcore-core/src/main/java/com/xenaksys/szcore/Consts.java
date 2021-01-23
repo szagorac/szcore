@@ -332,6 +332,10 @@ public interface Consts {
     String WEB_ACTION_ID_STATE = "state";
     String WEB_ACTION_ID_RAMP_LINEAR = "rampLinear";
     String WEB_ACTION_ID_RAMP_SIN = "rampSin";
+    String WEB_ACTION_VOLUME = "volume";
+
+    String WEB_ACTION_PARAM_LEVEL = "level";
+    String WEB_ACTION_PARAM_TIME_MS = "timeMs";
 
     String WEB_CONFIG_DURATION = "duration";
     String WEB_CONFIG_GRAIN = "grain";

@@ -39,7 +39,7 @@ public class WebGranulatorConfig {
     private static final double DEFAULT_PLAY_DURATION_SEC = 30.0;
     private static final double DEFAULT_PLAY_START_OFFSET_SEC = 0.0;
     private static final int DEFAULT_GRAINS = 12;
-    private static final double DEFAULT_BUFFER_POSITION_PLAY_RATE = 0.2;
+    private static final double DEFAULT_BUFFER_POSITION_PLAY_RATE = 0.5;
     private static final int DEFAULT_AUDIO_STOP_TOLERANCE_MS = 5;
 
     private double masterGainVal = DEFAULT_GAIN;

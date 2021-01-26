@@ -440,16 +440,23 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void addOscScriptEvent(BeatId beatId, OscScript script, Id transportId) {
 
-        if (script.isReset()) {
+        if (script.isResetPoint()) {
             try {
                 addMaxPreset(beatId, script);
+                if (!script.isResetOnly()) {
+                    addBeatOscScript(beatId, transportId, script);
+                }
             } catch (Exception e) {
                 LOG.error("addOscScriptEvent: failed to add maxmsp preset: " + script, e);
             }
         } else {
-            OscEvent beatScriptEvent = createOscBeatScriptEvent(script, beatId);
-            szcore.addScoreBaseBeatEvent(transportId, beatScriptEvent);
+            addBeatOscScript(beatId, transportId, script);
         }
+    }
+
+    private void addBeatOscScript(BeatId beatId, Id transportId, OscScript script) {
+        OscEvent beatScriptEvent = createOscBeatScriptEvent(script, beatId);
+        szcore.addScoreBaseBeatEvent(transportId, beatScriptEvent);
     }
 
     private void addScriptEngineEvent(BeatId beatId, ScriptingEngineScript script) {
@@ -466,7 +473,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     public void addMaxPreset(BeatId beatId, OscScript script) throws Exception {
-        if (script == null || !script.isReset()) {
+        if (script == null || !script.isResetPoint()) {
             return;
         }
 

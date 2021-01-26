@@ -123,7 +123,7 @@ public class MaxMspScoreConfig {
         args.add(fileName);
 
         IntId id = new IntId(Consts.ID_SOURCE.incrementAndGet());
-        return new OscScript(id, beatId, target, args, false);
+        return new OscScript(id, beatId, target, args, false, false);
     }
 
     public OscScript createPlayNextBufferScript(BeatId beatId, int buffer) {
@@ -139,6 +139,6 @@ public class MaxMspScoreConfig {
 //        args.add(target);
 
         IntId id = new IntId(Consts.ID_SOURCE.incrementAndGet());
-        return new OscScript(id, beatId, target, args, false);
+        return new OscScript(id, beatId, target, args, false, false);
     }
 }

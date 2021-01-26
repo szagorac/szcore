@@ -17,15 +17,17 @@ public class OscScript implements Script {
     private final String content;
     private final String target;
     private final List<Object> args;
-    private final boolean isReset;
+    private final boolean isResetPoint;
+    private final boolean isResetOnly;
 
-    public OscScript(IntId id, BeatId beatId, String target, List<Object> args, boolean isReset) {
+    public OscScript(IntId id, BeatId beatId, String target, List<Object> args, boolean isResetPoint, boolean isResetOnly) {
         this.id = id;
         this.beatId = beatId;
         this.content = target;
         this.target = target;
         this.args = args;
-        this.isReset = isReset;
+        this.isResetPoint = isResetPoint;
+        this.isResetOnly = isResetOnly;
     }
 
     @Override
@@ -47,7 +49,7 @@ public class OscScript implements Script {
     public Script copy(BeatId newBeatId) {
         IntId newId = new IntId(Consts.ID_SOURCE.incrementAndGet());
         List<Object> newArgs = new ArrayList<>(this.args);
-        return new OscScript(newId, newBeatId, this.target, newArgs, this.isReset);
+        return new OscScript(newId, newBeatId, this.target, newArgs, this.isResetPoint, this.isResetOnly);
     }
 
     public List<Object> getArgs() {
@@ -63,8 +65,12 @@ public class OscScript implements Script {
         return id;
     }
 
-    public boolean isReset() {
-        return isReset;
+    public boolean isResetPoint() {
+        return isResetPoint;
+    }
+
+    public boolean isResetOnly() {
+        return isResetOnly;
     }
 
     @Override
@@ -79,7 +85,8 @@ public class OscScript implements Script {
                 ", beatId=" + beatId +
                 ", content='" + content + '\'' +
                 ", target='" + target + '\'' +
-                ", isReset='" + isReset + '\'' +
+                ", isReset='" + isResetPoint + '\'' +
+                ", isResetOnly='" + isResetOnly + '\'' +
                 ", args=" + Arrays.toString(args.toArray()) +
                 '}';
     }

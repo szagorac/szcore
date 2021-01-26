@@ -411,6 +411,8 @@ public class WebScore {
             }
             if (isSortByClickCount) {
                 activeTiles.sort(CLICK_COMPARATOR);
+            } else {
+                LOG.info("setSelectedElement: sort by click disabled, using natural order");
             }
         }
     }
@@ -1306,10 +1308,6 @@ public class WebScore {
         return null;
     }
 
-    public WebScoreStateExport createExportDelta() {
-        return null;
-    }
-
     public WebScoreStateExport exportState() {
         Tile[][] tiles = state.getTiles();
         TileExport[][] tes = new TileExport[tiles.length][tiles[0].length];
@@ -1419,12 +1417,28 @@ public class WebScore {
                 default:
                     LOG.warn("processWebScoreEvent: Ignoring event {}", type);
             }
+            boolean isClickCountAdded = addClickCounts();
+            isSendStateUpdate = isSendStateUpdate || isClickCountAdded;
             if (isSendStateUpdate) {
                 updateServerStateAndPush();
             }
         } catch (Exception e) {
             LOG.error("Failed to evaluate script", e);
         }
+    }
+
+    private boolean addClickCounts() {
+        boolean isUpdate = false;
+        for (Tile tile : activeTiles) {
+            WebElementState tileState = tile.getState();
+            if (!tileState.isPlayed && tileState.getClickCount() > 0) {
+                pcs.firePropertyChange(WEB_OBJ_TILE, tile.getId(), tile);
+                if (!isUpdate) {
+                    isUpdate = true;
+                }
+            }
+        }
+        return isUpdate;
     }
 
     public void addBeatScript(BeatId beatId, WebScoreScript webScoreScript) {

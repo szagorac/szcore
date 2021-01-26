@@ -340,6 +340,7 @@ public class ScoreLoader {
         String target = Consts.OSC_ADDRESS_ZSCORE;
         List<Object> args = new ArrayList<>();
         boolean isReset = false;
+        boolean isResetOnly = false;
 
         if (script.startsWith(RESOURCE_MAXMSP)) {
             script = script.substring(RESOURCE_MAXMSP.length());
@@ -388,6 +389,14 @@ public class ScoreLoader {
             script = script.substring(end);
 
             isReset = true;
+            switch (resetPointType) {
+                case ONLY:
+                    isResetOnly = true;
+                    break;
+                case BOTH:
+                    isResetOnly = false;
+                    break;
+            }
 
             if (script.startsWith(SCRIPT_DELIMITER)) {
                 script = script.substring(SCRIPT_DELIMITER.length());
@@ -420,7 +429,7 @@ public class ScoreLoader {
             }
         }
 
-        Script scriptObj = new OscScript(id, beatId, target, args, isReset);
+        Script scriptObj = new OscScript(id, beatId, target, args, isReset, isResetOnly);
         LOG.info("processMaxMspScoreElement: Created script: {}", scriptObj);
         score.addScript(scriptObj);
     }

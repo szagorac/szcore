@@ -361,6 +361,10 @@ public interface Consts {
     String WEB_CONFIG_MAX_GRAINS = "maxGrains";
     String WEB_CONFIG_BUFFER_POSITION_PLAY_RATE = "bufferPositionPlayRate";
     String WEB_CONFIG_AUDIO_STOP_TOLERANCE_MS = "audioStopToleranceMs";
+    String WEB_CONFIG_IS_USE_POSITION_OSCILLATOR = "isUsePositionOscillator";
+    String WEB_CONFIG_IS_USE_SIZE_OSCILLATOR = "isUseSizeOscillator";
+    String WEB_CONFIG_IS_USE_POSITION_FREQ_MOD = "isUsePositionFrequencyMod";
+    String WEB_CONFIG_IS_USE_POSITION_RANGE_MOD = "isUsePositionRangeMod";
     String WEB_CONFIG_VOLUME = "volume";
     String WEB_CONFIG_PITCH = "pitch";
     String WEB_CONFIG_RATE = "rate";
@@ -378,6 +382,15 @@ public interface Consts {
     String WEB_CONFIG_END_VALUE = "endValue";
     String WEB_CONFIG_AMPLITUDE = "amplitude";
     String WEB_CONFIG_FREQUENCY = "frequency";
+    String WEB_CONFIG_OSCILLATOR = "oscillator";
+    String WEB_CONFIG_SIZE_OSCILLATOR = "sizeOscillator";
+    String WEB_CONFIG_POSITION_OSCILLATOR = "positionOscillator";
+    String WEB_CONFIG_FREQUENCY_LFO = "frequencyLFO";
+    String WEB_CONFIG_START_LFO = "startLFO";
+    String WEB_CONFIG_END_LFO = "endLFO";
+
+    double WEB_CONFIG_DOUBLE_CHANGE_THRESHOLD = 10E-3;
+
 
     String NAME_FULL_SCORE = "FullScore";
 

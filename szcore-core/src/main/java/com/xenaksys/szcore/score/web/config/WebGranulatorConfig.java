@@ -315,6 +315,58 @@ public class WebGranulatorConfig {
         return grain.validate() && envelope.validate() && panner.validate() && positionOscillator.validate() && sizeOscillator.validate();
     }
 
+
+    public void update(Map<String, Object> config) {
+        if (config == null || config.isEmpty()) {
+            return;
+        }
+        if (config.containsKey(WEB_CONFIG_MASTER_GAIN_VAL)) {
+            setMasterGainVal((Double) config.get(WEB_CONFIG_MASTER_GAIN_VAL));
+        }
+        if (config.containsKey(WEB_CONFIG_PLAY_DURATION_SEC)) {
+            setPlayDurationSec((Double) config.get(WEB_CONFIG_PLAY_DURATION_SEC));
+        }
+        if (config.containsKey(WEB_CONFIG_PLAY_START_OFFSET_SEC)) {
+            setPlayStartOffsetSec((Double) config.get(WEB_CONFIG_PLAY_START_OFFSET_SEC));
+        }
+        if (config.containsKey(WEB_CONFIG_MAX_GRAINS)) {
+            setMaxGrains((Integer) config.get(WEB_CONFIG_MAX_GRAINS));
+        }
+        if (config.containsKey(WEB_CONFIG_BUFFER_POSITION_PLAY_RATE)) {
+            setBufferPositionPlayRate((Double) config.get(WEB_CONFIG_BUFFER_POSITION_PLAY_RATE));
+        }
+        if (config.containsKey(WEB_CONFIG_AUDIO_STOP_TOLERANCE_MS)) {
+            setAudioStopToleranceMs((Integer) config.get(WEB_CONFIG_AUDIO_STOP_TOLERANCE_MS));
+        }
+        if (config.containsKey(WEB_CONFIG_IS_USE_POSITION_OSCILLATOR)) {
+            setUsePositionOscillator((Boolean) config.get(WEB_CONFIG_IS_USE_POSITION_OSCILLATOR));
+        }
+        if (config.containsKey(WEB_CONFIG_IS_USE_SIZE_OSCILLATOR)) {
+            setUseSizeOscillator((Boolean) config.get(WEB_CONFIG_IS_USE_SIZE_OSCILLATOR));
+        }
+        if (config.containsKey(WEB_CONFIG_IS_USE_POSITION_FREQ_MOD)) {
+            setUsePositionFrequencyMod((Boolean) config.get(WEB_CONFIG_IS_USE_POSITION_FREQ_MOD));
+        }
+        if (config.containsKey(WEB_CONFIG_IS_USE_POSITION_RANGE_MOD)) {
+            setUsePositionRangeMod((Boolean) config.get(WEB_CONFIG_IS_USE_POSITION_RANGE_MOD));
+        }
+        if (config.containsKey(WEB_CONFIG_GRAIN)) {
+            grain.update((Map<String, Object>) config.get(WEB_CONFIG_GRAIN));
+        }
+        if (config.containsKey(WEB_CONFIG_ENVELOPE)) {
+            envelope.update((Map<String, Object>) config.get(WEB_CONFIG_ENVELOPE));
+        }
+        if (config.containsKey(WEB_CONFIG_PANNER)) {
+            panner.update((Map<String, Object>) config.get(WEB_CONFIG_PANNER));
+        }
+        if (config.containsKey(WEB_CONFIG_POSITION_OSCILLATOR)) {
+            positionOscillator.update((Map<String, Object>) config.get(WEB_CONFIG_POSITION_OSCILLATOR));
+        }
+        if (config.containsKey(WEB_CONFIG_SIZE_OSCILLATOR)) {
+            sizeOscillator.update((Map<String, Object>) config.get(WEB_CONFIG_SIZE_OSCILLATOR));
+        }
+    }
+
     public Map<String, Object> toJsMap() {
         Map<String, Object> config = new HashMap<>();
         config.put(WEB_CONFIG_MASTER_GAIN_VAL, getMasterGainVal());

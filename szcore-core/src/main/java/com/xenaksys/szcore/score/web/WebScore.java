@@ -83,12 +83,14 @@ import static com.xenaksys.szcore.Consts.WEB_CONFIG_DURATION;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_END_VALUE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_ENVELOPE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_FREQUENCY;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_GO_PRESET;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_GRAIN;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_INTERRUPT_TIMEOUT_MS;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_IS_INTERRUPT;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_IS_PLAY_SPEECH_ON_CLICK;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_IS_USE_PANNER;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_LANG;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_LOAD_PRESET;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_MASTER_GAIN_VAL;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_GRAINS;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_PAN_ANGLE;
@@ -104,6 +106,7 @@ import static com.xenaksys.szcore.Consts.WEB_CONFIG_PITCH_RATE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_PLAY_DURATION_SEC;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_PLAY_START_OFFSET_SEC;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_RATE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_READY_PRESET;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_RELEASE_TIME;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_SIZE_MS;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_SPEECH_IS_INTERRUPT;
@@ -258,6 +261,8 @@ public class WebScore {
         state.setSpeechSynthConfig(createDefaultSpeechSynthConfig());
         state.setSpeechSynthState(createDefaultSpeechSynthState());
 
+        reset(WEB_CONFIG_LOAD_PRESET);
+
         updateServerState();
         pushServerState();
     }
@@ -278,10 +283,41 @@ public class WebScore {
                 return;
             }
 
-            runScripts(preset.getScripts());
+            Map<String, Object> configs = preset.getConfigs();
+            if (!configs.isEmpty()) {
+                processPresetConfigs(configs);
+            }
+
+            List<String> scripts = preset.getScripts();
+            if (!scripts.isEmpty()) {
+                runScripts(scripts);
+            }
         } catch (Exception e) {
             LOG.error("resetState: Failed to run preset: {}", presetNo, e);
         }
+    }
+
+    public void processPresetConfigs(Map<String, Object> configs) {
+        for (String key : configs.keySet()) {
+            switch (key) {
+                case WEB_GRANULATOR:
+                    updateGranulatorConfig((Map<String, Object>) configs.get(key));
+                    break;
+                case WEB_SPEECH_SYNTH:
+                    updateSpeechSynthConfig((Map<String, Object>) configs.get(key));
+                    break;
+                default:
+                    LOG.info("processPresetConfigs: unknown key: {}", key);
+            }
+        }
+    }
+
+    private void updateGranulatorConfig(Map<String, Object> conf) {
+        getGranulatorConfig().update(conf);
+    }
+
+    private void updateSpeechSynthConfig(Map<String, Object> conf) {
+        getSpeechSynthConfig().update(conf);
     }
 
     public void runScripts(List<String> scripts) {
@@ -1138,6 +1174,10 @@ public class WebScore {
         }
     }
 
+    public void setGranulatorConfig(String params) {
+
+    }
+
     public void setGranulatorConfig(Map<String, Object> params) {
         if (params == null) {
             LOG.error("setGranulatorConfig: invalid params");
@@ -1516,10 +1556,10 @@ public class WebScore {
 
         LOG.info("processPrecountEvent: count: {}, isOn: {}, colId: {}", count, isOn, colourId);
         if (count == 1 && isOn && colourId == 4) {
-            reset(0);
+            reset(WEB_CONFIG_READY_PRESET);
             return true;
         } else if (count == 1 && isOn && colourId == 3) {
-            reset(-1);
+            reset(WEB_CONFIG_GO_PRESET);
             return true;
         }
 

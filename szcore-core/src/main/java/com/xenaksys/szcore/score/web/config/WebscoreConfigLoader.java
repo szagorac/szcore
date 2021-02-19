@@ -23,6 +23,7 @@ import static com.xenaksys.szcore.Consts.CONFIG_SCRIPTS;
 import static com.xenaksys.szcore.Consts.CONFIG_START;
 import static com.xenaksys.szcore.Consts.CONFIG_TILE_COLS;
 import static com.xenaksys.szcore.Consts.CONFIG_TILE_ROW;
+import static com.xenaksys.szcore.Consts.CONFIG_WEB_CONFIG;
 import static com.xenaksys.szcore.Consts.WEBSCORE_PRESET_FILE_SUFFIX;
 import static com.xenaksys.szcore.Consts.YAML_FILE_EXTENSION;
 
@@ -56,10 +57,19 @@ public class WebscoreConfigLoader extends YamlLoader {
             if (id == null) {
                 throw new RuntimeException("loadWebScore: Invalid Preset ID");
             }
-            ScriptPreset preset = new ScriptPreset(id);
 
+            ScriptPreset preset = new ScriptPreset(id);
             List<String> presetScripts = getStrList(CONFIG_SCRIPTS, presetConfig);
             preset.addScripts(presetScripts);
+
+            if (presetConfig.containsKey(CONFIG_WEB_CONFIG)) {
+                List<Map<String, Object>> webConfigs = getListOfMaps(CONFIG_WEB_CONFIG, presetConfig);
+                for (Map<String, Object> webConfig : webConfigs) {
+                    for (String key : webConfig.keySet()) {
+                        preset.addConfig(key, webConfig.get(key));
+                    }
+                }
+            }
 
             config.addPreset(preset);
         }

@@ -223,6 +223,39 @@ public class WebSpeechSynthConfig {
         }
     }
 
+    public void update(Map<String, Object> config) {
+        if (config == null || config.isEmpty()) {
+            return;
+        }
+        if (config.containsKey(WEB_CONFIG_VOLUME)) {
+            setVolume((Double) config.get(WEB_CONFIG_VOLUME));
+        }
+        if (config.containsKey(WEB_CONFIG_PITCH)) {
+            setPitch((Double) config.get(WEB_CONFIG_PITCH));
+        }
+        if (config.containsKey(WEB_CONFIG_RATE)) {
+            setRate((Double) config.get(WEB_CONFIG_RATE));
+        }
+        if (config.containsKey(WEB_CONFIG_LANG)) {
+            setLang((String) config.get(WEB_CONFIG_LANG));
+        }
+        if (config.containsKey(WEB_CONFIG_MAX_VOICE_LOAD_ATTEMPTS)) {
+            setMaxVoiceLoadAttempts((Integer) config.get(WEB_CONFIG_MAX_VOICE_LOAD_ATTEMPTS));
+        }
+        if (config.containsKey(WEB_CONFIG_MAX_UTTERANCES)) {
+            setMaxUtterances((Integer) config.get(WEB_CONFIG_MAX_UTTERANCES));
+        }
+        if (config.containsKey(WEB_CONFIG_UTTERANCE_TIMEOUT_SEC)) {
+            setUtteranceTimeoutSec((Integer) config.get(WEB_CONFIG_UTTERANCE_TIMEOUT_SEC));
+        }
+        if (config.containsKey(WEB_CONFIG_IS_INTERRUPT)) {
+            setInterrupt((Boolean) config.get(WEB_CONFIG_IS_INTERRUPT));
+        }
+        if (config.containsKey(WEB_CONFIG_INTERRUPT_TIMEOUT_MS)) {
+            setInterruptTimeout((Integer) config.get(WEB_CONFIG_INTERRUPT_TIMEOUT_MS));
+        }
+    }
+
     public Map<String, Object> toJsMap() {
         Map<String, Object> config = new HashMap<>();
         config.put(WEB_CONFIG_VOLUME, getVolume());

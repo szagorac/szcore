@@ -7,6 +7,11 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_FREQUENCY;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_VALUE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MIN_VALUE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_TYPE;
+
 public class WebOscillatorConfigExport {
     static final Logger LOG = LoggerFactory.getLogger(WebOscillatorConfigExport.class);
 
@@ -50,10 +55,10 @@ public class WebOscillatorConfigExport {
 
     public Map<String, Object> toJsMap() {
         Map<String, Object> config = new HashMap<>();
-        config.put(parentConfigPrefix + "minValue", getMinValue());
-        config.put(parentConfigPrefix + "maxValue", getMaxValue());
-        config.put(parentConfigPrefix + "type", getType());
-        config.put(parentConfigPrefix + "frequency", getFrequency());
+        config.put(parentConfigPrefix + WEB_CONFIG_MIN_VALUE, getMinValue());
+        config.put(parentConfigPrefix + WEB_CONFIG_MAX_VALUE, getMaxValue());
+        config.put(parentConfigPrefix + WEB_CONFIG_TYPE, getType());
+        config.put(parentConfigPrefix + WEB_CONFIG_FREQUENCY, getFrequency());
         return config;
     }
 

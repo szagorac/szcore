@@ -5,6 +5,13 @@ import com.xenaksys.szcore.score.web.config.WebPannerConfig;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.xenaksys.szcore.Consts.DOT;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_DISTANCE_MODEL;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_IS_USE_PANNER;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_PAN_ANGLE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PANNER;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PANNING_MODEL;
+
 public class WebPannerConfigExport {
 
     private boolean isUsePanner;
@@ -40,10 +47,10 @@ public class WebPannerConfigExport {
 
     public Map<String, Object> toJsMap() {
         Map<String, Object> config = new HashMap<>();
-        config.put("panner.isUsePanner", isUsePanner());
-        config.put("panner.panningModel", getPanningModel());
-        config.put("panner.distanceModel", getDistanceModel());
-        config.put("panner.maxPanAngle", getMaxPanAngle());
+        config.put(WEB_CONFIG_PANNER + DOT + WEB_CONFIG_IS_USE_PANNER, isUsePanner());
+        config.put(WEB_CONFIG_PANNER + DOT + WEB_CONFIG_PANNING_MODEL, getPanningModel());
+        config.put(WEB_CONFIG_PANNER + DOT + WEB_CONFIG_DISTANCE_MODEL, getDistanceModel());
+        config.put(WEB_CONFIG_PANNER + DOT + WEB_CONFIG_MAX_PAN_ANGLE, getMaxPanAngle());
         return config;
     }
 

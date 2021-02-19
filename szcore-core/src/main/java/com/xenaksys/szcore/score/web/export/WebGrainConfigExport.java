@@ -5,6 +5,14 @@ import com.xenaksys.szcore.score.web.config.WebGrainConfig;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.xenaksys.szcore.Consts.DOT;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_GRAIN;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_PITCH_RATE_RANGE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_POSITION_OFFSET_RANGE_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PITCH_RATE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_SIZE_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_TIME_OFFSET_STEPS_MS;
+
 public class WebGrainConfigExport {
 
     private int sizeMs;
@@ -46,11 +54,11 @@ public class WebGrainConfigExport {
 
     public Map<String, Object> toJsMap() {
         Map<String, Object> config = new HashMap<>();
-        config.put("grain.sizeMs", getSizeMs());
-        config.put("grain.pitchRate", getPitchRate());
-        config.put("grain.maxPositionOffsetRangeMs", getMaxPositionOffsetRangeMs());
-        config.put("grain.maxPitchRateRange", getMaxPitchRateRange());
-        config.put("grain.timeOffsetStepMs", getTimeOffsetStepMs());
+        config.put(WEB_CONFIG_GRAIN + DOT + WEB_CONFIG_SIZE_MS, getSizeMs());
+        config.put(WEB_CONFIG_GRAIN + DOT + WEB_CONFIG_PITCH_RATE, getPitchRate());
+        config.put(WEB_CONFIG_GRAIN + DOT + WEB_CONFIG_MAX_POSITION_OFFSET_RANGE_MS, getMaxPositionOffsetRangeMs());
+        config.put(WEB_CONFIG_GRAIN + DOT + WEB_CONFIG_MAX_PITCH_RATE_RANGE, getMaxPitchRateRange());
+        config.put(WEB_CONFIG_GRAIN + DOT + WEB_CONFIG_TIME_OFFSET_STEPS_MS, getTimeOffsetStepMs());
         return config;
     }
 

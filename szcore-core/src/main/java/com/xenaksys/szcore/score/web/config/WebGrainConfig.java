@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.xenaksys.szcore.Consts.DOT;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_GRAIN;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_PITCH_RATE_RANGE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_POSITION_OFFSET_RANGE_MS;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_PITCH_RATE;
@@ -134,13 +136,35 @@ public class WebGrainConfig {
         return true;
     }
 
+    public void update(Map<String, Object> config) {
+        if (config == null || config.isEmpty()) {
+            return;
+        }
+        if (config.containsKey(WEB_CONFIG_SIZE_MS)) {
+            setSizeMs((Integer) config.get(WEB_CONFIG_SIZE_MS));
+        }
+        if (config.containsKey(WEB_CONFIG_PITCH_RATE)) {
+            setPitchRate((Double) config.get(WEB_CONFIG_PITCH_RATE));
+        }
+        if (config.containsKey(WEB_CONFIG_MAX_POSITION_OFFSET_RANGE_MS)) {
+            setMaxPositionOffsetRangeMs((Integer) config.get(WEB_CONFIG_MAX_POSITION_OFFSET_RANGE_MS));
+        }
+        if (config.containsKey(WEB_CONFIG_MAX_PITCH_RATE_RANGE)) {
+            setMaxPitchRateRange((Double) config.get(WEB_CONFIG_MAX_PITCH_RATE_RANGE));
+        }
+        if (config.containsKey(WEB_CONFIG_TIME_OFFSET_STEPS_MS)) {
+            setTimeOffsetStepMs((Integer) config.get(WEB_CONFIG_TIME_OFFSET_STEPS_MS));
+        }
+    }
+
+
     public Map<String, Object> toJsMap() {
         Map<String, Object> config = new HashMap<>();
-        config.put("grain.sizeMs", getSizeMs());
-        config.put("grain.pitchRate", getPitchRate());
-        config.put("grain.maxPositionOffsetRangeMs", getMaxPositionOffsetRangeMs());
-        config.put("grain.maxPitchRateRange", getMaxPitchRateRange());
-        config.put("grain.timeOffsetStepMs", getTimeOffsetStepMs());
+        config.put(WEB_CONFIG_GRAIN + DOT + WEB_CONFIG_SIZE_MS, getSizeMs());
+        config.put(WEB_CONFIG_GRAIN + DOT + WEB_CONFIG_PITCH_RATE, getPitchRate());
+        config.put(WEB_CONFIG_GRAIN + DOT + WEB_CONFIG_MAX_POSITION_OFFSET_RANGE_MS, getMaxPositionOffsetRangeMs());
+        config.put(WEB_CONFIG_GRAIN + DOT + WEB_CONFIG_MAX_PITCH_RATE_RANGE, getMaxPitchRateRange());
+        config.put(WEB_CONFIG_GRAIN + DOT + WEB_CONFIG_TIME_OFFSET_STEPS_MS, getTimeOffsetStepMs());
         return config;
     }
 
@@ -179,5 +203,4 @@ public class WebGrainConfig {
                 ", timeOffsetStepMs=" + timeOffsetStepMs +
                 '}';
     }
-
 }

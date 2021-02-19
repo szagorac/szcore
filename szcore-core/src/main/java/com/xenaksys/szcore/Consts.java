@@ -337,6 +337,10 @@ public interface Consts {
     String WEB_ACTION_PARAM_LEVEL = "level";
     String WEB_ACTION_PARAM_TIME_MS = "timeMs";
 
+    int WEB_CONFIG_READY_PRESET = 0;
+    int WEB_CONFIG_GO_PRESET = -1;
+    int WEB_CONFIG_LOAD_PRESET = -2;
+
     String WEB_CONFIG_DURATION = "duration";
     String WEB_CONFIG_GRAIN = "grain";
     String WEB_CONFIG_ENVELOPE = "envelope";
@@ -388,7 +392,9 @@ public interface Consts {
     String WEB_CONFIG_FREQUENCY_LFO = "frequencyLFO";
     String WEB_CONFIG_START_LFO = "startLFO";
     String WEB_CONFIG_END_LFO = "endLFO";
-
+    String WEB_CONFIG_MIN_VALUE = "minValue";
+    String WEB_CONFIG_MAX_VALUE = "maxValue";
+    String WEB_CONFIG_TYPE = "type";
     double WEB_CONFIG_DOUBLE_CHANGE_THRESHOLD = 10E-3;
 
 
@@ -494,6 +500,7 @@ public interface Consts {
     String CONFIG_ALL = "all";
     String CONFIG_PRESETS = "presets";
     String CONFIG_SCRIPTS = "scripts";
+    String CONFIG_WEB_CONFIG = "config";
     String CONFIG_ID = "id";
     String CONFIG_TILE_ROW = "tileRow";
     String CONFIG_TILE_COLS = "tileCols";

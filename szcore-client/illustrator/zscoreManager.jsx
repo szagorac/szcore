@@ -1308,6 +1308,7 @@ var ZSCORE = function (Window) {
     };
 
     var copyPageItem = function (pageItem, targetLayer, xOffset, yOffset, filter) {
+        var startCopyItem = Date.now();
         if (!pageItem || !targetLayer) {
             log("invalid inputs", ERROR);
             return;
@@ -1331,9 +1332,12 @@ var ZSCORE = function (Window) {
         if (isItemLocked) {
             unlock(pageItem);
         }
-
+        var startDuplicate = Date.now();
         var dupRef = pageItem.duplicate();
+        var endDuplicate = Date.now();
+        var startMoveTo = Date.now();
         dupRef.moveToBeginning(targetLayer);
+        var endMoveTo = Date.now();
         dupRef.translate(xOffset, yOffset);
 
         if (isItemLocked) {
@@ -1345,6 +1349,12 @@ var ZSCORE = function (Window) {
         if (isLayerLocked) {
             lock(parentLayer);
         }
+
+        var endCopyItem = Date.now();
+        var diff = (endCopyItem - startCopyItem)/1000.0;
+        var diffDuplicate = (endDuplicate - startDuplicate)/1000.0;
+        var diffMove = (endMoveTo - startMoveTo)/1000.0;
+        log("copy item took: " + diff + " seconds" + " moveToBeginningTime: " + diffMove  + "sec, duplicateTime: " + diffDuplicate  + "sec, item: " + pageItem.name + " targetLayer: " + targetLayer.name);
 
         return dupRef;
     };

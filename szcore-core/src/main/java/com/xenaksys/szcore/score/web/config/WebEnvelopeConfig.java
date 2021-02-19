@@ -8,8 +8,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.xenaksys.szcore.Consts.DOT;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_ATTACK_TIME;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_DECAY_TIME;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_ENVELOPE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_RELEASE_TIME;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_SUSTAIN_LEVEL;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_SUSTAIN_TIME;
@@ -132,13 +134,35 @@ public class WebEnvelopeConfig {
         return value;
     }
 
+
+    public void update(Map<String, Object> config) {
+        if (config == null || config.isEmpty()) {
+            return;
+        }
+        if (config.containsKey(WEB_CONFIG_ATTACK_TIME)) {
+            setAttackTime((Double) config.get(WEB_CONFIG_ATTACK_TIME));
+        }
+        if (config.containsKey(WEB_CONFIG_DECAY_TIME)) {
+            setDecayTime((Double) config.get(WEB_CONFIG_DECAY_TIME));
+        }
+        if (config.containsKey(WEB_CONFIG_SUSTAIN_TIME)) {
+            setSustainTime((Double) config.get(WEB_CONFIG_SUSTAIN_TIME));
+        }
+        if (config.containsKey(WEB_CONFIG_RELEASE_TIME)) {
+            setReleaseTime((Double) config.get(WEB_CONFIG_RELEASE_TIME));
+        }
+        if (config.containsKey(WEB_CONFIG_SUSTAIN_LEVEL)) {
+            setSustainLevel((Double) config.get(WEB_CONFIG_SUSTAIN_LEVEL));
+        }
+    }
+
     public Map<String, Object> toJsMap() {
         Map<String, Object> config = new HashMap<>();
-        config.put("envelope.attackTime", getAttackTime());
-        config.put("envelope.decayTime", getDecayTime());
-        config.put("envelope.sustainTime", getSustainTime());
-        config.put("envelope.releaseTime", getReleaseTime());
-        config.put("envelope.sustainLevel", getSustainLevel());
+        config.put(WEB_CONFIG_ENVELOPE + DOT + WEB_CONFIG_ATTACK_TIME, getAttackTime());
+        config.put(WEB_CONFIG_ENVELOPE + DOT + WEB_CONFIG_DECAY_TIME, getDecayTime());
+        config.put(WEB_CONFIG_ENVELOPE + DOT + WEB_CONFIG_SUSTAIN_TIME, getSustainTime());
+        config.put(WEB_CONFIG_ENVELOPE + DOT + WEB_CONFIG_RELEASE_TIME, getReleaseTime());
+        config.put(WEB_CONFIG_ENVELOPE + DOT + WEB_CONFIG_SUSTAIN_LEVEL, getSustainLevel());
         return config;
     }
 

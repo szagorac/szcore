@@ -3,6 +3,8 @@ package com.xenaksys.szcore.score;
 import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.model.ScriptPreset;
 import com.xenaksys.szcore.score.web.WebscorePageRangeAssignmentType;
+import com.xenaksys.szcore.score.web.config.WebGranulatorConfig;
+import com.xenaksys.szcore.score.web.config.WebSpeechSynthConfig;
 import com.xenaksys.szcore.score.web.config.WebscoreConfig;
 import com.xenaksys.szcore.score.web.config.WebscoreConfigLoader;
 import com.xenaksys.szcore.score.web.config.WebscorePageRangeConfig;
@@ -12,11 +14,18 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MASTER_GAIN_VAL;
+import static com.xenaksys.szcore.Consts.WEB_GRANULATOR;
+import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class TestWebscoreConfig {
     static final Logger LOG = LoggerFactory.getLogger(TestWebscoreConfig.class);
@@ -42,6 +51,20 @@ public class TestWebscoreConfig {
         assertEquals(1, preset1.getId());
         assertEquals(4, preset1.getScripts().size());
         assertEquals("webScore.resetState()", preset1.getScripts().get(0));
+
+        Map<String, Object> presetConfigs = preset1.getConfigs();
+        assertFalse(presetConfigs.isEmpty());
+        assertTrue(presetConfigs.containsKey(WEB_GRANULATOR));
+
+        Object granulatorConfigObj = presetConfigs.get(WEB_GRANULATOR);
+        assertNotNull(granulatorConfigObj);
+        Map<String, Object> granulatorConfig = (Map<String, Object>) granulatorConfigObj;
+
+        assertTrue(granulatorConfig.containsKey(WEB_CONFIG_MASTER_GAIN_VAL));
+        Object masterGainObj = granulatorConfig.get(WEB_CONFIG_MASTER_GAIN_VAL);
+        assertTrue(masterGainObj instanceof Double);
+        double masterGain = (Double) masterGainObj;
+        assertEquals(0.1, masterGain, 10E-5);
 
         List<WebscorePageRangeConfig> webscorePageRangeConfigs = config.getPageRangeConfigs();
         assertEquals(8, webscorePageRangeConfigs.size());
@@ -100,6 +123,49 @@ public class TestWebscoreConfig {
 
         pageNo = config.getPageNo(-1, 9);
         assertEquals(-1, pageNo);
+    }
+
+    @Test
+    public void testGranulatorConfigLoad() throws Exception {
+        PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+        WebGranulatorConfig granulatorConfig = new WebGranulatorConfig(pcs);
+
+        WebscoreConfig config = WebscoreConfigLoader.load(file);
+        ScriptPreset preset1 = config.getPreset(1);
+        Map<String, Object> presetConfigs = preset1.getConfigs();
+        assertFalse(presetConfigs.isEmpty());
+        assertTrue(presetConfigs.containsKey(WEB_GRANULATOR));
+
+        Object granulatorConfigObj = presetConfigs.get(WEB_GRANULATOR);
+        assertNotNull(granulatorConfigObj);
+        Map<String, Object> granulatorConfigMap = (Map<String, Object>) granulatorConfigObj;
+        granulatorConfig.update(granulatorConfigMap);
+
+        assertEquals(0.1, granulatorConfig.getMasterGainVal(), 10E-5);
+        assertEquals(-30.0, granulatorConfig.getSizeOscillator().getMinValue(), 10E-5);
+        assertEquals(0.02, granulatorConfig.getPositionOscillator().getFrequencyLfoConfig().getFrequency(), 10E-5);
+        assertEquals(-500.0, granulatorConfig.getPositionOscillator().getStartLfoConfig().getMinValue(), 10E-5);
+        assertEquals(500.0, granulatorConfig.getPositionOscillator().getEndLfoConfig().getMaxValue(), 10E-5);
+    }
+
+    @Test
+    public void testSpeechSynthConfigLoad() throws Exception {
+        PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+        WebSpeechSynthConfig speechSynthConfig = new WebSpeechSynthConfig(pcs);
+
+        WebscoreConfig config = WebscoreConfigLoader.load(file);
+        ScriptPreset preset1 = config.getPreset(1);
+        Map<String, Object> presetConfigs = preset1.getConfigs();
+        assertFalse(presetConfigs.isEmpty());
+        assertTrue(presetConfigs.containsKey(WEB_GRANULATOR));
+
+        Object speechConfigObj = presetConfigs.get(WEB_SPEECH_SYNTH);
+        assertNotNull(speechConfigObj);
+        Map<String, Object> speechConfigMap = (Map<String, Object>) speechConfigObj;
+        speechSynthConfig.update(speechConfigMap);
+
+        assertEquals(1.0, speechSynthConfig.getVolume(), 10E-5);
+        assertEquals(250, speechSynthConfig.getInterruptTimeout());
     }
 }
 

@@ -6,7 +6,10 @@ import java.beans.PropertyChangeSupport;
 import java.util.Map;
 
 import static com.xenaksys.szcore.Consts.DOT;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_END_LFO;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_FREQUENCY_LFO;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_POSITION_OSCILLATOR;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_START_LFO;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRANULATOR;
 import static com.xenaksys.szcore.model.OscillatorType.TRIANGLE;
 
@@ -93,6 +96,22 @@ public class WebPositionOscillatorConfig extends WebOscillatorConfig {
         }
 
         return frequencyLfoConfig.validate() && startLfoConfig.validate() && endLfoConfig.validate();
+    }
+
+    public void update(Map<String, Object> config) {
+        if (config == null || config.isEmpty()) {
+            return;
+        }
+        super.update(config);
+        if (config.containsKey(WEB_CONFIG_FREQUENCY_LFO)) {
+            frequencyLfoConfig.update((Map<String, Object>) config.get(WEB_CONFIG_FREQUENCY_LFO));
+        }
+        if (config.containsKey(WEB_CONFIG_START_LFO)) {
+            startLfoConfig.update((Map<String, Object>) config.get(WEB_CONFIG_START_LFO));
+        }
+        if (config.containsKey(WEB_CONFIG_END_LFO)) {
+            endLfoConfig.update((Map<String, Object>) config.get(WEB_CONFIG_END_LFO));
+        }
     }
 
     public WebPositionOscillatorConfig copy(WebPositionOscillatorConfig to) {

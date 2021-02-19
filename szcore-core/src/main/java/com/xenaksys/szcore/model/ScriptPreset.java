@@ -1,12 +1,15 @@
 package com.xenaksys.szcore.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class ScriptPreset {
     private final int id;
     private final List<String> scripts = new ArrayList<>();
+    private final Map<String, Object> configs = new HashMap<>();
 
     public ScriptPreset(int id) {
         this.id = id;
@@ -28,6 +31,21 @@ public class ScriptPreset {
 
     public List<String> getScripts() {
         return scripts;
+    }
+
+    public void addConfig(String key, Object value) {
+        if (key == null || value == null) {
+            return;
+        }
+        configs.put(key, value);
+    }
+
+    public Map<String, Object> getConfigs() {
+        return configs;
+    }
+
+    public Object getConfig(String key) {
+        return configs.get(key);
     }
 
     public int getId() {

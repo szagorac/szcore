@@ -10,6 +10,10 @@ import java.util.Map;
 import java.util.Objects;
 
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_DOUBLE_CHANGE_THRESHOLD;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_FREQUENCY;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_VALUE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MIN_VALUE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_TYPE;
 
 public class WebOscillatorConfig {
     static final Logger LOG = LoggerFactory.getLogger(WebOscillatorConfig.class);
@@ -104,12 +108,31 @@ public class WebOscillatorConfig {
         return parentConfigPrefix;
     }
 
+
+    public void update(Map<String, Object> config) {
+        if (config == null || config.isEmpty()) {
+            return;
+        }
+        if (config.containsKey(WEB_CONFIG_MIN_VALUE)) {
+            setMinValue((Double) config.get(WEB_CONFIG_MIN_VALUE));
+        }
+        if (config.containsKey(WEB_CONFIG_MAX_VALUE)) {
+            setMaxValue((Double) config.get(WEB_CONFIG_MAX_VALUE));
+        }
+        if (config.containsKey(WEB_CONFIG_TYPE)) {
+            setType(OscillatorType.valueOf((String) config.get(WEB_CONFIG_TYPE)));
+        }
+        if (config.containsKey(WEB_CONFIG_FREQUENCY)) {
+            setFrequency((Double) config.get(WEB_CONFIG_FREQUENCY));
+        }
+    }
+
     public Map<String, Object> toJsMap() {
         Map<String, Object> config = new HashMap<>();
-        config.put(parentConfigPrefix + "minValue", getMinValue());
-        config.put(parentConfigPrefix + "maxValue", getMaxValue());
-        config.put(parentConfigPrefix + "type", getType().name());
-        config.put(parentConfigPrefix + "frequency", getFrequency());
+        config.put(parentConfigPrefix + WEB_CONFIG_MIN_VALUE, getMinValue());
+        config.put(parentConfigPrefix + WEB_CONFIG_MAX_VALUE, getMaxValue());
+        config.put(parentConfigPrefix + WEB_CONFIG_TYPE, getType().name());
+        config.put(parentConfigPrefix + WEB_CONFIG_FREQUENCY, getFrequency());
         return config;
     }
 

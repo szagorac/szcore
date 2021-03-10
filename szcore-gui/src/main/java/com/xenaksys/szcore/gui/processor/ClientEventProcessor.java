@@ -70,14 +70,17 @@ public class ClientEventProcessor implements Processor {
                 }
                 break;
             case MUSIC:
-                if((event instanceof MusicEvent)){
-                    processMusicEvent((MusicEvent)event);
+                if ((event instanceof MusicEvent)) {
+                    processMusicEvent((MusicEvent) event);
                 }
                 break;
             case WEB_SCORE:
-                if((event instanceof WebScoreEvent)){
-                    processWebScoreEvent((WebScoreEvent)event);
+                if ((event instanceof WebScoreEvent)) {
+                    processWebScoreEvent((WebScoreEvent) event);
                 }
+                break;
+            case SCRIPTING_ENGINE:
+                //TODO
                 break;
             default:
                 LOG.error("process event: Unknown event type: " + type);
@@ -96,15 +99,18 @@ public class ClientEventProcessor implements Processor {
             return;
         }
 
-        switch (type){
+        switch (type) {
             case OSC:
                 processScoreOscEvent((OscEvent) event, beatNo, tickNo);
                 break;
             case MUSIC:
-                processMusicEvent((MusicEvent)event, beatNo, tickNo);
+                processMusicEvent((MusicEvent) event, beatNo, tickNo);
                 break;
             case WEB_SCORE:
-                processWebScoreEvent((WebScoreEvent)event, beatNo, tickNo);
+                processWebScoreEvent((WebScoreEvent) event, beatNo, tickNo);
+                break;
+            case SCRIPTING_ENGINE:
+                //TODO
                 break;
             default:
                 LOG.error("process beat event: Unknown event type: " + type);

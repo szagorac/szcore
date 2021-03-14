@@ -4,7 +4,6 @@ import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.StrId;
 import com.xenaksys.szcore.score.BasicScore;
-import com.xenaksys.szcore.score.StrategyConfigLoader;
 import com.xenaksys.szcore.score.TstFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,7 +54,7 @@ public class TestRandomStrategyConfig {
         assertEquals(score.getName(), config.getScoreName());
 
         List<RndPageRangeConfig> pageRangeConfigs = config.getPageRangeConfigs();
-        assertEquals(5, pageRangeConfigs.size());
+        assertEquals(6, pageRangeConfigs.size());
 
         RndPageRangeConfig first = pageRangeConfigs.get(0);
         List<InstrumentId> instrumentIds = first.getInstruments();
@@ -104,6 +103,14 @@ public class TestRandomStrategyConfig {
 
         isActive = fourth.isRangeActive();
         assertTrue(isActive);
+
+        RndPageRangeConfig sixth = pageRangeConfigs.get(5);
+        IntRange selRange = sixth.getSelectionPageRange();
+        assertTrue(selRange instanceof MultiIntRange);
+        assertEquals(3 * 8, selRange.getSize());
+        assertEquals(1, selRange.getStart());
+        assertEquals(48, selRange.getEnd());
+        assertEquals(17, selRange.getElement(8));
     }
 
 }

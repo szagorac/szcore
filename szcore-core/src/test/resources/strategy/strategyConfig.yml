@@ -6,16 +6,20 @@ rndStrategy:
       instruments: [ all ]
     - range: { start: 9, end: 16 }
       isRndActive: true
-      selectionRange: { start: 1, end: 8 }
+      selectionRange: [ { start: 1, end: 8 } ]
       instruments: [ all ]
     - range: { start: 17, end: 24 }
       isRndActive: false
       instruments: [ all ]
     - range: { start: 25, end: 32 }
       isRndActive: true
-      selectionRange: { start: 17, end: 24 }
+      selectionRange: [ { start: 17, end: 24 } ]
       instruments: [ "Cello", "Viola" ]
     - range: { start: 33, end: 0 }
       isRndActive: true
-      selectionRange: { start: 1, end: 3 }
+      selectionRange: [ { start: 1, end: 3 } ]
+      instruments: [ all ]
+    - range: { start: 41, end: 48 }
+      isRndActive: true
+      selectionRange: [ { start: 1, end: 8 },{ start: 17, end: 24 },{ start: 41, end: 48 } ]
       instruments: [ all ]

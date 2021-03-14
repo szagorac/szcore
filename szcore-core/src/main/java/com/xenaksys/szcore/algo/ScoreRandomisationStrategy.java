@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class ScoreRandomisationStrategy {
     static final Logger LOG = LoggerFactory.getLogger(ScoreRandomisationStrategy.class);
@@ -52,8 +51,6 @@ public class ScoreRandomisationStrategy {
 
             this.instruments.add((InstrumentId) instrument.getId());
             this.instrumentPage.put((InstrumentId) instrument.getId(), 0);
-
-            Page continuousPage = szcore.getContinuousPage(instrument.getId());
         }
 
         assignmentStrategy.add(2);
@@ -129,31 +126,19 @@ public class ScoreRandomisationStrategy {
             return;
         }
         reset();
-        int rndNo = assignmentStrategy.size();
-        int[] rndNos = new int[rndNo];
         IntRange range = config.getSelectionRange(page);
         if (range == null) {
             return;
-        }
-
-        int start = range.getStart();
-        int end = range.getEnd();
-
-        for (int i = 0; i < rndNo; i++) {
-            if (end == 1) {
-                rndNos[i] = 1;
-            } else {
-                rndNos[i] = ThreadLocalRandom.current().nextInt(start, end + 1);
-            }
         }
 
         List<InstrumentId> rndInst = new ArrayList<>(instrumentPage.keySet());
         Collections.shuffle(rndInst, rnd);
         int instStart = 0;
         int instEnd = 0;
-        for (int i = 0; i < rndNo; i++) {
+        int rndPageNo = assignmentStrategy.size();
+        for (int i = 0; i < rndPageNo; i++) {
             Integer instNo = assignmentStrategy.get(i);
-            int pageNo = rndNos[i];
+            int pageNo = range.getRndValueFromRange();
             instEnd = instStart + instNo;
             for (int j = instStart; j < instEnd; j++) {
                 if (rndInst.size() < j) {

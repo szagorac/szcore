@@ -3,7 +3,7 @@ package com.xenaksys.szcore.event;
 
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.id.BeatId;
-import com.xenaksys.szcore.score.ScriptingEngineScript;
+import com.xenaksys.szcore.scripting.ScriptingEngineScript;
 
 import java.util.List;
 

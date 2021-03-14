@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.score;
+package com.xenaksys.szcore.scripting;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
@@ -189,6 +189,15 @@ public class ScoreScriptingEngine {
             scoreProcessor.sendOscInstrumentRndPageUpdate(buffer);
         } catch (Exception e) {
             LOG.error("Failed to process sendMaxMspRndPageUpdates()", e);
+        }
+    }
+
+    public void setRndStrategy(List<Integer> randomisationStrategy) {
+        LOG.info("setRndStrategy: {}", randomisationStrategy);
+        try {
+            scoreProcessor.setRandomisationStrategy(randomisationStrategy);
+        } catch (Exception e) {
+            LOG.error("Failed to process setRndStrategy()", e);
         }
     }
 

@@ -1,7 +1,8 @@
-package com.xenaksys.szcore.score;
+package com.xenaksys.szcore.scripting;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.model.ScriptPreset;
+import com.xenaksys.szcore.score.YamlLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

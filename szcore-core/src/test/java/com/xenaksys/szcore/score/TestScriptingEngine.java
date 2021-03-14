@@ -7,6 +7,10 @@ import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.IntId;
+import com.xenaksys.szcore.scripting.ScoreScriptingEngine;
+import com.xenaksys.szcore.scripting.ScriptingEngineConfig;
+import com.xenaksys.szcore.scripting.ScriptingEngineConfigLoader;
+import com.xenaksys.szcore.scripting.ScriptingEngineScript;
 import com.xenaksys.szcore.time.TstClock;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,6 +46,17 @@ public class TestScriptingEngine {
         BeatId beatId = TstScoreUtil.createBeatId(1, 1, 1, 1, 1);
         List<ScriptingEngineScript> scripts = new ArrayList<>();
         String content = "sce.reset(1)";
+        ScriptingEngineScript script = new ScriptingEngineScript(new IntId(1), beatId, content, false);
+        scripts.add(script);
+        ScriptingEngineEvent event = new ScriptingEngineEvent(beatId, scripts, 0L);
+        scriptingEngine.processEvent(event);
+    }
+
+    @Test
+    public void testSetRndStrategy() {
+        BeatId beatId = TstScoreUtil.createBeatId(1, 1, 1, 1, 1);
+        List<ScriptingEngineScript> scripts = new ArrayList<>();
+        String content = "sce.setRndStrategy([2,2])";
         ScriptingEngineScript script = new ScriptingEngineScript(new IntId(1), beatId, content, false);
         scripts.add(script);
         ScriptingEngineEvent event = new ScriptingEngineEvent(beatId, scripts, 0L);

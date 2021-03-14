@@ -2,7 +2,7 @@ package com.xenaksys.szcore.task;
 
 import com.xenaksys.szcore.event.ScriptingEngineEvent;
 import com.xenaksys.szcore.model.SzcoreEvent;
-import com.xenaksys.szcore.score.ScoreScriptingEngine;
+import com.xenaksys.szcore.scripting.ScoreScriptingEngine;
 
 public class ScriptingEngineEventTask extends EventMusicTask {
     private ScoreScriptingEngine scriptingEngine;

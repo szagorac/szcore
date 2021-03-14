@@ -1,6 +1,8 @@
 package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.algo.IntRange;
+import com.xenaksys.szcore.algo.MultiIntRange;
+import com.xenaksys.szcore.algo.SequentalIntRange;
 import com.xenaksys.szcore.model.ScriptPreset;
 import com.xenaksys.szcore.score.web.WebscorePageRangeAssignmentType;
 import com.xenaksys.szcore.score.web.config.WebGranulatorConfig;
@@ -16,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import java.beans.PropertyChangeSupport;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -72,9 +75,19 @@ public class TestWebscoreConfig {
         WebscorePageRangeConfig first = webscorePageRangeConfigs.get(0);
         assertEquals(WebscorePageRangeAssignmentType.SEQ, first.getAssignmentType());
         assertEquals(new Integer(1), first.getTileRow());
-        IntRange pageRange = new IntRange(1, 8);
+        IntRange pageRange = new SequentalIntRange(1, 8);
+        List<IntRange> rngs = new ArrayList<>();
+        rngs.add(pageRange);
+        MultiIntRange multiIntRange = new MultiIntRange(rngs);
         assertEquals(pageRange, first.getTileCols());
-        assertEquals(pageRange, first.getPageRange());
+        assertEquals(multiIntRange, first.getPageRange());
+
+        WebscorePageRangeConfig last = webscorePageRangeConfigs.get(7);
+        assertEquals(WebscorePageRangeAssignmentType.RND, last.getAssignmentType());
+        assertEquals(new Integer(8), last.getTileRow());
+        pageRange = last.getPageRange();
+        assertEquals(3 * 8, pageRange.getSize());
+        assertEquals(8, first.getTileCols().getSize());
 
         int[][] tilePageMap = config.getTilePageMap();
         assertEquals(1, tilePageMap[0][0]);

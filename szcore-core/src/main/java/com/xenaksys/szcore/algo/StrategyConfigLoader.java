@@ -1,12 +1,10 @@
-package com.xenaksys.szcore.score;
+package com.xenaksys.szcore.algo;
 
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.algo.IntRange;
-import com.xenaksys.szcore.algo.RndPageRangeConfig;
-import com.xenaksys.szcore.algo.ScoreRandomisationStrategyConfig;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.Score;
 import com.xenaksys.szcore.model.id.InstrumentId;
+import com.xenaksys.szcore.score.YamlLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,15 +85,20 @@ public class StrategyConfigLoader extends YamlLoader {
             Map<String, Object> activeRangeConfig = getMap(CONFIG_RANGE, instConfig);
             int start = getInteger(CONFIG_START, activeRangeConfig);
             int end = getInteger(CONFIG_END, activeRangeConfig);
-            IntRange activeRange = new IntRange(start, end);
+            IntRange activeRange = new SequentalIntRange(start, end);
 
             Boolean isActive = getBoolean(CONFIG_IS_RND_ACTIVE, instConfig);
             IntRange selRange = activeRange;
             if (isActive) {
-                Map<String, Object> selectionRangeConfig = getMap(CONFIG_SELECTION_RANGE, instConfig);
-                int selStart = getInteger(CONFIG_START, selectionRangeConfig);
-                int selEnd = getInteger(CONFIG_END, selectionRangeConfig);
-                selRange = new IntRange(selStart, selEnd);
+                List<IntRange> ranges = new ArrayList<>();
+                List<Map<String, Object>> selectionRangeConfig = getListOfMaps(CONFIG_SELECTION_RANGE, instConfig);
+                for (Map<String, Object> selectionRange : selectionRangeConfig) {
+                    int selStart = getInteger(CONFIG_START, selectionRange);
+                    int selEnd = getInteger(CONFIG_END, selectionRange);
+                    IntRange range = new SequentalIntRange(selStart, selEnd);
+                    ranges.add(range);
+                }
+                selRange = new MultiIntRange(ranges);
             }
 
             RndPageRangeConfig pageRangeConfig = new RndPageRangeConfig(isActive, participatingInsts, activeRange, selRange);

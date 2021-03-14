@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.score;
+package com.xenaksys.szcore.scripting;
 
 import com.xenaksys.szcore.model.ScriptPreset;
 import gnu.trove.map.hash.TIntObjectHashMap;

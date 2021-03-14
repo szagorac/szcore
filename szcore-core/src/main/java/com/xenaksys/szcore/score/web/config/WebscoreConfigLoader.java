@@ -2,6 +2,8 @@ package com.xenaksys.szcore.score.web.config;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.IntRange;
+import com.xenaksys.szcore.algo.MultiIntRange;
+import com.xenaksys.szcore.algo.SequentalIntRange;
 import com.xenaksys.szcore.model.ScriptPreset;
 import com.xenaksys.szcore.score.YamlLoader;
 import com.xenaksys.szcore.score.web.WebscorePageRangeAssignmentType;
@@ -9,13 +11,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static com.xenaksys.szcore.Consts.CONFIG_ASSIGNMENT_TYPE;
 import static com.xenaksys.szcore.Consts.CONFIG_END;
 import static com.xenaksys.szcore.Consts.CONFIG_ID;
-import static com.xenaksys.szcore.Consts.CONFIG_PAGE_RANGE;
+import static com.xenaksys.szcore.Consts.CONFIG_PAGE_RANGES;
 import static com.xenaksys.szcore.Consts.CONFIG_PAGE_RANGE_MAPPING;
 import static com.xenaksys.szcore.Consts.CONFIG_PRESETS;
 import static com.xenaksys.szcore.Consts.CONFIG_SCORE_NAME;
@@ -87,14 +90,19 @@ public class WebscoreConfigLoader extends YamlLoader {
             Map<String, Object> tileColsConfig = getMap(CONFIG_TILE_COLS, pageRangeMapping);
             int start = getInteger(CONFIG_START, tileColsConfig);
             int end = getInteger(CONFIG_END, tileColsConfig);
-            IntRange tileCols = new IntRange(start, end);
+            IntRange tileCols = new SequentalIntRange(start, end);
             pageRangeConfig.setTileCols(tileCols);
 
-            Map<String, Object> pageRange = getMap(CONFIG_PAGE_RANGE, pageRangeMapping);
-            int startTileCol = getInteger(CONFIG_START, pageRange);
-            int endTileCol = getInteger(CONFIG_END, pageRange);
-            IntRange pRange = new IntRange(startTileCol, endTileCol);
-            pageRangeConfig.setPageRange(pRange);
+            List<Map<String, Object>> pageRanges = getListOfMaps(CONFIG_PAGE_RANGES, pageRangeMapping);
+            List<IntRange> ranges = new ArrayList<>();
+            for (Map<String, Object> pageRange : pageRanges) {
+                int startTileCol = getInteger(CONFIG_START, pageRange);
+                int endTileCol = getInteger(CONFIG_END, pageRange);
+                IntRange pRange = new SequentalIntRange(startTileCol, endTileCol);
+                ranges.add(pRange);
+            }
+            MultiIntRange multiRange = new MultiIntRange(ranges);
+            pageRangeConfig.setPageRange(multiRange);
 
             String assignmentTypeStr = getString(CONFIG_ASSIGNMENT_TYPE, pageRangeMapping);
             WebscorePageRangeAssignmentType assignmentType = WebscorePageRangeAssignmentType.SEQ;

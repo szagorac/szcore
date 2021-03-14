@@ -20,8 +20,8 @@ import com.xenaksys.szcore.model.Stave;
 import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.Transport;
 import com.xenaksys.szcore.score.ScoreProcessorImpl;
-import com.xenaksys.szcore.score.ScoreScriptingEngine;
 import com.xenaksys.szcore.score.web.WebScore;
+import com.xenaksys.szcore.scripting.ScoreScriptingEngine;
 
 public class TaskFactory {
 

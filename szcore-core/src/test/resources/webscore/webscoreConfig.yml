@@ -57,33 +57,33 @@ presets:
 pageRangeMapping:
   - tileRow: 1
     tileCols: { start: 1, end: 8 }
-    pageRange: { start: 1, end: 8 }
+    pageRanges: [ { start: 1, end: 8 } ]
     assignmentType: SEQ
   - tileRow: 2
     tileCols: { start: 1, end: 8 }
-    pageRange: { start: 1, end: 8 }
+    pageRanges: [ { start: 1, end: 8 } ]
     assignmentType: SEQ
   - tileRow: 3
     tileCols: { start: 1, end: 8 }
-    pageRange: { start: 1, end: 8 }
+    pageRanges: [ { start: 1, end: 8 } ]
     assignmentType: SEQ
   - tileRow: 4
     tileCols: { start: 1, end: 8 }
-    pageRange: { start: 17, end: 24 }
+    pageRanges: [ { start: 17, end: 24 } ]
     assignmentType: SEQ
   - tileRow: 5
     tileCols: { start: 1, end: 8 }
-    pageRange: { start: 17, end: 24 }
+    pageRanges: [ { start: 17, end: 24 } ]
     assignmentType: SEQ
   - tileRow: 6
     tileCols: { start: 1, end: 8 }
-    pageRange: { start: 1, end: 8 }
-    assignmentType: RND
+    pageRanges: [ { start: 33, end: 40 } ]
+    assignmentType: SEQ
   - tileRow: 7
     tileCols: { start: 1, end: 8 }
-    pageRange: { start: 17, end: 24 }
+    pageRanges: [ { start: 1, end: 8 }, { start: 17, end: 24 }, { start: 33, end: 40 } ]
     assignmentType: RND
   - tileRow: 8
     tileCols: { start: 1, end: 8 }
-    pageRange: { start: 17, end: 24 }
+    pageRanges: [ { start: 1, end: 8 }, { start: 17, end: 24 }, { start: 33, end: 40 } ]
     assignmentType: RND

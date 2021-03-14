@@ -7,7 +7,6 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class WebscoreConfig {
 
@@ -73,31 +72,26 @@ public class WebscoreConfig {
             IntRange cols = pageRangeConfig.getTileCols();
             int colStart = cols.getStart();
             int colEnd = cols.getEnd();
+            List<Integer> pageIdx = new ArrayList<>();
 
-            IntRange pageRange = pageRangeConfig.getPageRange();
-            int pageStart = pageRange.getStart();
-            int pageEnd = pageRange.getEnd();
-
+            IntRange pageRanges = pageRangeConfig.getPageRange();
             WebscorePageRangeAssignmentType assignmentType = pageRangeConfig.getAssignmentType();
 
             int rowIndex = row - 1;
-            int pageIndex = pageStart - 1;
-
+            int pageNo = pageRanges.getStart();
+            int pIdx = 0;
             for (int i = colStart; i <= colEnd; i++) {
                 int colIndex = i - 1;
                 switch (assignmentType) {
                     case SEQ:
-                        pageIndex++;
-                        if (pageIndex > pageEnd) {
-                            pageIndex = pageStart;
-                        }
+                        pageNo = pageRanges.getElement(pIdx);
+                        pIdx++;
                         break;
                     case RND:
-                        pageIndex = ThreadLocalRandom.current().nextInt(pageStart, pageEnd + 1);
+                        pageNo = pageRanges.getRndValueFromRange();
                         break;
                 }
-
-                tilePageMap[rowIndex][colIndex] = pageIndex;
+                tilePageMap[rowIndex][colIndex] = pageNo;
             }
         }
     }

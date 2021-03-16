@@ -247,7 +247,7 @@ public class TestWebScore {
         assertEquals(1, actions.size());
         WebActionExport action = actions.iterator().next();
         assertEquals(WEB_ACTION_ID_START, action.getId());
-        assertEquals(WebActionType.DISSOLVE, action.getActionType());
+        assertEquals(WebActionType.ALPHA, action.getActionType());
         List<String> actionElements = action.getElementIds();
         assertEquals(1, actionElements.size());
         String elId = actionElements.get(0);

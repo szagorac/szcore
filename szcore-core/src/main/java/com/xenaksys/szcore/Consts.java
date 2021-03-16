@@ -301,6 +301,7 @@ public interface Consts {
 
     String WEB_SCORE_ID = "webScore";
     String WEB_GRANULATOR = "granulator";
+    String WEB_STAGE = "stage";
     String WEB_SPEECH_SYNTH = "speechSynth";
     String WEB_SPEECH_VOICE_RANDOM = "random";
     String WEB_SPEECH_VOICE_DEFAULT = "default";
@@ -342,6 +343,7 @@ public interface Consts {
     int WEB_CONFIG_LOAD_PRESET = -2;
 
     String WEB_CONFIG_DURATION = "duration";
+    String WEB_CONFIG_VALUE = "value";
     String WEB_CONFIG_GRAIN = "grain";
     String WEB_CONFIG_ENVELOPE = "envelope";
     String WEB_CONFIG_PANNER = "panner";

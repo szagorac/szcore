@@ -116,6 +116,7 @@ import static com.xenaksys.szcore.Consts.WEB_CONFIG_SUSTAIN_LEVEL;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_SUSTAIN_TIME;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_TIME_OFFSET_STEPS_MS;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_UTTERANCE_TIMEOUT_SEC;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_VALUE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_VOLUME;
 import static com.xenaksys.szcore.Consts.WEB_GRANULATOR;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_ACTIONS;
@@ -133,6 +134,7 @@ import static com.xenaksys.szcore.Consts.WEB_OBJ_TILE_TEXT;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_ZOOM_LEVEL;
 import static com.xenaksys.szcore.Consts.WEB_SCORE_ID;
 import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
+import static com.xenaksys.szcore.Consts.WEB_STAGE;
 import static com.xenaksys.szcore.Consts.WEB_TARGET_ALL;
 import static com.xenaksys.szcore.Consts.WEB_TEXT_BACKGROUND_COLOUR;
 import static com.xenaksys.szcore.Consts.WEB_TILE_PLAY_PAGE_DURATION_FACTOR;
@@ -710,9 +712,10 @@ public class WebScore {
             duration = MathUtil.roundTo2DecimalPlaces(duration * WEB_TILE_PLAY_PAGE_DURATION_FACTOR);
         }
 
-        Map<String, Object> params = new HashMap<>(1);
+        Map<String, Object> params = new HashMap<>(2);
         params.put(WEB_CONFIG_DURATION, duration);
-        setAction(WEB_ACTION_ID_START, WebActionType.DISSOLVE.name(), tileIds, params);
+        params.put(WEB_CONFIG_VALUE, 0);
+        setAction(WEB_ACTION_ID_START, WebActionType.ALPHA.name(), tileIds, params);
     }
 
     public void setPlayingTiles(String[] tileIds) {
@@ -841,6 +844,18 @@ public class WebScore {
 
     public void validateGranulatorConfig() {
         state.getGranulatorConfig().validate();
+    }
+
+    public void setStageAlpha(double endValue, int durationSec) {
+        setAlpha(WEB_STAGE, endValue, durationSec);
+    }
+
+    public void setAlpha(String targetId, double endValue, int durationSec) {
+        String[] targetIds = {targetId};
+        Map<String, Object> params = new HashMap<>(2);
+        params.put(WEB_CONFIG_DURATION, durationSec);
+        params.put(WEB_CONFIG_VALUE, endValue);
+        setAction(WEB_ACTION_ID_START, WebActionType.ALPHA.name(), targetIds, params);
     }
 
     public void granulatorRampLinear(String paramName, Object endValue, int durationMs) {

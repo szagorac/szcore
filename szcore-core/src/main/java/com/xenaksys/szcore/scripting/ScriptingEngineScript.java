@@ -11,13 +11,15 @@ public class ScriptingEngineScript implements Script {
     private final IntId id;
     private final BeatId beatId;
     private final String content;
-    private final boolean isReset;
+    private final boolean isResetPoint;
+    private boolean isResetOnly;
 
-    public ScriptingEngineScript(IntId id, BeatId beatId, String content, boolean isReset) {
+    public ScriptingEngineScript(IntId id, BeatId beatId, String content, boolean isResetPoint, boolean isResetOnly) {
         this.id = id;
         this.beatId = beatId;
         this.content = content;
-        this.isReset = isReset;
+        this.isResetPoint = isResetPoint;
+        this.isResetOnly = isResetOnly;
     }
 
     @Override
@@ -38,11 +40,15 @@ public class ScriptingEngineScript implements Script {
     @Override
     public Script copy(BeatId newBeatId) {
         IntId newId = new IntId(Consts.ID_SOURCE.incrementAndGet());
-        return new ScriptingEngineScript(newId, newBeatId, this.content, this.isReset);
+        return new ScriptingEngineScript(newId, newBeatId, this.content, this.isResetPoint, this.isResetOnly);
     }
 
-    public boolean isReset() {
-        return isReset;
+    public boolean isResetPoint() {
+        return isResetPoint;
+    }
+
+    public boolean isResetOnly() {
+        return isResetOnly;
     }
 
     @Override
@@ -61,7 +67,8 @@ public class ScriptingEngineScript implements Script {
                 "id=" + id +
                 ", beatId=" + beatId +
                 ", script='" + content + '\'' +
-                ", isReset='" + isReset + '\'' +
+                ", isReset='" + isResetPoint + '\'' +
+                ", isResetOnly='" + isResetOnly + '\'' +
                 '}';
     }
 }

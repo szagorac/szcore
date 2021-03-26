@@ -122,18 +122,17 @@ public class ScoreScriptingEngine {
         this.config = config;
     }
 
+    public ScriptingEngineConfig getConfig() {
+        return config;
+    }
+
     public void addBeatScript(BeatId beatId, ScriptingEngineScript script) {
         if (beatId == null || script == null) {
             return;
         }
 
         List<ScriptingEngineScript> scripts = beatScripts.computeIfAbsent(beatId, k -> new ArrayList<>());
-
-        if (script.isReset()) {
-            addResetScript(beatId, script);
-        } else {
-            scripts.add(script);
-        }
+        scripts.add(script);
     }
 
     public void addResetScript(BeatId beatId, ScriptingEngineScript script) {

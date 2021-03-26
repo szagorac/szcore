@@ -60,6 +60,7 @@ import com.xenaksys.szcore.model.Score;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.Script;
 import com.xenaksys.szcore.model.ScriptEventPreset;
+import com.xenaksys.szcore.model.ScriptPreset;
 import com.xenaksys.szcore.model.ScriptType;
 import com.xenaksys.szcore.model.Stave;
 import com.xenaksys.szcore.model.SzcoreEvent;
@@ -74,6 +75,7 @@ import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.model.id.BarId;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.InstrumentId;
+import com.xenaksys.szcore.model.id.IntId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.model.id.StrId;
@@ -85,6 +87,7 @@ import com.xenaksys.szcore.score.web.WebScoreScript;
 import com.xenaksys.szcore.score.web.export.WebScoreStateDeltaExport;
 import com.xenaksys.szcore.score.web.export.WebScoreStateExport;
 import com.xenaksys.szcore.scripting.ScoreScriptingEngine;
+import com.xenaksys.szcore.scripting.ScriptingEngineConfig;
 import com.xenaksys.szcore.scripting.ScriptingEngineScript;
 import com.xenaksys.szcore.task.ScriptingEngineEventTask;
 import com.xenaksys.szcore.task.TaskFactory;
@@ -464,7 +467,14 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void addScriptEngineEvent(BeatId beatId, ScriptingEngineScript script) {
         try {
-            scriptingEngine.addBeatScript(beatId, script);
+            if (script.isResetPoint()) {
+                scriptingEngine.addResetScript(beatId, script);
+                if (!script.isResetOnly()) {
+                    scriptingEngine.addBeatScript(beatId, script);
+                }
+            } else {
+                scriptingEngine.addBeatScript(beatId, script);
+            }
         } catch (Exception e) {
             LOG.error("addScriptEngineEvent: failed to add scripting preset: " + script, e);
         }
@@ -490,6 +500,23 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
 
         scriptPreset.addScriptEvent(beatScriptEvent);
+    }
+
+    public void addScriptingEnginePreset(BeatId beatId, ScriptingEngineScript script) throws Exception {
+        if (script == null || !script.isResetPoint()) {
+            return;
+        }
+
+        int id = ((IntId) script.getId()).getValue();
+        ScriptingEngineConfig config = scriptingEngine.getConfig();
+        ScriptPreset scriptPreset = config.getPreset(id);
+        if (scriptPreset == null) {
+            ;
+            scriptPreset = new ScriptPreset(id);
+            config.addPreset(scriptPreset);
+        }
+
+        scriptPreset.addScript(script.getContent());
     }
 
     private void addBeatScriptEvent(BeatId beatId, Script script, Id transportId) {

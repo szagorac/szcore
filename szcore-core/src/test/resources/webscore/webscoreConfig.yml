@@ -5,7 +5,7 @@ presets:
         "webScore.resetState()",
         "webScore.resetGranulator()",
         "webScore.setAction('all', 'RESET', ['elements']);",
-        "webScore.setInstructions('get ready for','<span style=\\'color:blueviolet;\\'>Union Rose</span>', 'performance');"
+        "webScore.setInstructions('get ready for','<span style=\\'color:blueviolet;\\'>Union Rose</span>', 'performance');",
     ]
     config:
       - granulator: {

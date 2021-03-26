@@ -306,6 +306,7 @@ public interface Consts {
     String WEB_SPEECH_VOICE_RANDOM = "random";
     String WEB_SPEECH_VOICE_DEFAULT = "default";
     String WEB_TARGET_ALL = "all";
+    String WEB_SELECTED_TILES = "selectedTiles";
 
     String WEB_OBJ_ELEMENT_STATE = "webElementState";
     String WEB_OBJ_TILE_TEXT = "tileText";
@@ -327,6 +328,8 @@ public interface Consts {
 
     String WEB_ACTION_ID_CONFIG = "config";
     String WEB_ACTION_ID_START = "start";
+    String WEB_ACTION_ID_DISPLAY = "display";
+    String WEB_ACTION_ID_ALL = "all";
     String WEB_ACTION_ID_RESET = "reset";
     String WEB_ACTION_ID_PLAY = "play";
     String WEB_ACTION_ID_STOP = "stop";

@@ -19,7 +19,7 @@ public class ScriptingEngineEventTask extends EventMusicTask {
             return;
         }
 
-        ScriptingEngineEvent webScoreEvent = (ScriptingEngineEvent) event;
-        scriptingEngine.processEvent(webScoreEvent);
+        ScriptingEngineEvent scriptingEngineEvent = (ScriptingEngineEvent) event;
+        scriptingEngine.processEvent(scriptingEngineEvent);
     }
 }

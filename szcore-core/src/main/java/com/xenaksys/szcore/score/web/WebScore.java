@@ -63,6 +63,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_ALL;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_CONFIG;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_PLAY;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_RAMP_LINEAR;
@@ -133,6 +134,7 @@ import static com.xenaksys.szcore.Consts.WEB_OBJ_TILES;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_TILE_TEXT;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_ZOOM_LEVEL;
 import static com.xenaksys.szcore.Consts.WEB_SCORE_ID;
+import static com.xenaksys.szcore.Consts.WEB_SELECTED_TILES;
 import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_STAGE;
 import static com.xenaksys.szcore.Consts.WEB_TARGET_ALL;
@@ -844,6 +846,11 @@ public class WebScore {
 
     public void validateGranulatorConfig() {
         state.getGranulatorConfig().validate();
+    }
+
+    public void resetSelectedTiles() {
+        String[] target = {WEB_SELECTED_TILES};
+        setAction(WEB_ACTION_ID_ALL, WebActionType.RESET.name(), target, null);
     }
 
     public void setStageAlpha(double endValue, int durationSec) {

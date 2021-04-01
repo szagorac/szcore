@@ -138,6 +138,9 @@ public interface Consts {
     int DEFAULT_ALL_PORTS = Integer.MIN_VALUE;
     String DEFAULT_SUBNET_MASK = "255.255.255.0";
 
+    int MIN_BPM = 1;
+    int MAX_BPM = 200;
+
     String OSC_INSCORE_LOAD = "load";
     String OSC_INSCORE_SET = "set";
     String OSC_INSCORE_FILE = "file";
@@ -521,4 +524,5 @@ public interface Consts {
     String MAXMSP_BUFFER_TARGET = "b" + MAXMSP_BUFFER_NO_TOKEN;
 
     String SCRIPTING_ENGINE_ID = "sce";
+    String T_ACTION_TEMPO = "tempo";
 }

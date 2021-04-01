@@ -2,7 +2,12 @@ package com.xenaksys.szcore.task;
 
 import com.xenaksys.szcore.event.OscStaveTempoEvent;
 import com.xenaksys.szcore.event.TempoChangeEvent;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.model.OscPublisher;
+import com.xenaksys.szcore.model.SzcoreEvent;
+import com.xenaksys.szcore.model.Tempo;
+import com.xenaksys.szcore.model.TempoImpl;
+import com.xenaksys.szcore.model.TempoModifier;
+import com.xenaksys.szcore.model.Transport;
 
 import java.util.List;
 
@@ -40,7 +45,7 @@ public class TempoChangeTask extends EventMusicTask {
         if(currentModifier != null){
             if(!currentModifier.equals(modifier)){
                 tempo = new TempoImpl(tempo, currentModifier);
-LOG.info("Setting new modified tempo: " + tempo);
+                LOG.info("Setting new modified tempo: " + tempo);
             }
         }
 

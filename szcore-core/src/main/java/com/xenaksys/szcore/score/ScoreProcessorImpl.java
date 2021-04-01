@@ -118,6 +118,8 @@ import static com.xenaksys.szcore.Consts.CONTENT_LINE_Y_MAX;
 import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NAME;
 import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NO;
 import static com.xenaksys.szcore.Consts.DYNAMICS_LINE_Y_MAX;
+import static com.xenaksys.szcore.Consts.MAX_BPM;
+import static com.xenaksys.szcore.Consts.MIN_BPM;
 import static com.xenaksys.szcore.Consts.POSITION_LINE_Y_MAX;
 import static com.xenaksys.szcore.Consts.PRESSURE_LINE_Y_MAX;
 import static com.xenaksys.szcore.Consts.SPEED_LINE_Y_MAX;
@@ -878,6 +880,48 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         Map<Integer, List<InstrumentId>> pageAssignments = strategy.getPageAssigments();
         if (isInRange) {
             sendOscPlayerRndPageUpdate(instId, beatId, pageAssignments.keySet(), nextPage, bufferNo, transport);
+        }
+    }
+
+    @Override
+    public void setUpContinuousTempoChange(int endBpm, int timeInBeats) {
+        Collection<Instrument> avInstruments = szcore.getAvInstruments();
+        if (avInstruments.isEmpty()) {
+            return;
+        }
+        if (endBpm < MIN_BPM) {
+            endBpm = 1;
+        }
+        if (endBpm > MAX_BPM) {
+            endBpm = MAX_BPM;
+        }
+        if (timeInBeats < 1) {
+            timeInBeats = 1;
+        }
+        if (timeInBeats < 1) {
+            timeInBeats = 1;
+        }
+        Instrument avInstrument = avInstruments.iterator().next();
+        InstrumentId acInstId = (InstrumentId) avInstrument.getId();
+        Transport transport = szcore.getInstrumentTransport(acInstId);
+        Tempo currentTempo = transport.getTempo();
+        int currentBpm = currentTempo.getBpm();
+        int bpmDelta = (endBpm - currentBpm) / timeInBeats;
+        int currentBeat = getCurrentBeatNo();
+        BeatId currentBeatId = szcore.getInstrumentBeatIds(transport.getId(), acInstId, currentBeat);
+        for (int i = 1; i <= timeInBeats; i++) {
+            Beat offsetBeat = szcore.getOffsetBeat(currentBeatId, i);
+            if (offsetBeat == null) {
+                continue;
+            }
+            int beatBpmOffset = i * bpmDelta;
+            int newBpm = currentBpm + beatBpmOffset;
+            if (i == timeInBeats) {
+                newBpm = endBpm;
+            }
+            Tempo newTempo = new TempoImpl(newBpm, currentTempo.getBeatDuration());
+            LOG.info("#### setUpContinuousTempoChange: new tempo{}, beat: {}, bpmDelta: {}, beatBpmOffset: {}", newBpm, offsetBeat.getBeatId(), bpmDelta, beatBpmOffset);
+            addTempoChangeEvent(newTempo, offsetBeat.getBeatId(), Consts.ALL_DESTINATIONS, transport.getId());
         }
     }
 

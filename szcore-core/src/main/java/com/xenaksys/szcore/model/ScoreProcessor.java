@@ -92,4 +92,6 @@ public interface  ScoreProcessor extends Processor {
     public int getCurrentBeatNo();
 
     void sendOscInstrumentRndPageUpdate(int bufferNo);
+
+    void setUpContinuousTempoChange(int endTempo, int timeInBeats);
 }

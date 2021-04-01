@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.xenaksys.szcore.Consts.SCRIPTING_ENGINE_ID;
+import static com.xenaksys.szcore.Consts.T_ACTION_TEMPO;
 
 public class ScoreScriptingEngine {
     static final Logger LOG = LoggerFactory.getLogger(ScoreScriptingEngine.class);
@@ -181,6 +182,29 @@ public class ScoreScriptingEngine {
             LOG.error("Failed to process sendRndPageUpdates()", e);
         }
     }
+
+    public void timedAction(String action, Object endValue, int timeInBeats) {
+        LOG.info("timedAction: action: {}", action);
+        if (action == null) {
+            return;
+        }
+        try {
+            switch (action) {
+                case T_ACTION_TEMPO:
+                    if (endValue == null) {
+                        return;
+                    }
+                    int endBpm = (Integer) endValue;
+                    scoreProcessor.setUpContinuousTempoChange(endBpm, timeInBeats);
+                    break;
+                default:
+                    LOG.warn("timedAction: Unknown Timed Action: {}", action);
+            }
+        } catch (Exception e) {
+            LOG.error("Failed to process sendRndPageUpdates()", e);
+        }
+    }
+
 
     public void sendMaxMspRndPageUpdates(int buffer) {
         LOG.info("sendMaxMspRndPageUpdates: buffer: {}", buffer);

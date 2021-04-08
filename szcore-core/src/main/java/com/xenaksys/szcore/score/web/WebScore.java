@@ -65,6 +65,7 @@ import java.util.Objects;
 import static com.xenaksys.szcore.Consts.EMPTY;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_ALL;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_CONFIG;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_DISPLAY;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_PLAY;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_RAMP_LINEAR;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_RAMP_SIN;
@@ -128,11 +129,13 @@ import static com.xenaksys.szcore.Consts.WEB_OBJ_ELEMENT_STATE;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_INNER_CIRCLE;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_INSTRUCTIONS;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_OUTER_CIRCLE;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_STAGE_ALPHA;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_STATE_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_TILE;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_TILES;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_TILE_TEXT;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_ZOOM_LEVEL;
+import static com.xenaksys.szcore.Consts.WEB_OVERLAYS;
 import static com.xenaksys.szcore.Consts.WEB_SCORE_ID;
 import static com.xenaksys.szcore.Consts.WEB_SELECTED_TILES;
 import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
@@ -198,7 +201,7 @@ public class WebScore {
         WebSpeechSynthState speechSynthState = createDefaultSpeechSynthState();
 
         return new WebScoreServerState(tiles, currentActions, elementStates, WEB_ZOOM_DEFAULT, instructions, granulatorConfig,
-                speechSynthConfig, speechSynthState);
+                speechSynthConfig, speechSynthState, 1);
     }
 
     private MutablePageId createTempPage() {
@@ -853,16 +856,22 @@ public class WebScore {
         setAction(WEB_ACTION_ID_ALL, WebActionType.RESET.name(), target, null);
     }
 
-    public void setStageAlpha(double endValue, int durationSec) {
+    public void removeOverlays() {
+        String[] target = {WEB_OVERLAYS};
+        setAction(WEB_ACTION_ID_DISPLAY, WebActionType.DEACTIVATE.name(), target, null);
+    }
+
+    public void setStageAlpha(double endValue, double durationSec) {
         setAlpha(WEB_STAGE, endValue, durationSec);
     }
 
-    public void setAlpha(String targetId, double endValue, int durationSec) {
+    public void setAlpha(String targetId, double endValue, double durationSec) {
         String[] targetIds = {targetId};
         Map<String, Object> params = new HashMap<>(2);
         params.put(WEB_CONFIG_DURATION, durationSec);
         params.put(WEB_CONFIG_VALUE, endValue);
         setAction(WEB_ACTION_ID_START, WebActionType.ALPHA.name(), targetIds, params);
+        state.setStageAlpha(endValue);
     }
 
     public void granulatorRampLinear(String paramName, Object endValue, int durationMs) {
@@ -1407,7 +1416,7 @@ public class WebScore {
         LOG.info("WebScoreStateExport sending actions: {}", actions);
 
         return new WebScoreStateExport(tes, actions, centreShape, innerCircle, outerCircle, state.getZoomLevel(),
-                instructions, granulatorConfig, speechSynthConfigExport, speechSynthStateExport);
+                instructions, granulatorConfig, speechSynthConfigExport, speechSynthStateExport, state.getStageAlpha());
     }
 
     public void updateServerState() {
@@ -2024,10 +2033,11 @@ public class WebScore {
         private volatile WebGranulatorConfig granulatorConfig;
         private volatile WebSpeechSynthConfig speechSynthConfig;
         private volatile WebSpeechSynthState speechSynthState;
+        private volatile double stageAlpha;
 
         public WebScoreServerState(WebScore.Tile[][] tiles, List<WebAction> currentActions, Map<String, WebElementState> elementStates,
                                    String zoomLevel, WebTextState instructions, WebGranulatorConfig granulatorConfig,
-                                   WebSpeechSynthConfig speechSynthConfig, WebSpeechSynthState speechSynthState) {
+                                   WebSpeechSynthConfig speechSynthConfig, WebSpeechSynthState speechSynthState, double stageAlpha) {
             this.tiles = tiles;
             this.actions = currentActions;
             this.elementStates = elementStates;
@@ -2036,6 +2046,7 @@ public class WebScore {
             this.granulatorConfig = granulatorConfig;
             this.speechSynthConfig = speechSynthConfig;
             this.speechSynthState = speechSynthState;
+            this.stageAlpha = stageAlpha;
         }
 
         public void resetDelta() {
@@ -2191,6 +2202,15 @@ public class WebScore {
         public void setSpeechSynthState(WebSpeechSynthState speechSynthState) {
             this.speechSynthState = speechSynthState;
             pcs.firePropertyChange(WEB_OBJ_STATE_SPEECH_SYNTH, WEB_OBJ_STATE_SPEECH_SYNTH, speechSynthState);
+        }
+
+        public double getStageAlpha() {
+            return stageAlpha;
+        }
+
+        public void setStageAlpha(double stageAlpha) {
+            this.stageAlpha = stageAlpha;
+            pcs.firePropertyChange(WEB_OBJ_STAGE_ALPHA, WEB_OBJ_STAGE_ALPHA, stageAlpha);
         }
     }
 

@@ -310,6 +310,7 @@ public interface Consts {
     String WEB_SPEECH_VOICE_DEFAULT = "default";
     String WEB_TARGET_ALL = "all";
     String WEB_SELECTED_TILES = "selectedTiles";
+    String WEB_OVERLAYS = "overlays";
 
     String WEB_OBJ_ELEMENT_STATE = "webElementState";
     String WEB_OBJ_TILE_TEXT = "tileText";
@@ -321,6 +322,7 @@ public interface Consts {
     String WEB_OBJ_TILES = "tiles";
     String WEB_OBJ_TILE = "tile";
     String WEB_OBJ_ACTIONS = "actions";
+    String WEB_OBJ_STAGE_ALPHA = "stageAlpha";
     String WEB_OBJ_ZOOM_LEVEL = "zoomLevel";
     String WEB_OBJ_CONFIG_GRANULATOR = "granulatorConfig";
     String WEB_OBJ_CONFIG_SPEECH_SYNTH = "speechSynthConfig";

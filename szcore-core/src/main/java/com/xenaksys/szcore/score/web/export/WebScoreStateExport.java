@@ -15,11 +15,12 @@ public class WebScoreStateExport {
     private final WebGranulatorConfigExport granulatorConfig;
     private final WebSpeechSynthConfigExport speechSynthConfig;
     private final WebSpeechSynthStateExport speechSynthState;
+    private volatile double stageAlpha;
 
     public WebScoreStateExport(TileExport[][] tiles, List<WebAction> currentActions,
                                WebElementStateExport centreShape, WebElementStateExport innerCircle, WebElementStateExport outerCircle,
                                String zoomLevel, WebInstructionsExport instructions, WebGranulatorConfigExport granulatorConfig,
-                               WebSpeechSynthConfigExport speechSynthConfig, WebSpeechSynthStateExport speechSynthState) {
+                               WebSpeechSynthConfigExport speechSynthConfig, WebSpeechSynthStateExport speechSynthState, double stageAlpha) {
         this.tiles = tiles;
         this.actions = currentActions;
         this.centreShape = centreShape;
@@ -30,6 +31,7 @@ public class WebScoreStateExport {
         this.granulatorConfig = granulatorConfig;
         this.speechSynthConfig = speechSynthConfig;
         this.speechSynthState = speechSynthState;
+        this.stageAlpha = stageAlpha;
     }
 
     public TileExport[][] getTiles() {
@@ -70,5 +72,9 @@ public class WebScoreStateExport {
 
     public WebSpeechSynthStateExport getSpeechSynthState() {
         return speechSynthState;
+    }
+
+    public double getStageAlpha() {
+        return stageAlpha;
     }
 }

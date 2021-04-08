@@ -30,6 +30,7 @@ import static com.xenaksys.szcore.Consts.WEB_OBJ_ELEMENT_STATE;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_INNER_CIRCLE;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_INSTRUCTIONS;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_OUTER_CIRCLE;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_STAGE_ALPHA;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_STATE_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_TILE;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_TILES;
@@ -115,6 +116,8 @@ public class WebScoreStateDeltaTracker {
             case WEB_OBJ_STATE_SPEECH_SYNTH:
                 processSpeechSynthState(id, newValue);
                 break;
+            case WEB_OBJ_STAGE_ALPHA:
+                processStageAlpha(id, newValue);
             default:
                 LOG.error("processUpdate: Unknown propertyName: {}", propertyName);
         }
@@ -162,6 +165,25 @@ public class WebScoreStateDeltaTracker {
         } else {
             LOG.error("processAction: invalid object type: {}", newValue);
         }
+    }
+
+
+    private void processStageAlpha(String id, Object newValue) {
+        if (id == null || newValue == null) {
+            return;
+        }
+        if (newValue instanceof Integer) {
+            addStageAlpha((Integer) newValue);
+        } else {
+            LOG.error("processStageAlpha: invalid object type: {}", newValue);
+        }
+    }
+
+    private void addStageAlpha(Integer stageAlpha) {
+        if (stageAlpha == null) {
+            return;
+        }
+        delta.put(WEB_OBJ_STAGE_ALPHA, stageAlpha);
     }
 
     private void processAction(String id, Object newValue) {

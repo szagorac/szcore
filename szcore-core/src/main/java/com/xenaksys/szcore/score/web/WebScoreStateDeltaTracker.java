@@ -118,6 +118,7 @@ public class WebScoreStateDeltaTracker {
                 break;
             case WEB_OBJ_STAGE_ALPHA:
                 processStageAlpha(id, newValue);
+                break;
             default:
                 LOG.error("processUpdate: Unknown propertyName: {}", propertyName);
         }
@@ -173,13 +174,16 @@ public class WebScoreStateDeltaTracker {
             return;
         }
         if (newValue instanceof Integer) {
-            addStageAlpha((Integer) newValue);
+            addStageAlpha(1.0 * (Integer) newValue);
+        }
+        if (newValue instanceof Double) {
+            addStageAlpha((Double) newValue);
         } else {
             LOG.error("processStageAlpha: invalid object type: {}", newValue);
         }
     }
 
-    private void addStageAlpha(Integer stageAlpha) {
+    private void addStageAlpha(Double stageAlpha) {
         if (stageAlpha == null) {
             return;
         }

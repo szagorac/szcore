@@ -793,6 +793,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         if (isInRndRange) {
             List<InstrumentId> slotInstrumentIds = strategy.getInstrumentSlotIds();
             String instSlotsCsv = ParseUtil.convertToCsv(slotInstrumentIds);
+            LOG.info("onOpenModWindow: rnd strategy selected instruments: {}", instSlotsCsv);
             if (currentPage != null) {
                 OscEvent instrumentSlotsEvent = createInstrumentSlotsEvent(destination, instSlotsCsv, null);
                 if (instrumentSlotsEvent == null) {

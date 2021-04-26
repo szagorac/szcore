@@ -70,6 +70,13 @@ public class ParseUtil {
         }
     }
 
+    public static String parseToken(String val, String token, String replaceWith) {
+        if (!val.contains(token)) {
+            return val;
+        }
+        return val.replaceAll(token, replaceWith);
+    }
+
     public static Object convertToType(String val) {
         if (isNumeric(val)) {
             if (val.contains(DOT)) {

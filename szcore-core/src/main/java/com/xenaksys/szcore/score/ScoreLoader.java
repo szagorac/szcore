@@ -57,6 +57,7 @@ public class ScoreLoader {
     static final String SCRIPT_DELIMITER = ":";
     static final String SCRIPT_COMMA_REPLACE_CHAR = "|";
     static final String COMMA = ",";
+    static final String COMMA_TOKEN = "@C@";
     static final String CURLY_QUOTE = "�";
     static final String SINGLE_QUOTE = "'";
     static final String AV = "AV";
@@ -426,7 +427,8 @@ public class ScoreLoader {
 
         if (sargs.length > 2) {
             for (int i = 2; i < sargs.length; i++) {
-                args.add(ParseUtil.convertToType(sargs[i]));
+                String arg = ParseUtil.parseToken(sargs[i], COMMA_TOKEN, COMMA);
+                args.add(ParseUtil.convertToType(arg));
             }
         }
 
@@ -524,6 +526,8 @@ public class ScoreLoader {
         if (script.contains(CURLY_QUOTE)) {
             script = script.replace(CURLY_QUOTE, SINGLE_QUOTE);
         }
+
+        script = ParseUtil.parseToken(script, COMMA_TOKEN, COMMA);
 
         Script scriptObj = new WebScoreScript(id, beatId, script, isResetPoint, isResetOnly);
         LOG.info("Created script: {}", scriptObj);

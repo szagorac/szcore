@@ -73,12 +73,12 @@ public class SzcorePlayer extends Server implements EventService {
 
     public void initProcessors(){
         clock = new MutableNanoClock();
-        eventReceiver = new OscReceiveProcessor(new OscListenerId(Consts.DEFAULT_ALL_PORTS, getAddress().getHostAddress(), "OscReceiveProcessor"), clock);
+        eventReceiver = new OscReceiveProcessor(new OscListenerId(Consts.DEFAULT_ALL_PORTS, serverAddress.getHostAddress(), "OscReceiveProcessor"), clock);
 
         inDisruptor = DisruptorFactory.createInDisruptor();
         eventProcessor = new PlayerEventProcessor(this, clock, eventFactory, inDisruptor);
         playerEventReceiver = new PlayerEventReceiver(eventProcessor, eventReceiver,
-                new OscListenerId(Consts.DEFAULT_ALL_PORTS, getAddress().getHostAddress(), "PlayerEventReceiver"));
+                new OscListenerId(Consts.DEFAULT_ALL_PORTS, serverAddress.getHostAddress(), "PlayerEventReceiver"));
         playerEventReceiver.init();
 
         outDisruptor = DisruptorFactory.createDefaultDisruptor();
@@ -149,8 +149,8 @@ public class SzcorePlayer extends Server implements EventService {
     }
 
     @Override
-    public InetAddress getAddress() {
-        return getServerAddress();
+    public void receive(SzcoreEvent event) {
+//        serverEventReceiver.onEvent(event);
     }
 
     public void subscribe(SzcoreIncomingEventListener listener){

@@ -1,6 +1,8 @@
 package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
+import com.xenaksys.szcore.algo.ScoreRandomisationStrategyConfig;
 import com.xenaksys.szcore.model.Bar;
 import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.Id;
@@ -12,6 +14,7 @@ import com.xenaksys.szcore.model.Stave;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.Transport;
 import com.xenaksys.szcore.model.id.BeatId;
+import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.MutableBeatId;
 import com.xenaksys.szcore.model.id.MutablePageId;
 import com.xenaksys.szcore.model.id.PageId;
@@ -31,6 +34,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.LinkedBlockingQueue;
 
 
 public class BasicScore implements Score {
@@ -40,6 +45,8 @@ public class BasicScore implements Score {
 
     private List<SzcoreEvent> initEvents = new ArrayList<>();
     private Set<Id> transportIds = new HashSet<>();
+    private List<Instrument> scoreInstruments = new ArrayList<>();
+    private List<Instrument> avInstruments = new ArrayList<>();
     private Map<Id, Instrument> instruments = new HashMap<>();
     private Map<Id, Page> pages = new HashMap<>();
     private Map<Id, Bar> bars = new HashMap<>();
@@ -55,6 +62,8 @@ public class BasicScore implements Score {
     private Map<Id, OSCPortOut> instrumentOscPortMap = new HashMap<>();
     private Map<Id, Stave> staves = new HashMap<>();
     private Map<Id, List<Stave>> instrumentStaves = new HashMap<>();
+    private Map<Id, Instrument> oscPlayers = new HashMap<>();
+
     private boolean isPrecount = true;
     private int precountBeatNo = 4;
     private int precountMillis = 5 * 1000;
@@ -64,11 +73,60 @@ public class BasicScore implements Score {
     private final MutableBeatId tempBeatId = new MutableBeatId(0, null, null, null, null, 0);
 
     private Page blankPage;
+    private Map<Id, Page> instrumentContinuousPage = new HashMap<>();
+
+    private boolean isUseContinuousPage = false;
+    public int noContinuousPages = 10;
+    private boolean isRandomizeContinuousPageContent = true;
+
+    private ScoreRandomisationStrategyConfig randomisationStrategyConfig;
+    private ScoreRandomisationStrategy randomisationStrategy;
+
+    private String workingDir;
 
     public BasicScore(StrId id) {
         this.id = id;
     }
 
+    public void initRandomisation() {
+        if (randomisationStrategyConfig == null) {
+            LOG.info("initRandomisation: no config, ignoring ...");
+            return;
+        }
+        randomisationStrategy = new ScoreRandomisationStrategy(this, randomisationStrategyConfig);
+        randomisationStrategy.init();
+    }
+
+    public void setRandomisationStrategy(List<Integer> strategy) {
+        if (randomisationStrategy == null || strategy == null) {
+            return;
+        }
+
+        randomisationStrategy.setAssignmentStrategy(strategy);
+    }
+
+    public boolean isRandomisePage(Page nextPage) {
+        int pageNo = nextPage.getPageNo();
+        boolean out = pageNo > 3;
+        LOG.info("isRandomisePage: {} {} ", out, nextPage);
+        return out;
+    }
+
+    public boolean isUseContinuousPage() {
+        return isUseContinuousPage;
+    }
+
+    public void setUseContinuousPage(boolean useContinuousPage) {
+        isUseContinuousPage = useContinuousPage;
+    }
+
+    public boolean isRandomizeContinuousPageContent() {
+        return isRandomizeContinuousPageContent;
+    }
+
+    public void setRandomizeContinuousPageContent(boolean randomizeContinuousPageContent) {
+        isRandomizeContinuousPageContent = randomizeContinuousPageContent;
+    }
 
     public void addInitEvent(SzcoreEvent initEvent) {
         initEvents.add(initEvent);
@@ -76,6 +134,11 @@ public class BasicScore implements Score {
 
     public void addInstrument(Instrument instrument) {
         instruments.put(instrument.getId(), instrument);
+        if (instrument.isAv()) {
+            avInstruments.add(instrument);
+        } else {
+            scoreInstruments.add(instrument);
+        }
     }
 
     public Page getBlankPage() {
@@ -86,17 +149,21 @@ public class BasicScore implements Score {
         this.blankPage = blankPage;
     }
 
+    public Page getContinuousPage(Id instrumentId) {
+        return instrumentContinuousPage.get(instrumentId);
+    }
+
+    public void setContinuousPage(Id instrumentId, Page continuousPage) {
+        this.instrumentContinuousPage.put(instrumentId, continuousPage);
+    }
+
     public void addInstrumentTransport(Instrument instrument, Transport transport) {
         Id instrumentId = instrument.getId();
         Id transportId = transport.getId();
         addTransportId(transportId);
         transports.put(transportId, transport);
         instrumentTransports.put(instrumentId, transportId);
-        List<Id> instrumentIds = transportInstruments.get(transportId);
-        if(instrumentIds == null){
-            instrumentIds = new ArrayList<>();
-            transportInstruments.put(transportId, instrumentIds);
-        }
+        List<Id> instrumentIds = transportInstruments.computeIfAbsent(transportId, k -> new ArrayList<>());
         if(!instrumentIds.contains(instrumentId)){
             instrumentIds.add(instrumentId);
         }
@@ -114,6 +181,18 @@ public class BasicScore implements Score {
         transportContext.addClockTickEvent(clockTickEvent);
     }
 
+    public void addOneOffClockTickEvent(Id transportId, SzcoreEvent clockTickEvent) throws Exception {
+
+        TransportContext transportContext = transportSpecificData.get(transportId);
+        if (transportContext == null) {
+            transportContext = new TransportContext(transportId);
+            transportSpecificData.put(transportId, transportContext);
+            addTransportId(transportId);
+        }
+
+        transportContext.addOneOffClockTickEvent(clockTickEvent);
+    }
+
     public void addClockBaseBeatTickEvent(Id transportId, SzcoreEvent clockBaseBeatEvent) {
         TransportContext transportContext = transportSpecificData.get(transportId);
         if (transportContext == null) {
@@ -126,9 +205,7 @@ public class BasicScore implements Score {
     }
 
     public void addTransportId(Id transportId) {
-        if (!transportIds.contains(transportId)) {
-            transportIds.add(transportId);
-        }
+        transportIds.add(transportId);
     }
 
     public void addScoreBaseBeatEvent(Id transportId, SzcoreEvent scoreBaseBeatEvent) {
@@ -176,6 +253,15 @@ public class BasicScore implements Score {
             return null;
         }
         return transportContext.getClockTickEvents();
+    }
+
+    @Override
+    public LinkedBlockingQueue<SzcoreEvent> getOneOffClockTickEvents(Id transportId) {
+        TransportContext transportContext = transportSpecificData.get(transportId);
+        if (transportContext == null) {
+            return null;
+        }
+        return transportContext.getOneOffClockTickEvents();
     }
 
     @Override
@@ -239,6 +325,41 @@ public class BasicScore implements Score {
     }
 
     @Override
+    public Collection<Instrument> getScoreInstruments() {
+        return scoreInstruments;
+    }
+
+    @Override
+    public Collection<Instrument> getAvInstruments() {
+        return avInstruments;
+    }
+
+    public Instrument getInstrument(String name) {
+        if (name == null) {
+            return null;
+        }
+        Collection<Instrument> instruments = getInstruments();
+        for (Instrument instrument : instruments) {
+            if (name.equals(instrument.getName())) {
+                return instrument;
+            }
+        }
+        return null;
+    }
+
+    public Collection<Instrument> getOscPlayers() {
+        return oscPlayers.values();
+    }
+
+    public void addOscPlayer(Instrument instrument) {
+        oscPlayers.put(instrument.getId(), instrument);
+    }
+
+    public boolean isOscPlayer(InstrumentId instrumentId) {
+        return oscPlayers.containsKey(instrumentId);
+    }
+
+    @Override
     public Collection<Page> getPages() {
         return pages.values();
     }
@@ -255,8 +376,34 @@ public class BasicScore implements Score {
         pages.put(page.getId(), page);
     }
 
+    public Page getLastInstrumentPage(Id instrumentId) {
+        TreeSet<Page> out = getInstrumentPages(instrumentId);
+        Page last = out.last();
+        if (last.getPageNo() == Consts.CONTINUOUS_PAGE_NO) {
+            out.remove(last);
+            last = out.last();
+        }
+        return last;
+    }
+
+    public TreeSet<Page> getInstrumentPages(Id instrumentId) {
+        TreeSet<Page> out = new TreeSet<>();
+
+        for(Id pid : pages.keySet()) {
+            PageId pageId = (PageId) pid;
+            if(pageId.getInstrumentId().equals(instrumentId)) {
+                out.add(pages.get(pageId));
+            }
+        }
+        return out;
+    }
+
     public boolean containsPage(Page page) {
         return pages.containsKey(page.getId());
+    }
+
+    public boolean containsPage(PageId pageId) {
+        return pages.containsKey(pageId);
     }
 
     public void addBar(Bar bar) {
@@ -302,17 +449,9 @@ public class BasicScore implements Score {
         Long time = beat.getStartTimeMillis();
         Id beatId = beat.getBeatId();
         beatToTimeMap.put(beatId, time);
-        List<Id> timeBeats = timeToBeatMap.get(time);
-        if(timeBeats == null){
-            timeBeats = new ArrayList<>();
-            timeToBeatMap.put(time, timeBeats);
-        }
+        List<Id> timeBeats = timeToBeatMap.computeIfAbsent(time, k -> new ArrayList<>());
         timeBeats.add(beatId);
-        List<BeatId> iBeats = instrumentBeats.get(beat.getInstrumentId());
-        if (iBeats == null) {
-            iBeats = new ArrayList<>();
-            instrumentBeats.put(beat.getInstrumentId(), iBeats);
-        }
+        List<BeatId> iBeats = instrumentBeats.computeIfAbsent(beat.getInstrumentId(), k -> new ArrayList<>());
         iBeats.add(beat.getBeatId());
         Collections.sort(iBeats);
     }
@@ -323,12 +462,7 @@ public class BasicScore implements Score {
             return;
         }
 
-        List<Script> bScripts = beatScripts.get(script.getBeatId());
-        if (bScripts == null) {
-            bScripts = new ArrayList<>();
-            beatScripts.put(script.getBeatId(), bScripts);
-        }
-
+        List<Script> bScripts = beatScripts.computeIfAbsent(script.getBeatId(), k -> new ArrayList<>());
         bScripts.add(script);
     }
 
@@ -340,11 +474,7 @@ public class BasicScore implements Score {
         StaveId id = (StaveId) stave.getId();
         Id instrumentId = id.getInstrumentId();
         staves.put(id, stave);
-        List<Stave> iStaves = instrumentStaves.get(instrumentId);
-        if (iStaves == null) {
-            iStaves = new ArrayList<>();
-            instrumentStaves.put(instrumentId, iStaves);
-        }
+        List<Stave> iStaves = instrumentStaves.computeIfAbsent(instrumentId, k -> new ArrayList<>());
         iStaves.add(stave);
     }
 
@@ -456,20 +586,23 @@ public class BasicScore implements Score {
         if (id == null) {
             return null;
         }
-        return pages.get(id);
+        if(pages.containsKey(id)) {
+            return pages.get(id);
+        }
+        return null;
     }
 
     @Override
     public long getBeatTime(BeatId beatId) {
         if (beatId == null) {
-            return 0l;
+            return 0L;
         }
         return beatToTimeMap.get(beatId);
     }
 
     @Override
     public BeatId getBeatForTime(long time, Id transportId) {
-        BeatId beatId = null;
+        BeatId beatId;
 
         while (time >= 0) {
             List<Id> timeBeats = timeToBeatMap.get(time);
@@ -490,8 +623,6 @@ public class BasicScore implements Score {
                     return beatId;
                 }
             }
-
-            beatId = null;
             time--;
         }
 
@@ -598,6 +729,8 @@ public class BasicScore implements Score {
         return next;
     }
 
+
+
     @Override
     public List<BeatId> getBeatIds(Id transportId, int beatNo) {
         TransportContext transportContext = transportSpecificData.get(transportId);
@@ -605,6 +738,25 @@ public class BasicScore implements Score {
             return null;
         }
         return transportContext.getBeatIds(beatNo);
+    }
+
+    public BeatId getInstrumentBeatIds(Id transportId, Id instrumentId, int beatNo) {
+        for (BeatId beatId : getBeatIds(transportId, beatNo)) {
+            if (beatId.getInstrumentId().equals(instrumentId)) {
+                return beatId;
+            }
+        }
+        return null;
+    }
+
+    public BeatId getInstrumentBeat(Id instrumentId, int beatNo) {
+        Collection<BeatId> instBeats = getInstrumentBeatIds(instrumentId);
+        for(BeatId beatId : instBeats) {
+            if(beatId.getBeatNo() == beatNo) {
+                return beatId;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -718,6 +870,7 @@ public class BasicScore implements Score {
         int nextBeatNo = beatNo + beatOffset;
         Id instrumentId = beatId.getInstrumentId();
         List<BeatId> beatIds = instrumentBeats.get(instrumentId);
+
         tempBeatId.reset();
         tempBeatId.setBeatNo(nextBeatNo);
 
@@ -735,4 +888,19 @@ public class BasicScore implements Score {
         return beats.get(offsetBeatId);
     }
 
+    public String getRandomPageFileName(InstrumentId instrumentId) {
+        return randomisationStrategy.getRandomPageFileName(instrumentId);
+    }
+
+    public ScoreRandomisationStrategy getRandomisationStrategy() {
+        return randomisationStrategy;
+    }
+
+    public void setRandomisationStrategyConfig(ScoreRandomisationStrategyConfig config) {
+        this.randomisationStrategyConfig = config;
+    }
+
+    public ScoreRandomisationStrategyConfig getRandomisationStrategyConfig() {
+        return randomisationStrategyConfig;
+    }
 }

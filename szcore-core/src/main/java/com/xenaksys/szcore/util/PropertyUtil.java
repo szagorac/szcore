@@ -4,6 +4,7 @@ package com.xenaksys.szcore.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Properties;
 
 public class PropertyUtil {
@@ -52,6 +53,53 @@ public class PropertyUtil {
         }
 
         return out;
+    }
+
+    public static String parseStringArg(List<Object> args, int argIndex, String defaultValue) {
+        if (args == null) {
+            return defaultValue;
+        }
+        if (args.size() <= argIndex) {
+            return defaultValue;
+        }
+        Object arg = args.get(argIndex);
+        if (arg instanceof String) {
+            return (String) arg;
+        } else {
+            return arg.toString();
+        }
+    }
+
+    public static int parseIntArg(List<Object> args, int argIndex, int defaultValue) {
+        if (args == null) {
+            return defaultValue;
+        }
+        if (args.size() <= argIndex) {
+            return defaultValue;
+        }
+        Object arg = args.get(argIndex);
+        if (arg instanceof Integer) {
+            return (Integer) arg;
+        } else if (arg instanceof String) {
+            return Integer.parseInt((String) arg);
+        }
+        return defaultValue;
+    }
+
+    public static long parseLongArg(List<Object> args, int argIndex, long defaultValue) {
+        if (args == null) {
+            return defaultValue;
+        }
+        if (args.size() <= argIndex) {
+            return defaultValue;
+        }
+        Object arg = args.get(argIndex);
+        if (arg instanceof Long) {
+            return (Long) arg;
+        } else if (arg instanceof String) {
+            return Long.parseLong((String) arg);
+        }
+        return defaultValue;
     }
 
 }

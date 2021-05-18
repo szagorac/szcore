@@ -13,7 +13,7 @@ public class RootLayoutController {
     @FXML
     private Tab loggerTab;
     @FXML
-    private Tab setupTab;
+    private Tab settingsTab;
     @FXML
     private Tab scoreTab;
 
@@ -35,8 +35,8 @@ public class RootLayoutController {
         return loggerTab;
     }
 
-    public Tab getSetupTab() {
-        return setupTab;
+    public Tab getSettingsTab() {
+        return settingsTab;
     }
 
     public Tab getScoreTab() {

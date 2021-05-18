@@ -6,6 +6,7 @@ import com.xenaksys.szcore.event.OscEvent;
 import com.xenaksys.szcore.net.osc.OSCMessage;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.process.AbstractOscPublisherDisruptorProcessor;
+import com.xenaksys.szcore.util.NetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +16,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.xenaksys.szcore.Consts.ALLOWED_DESTINATIONS;
 
 public class OscDisruptorPublishProcessor extends AbstractOscPublisherDisruptorProcessor {
     static final Logger LOG = LoggerFactory.getLogger(OscDisruptorPublishProcessor.class);
@@ -32,28 +35,28 @@ public class OscDisruptorPublishProcessor extends AbstractOscPublisherDisruptorP
         }
 
         InetAddress inetAddress = port.getAddress();
-        if(inetAddress == null){
+        if (inetAddress == null) {
             return;
         }
 
         String hostAddr = inetAddress.getHostAddress();
-        if(hostAddr == null){
+        if (hostAddr == null) {
             return;
         }
 
+        int portNo = port.getPort();
+        String clientId = NetUtil.createClientId(hostAddr, portNo);
+
         toRemove.clear();
-        for(String outKey: oscPublishPorts.keySet()){
-            OSCPortOut outPort = oscPublishPorts.get(outKey);
-            InetAddress outInetAddress = outPort.getAddress();
-            String outHostAddr = outInetAddress.getHostAddress();
-            if(hostAddr.equals(outHostAddr)){
-                LOG.warn("Already have out port with the same IP address for destination: " + outKey);
-                if(hostAddr.equals(outKey)){
-                    LOG.warn("Existing out port is allowed; IP address destination: " + outKey);
-                } else {
-                    LOG.warn("Removing existing out port mapping for a different destination: " + outKey);
-                    toRemove.add(outKey);
-                }
+        for (String outKey : oscPublishPorts.keySet()) {
+            OSCPortOut publishPort = oscPublishPorts.get(outKey);
+            InetAddress publishInetAddress = publishPort.getAddress();
+            String publishHostAddr = publishInetAddress.getHostAddress();
+            int publishPortNo = publishPort.getPort();
+
+            if (hostAddr.equals(publishHostAddr) && portNo == publishPortNo) {
+                LOG.warn("addOscPort: Removing existing out port mapping: {}, adding mapping for destination: {}", outKey, destination);
+                toRemove.add(outKey);
             }
         }
 
@@ -64,29 +67,26 @@ public class OscDisruptorPublishProcessor extends AbstractOscPublisherDisruptorP
         oscPublishPorts.put(destination, port);
     }
 
-    public void setPublishPorts(Map<String, OSCPortOut> oscPublishPorts){
+    public void setPublishPorts(Map<String, OSCPortOut> oscPublishPorts) {
         this.oscPublishPorts = oscPublishPorts;
     }
 
-    public OSCPortOut getOutPort(String destination){
+    public OSCPortOut getOutPort(String destination) {
         return oscPublishPorts.get(destination);
     }
 
-    public boolean isDestination(String destination, int port) {
-        if (!oscPublishPorts.containsKey(destination)) {
-            return false;
+    public boolean isDestination(String destination) {
+        if (ALLOWED_DESTINATIONS.contains(destination)) {
+            return true;
         }
-
-        OSCPortOut portOut = oscPublishPorts.get(destination);
-        int outPort = portOut.getPort();
-        return port == outPort;
+        return oscPublishPorts.containsKey(destination);
     }
 
     public void removeDestination(String destination) {
         oscPublishPorts.remove(destination);
     }
 
-    public Collection<String> getDestinations(){
+    public Collection<String> getDestinations() {
         return oscPublishPorts.keySet();
     }
 
@@ -108,18 +108,23 @@ public class OscDisruptorPublishProcessor extends AbstractOscPublisherDisruptorP
 //long diff = System.currentTimeMillis() - creationTime;
 //LOG.debug("Sending message time diff: " + diff + " creationTime: " + creationTime);
 
-        if (Consts.ALL_DESTINATIONS.equals(destination)){
-            for (OSCPortOut port : oscPublishPorts.values()){
+        if (Consts.ALL_DESTINATIONS.equals(destination)) {
+            for (OSCPortOut port : oscPublishPorts.values()) {
                 send(port, address, args);
             }
+        } else if (Consts.BROADCAST.equals(destination)) {
+            List<OSCPortOut> broadcastPorts = getBroadcastPorts();
+            if(broadcastPorts != null && !broadcastPorts.isEmpty()) {
+                for(OSCPortOut broadcastPort : broadcastPorts) {
+                    send(broadcastPort, address, args);
+                }
+            }
         } else {
-
             OSCPortOut port = oscPublishPorts.get(destination);
             if (port == null) {
-//            LOG.error("Failed to find OSC port for destination: " + destination);
+                LOG.error("Failed to find OSC port for destination: " + destination);
                 return;
             }
-
             send(port, address, args);
         }
     }

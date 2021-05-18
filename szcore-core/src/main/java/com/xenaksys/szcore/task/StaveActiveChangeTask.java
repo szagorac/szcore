@@ -25,7 +25,7 @@ public class StaveActiveChangeTask extends EventMusicTask {
     @Override
     public void play() {
         SzcoreEvent event = getEvent();
-        if (event == null || !(event instanceof StaveActiveChangeEvent)) {
+        if (!(event instanceof StaveActiveChangeEvent)) {
             return;
         }
 
@@ -46,6 +46,12 @@ public class StaveActiveChangeTask extends EventMusicTask {
 
         OscStaveActivateEvent oscStaveActivateEvent = staveActiveChangeEvent.getOscStaveActivateEvent();
         if (oscStaveActivateEvent == null) {
+            return;
+        }
+
+        String destination = oscStaveActivateEvent.getDestination();
+        if (!oscPublisher.isDestination(destination)) {
+//            LOG.debug("Destination {} is not active, ignoring event {}", destination, oscStaveActivateEvent);
             return;
         }
 

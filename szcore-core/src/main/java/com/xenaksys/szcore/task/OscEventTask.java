@@ -15,7 +15,7 @@ public class OscEventTask extends EventMusicTask {
     @Override
     public void play() {
         SzcoreEvent event = getEvent();
-        if (event == null || !(event instanceof OscEvent)) {
+        if (!(event instanceof OscEvent)) {
             return;
         }
 

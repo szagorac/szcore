@@ -1,0 +1,489 @@
+<? javascript
+
+// GLobal Static Data initialiser
+var START_TIME = Date.now();
+var SPACE = " ";
+var UNDERSCORE = "_";
+var COMMA = ",";
+var DOT = ".";
+var SLASH = "/";
+var PIPE = "|";
+var SEMICOLON = ";";
+var EQUALS = "=";
+var EMPTY = "";
+var SINGLE_QUOTE = "'";
+var DOUBLE_QUOTE = '"';
+var ENCODED_QUOTE = "&quot";
+var ENCODED_SPACE = "%20";
+var TOKEN = "@";
+var COLON = ":";
+var UNKNOWN = "UNKNOWN";
+
+var IS_LOGGING_ON = 1; //0 to switch off logging
+
+//### ZSCORE JS LIB ###
+var ZSCORE = function () {
+
+    var INSCORE_SCENE_ROOT_URL = "/ITL/scene/";
+    var INSCORE_SCENE_URL = "/ITL/scene";
+    var INSCORE_LOG_URL = "/ITL/log";
+    var INSCORE_JS_URL = "/ITL/scene/javascript";
+    var SCENE_LOGGER = "/ITL/scene/logger";
+
+    var SYMBOLS_DIR = "symbols/";
+
+    var START_LOG = "START -------";
+    var END_LOG = "END -------";
+    var ERROR = "ERROR: ";
+    var ERROR_START = ERROR + START_LOG;
+    var ERROR_END = ERROR + END_LOG;
+    var TYPE_STRING = "string";
+    var TYPE_BOOLEAN = "boolean"; 
+
+    var RECT = "rect";
+    var LAYER = "layer";
+    var TXT =  "txt";
+    var SET = "set";
+    var RUN = "run";
+    var WATCH = "watch";
+    var WRITE = "write";
+    var SAVE = "save";
+    var DEL = "del";
+    var MAP = "map";
+    var EXPORT = "export";
+    var EXPORT_ALL = "exportAll";
+    var CLEAR = "clear";
+    var SHOW = "show";
+
+    var isLoggingOn = false;
+    var isLogTime = false;
+
+    var lastTimerCall = START_TIME;
+    var maxTimerInterval = 0;
+    var isUseTimer = false;
+
+    var intVals =[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255];
+
+    var SYMBOL_MAP = {
+        "GCLF": SYMBOLS_DIR + "gClefMy.svg",
+        "TSN4": SYMBOLS_DIR + "timeSig4My.svg",
+        "TSD4": SYMBOLS_DIR + "timeSigDenom4My.svg",
+        "NQSU": SYMBOLS_DIR + "noteQuarterUpMy.svg",
+        "NTHD": SYMBOLS_DIR + "noteheadBlackMy1.svg",
+    };
+
+    var replaceAll = function(target, search, replacement) {
+        return target.replace(new RegExp(search, 'g'), replacement);
+    };
+    var initLib = function() {       
+        postTimer();
+    };
+    var postTimer = function() {
+        if(isUseTimer) {
+            post(INSCORE_JS_URL,"run","timer()");
+        }
+    };
+    var processTimer = function() {
+        var now = Date.now();
+        var diff = now - lastTimerCall;
+        lastTimerCall = now;
+        if(diff > maxTimerInterval) {
+            log("Max timer call interval ms: " + diff); 
+            maxTimerInterval = diff;
+        }
+        postTimer();
+    };
+    var isArray = function(obj) {
+        return Array.isArray(obj);
+    };
+    var isObject = function(obj) {
+        return Object.prototype.toString.call(obj) === '[object Object]';
+    };    
+    var isFunction = function(functionToCheck) {
+        var getType = {};
+        return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
+    };
+    var isNumber = function (n) {
+        return !isNaN(parseFloat(n)) && isFinite(n);
+    };
+    var isInteger = function (value) {
+        // return n === parseInt(n, 10);
+        if (isNaN(value)) {
+            return false;
+        }
+        var x = parseFloat(value);
+        return (x | 0) === x;
+    };
+    var isString = function (str) {
+        return str && (typeof(str) == TYPE_STRING || str instanceof String);
+    };
+    var isBoolean = function (value) {
+        return (typeof value) === TYPE_BOOLEAN;
+    };
+    var showLog = function(onOff){
+        if(onOff === 1) {
+            isLoggingOn = true;
+        }
+        post(INSCORE_LOG_URL, SHOW, onOff);
+    };
+    var log = function(value){
+        if(value !== 0 && !value){
+            return;
+        }
+        if(isArray(value)){
+            return logArray(value);
+        }
+        if(isObject(value)){
+            return logObject(value);
+        }
+        if(isLoggingOn) {
+            if(isLogTime) {
+                var time = new Date();
+                var timePrefix = time.toLocaleTimeString() + " ";
+                value = timePrefix + value;
+            }
+            post(INSCORE_LOG_URL, WRITE, value);
+        }
+    };
+    var logEmptyLine = function(){
+        log('-');
+    };
+    var logError = function(value){
+        if(isArray(value)) {
+            log(ERROR_START);
+            log(value);    
+            return log(ERROR_END);
+        }
+        log(ERROR + value);
+    };
+    var logArray = function(arr){
+        if(!arr || !isArray(arr)){
+            return;
+        }
+        log(arr.join());        
+    };
+    var logObject = function (obj){
+        if(!obj || !isObject(obj)) {
+            logError("logObject: Not an Object");
+            return;
+        }
+         
+        for (var property in obj) {
+            if(!property) {
+                continue;
+            }
+            if (obj.hasOwnProperty(property)) {
+                var val = obj[property];
+                if(!val) {
+                    // val = "";
+                    log(SPACE + property + COLON + SPACE + val);     
+                } else if(isArray(val)) {
+                    val = val.join();
+                    log(SPACE + property + COLON + SPACE + val);     
+                } else if(isObject(val)) {
+                    log(SPACE + property + COLON + SPACE + START_LOG);
+                    logObject(val);                         
+                    log(SPACE + property + COLON + SPACE + END_LOG);
+                } else {
+                    log(SPACE + property + COLON + SPACE + val);  
+                }                           
+            }
+        }
+    };
+    var sceneLog = function(value){
+        if(!value){
+            return;
+        }
+        if(isArray(value)) {
+            return sceneLogArray(value);
+        }
+        post(SCENE_LOGGER, SET, TXT, value);
+    };
+    var sceneLogArray = function(arr){
+        if(!arr || !isArray(arr)){
+            return;
+        }
+        var out = "";
+        for (var i = 0; i < arr.length; i++) {
+            out += arr[i] + NL;
+        }
+        sceneLog(out);
+    };
+    var postToInscore = function(inscoreCmdArr){
+        if(!inscoreCmdArr || !isArray(inscoreCmdArr)) {
+            logError("postToInscore: Invalid inputs");
+            return;
+        }
+        if(isArray(inscoreCmdArr[0])) {
+            for (var i = 0; i < inscoreCmdArr.length; i++) {
+                log(inscoreCmdArr[i]); // ####### Log #######
+                post.apply(this, inscoreCmdArr[i]);
+            }
+        } else {
+            log(inscoreCmdArr); // ####### Log #######
+            post.apply(this, inscoreCmdArr); 
+        }
+    };
+    var saveInscoreFile = function(fileName, layer, attribArr){
+        if(!fileName){
+            fileName = UNKNOWN;
+        }
+        if(!layer) {
+            layer = INSCORE_SCENE_URL;
+        }
+        var cmdArr = [];
+        cmdArr.push(layer);
+        cmdArr.push(SAVE);
+        if(isArray(attribArr)) {
+            for (var i = 0; i < attribArr.length; i++) {
+                cmdArr.push(this, attribArr[i]);
+            }
+        }
+        cmdArr.push(fileName);
+        log("Saving InScore layer: " + layer + " to file: " + fileName)
+        postToInscore(cmdArr);
+    };
+    var exportInscoreScene = function(fileName, layer, isExportAll){
+        if(!fileName){
+            fileName = EXPORT + ".pdf";
+        }
+        if(!layer) {
+            layer = INSCORE_SCENE_URL;
+        }
+        var cmd = EXPORT;
+        if(isExportAll) {
+            cmd = EXPORT_ALL;
+        }
+        var cmdArr = [];
+        cmdArr.push(layer);
+        cmdArr.push(cmd);
+        cmdArr.push(fileName);
+        log("Exporting InScore layer: " + layer + " to file: " + fileName + " cmd: " + cmd);
+        postToInscore(cmdArr);
+    };
+    var convertToArr = function(str, delimiter) {
+        if (!str || !isString(str)) {
+            logError("convertToArr: invalid String");
+            log(str);
+            return [];
+        }
+    
+        return str.split(delimiter);
+    };
+    var isEven = function (n) {
+        if(!isNumber(n)) {
+            return;
+        }
+        return n % 2 == 0;
+    };
+    var startsWith = function (strvalue, substr) {
+        if (!strvalue || !isString(strvalue) || !isString(substr)) {
+            return false;
+        }
+
+        return strvalue.indexOf(substr, 0) === 0;
+    };
+    var endsWith = function (strvalue, substr) {
+        if (!strvalue || !isString(strvalue) || !isString(substr)) {
+            return false;
+        }
+        return strvalue.indexOf(substr, strvalue.length - substr.length) !== -1;
+    };  
+    var contains = function (strvalue, substr) {
+        if (!strvalue || !isString(strvalue) || !isString(substr)) {
+            return false;
+        }
+
+        return strvalue.indexOf(substr) > 0;
+    };
+    var isToken = function (strvalue) {
+        return startsWith(strvalue, TOKEN) && endsWith(strvalue, TOKEN) ;
+    };
+    var parseToken = function (token) {
+        var tokenValue = token.substring(1, token.length-1);
+        var out = SYMBOL_MAP[tokenValue];
+        if(!out) {
+            logError("Could not find mapping for token: " + token);
+            out = token;
+        } else {
+            log("Mapped token: " + token + " to: " + out);
+        }
+        return out;
+    };
+    var isFullUrl = function(url){
+        return startsWith(url, INSCORE_SCENE_URL);
+    }; 
+    var prependRootUrl = function(url){
+        if(startsWith(url,SLASH)) {
+            return INSCORE_SCENE_URL + url;
+        } else {
+            return INSCORE_SCENE_ROOT_URL + url;
+        }
+    };    
+    var processCmdArgs = function(url, args){
+        var cmdArr = [];
+
+        cmdArr.push(url);
+        var cmdArgs = convertToArr(args, SPACE);
+        for (var j = 0; j < cmdArgs.length; j++) {
+            var arg = cmdArgs[j];
+            if(isNumber(arg)) {
+                if(contains(arg, DOT)) {
+                    cmdArr.push(parseFloat(arg));
+                } else {
+                    //Workaround for Inscore inability to parse js int
+                    var actual = parseInt(arg, 10);
+                    if(actual >= 0 && actual < intVals.length) {
+                        var intVal = intVals[actual];
+                        cmdArr.push(intVal);
+                    } else {
+                        log("Value is Integer, but dont have preset, so using: " + actual);                    
+                        cmdArr.push(actual);
+                    }
+                }
+            } else {
+                if(contains(arg, ENCODED_SPACE)){
+                    arg = replaceAll(arg, ENCODED_SPACE, SPACE);
+                }
+                if(isToken(arg)) {
+                    log("Found token: " + arg); 
+                    arg = parseToken(arg);
+                }
+                cmdArr.push(arg);
+            }
+        }
+
+        return cmdArr;
+    };
+    var processCmd = function(cmd){
+        if(!cmd){
+            logError("Received invalid command");
+            return;
+        }
+
+        var cmdParts = convertToArr(cmd, COMMA);
+        if(cmdParts.length < 2) {
+            return cmdParts[0];
+        }
+        if(!isEven(cmdParts.length)) {
+            logError("Unexpected cmd array length: " + cmdParts.length);
+            return;
+        }        
+
+        var cmdsArr = [];
+        for (var i = 0; i < cmdParts.length; i+=2) {
+            var url = cmdParts[i];
+            var args = cmdParts[i+1];
+            log("Received cmd url: " +url);
+            log("Received cmd args: " +args);         
+            
+            if(!isFullUrl(url)) {
+                url = prependRootUrl(url); 
+                log("Actual url: " +url);
+            }
+            
+            if(contains(args, PIPE)) {
+                var cmdArgs = convertToArr(args, PIPE);
+                for (var j = 0; j < cmdArgs.length; j++) {        
+                    cmdsArr.push(processCmdArgs(url, cmdArgs[j]));
+                }
+            } else {
+                cmdsArr.push(processCmdArgs(url, args));
+            }
+        }
+
+        postToInscore(cmdsArr);
+    };
+
+
+     //--------------------------------
+    // ZSCORE JS public API
+    //--------------------------------
+    return {
+        // Initialise here
+        init: function () {
+            showLog(IS_LOGGING_ON);
+            //clearLog();
+            initLib();
+            log("---------------------------");
+            log("--- Initialising ZSCORE ---");
+            log("---------------------------");
+            var v = version();
+            log("Javascript version: " + v);
+        },
+        inscoreLog: function (value) {
+            log(value);
+        },
+        inscoreLogEmptyLine: function () {
+            logEmptyLine();
+        },
+        inscoreSceneLog: function (value) {
+            sceneLog(value);
+        },
+        inscoreSaveFile: function (fileName, layer, attribArr) {
+            saveInscoreFile(fileName, layer, attribArr);
+        },
+        inscoreExport: function (fileName, layer, isExportAll) {
+            exportInscoreScene(fileName, layer, isExportAll);
+        }, 
+        inscoreExport: function (fileName, layer, isExportAll) {
+            exportInscoreScene(fileName, layer, isExportAll);
+        },   
+        getRootSceneUrl: function () {
+            return INSCORE_SCENE_ROOT_URL;
+        },
+        processZsTimer: function () {
+            processTimer();
+        },
+        processZsCmd: function (cmd) {
+            processCmd(cmd);
+        },
+    }
+}();
+//--------------------------------
+//### END ZSCORE JS LIB ###
+//--------------------------------
+
+function initScene(){
+    ZSCORE.init();
+    
+    var rootUrl = ZSCORE.getRootSceneUrl();
+    ZSCORE.inscoreLog("Root URL: " + rootUrl);    
+    ZSCORE.inscoreLogEmptyLine();
+
+    var end = Date.now();
+    var duration = end - START_TIME;
+    ZSCORE.inscoreLog("Startup time: " + duration + "ms");
+    ZSCORE.inscoreLog("---   ZSCORE Started    ---");
+};
+
+function zs(content){
+    var start = Date.now();
+
+    ZSCORE.inscoreLog("RECEIVED : " + content);  
+    var out = ZSCORE.processZsCmd(content);  
+
+    var end = Date.now();
+    var duration = end - start;
+    ZSCORE.inscoreLog("Notation update took: " + duration + "ms");
+
+    if(out) {
+        return out;
+    }
+};
+
+function timer(){
+    ZSCORE.processZsTimer();  
+}
+
+?>
+
+/ITL/scene/* del;
+/ITL/scene color 255 255 255 255;
+
+#/ITL/scene/rr set rect 0.5 0.5;
+#/ITL/scene/rr color 255 0 0 255;
+
+<? javascript
+    initScene();
+?>

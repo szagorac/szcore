@@ -21,6 +21,10 @@ public interface Bar extends Identifiable, Comparable<Bar> {
 
     Collection<Beat> getBeats();
 
+    Beat getFirstBeat();
+
+    Beat getLastBeat();
+
     boolean isUpbeatBar();
 
 }

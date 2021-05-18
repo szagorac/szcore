@@ -21,7 +21,7 @@ public class PrepStaveChangeTask extends EventMusicTask {
     @Override
     public void play() {
         SzcoreEvent event = getEvent();
-        if (event == null || !(event instanceof PrepStaveChangeEvent)) {
+        if (!(event instanceof PrepStaveChangeEvent)) {
             return;
         }
 
@@ -31,6 +31,6 @@ public class PrepStaveChangeTask extends EventMusicTask {
 
 //LOG.debug("### About to execute PrepStaveChangeTask beatid: " + executeBeatId);
         scoreProcessor.processPrepStaveChange(instrumentId, executeBeatId,
-                prepEvent.getActivateBaseBeat(), prepEvent.getDeactivateBaseBeat(), prepEvent.getPageChangeOnBaseBeat());
+                prepEvent.getActivateBaseBeat(), prepEvent.getDeactivateBaseBeat(), prepEvent.getPageChangeOnBaseBeat(), prepEvent.getNextPageId());
     }
 }

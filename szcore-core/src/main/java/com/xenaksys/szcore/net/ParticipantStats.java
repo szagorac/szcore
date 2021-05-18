@@ -2,12 +2,19 @@ package com.xenaksys.szcore.net;
 
 public class ParticipantStats {
 
+    private final String id;
     private final String ipAddress;
     private double pingLatency;
+    private long lastPingResponseTime;
     private double oneWayPingLatency;
 
-    public ParticipantStats(String ipAddress) {
+    public ParticipantStats(String id, String ipAddress) {
+        this.id = id;
         this.ipAddress = ipAddress;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public double getPingLatency() {
@@ -28,5 +35,13 @@ public class ParticipantStats {
 
     public String getIpAddress() {
         return ipAddress;
+    }
+
+    public long getLastPingResponseTime() {
+        return lastPingResponseTime;
+    }
+
+    public void setLastPingResponseTime(long lastPingResponseTime) {
+        this.lastPingResponseTime = lastPingResponseTime;
     }
 }

@@ -4,7 +4,7 @@ import com.xenaksys.szcore.model.MutableClock;
 import com.xenaksys.szcore.model.TimeEventListener;
 import com.xenaksys.szcore.model.WaitStrategy;
 import com.xenaksys.szcore.time.clock.MutableNanoClock;
-import com.xenaksys.szcore.time.waitstrategy.BockingWaitStrategy;
+import com.xenaksys.szcore.time.waitstrategy.BlockingWaitStrategy;
 import gnu.trove.list.array.TLongArrayList;
 import org.junit.Assert;
 import org.junit.Before;
@@ -35,7 +35,7 @@ public class TestTimer {
         interval = 1l;
         TimeUnit timeUnit = TimeUnit.MILLISECONDS;
 //        WaitStrategy waitStrategy = new NanoSpinWaitStrategy(interval, timeUnit);
-        WaitStrategy waitStrategy = new BockingWaitStrategy(interval, timeUnit);
+        WaitStrategy waitStrategy = new BlockingWaitStrategy(interval, timeUnit);
 
         clock = new MutableNanoClock();
 

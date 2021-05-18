@@ -1,9 +1,11 @@
 package com.xenaksys.szcore.gui.model;
 
 import com.xenaksys.szcore.Consts;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -11,6 +13,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 import java.net.InetAddress;
+import java.util.Objects;
 
 public class Participant {
     private ObjectProperty<InetAddress> inetAddress = new SimpleObjectProperty<>();
@@ -20,6 +23,9 @@ public class Participant {
     private IntegerProperty portErr = new SimpleIntegerProperty(0);
     private DoubleProperty ping = new SimpleDoubleProperty(0.0);
     private StringProperty instrument = new SimpleStringProperty(Consts.EMPTY);
+    private BooleanProperty select = new SimpleBooleanProperty(false);
+    private BooleanProperty expired = new SimpleBooleanProperty(false);
+    private StringProperty lastPingTime = new SimpleStringProperty(Consts.EMPTY);
 
     public InetAddress getInetAddress() {
         return inetAddress.get();
@@ -101,19 +107,54 @@ public class Participant {
         this.instrument.set(instrument);
     }
 
+    public BooleanProperty getSelectProperty() {
+        return select;
+    }
+
+    public Boolean getSelect() {
+        return select.get();
+    }
+
+    public void setSelect(Boolean select) {
+        this.select.set(select);
+    }
+
+    public BooleanProperty getExpiredProperty() {
+        return expired;
+    }
+
+    public Boolean getExpired() {
+        return expired.get();
+    }
+
+    public void setExpired(Boolean select) {
+        this.expired.set(select);
+    }
+
+    public String getLastPingTime() {
+        return lastPingTime.get();
+    }
+
+    public StringProperty getLastPingMillisProperty() {
+        return lastPingTime;
+    }
+
+    public void setLastPingTime(String lastPing) {
+        this.lastPingTime.set(lastPing);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Participant)) return false;
-
+        if (o == null || getClass() != o.getClass()) return false;
         Participant that = (Participant) o;
-
-        return getHostAddress().equals(that.getHostAddress());
+        return hostAddress.getValue().equals(that.hostAddress.getValue()) &&
+                portIn.getValue().equals(that.portIn.getValue());
     }
 
     @Override
     public int hashCode() {
-        return hostAddress.hashCode();
+        return Objects.hash(hostAddress, portIn);
     }
 
     @Override

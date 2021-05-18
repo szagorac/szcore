@@ -16,6 +16,7 @@ import com.xenaksys.szcore.event.ParticipantStatsEvent;
 import com.xenaksys.szcore.event.StopEvent;
 import com.xenaksys.szcore.event.TempoChangeEvent;
 import com.xenaksys.szcore.event.TimeSigChangeEvent;
+import com.xenaksys.szcore.event.WebScoreEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Participant;
 import com.xenaksys.szcore.model.Id;
@@ -24,6 +25,7 @@ import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.util.IpAddressValidator;
+import com.xenaksys.szcore.util.TimeUtil;
 import javafx.scene.control.Alert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,15 +70,22 @@ public class ClientEventProcessor implements Processor {
                 }
                 break;
             case MUSIC:
-                if((event instanceof MusicEvent)){
-                    processMusicEvent((MusicEvent)event);
+                if ((event instanceof MusicEvent)) {
+                    processMusicEvent((MusicEvent) event);
                 }
                 break;
+            case WEB_SCORE:
+                if ((event instanceof WebScoreEvent)) {
+                    processWebScoreEvent((WebScoreEvent) event);
+                }
+                break;
+            case SCRIPTING_ENGINE:
+                //TODO
+                break;
             default:
-                LOG.error("Unknown event type: " + type);
+                LOG.error("process event: Unknown event type: " + type);
         }
     }
-
 
     public void process(SzcoreEvent event, int beatNo, int tickNo) {
         if(event == null){
@@ -90,15 +99,21 @@ public class ClientEventProcessor implements Processor {
             return;
         }
 
-        switch (type){
+        switch (type) {
             case OSC:
                 processScoreOscEvent((OscEvent) event, beatNo, tickNo);
                 break;
             case MUSIC:
-                processMusicEvent((MusicEvent)event, beatNo, tickNo);
+                processMusicEvent((MusicEvent) event, beatNo, tickNo);
+                break;
+            case WEB_SCORE:
+                processWebScoreEvent((WebScoreEvent) event, beatNo, tickNo);
+                break;
+            case SCRIPTING_ENGINE:
+                //TODO
                 break;
             default:
-                LOG.error("Unknown event type: " + type);
+                LOG.error("process beat event: Unknown event type: " + type);
         }
     }
 
@@ -119,6 +134,10 @@ public class ClientEventProcessor implements Processor {
                 //
 
         }
+    }
+
+    private void processWebScoreEvent(WebScoreEvent event, int beatNo, int tickNo) {
+
     }
 
     private void processScoreOscEvent(OscEvent event, int beatNo, int tickNo) {
@@ -151,6 +170,11 @@ public class ClientEventProcessor implements Processor {
         LOG.debug("Received score MUSIC event: " + event);
     }
 
+    private void processWebScoreEvent(WebScoreEvent event) {
+        LOG.debug("Received WebScore MUSIC event: " + event);
+    }
+
+
     private void processScoreOscEvent(OscEvent event) {
         LOG.debug("Received score OSC event: " + event);
     }
@@ -171,7 +195,7 @@ public class ClientEventProcessor implements Processor {
                 processErrorEvent((ErrorEvent) event);
                 break;
             default:
-                LOG.error("Unknown event type: " + type);
+                LOG.error("processClientEvent: Unknown event type: " + type);
         }
     }
 
@@ -242,19 +266,22 @@ public class ClientEventProcessor implements Processor {
             return;
         }
 
-        Participant participant = client.getParticipant(event.getHostAddress());
-        if(participant == null){
+        Participant participant = client.getParticipant(event.getHostAddress(), event.getPort());
+        if (participant == null) {
             LOG.error("Can not find participant for event: " + event);
             return;
         }
 
         participant.setPing(event.getOneWayPingLatencyMillis());
+        participant.setExpired(event.isExpired());
+        String pingPeriod = TimeUtil.formatPeriod(event.getLastPingMillis());
+        participant.setLastPingTime(pingPeriod);
     }
 
     private void processInstrumentEvent(InstrumentEvent event) {
 
         String hostAddress = event.getHostAddress();
-        Participant participant = client.getParticipant(hostAddress);
+        Participant participant = client.getParticipant(hostAddress, event.getPort());
         if(participant == null){
             LOG.error("Failed to find participant for event: " + event);
             return;

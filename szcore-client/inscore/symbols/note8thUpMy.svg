@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="0" height="0" version="1.1">
+  <szcore:glyphMeta xmlns:szcore="urn:xenaksys:szcore:glyph" isComposite="false" codePoint="U+E1D7" intCodePoint="U+57815" glyphName="note8thUp" glyphDescription="Eighth note (quaver) stem up" />
+  <path transform="scale(0.1, -0.1) translate(250, -1550)" 
+    unicode="&#xe1d7;" horiz-adv-x="566"
+    d="M451 594q115 -183 115 -343q0 -35 -6.5 -78t-13.5 -69l-6 -26q-7 -22 -26 -20l-2 1q-16 11 -16 29q0 6 3 15q24 64 24 137q0 96 -24 150q-25 60 -74 127t-93 94v-561q0 -70 -73 -129t-150 -59q-47 0 -78 25.5t-31 68.5q0 74 65.5 131t156.5 57q51 0 80 -26v505v235v5v1 q1 9 10 9q26 0 30 -22q20 -119 109 -257z" />
+</svg>

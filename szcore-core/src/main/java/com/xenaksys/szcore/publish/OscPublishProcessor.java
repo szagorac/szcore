@@ -17,11 +17,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.xenaksys.szcore.Consts.ALLOWED_DESTINATIONS;
+
 public class OscPublishProcessor implements OscPublisher {
     static final Logger LOG = LoggerFactory.getLogger(OscPublishProcessor.class);
 
     private Map<String, OSCPortOut> oscPublishPorts = new ConcurrentHashMap<>();
     private List<String> toRemove = new ArrayList<>();
+    private List<OSCPortOut> broadcastPorts = new ArrayList<>();
 
     public OscPublishProcessor(Map<String, OSCPortOut> oscPublishPorts) {
         this.oscPublishPorts = oscPublishPorts;
@@ -70,8 +73,25 @@ public class OscPublishProcessor implements OscPublisher {
     }
 
     @Override
+    public void addOscBroadcastPort(OSCPortOut port) {
+        if(port != null) {
+            this.broadcastPorts.add(port);
+        }
+    }
+
+    @Override
     public OSCPortOut getOutPort(String destination){
         return oscPublishPorts.get(destination);
+    }
+
+    @Override
+    public List<OSCPortOut> getBroadcastPorts() {
+        return broadcastPorts;
+    }
+
+    @Override
+    public void resetBroadcastPorts() {
+        broadcastPorts.clear();
     }
 
     @Override
@@ -80,14 +100,11 @@ public class OscPublishProcessor implements OscPublisher {
     }
 
     @Override
-    public boolean isDestination(String destination, int port) {
-        if (!oscPublishPorts.containsKey(destination)) {
-            return false;
+    public boolean isDestination(String destination) {
+        if (ALLOWED_DESTINATIONS.contains(destination)) {
+            return true;
         }
-
-        OSCPortOut portOut = oscPublishPorts.get(destination);
-        int outPort = portOut.getPort();
-        return port == outPort;
+        return oscPublishPorts.containsKey(destination);
     }
 
     @Override
@@ -148,8 +165,8 @@ public class OscPublishProcessor implements OscPublisher {
 
         OSCMessage msg = new OSCMessage(address, args);
 
-long diff = System.currentTimeMillis() - creationTime;
-LOG.debug("Sending message time diff: " + diff);
+        long diff = System.currentTimeMillis() - creationTime;
+        LOG.debug("Sending message time diff: " + diff);
 
         sendMessage(msg, port);
     }

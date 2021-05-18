@@ -2,6 +2,7 @@ package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.model.Bar;
+import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.id.PageId;
@@ -19,6 +20,8 @@ public class BasicPage implements Page {
     private final PageId id;
     private final String name;
     private final String fileName;
+    private final InscorePageMap inscorePageMap;
+    private final boolean isSendInscoreMap;
 
     List<Bar> bars = new ArrayList<>();
 
@@ -27,9 +30,19 @@ public class BasicPage implements Page {
     }
 
     public BasicPage(PageId id, String name, String fileName) {
+        this(id, name, fileName, null);
+    }
+
+    public BasicPage(PageId id, String name, String fileName, InscorePageMap inscorePageMap) {
+        this(id, name, fileName, inscorePageMap, false);
+    }
+
+    public BasicPage(PageId id, String name, String fileName, InscorePageMap inscorePageMap, boolean isSendInscoreMap) {
         this.id = id;
         this.fileName = fileName;
         this.name = name;
+        this.inscorePageMap = inscorePageMap;
+        this.isSendInscoreMap = isSendInscoreMap;
     }
 
     @Override
@@ -48,6 +61,40 @@ public class BasicPage implements Page {
     }
 
     @Override
+    public Bar getFirstBar() {
+        if (bars == null || bars.isEmpty()) {
+            return null;
+        }
+        return bars.get(0);
+    }
+
+    @Override
+    public Bar getLastBar() {
+        if (bars == null || bars.isEmpty()) {
+            return null;
+        }
+        return bars.get(bars.size() - 1);
+    }
+
+    @Override
+    public Beat getFirstBeat() {
+        Bar first = getFirstBar();
+        if (first == null) {
+            return null;
+        }
+        return first.getFirstBeat();
+    }
+
+    @Override
+    public Beat getLastBeat() {
+        Bar last = getLastBar();
+        if (last == null) {
+            return null;
+        }
+        return last.getLastBeat();
+    }
+
+    @Override
     public Id getInstrumentId() {
         return id.getInstrumentId();
     }
@@ -60,6 +107,24 @@ public class BasicPage implements Page {
     @Override
     public Id getScoreId() {
         return id.getScoreId();
+    }
+
+    public InscorePageMap getInscorePageMap() {
+        return inscorePageMap;
+    }
+
+    @Override
+    public long getDurationMs() {
+        Beat firstBeat = getFirstBeat();
+        Beat lastBeat = getLastBeat();
+
+        long start = firstBeat.getStartTimeMillis();
+        long end = lastBeat.getEndTimeMillis();
+        return end - start;
+    }
+
+    public boolean isSendInscoreMap() {
+        return isSendInscoreMap;
     }
 
     @Override

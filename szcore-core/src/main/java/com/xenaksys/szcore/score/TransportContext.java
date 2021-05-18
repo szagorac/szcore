@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class TransportContext {
     static final Logger LOG = LoggerFactory.getLogger(TransportContext.class);
@@ -18,10 +19,11 @@ public class TransportContext {
     private final Id transportId;
     private List<SzcoreEvent> initEvents = new ArrayList<>();
     private List<SzcoreEvent> clockTickEvents = new ArrayList<>();
+    private LinkedBlockingQueue<SzcoreEvent> oneOffClockTickEvents = new LinkedBlockingQueue<>();
     private List<SzcoreEvent> clockBaseBeatEvents = new ArrayList<>();
     private TIntObjectMap<List<SzcoreEvent>> scoreBaseBeatEvents = new TIntObjectHashMap<>();
     private TIntObjectMap<List<SzcoreEvent>> oneOffBaseBeatEvents = new TIntObjectHashMap<>();
-    private TIntObjectMap<List<BeatId>> betNoToId = new TIntObjectHashMap<>();
+    private TIntObjectMap<List<BeatId>> beatNoToId = new TIntObjectHashMap<>();
 
     public TransportContext(Id transportId) {
         this.transportId = transportId;
@@ -33,6 +35,10 @@ public class TransportContext {
 
     public void addClockTickEvent(SzcoreEvent clockTickEvent) {
         clockTickEvents.add(clockTickEvent);
+    }
+
+    public void addOneOffClockTickEvent(SzcoreEvent oneOffEvent) throws Exception {
+        oneOffClockTickEvents.add(oneOffEvent);
     }
 
     public void addClockBaseBeatTickEvent(SzcoreEvent clockBaseBeatEvent) {
@@ -95,10 +101,10 @@ public class TransportContext {
             baseBeatNo = beatId.getBaseBeatNo();
         }
 
-        List<BeatId> beatIds = betNoToId.get(baseBeatNo);
+        List<BeatId> beatIds = beatNoToId.get(baseBeatNo);
         if (beatIds == null) {
             beatIds = new ArrayList<>();
-            betNoToId.put(baseBeatNo, beatIds);
+            beatNoToId.put(baseBeatNo, beatIds);
         }
 
         beatIds.add(beatId);
@@ -106,7 +112,7 @@ public class TransportContext {
     }
 
     public List<BeatId> getBeatIds(int beatNo) {
-        return betNoToId.get(beatNo);
+        return beatNoToId.get(beatNo);
     }
 
     public List<SzcoreEvent> getInitEvents() {
@@ -118,6 +124,9 @@ public class TransportContext {
         return clockTickEvents;
     }
 
+    public LinkedBlockingQueue<SzcoreEvent> getOneOffClockTickEvents() {
+        return oneOffClockTickEvents;
+    }
 
     public List<SzcoreEvent> getClockBaseBeatEvents() {
         return clockBaseBeatEvents;

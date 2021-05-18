@@ -11,8 +11,10 @@ import com.xenaksys.szcore.model.Scheduler;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.Timer;
 import com.xenaksys.szcore.model.WaitStrategy;
+import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.publish.OscPublishProcessor;
+import com.xenaksys.szcore.publish.WebPublisherProcessor;
 import com.xenaksys.szcore.score.ScoreProcessorImpl;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.BasicScheduler;
@@ -20,7 +22,8 @@ import com.xenaksys.szcore.time.BasicTimer;
 import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.time.beatstrategy.SimpleBeatTimeStrategy;
 import com.xenaksys.szcore.time.clock.MutableNanoClock;
-import com.xenaksys.szcore.time.waitstrategy.BockingWaitStrategy;
+import com.xenaksys.szcore.time.waitstrategy.BlockingWaitStrategy;
+import com.xenaksys.szcore.web.WebProcessor;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -40,16 +43,19 @@ public class TestOscPublish {
     ScoreProcessor scoreProcessor;
     TransportFactory transportFactory;
     OscPublisher oscPublisher;
+    WebPublisher webPublisher;
+    WebProcessor webProcessor;
 
     boolean isSkip = true;
 
     @Before
     public void init(){
 
-        WaitStrategy waitStrategy = new BockingWaitStrategy(1, TimeUnit.MILLISECONDS);
+        WaitStrategy waitStrategy = new BlockingWaitStrategy(1, TimeUnit.MILLISECONDS);
         MutableClock clock = new MutableNanoClock();
         Timer timer = new BasicTimer(waitStrategy, clock);
         oscPublisher = new OscPublishProcessor();
+        webPublisher = new WebPublisherProcessor();
         Scheduler scheduler = new BasicScheduler(clock, timer);
         BeatTimeStrategy beatTimeStrategy = new SimpleBeatTimeStrategy();
         transportFactory = new TransportFactory(clock, scheduler, beatTimeStrategy);
@@ -57,7 +63,7 @@ public class TestOscPublish {
         EventFactory eventFactory = new EventFactory();
         TaskFactory taskFactory = new TaskFactory();
 
-        scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, oscPublisher, scheduler, eventFactory, taskFactory);
+        scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory);
     }
 
     @Test
@@ -187,7 +193,7 @@ public class TestOscPublish {
         List<Object> arguments = new ArrayList<>();;
 
         oscPublisher.addOscPort("DEFAULT_OSC_PORT", port);
-        WaitStrategy waitStrategy = new BockingWaitStrategy(25, TimeUnit.MILLISECONDS);
+        WaitStrategy waitStrategy = new BlockingWaitStrategy(25, TimeUnit.MILLISECONDS);
 
 
         arguments.clear();
@@ -327,7 +333,7 @@ public class TestOscPublish {
         List<Object> arguments = new ArrayList<>();;
 
         oscPublisher.addOscPort("DEFAULT_OSC_PORT", port);
-        WaitStrategy waitStrategy = new BockingWaitStrategy(25, TimeUnit.MILLISECONDS);
+        WaitStrategy waitStrategy = new BlockingWaitStrategy(25, TimeUnit.MILLISECONDS);
 
         arguments.clear();
         String address = "/ITL";

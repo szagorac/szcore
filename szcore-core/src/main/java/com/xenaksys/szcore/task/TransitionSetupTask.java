@@ -3,11 +3,7 @@ package com.xenaksys.szcore.task;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.TransitionEvent;
 import com.xenaksys.szcore.event.TransitionScriptEvent;
-import com.xenaksys.szcore.model.Clock;
-import com.xenaksys.szcore.model.OscPublisher;
-import com.xenaksys.szcore.model.Scheduler;
-import com.xenaksys.szcore.model.SzcoreEvent;
-import com.xenaksys.szcore.model.Transition;
+import com.xenaksys.szcore.model.*;
 
 public class TransitionSetupTask extends EventMusicTask {
     private final Scheduler scheduler;
@@ -29,7 +25,7 @@ public class TransitionSetupTask extends EventMusicTask {
     @Override
     public void play() {
         SzcoreEvent event = getEvent();
-        if (event == null || !(event instanceof TransitionEvent)) {
+        if (!(event instanceof TransitionEvent)) {
             return;
         }
 

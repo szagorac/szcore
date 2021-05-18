@@ -5,11 +5,13 @@ import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.PrecountBeatOffEvent;
 import com.xenaksys.szcore.event.PrecountBeatOnEvent;
 import com.xenaksys.szcore.event.PrecountBeatSetupEvent;
+import com.xenaksys.szcore.event.WebScoreEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.OscPublisher;
 import com.xenaksys.szcore.model.Scheduler;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.Transport;
+import com.xenaksys.szcore.score.web.WebScore;
 
 public class PrecountBeatSetupTask extends EventMusicTask {
     private final Transport transport;
@@ -18,9 +20,11 @@ public class PrecountBeatSetupTask extends EventMusicTask {
     private final EventFactory eventFactory;
     private final String destination;
     private final Clock clock;
+    private final TaskFactory taskFactory;
+    private final WebScore webScore;
 
     public PrecountBeatSetupTask(PrecountBeatSetupEvent precountBeatSetupEvent, String destination, Transport transport, Scheduler scheduler,
-                                 OscPublisher oscPublisher, EventFactory eventFactory, Clock clock) {
+                                 OscPublisher oscPublisher, EventFactory eventFactory, TaskFactory taskFactory, WebScore webScore, Clock clock) {
         super(0, precountBeatSetupEvent);
         this.transport = transport;
         this.scheduler = scheduler;
@@ -28,12 +32,14 @@ public class PrecountBeatSetupTask extends EventMusicTask {
         this.eventFactory = eventFactory;
         this.destination = destination;
         this.clock = clock;
+        this.taskFactory = taskFactory;
+        this.webScore = webScore;
     }
 
     @Override
     public void play() {
         SzcoreEvent event = getEvent();
-        if (event == null || !(event instanceof PrecountBeatSetupEvent)) {
+        if (!(event instanceof PrecountBeatSetupEvent)) {
             return;
         }
 
@@ -77,6 +83,7 @@ public class PrecountBeatSetupTask extends EventMusicTask {
         addBeaterOnTask(adjustPlaytime(beatIntervalMillis, startPositionMillis), 1, Consts.OSC_COLOUR_GREEN);
 //        addBeaterOffTask(2*beatIntervalMillis, 1);
 
+
     }
 
     private long adjustPlaytime(long playTime, long startPositionMillis){
@@ -110,6 +117,7 @@ public class PrecountBeatSetupTask extends EventMusicTask {
         OscEventTask task = new OscEventTask(playTime, event, oscPublisher);
         //LOG.info("Create Beater ON Task playTime: " + playTime + " beaterNo: " + beaterNo + " colourId: " + colourId);
         scheduler.add(task);
+        addWebscorePrecountTask(playTime, true, beaterNo, colourId);
     }
 
     private void addBeaterOffTask(long playTime, int beaterNo) {
@@ -120,6 +128,13 @@ public class PrecountBeatSetupTask extends EventMusicTask {
         event.addCommandArg(beaterNo);
         OscEventTask task = new OscEventTask(playTime, event, oscPublisher);
         //LOG.info("Create Beater OFF Task playTime: " + playTime + " beaterNo: " + beaterNo);
+        scheduler.add(task);
+        addWebscorePrecountTask(playTime, false, beaterNo, 0);
+    }
+
+    private void addWebscorePrecountTask(long playTime, boolean isOn, int beaterNo, int colourId) {
+        WebScoreEvent event = eventFactory.createWebScorePrecountEvent(beaterNo, isOn, colourId, clock.getSystemTimeMillis());
+        WebScoreEventTask task = taskFactory.createWebScoreEventTask(playTime, event, webScore);
         scheduler.add(task);
     }
 }

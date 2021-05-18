@@ -2,15 +2,22 @@ package com.xenaksys.szcore.event;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.model.Id;
+import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.Stave;
 import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.TimeSignature;
 import com.xenaksys.szcore.model.Transition;
 import com.xenaksys.szcore.model.id.BeatId;
+import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
+import com.xenaksys.szcore.score.web.WebScoreScript;
+import com.xenaksys.szcore.scripting.ScriptingEngineScript;
+import com.xenaksys.szcore.web.WebConnection;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class EventFactory {
 
@@ -18,6 +25,9 @@ public class EventFactory {
     List<Object> oscDateArgs = new ArrayList<>();
     List<Object> oscDyArgs = new ArrayList<>();
     List<Object> oscYPositionArgs = new ArrayList<>();
+    List<Object> oscAlphaArgs = new ArrayList<>();
+    List<Object> oscPenAlphaArgs = new ArrayList<>();
+    List<Object> oscColorArgs = new ArrayList<>();
 
     public EventFactory() {
         init();
@@ -28,6 +38,9 @@ public class EventFactory {
         oscDateArgs.add(Consts.OSC_ARG_DATE);
         oscDyArgs.add(Consts.OSC_ARG_DY);
         oscYPositionArgs.add(Consts.OSC_ARG_Y_POSITION);
+        oscAlphaArgs.add(Consts.OSC_ARG_ALPHA);
+        oscPenAlphaArgs.add(Consts.OSC_ARG_PEN_ALPHA);
+        oscColorArgs.add(Consts.OSC_ARG_PEN_COLOR);
     }
 
     public TempoChangeEvent createTempoChangeEvent(Tempo tempo,
@@ -40,16 +53,20 @@ public class EventFactory {
 
 
     public TransportPositionEvent createTransportPositionEvent(Id transportId,
-                                                                int startBaseBeatNo,
-                                                                int transportBeatNo,
-                                                                int tickNo,
-                                                                long positionMillis,
-                                                                long creationTime) {
+                                                               int startBaseBeatNo,
+                                                               int transportBeatNo,
+                                                               int tickNo,
+                                                               long positionMillis,
+                                                               long creationTime) {
         return new TransportPositionEvent(transportId, startBaseBeatNo, transportBeatNo, tickNo, positionMillis, creationTime);
     }
 
     public StopEvent createStopEvent(BeatId lastEvent, Id transportId, long creationTime) {
         return new StopEvent(lastEvent, transportId, creationTime);
+    }
+
+    public ModWindowEvent createModWindowEvent(BeatId beatId, Page nextPage, PageId currentPageId, Stave stave, boolean isOpen, long creationTime) {
+        return new ModWindowEvent(beatId, nextPage, currentPageId, stave, isOpen, creationTime);
     }
 
     public TimeSigChangeEvent createTimeSigChangeEvent(TimeSignature timeSignature,
@@ -71,16 +88,17 @@ public class EventFactory {
                                                            BeatId activateOnBaseBeat,
                                                            BeatId deactivateOnBaseBeat,
                                                            BeatId pageChangeOnBaseBeat,
+                                                           PageId nextPageId,
                                                            long creationTime) {
-        return new PrepStaveChangeEvent(executeOnBaseBeat, activateOnBaseBeat, deactivateOnBaseBeat, pageChangeOnBaseBeat, creationTime);
+        return new PrepStaveChangeEvent(executeOnBaseBeat, activateOnBaseBeat, deactivateOnBaseBeat, pageChangeOnBaseBeat, nextPageId, creationTime);
     }
 
     public ParticipantEvent createParticipantEvent(InetAddress inetAddress, String hostAddress, int portIn, int portOut, int portErr, int ping, String instrument, long creationTime) {
-        return new  ParticipantEvent(inetAddress, hostAddress, portIn, portOut, portErr, ping, instrument, creationTime);
+        return new ParticipantEvent(inetAddress, hostAddress, portIn, portOut, portErr, ping, instrument, creationTime);
     }
 
-    public ParticipantStatsEvent createParticipantStatsEvent(InetAddress inetAddress, String hostAddress, double pingLatencyMillis, double halfPingLatencyMillis, long creationTime){
-        return new ParticipantStatsEvent(inetAddress, hostAddress, pingLatencyMillis, halfPingLatencyMillis, creationTime);
+    public ParticipantStatsEvent createParticipantStatsEvent(InetAddress inetAddress, String hostAddress, int port, double pingLatencyMillis, double halfPingLatencyMillis, boolean isExpired, long lastPingLatency, long creationTime) {
+        return new ParticipantStatsEvent(inetAddress, hostAddress, port, pingLatencyMillis, halfPingLatencyMillis, isExpired, lastPingLatency, creationTime);
     }
 
     public OscEvent createOscEvent(String address, List<Object> arguments, BeatId eventBaseBeat, long creationTime) {
@@ -117,6 +135,22 @@ public class EventFactory {
 
     public StaveYPositionEvent createStaveYPositionEvent(String address, String destination, StaveId staveId, long creationTime) {
         return new StaveYPositionEvent(address, oscYPositionArgs, destination, staveId, creationTime);
+    }
+
+    public ElementYPositionEvent createElementYPositionEvent(String address, String destination, StaveId staveId, long creationTime) {
+        return new ElementYPositionEvent(address, oscYPositionArgs, destination, staveId, creationTime);
+    }
+
+    public ElementAlphaEvent createElementAlphaEvent(String address, String destination, long creationTime) {
+        return new ElementAlphaEvent(address, oscAlphaArgs, destination, creationTime);
+    }
+
+    public ElementAlphaEvent createElementPenAlphaEvent(String address, String destination, long creationTime) {
+        return new ElementAlphaEvent(address, oscPenAlphaArgs, destination, creationTime);
+    }
+
+    public ElementColorEvent createElementColorEvent(String address, String destination, long creationTime) {
+        return new ElementColorEvent(address, oscColorArgs, destination, creationTime);
     }
 
     public OscEvent createPageDisplayEvent(String address, List<Object> args, BeatId eventBaseBeat, String destination, long creationTime) {
@@ -167,6 +201,10 @@ public class EventFactory {
         return new BeatScriptEvent(createJavaScriptArgs(), beatId, destination, creationTime);
     }
 
+    public OscScriptEvent createOscScriptEvent(String destination, BeatId beatId, String address, List<Object> args, long creationTime) {
+        return new OscScriptEvent(address, args, beatId, destination, creationTime);
+    }
+
     public TransitionEvent createTransitionEvent(String destination, BeatId beatId, Transition transition, long creationTime) {
         return new TransitionEvent(beatId, destination, transition, creationTime);
     }
@@ -197,6 +235,24 @@ public class EventFactory {
         return event;
     }
 
+    public InstrumentSlotsEvent createInstrumentSlotsEvent(String instrumentsCsv, String destination, long creationTime, BeatId beatId) {
+        InstrumentSlotsEvent event = new InstrumentSlotsEvent(createJavaScriptArgs(), beatId, destination, creationTime);
+        event.addCommandArg(instrumentsCsv);
+        return event;
+    }
+
+    public InstrumentResetSlotsEvent createResetInstrumentSlotsEvent(String destination, long creationTime, BeatId beatId) {
+        InstrumentResetSlotsEvent event = new InstrumentResetSlotsEvent(createJavaScriptArgs(), beatId, destination, creationTime);
+        event.addCommandArg();
+        return event;
+    }
+
+    public SendServerIpBroadcastEvent createServerIpBroadcastEvent(String serverIp, String destination, long creationTime) {
+        SendServerIpBroadcastEvent event = new SendServerIpBroadcastEvent(createJavaScriptArgs(), destination, creationTime);
+        event.addCommandArg(serverIp);
+        return event;
+    }
+
     public ResetScoreEvent createResetScoreEvent(String destination, long creationTime) {
         ResetScoreEvent resetScoreEvent = new ResetScoreEvent(createJavaScriptArgs(), destination, creationTime);
         resetScoreEvent.addCommandArg();
@@ -213,6 +269,64 @@ public class EventFactory {
         ResetStavesEvent resetScoreEvent = new ResetStavesEvent(createJavaScriptArgs(), destination, creationTime);
         resetScoreEvent.addCommandArg();
         return resetScoreEvent;
+    }
+
+    public ElementSelectedEvent createElementSelectedEvent(String elementId, boolean isSelected, String eventId, String sourceAddr, String requestPath,
+                                                           long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new ElementSelectedEvent(elementId, isSelected, sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
+    }
+
+    public UpdateWebConnectionsEvent createUpdateWebConnectionsEvent(Set<WebConnection> clientConnections, long creationTime) {
+        return new UpdateWebConnectionsEvent(clientConnections, creationTime);
+    }
+
+    public WebPollEvent createWebPollEvent(String eventId, String sourceAddr, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new WebPollEvent(eventId, sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    }
+
+    public WebStartEvent createWebStartEvent(String eventId, String sourceAddr, String requestPath,
+                                             long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new WebStartEvent(sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
+    }
+
+    public WebScoreEvent createWebScoreEvent(BeatId beatId, List<WebScoreScript> scripts, long creationTime) {
+        return new WebScoreEvent(beatId, scripts, creationTime);
+    }
+
+    public ScriptingEngineEvent createScriptingEngineEvent(BeatId beatId, List<ScriptingEngineScript> scripts, long creationTime) {
+        return new ScriptingEngineEvent(beatId, scripts, creationTime);
+    }
+
+    public ScriptingEngineResetEvent createScriptingEngineResetEvent(BeatId beatId, List<ScriptingEngineScript> scripts, long creationTime) {
+        return new ScriptingEngineResetEvent(beatId, scripts, creationTime);
+    }
+
+    public WebScoreInstructionsEvent createWebScoreInstructionsEvent(String l1, String l2, String l3, boolean isVisible, long creationTime) {
+        return new WebScoreInstructionsEvent(l1, l2, l3, isVisible, creationTime);
+    }
+
+    public WebScorePrecountEvent createWebScorePrecountEvent(int count, boolean isOn, int colourId, long creationTime) {
+        return new WebScorePrecountEvent(count, isOn, colourId, creationTime);
+    }
+
+    public WebScoreResetEvent createWebScoreResetEvent(BeatId beatId, List<WebScoreScript> scripts, long creationTime) {
+        return new WebScoreResetEvent(beatId, scripts, creationTime);
+    }
+
+    public WebScoreStopEvent createWebScoreStopEvent(long creationTime) {
+        return new WebScoreStopEvent(null, null, creationTime);
+    }
+
+    public WebScorePlayTilesEvent createWebScorePlayTilesEvent(long creationTime) {
+        return new WebScorePlayTilesEvent(null, null, creationTime);
+    }
+
+    public WebScoreSelectTilesEvent createWebScoreSelectTilesEvent(List<String> tileIds, long creationTime) {
+        return new WebScoreSelectTilesEvent(null, null, tileIds, creationTime);
+    }
+
+    public OutgoingWebEvent createOutgoingWebEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, long creationTime) {
+        return new OutgoingWebEvent(beatId, eventId, eventType, creationTime);
     }
 
     public List<Object> createJavaScriptArgs() {

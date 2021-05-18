@@ -4,18 +4,20 @@ package com.xenaksys.szcore.server;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.ErrorEvent;
+import com.xenaksys.szcore.event.EventContainer;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.HelloEvent;
-import com.xenaksys.szcore.event.IncomingOscEvent;
+import com.xenaksys.szcore.event.IncomingWebEvent;
 import com.xenaksys.szcore.event.OscEvent;
+import com.xenaksys.szcore.event.OutgoingWebEvent;
 import com.xenaksys.szcore.event.PingEvent;
 import com.xenaksys.szcore.event.ServerHelloEvent;
 import com.xenaksys.szcore.model.BeatTimeStrategy;
+import com.xenaksys.szcore.model.ClientInfo;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.EventService;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.OscPublisher;
-import com.xenaksys.szcore.model.OscReceiver;
 import com.xenaksys.szcore.model.Scheduler;
 import com.xenaksys.szcore.model.Score;
 import com.xenaksys.szcore.model.ScoreProcessor;
@@ -24,6 +26,7 @@ import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.Timer;
 import com.xenaksys.szcore.model.WaitStrategy;
+import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.model.id.OscListenerId;
 import com.xenaksys.szcore.net.ParticipantStats;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
@@ -32,21 +35,32 @@ import com.xenaksys.szcore.process.SimpleLogger;
 import com.xenaksys.szcore.process.SzcoreThreadFactory;
 import com.xenaksys.szcore.publish.OscDisruptorPublishProcessor;
 import com.xenaksys.szcore.publish.OscPortFactory;
+import com.xenaksys.szcore.publish.WebPublisherDisruptorProcessor;
 import com.xenaksys.szcore.receive.OscReceiveProcessor;
 import com.xenaksys.szcore.receive.SzcoreIncomingEventListener;
 import com.xenaksys.szcore.score.ScoreProcessorImpl;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
-import com.xenaksys.szcore.server.processor.ServerEventDisruptorProcessor;
+import com.xenaksys.szcore.score.web.WebScore;
+import com.xenaksys.szcore.server.processor.InEventContainerDisruptorProcessor;
 import com.xenaksys.szcore.server.processor.ServerLogProcessor;
 import com.xenaksys.szcore.server.receive.ServerEventReceiver;
+import com.xenaksys.szcore.server.web.WebServer;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.BasicScheduler;
 import com.xenaksys.szcore.time.BasicTimer;
 import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.time.beatstrategy.SimpleBeatTimeStrategy;
 import com.xenaksys.szcore.time.clock.MutableNanoClock;
-import com.xenaksys.szcore.time.waitstrategy.BockingWaitStrategy;
+import com.xenaksys.szcore.time.waitstrategy.BlockingWaitStrategy;
+import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
+import com.xenaksys.szcore.web.WebConnection;
+import com.xenaksys.szcore.web.WebConnectionType;
+import com.xenaksys.szcore.web.WebProcessor;
+import com.xenaksys.szcore.web.WebScoreStateListener;
+import com.xenaksys.szcore.web.ZsWebRequest;
+import com.xenaksys.szcore.web.ZsWebResponse;
+import org.apache.commons.net.util.SubnetUtils;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -54,33 +68,50 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.xenaksys.szcore.Consts.PING_EXPIRY_MILLIS;
+import static com.xenaksys.szcore.Consts.WEB_ROOT;
+
 public class SzcoreServer extends Server implements EventService, ScoreService {
     private static final String PROP_APP_NAME = "appName";
 
     private static final AtomicInteger DEFAULT_POOL_NUMBER = new AtomicInteger(1);
 
-    private OscReceiveProcessor eventReceiver;
-    private OscPublisher eventPublisher;
+
+    private OscReceiveProcessor oscEventReceiver;
+    private OscPublisher oscEventPublisher;
+    private WebPublisher webEventPublisher;
     private ServerEventReceiver serverEventReceiver;
     private ScoreProcessor scoreProcessor;
+    private WebProcessor webProcessor;
     private ServerLogProcessor logProcessor;
-    private OscReceiver eventProcessor;
+//    private OscReceiver eventProcessor;
+    private InEventContainerDisruptorProcessor eventProcessor;
     private Scheduler scheduler;
     private EventFactory eventFactory;
     private TaskFactory taskFactory;
     private MutableNanoClock clock;
-    private Disruptor<OscEvent> outDisruptor;
-    private Disruptor<IncomingOscEvent> inDisruptor;
+    private Disruptor<OscEvent> outOscDisruptor;
+    private Disruptor<OutgoingWebEvent> outWebDisruptor;
+//    private Disruptor<IncomingOscEvent> inDisruptor;
+    private Disruptor<EventContainer> inDisruptor;
+    private WebServer webServer;
 
-    private Map<String, InetAddress> participants = new ConcurrentHashMap<>();
-    private Map<String, ParticipantStats> participantStats = new ConcurrentHashMap<>();
+    private final Map<String, ClientInfo> participants = new ConcurrentHashMap<>();
+    private final Map<String, ParticipantStats> participantStats = new ConcurrentHashMap<>();
     private PingEvent pingEvent;
+
+    private volatile String subnetMask = Consts.DEFAULT_SUBNET_MASK;
+    private volatile int inscorePort = Consts.DEFAULT_OSC_PORT;
+    private volatile int maxPort = Consts.DEFAULT_OSC_MAX_PORT;
+    private InetAddress broadcastAddress = null;
 
     protected SzcoreServer(String id) {
         super(id);
@@ -95,24 +126,81 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         eventFactory = new EventFactory();
         taskFactory = new TaskFactory();
         initProcessors();
+        initNetInfo();
+    }
+
+    public void initNetInfo() {
+        try {
+            String serverIp = getServerAddress().getHostAddress();
+            String subnetMask = getSubnetMask();
+            int[] remotePorts = getRemotePorts();
+            initBroadcastAddresses(serverIp, subnetMask, remotePorts);
+        } catch (Exception e) {
+            LOG.error("Failed to init net info", e);
+        }
+    }
+
+    public int[] getRemotePorts() {
+        int inscorePort = getInscorePort();
+        int maxPort = getMaxPort();
+        return new int[]{inscorePort, maxPort};
+    }
+
+    public void initBroadcastAddresses(String serverIp, String subnetMask, int[] remotePorts) throws Exception {
+        InetAddress broadcastAddress = getBroadcastAddress();
+        if (broadcastAddress == null) {
+            broadcastAddress = detectBroadcastAddress(serverIp, subnetMask);
+            setBroadcastAddress(broadcastAddress);
+        }
+
+        List<InetAddress> out = new ArrayList<>();
+        List<InetAddress> broadcastAddrs = NetUtil.listAllBroadcastAddresses();
+        if (broadcastAddrs.isEmpty()) {
+            out.add(broadcastAddress);
+        } else {
+            if(!broadcastAddrs.contains(broadcastAddress)) {
+                LOG.warn("Retrieved broadcast addresses do not contain address: {}, adding", broadcastAddress.getHostAddress());
+                out.add(broadcastAddress);
+            }
+            out.addAll(broadcastAddrs);
+        }
+
+        oscEventPublisher.resetBroadcastPorts();
+
+        for(InetAddress badr : out) {
+            for (int port : remotePorts) {
+                addBroadcastPort(badr, port);
+            }
+        }
+    }
+
+    private InetAddress detectBroadcastAddress(String serverIp, String subnetMask) throws Exception {
+        SubnetUtils su = new SubnetUtils(serverIp, subnetMask);
+        SubnetUtils.SubnetInfo info = su.getInfo();
+        String broadcastAddr = info.getBroadcastAddress();
+        return InetAddress.getByName(broadcastAddr);
     }
 
     public void initProcessors(){
         clock = new MutableNanoClock();
-        eventReceiver = new OscReceiveProcessor(new OscListenerId(Consts.DEFAULT_ALL_PORTS, getAddress().getHostAddress(), "OscReceiveProcessor"), clock);
+        Properties props = getProperties();
+        oscEventReceiver = new OscReceiveProcessor(new OscListenerId(Consts.DEFAULT_ALL_PORTS, getServerAddress().getHostAddress(), "OscReceiveProcessor"), clock);
 
-        inDisruptor = DisruptorFactory.createInDisruptor();
-        eventProcessor = new ServerEventDisruptorProcessor(this, clock, eventFactory, inDisruptor);
-        serverEventReceiver = new ServerEventReceiver(eventProcessor, eventReceiver,
-                new OscListenerId(Consts.DEFAULT_ALL_PORTS, getAddress().getHostAddress(), "ServerEventReceiver"));
+//        inDisruptor = DisruptorFactory.createInDisruptor();
+//        eventProcessor = new InServerEventDisruptorProcessor(this, clock, eventFactory, inDisruptor);
+        inDisruptor = DisruptorFactory.createContainerInDisruptor();
+        eventProcessor = new InEventContainerDisruptorProcessor(this, clock, eventFactory, inDisruptor);
+
+        serverEventReceiver = new ServerEventReceiver(eventProcessor, oscEventReceiver,
+                new OscListenerId(Consts.DEFAULT_ALL_PORTS, getServerAddress().getHostAddress(), "ServerEventReceiver"));
         serverEventReceiver.init();
 
-        WaitStrategy waitStrategy = new BockingWaitStrategy(1, TimeUnit.MILLISECONDS);
+        WaitStrategy waitStrategy = new BlockingWaitStrategy(1, TimeUnit.MILLISECONDS);
 
         Timer timer = new BasicTimer(waitStrategy, clock);
 
-        outDisruptor = DisruptorFactory.createOutDisruptor();
-        eventPublisher = new OscDisruptorPublishProcessor(outDisruptor);
+        outOscDisruptor = DisruptorFactory.createOscOutDisruptor();
+        oscEventPublisher = new OscDisruptorPublishProcessor(outOscDisruptor);
 
         SzcoreThreadFactory threadFactory = new SzcoreThreadFactory(Consts.SCHEDULER_THREAD_FACTORY + "_" +  DEFAULT_POOL_NUMBER.getAndIncrement());
         ExecutorService executor = Executors.newSingleThreadExecutor(threadFactory);
@@ -121,18 +209,33 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         BeatTimeStrategy beatTimeStrategy = new SimpleBeatTimeStrategy();
         TransportFactory transportFactory = new TransportFactory(clock, scheduler, beatTimeStrategy);
 
-        scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, eventPublisher, scheduler, eventFactory, taskFactory);
-
         logProcessor = new ServerLogProcessor(new SimpleLogger());
 
+        webProcessor = new WebProcessor( this, this, clock, eventFactory);
+        outWebDisruptor = DisruptorFactory.createWebOutDisruptor();
+        webEventPublisher = new WebPublisherDisruptorProcessor(outWebDisruptor, webProcessor);
+
+        scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, oscEventPublisher, webEventPublisher, scheduler, eventFactory, taskFactory);
+        subscribe(webProcessor);
+
+        String webRoot = props.getProperty(WEB_ROOT);
+        webServer = new WebServer(webRoot, 80, 1024, true, this);
+
+        webServer.start();
     }
 
     protected void onStart() throws Exception {
-        if(outDisruptor != null) {
-            outDisruptor.start();
+        if(outOscDisruptor != null) {
+            outOscDisruptor.start();
         }
-        if(eventPublisher != null) {
-            eventPublisher.start();
+        if(oscEventPublisher != null) {
+            oscEventPublisher.start();
+        }
+        if(outWebDisruptor != null) {
+            outWebDisruptor.start();
+        }
+        if(webEventPublisher != null) {
+            webEventPublisher.start();
         }
         if(inDisruptor != null) {
             inDisruptor.start();
@@ -160,18 +263,18 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     public void stop(){
-        eventReceiver.stop();
+        oscEventReceiver.stop();
         scheduler.stop();
         super.stop();
     }
 
     public void publish(SzcoreEvent event){
-        eventPublisher.process(event);
+        oscEventPublisher.process(event);
     }
 
     @Override
-    public InetAddress getAddress() {
-        return getServerAddress();
+    public void receive(SzcoreEvent event) {
+        serverEventReceiver.onEvent(event);
     }
 
     public void subscribe(SzcoreIncomingEventListener listener){
@@ -191,81 +294,222 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         return taskFactory;
     }
 
-    public OscPublisher getEventPublisher() {
-        return eventPublisher;
+    public OscPublisher getOscEventPublisher() {
+        return oscEventPublisher;
     }
 
-    public boolean isParticipant(InetAddress addr){
-        if(addr == null){
+    public boolean isParticipant(String clientId) {
+        if (clientId == null) {
             return false;
         }
-
-        String ip = addr.getHostAddress();
-        return participants.containsKey(ip);
+        return participants.containsKey(clientId);
     }
 
-    public void addParticipant(InetAddress addr){
-        if(addr == null){
+    public void addParticipant(String id, InetAddress addr, int port) {
+        if (id == null || addr == null) {
             return;
         }
-        participants.put(addr.getHostAddress(), addr);
-    }
-
-    public void addParticipantStats(ParticipantStats stats){
-        if(stats == null || stats.getIpAddress() == null){
+        if (participants.containsKey(id)) {
+            LOG.info("addParticipant: participant key {} exists already, ignoring add..", id);
             return;
         }
-        participantStats.put(stats.getIpAddress(), stats);
+
+        ClientInfo info = new ClientInfo(id, addr, port);
+        participants.put(id, info);
     }
 
-    public ParticipantStats getParticipantStats(String ipAddress){
-        return participantStats.get(ipAddress);
+    public void addParticipantStats(ParticipantStats stats) {
+        if (stats == null || stats.getId() == null) {
+            return;
+        }
+        participantStats.put(stats.getId(), stats);
     }
 
-    public InetAddress getParticipantAddress(String ipAddress){
-        return participants.get(ipAddress);
+    public ParticipantStats getParticipantStats(String participantId) {
+        return participantStats.get(participantId);
     }
 
-    public Collection<String> getParticipants(){
+    public InetAddress getParticipantAddress(String participantId) {
+        if (participants.containsKey(participantId)) {
+            return null;
+        }
+        return participants.get(participantId).getAddr();
+    }
+
+    public Collection<String> getParticipantIds() {
         return participants.keySet();
     }
 
-    public void sendHello(String remoteAddr){
-        HelloEvent helloEvent = eventFactory.createHelloEvent(remoteAddr, 0l);
-        eventPublisher.process(helloEvent);
+    public void sendHello(String clientId) {
+        HelloEvent helloEvent = eventFactory.createHelloEvent(clientId, 0L);
+        oscEventPublisher.process(helloEvent);
     }
 
-    public void sendServerHelloEvent(String remoteAddr){
-        ServerHelloEvent pingEvent = eventFactory.createServerHelloEvent(getServerAddress().getHostAddress(), remoteAddr, 0l);
-        eventPublisher.process(pingEvent);
+    public void sendServerHelloEvent(String remoteAddr) {
+        ServerHelloEvent pingEvent = eventFactory.createServerHelloEvent(getServerAddress().getHostAddress(), remoteAddr, 0L);
+        oscEventPublisher.process(pingEvent);
     }
 
-    public void addOutPort(InetAddress addr, int port){
-        String remoteAddr = addr.getHostAddress();
-        if(!eventPublisher.isDestination(remoteAddr, port)) {
+    public void addOutPort(String destinationId, InetAddress addr, int port) {
+        if (!oscEventPublisher.isDestination(destinationId)) {
             OSCPortOut outPort = OscPortFactory.createOutPort(addr, port);
-            eventPublisher.addOscPort(remoteAddr, outPort);
+            oscEventPublisher.addOscPort(destinationId, outPort);
         }
     }
 
-    public void addInstrumentOutPort(InetAddress addr, String instrument){
-        String remoteAddr = addr.getHostAddress();
-        OSCPortOut outPort = eventPublisher.getOutPort(remoteAddr);
-        if(outPort == null){
-            LOG.error("Add Instrument: Failed to find out port for instrument: " + instrument + " addr: " + remoteAddr);
+    public void addBroadcastPort(InetAddress addr, int port) {
+        if (addr == null) {
             return;
         }
 
-        eventPublisher.addOscPort(instrument, outPort);
+        List<OSCPortOut> bPorts = oscEventPublisher.getBroadcastPorts();
+        for(OSCPortOut bPort : bPorts) {
+            if (bPort.getAddress().equals(addr) && bPort.getPort() == port) {
+                LOG.info("addBroadcastPort: broadcast addr {} already registered, ignoring add broadcast port", addr.getHostAddress());
+                return;
+            }
+        }
+
+        OSCPortOut broadcastPort = OscPortFactory.createOutPort(addr, port);
+        if (broadcastPort != null) {
+            oscEventPublisher.addOscBroadcastPort(broadcastPort);
+        }
     }
 
-    public void sendScoreInfo(String instrument){
-        if(instrument == null){
+    @Override
+    public InetAddress getBroadcastAddress() {
+        return broadcastAddress;
+    }
+
+    @Override
+    public void setBroadcastAddress(InetAddress broadcastAddress) {
+        this.broadcastAddress = broadcastAddress;
+    }
+
+    @Override
+    public List<InetAddress> getDetectedBroadcastAddresses() {
+        List<InetAddress> out = new ArrayList<>();
+        if(oscEventPublisher == null) {
+            return out;
+        }
+
+        List<OSCPortOut> bPorts = oscEventPublisher.getBroadcastPorts();
+        for(OSCPortOut bPort : bPorts) {
+            out.add(bPort.getAddress());
+        }
+        return out;
+    }
+
+    public List<NetUtil.NetworkDevice> getParallelConnectedNetworkClients(){
+        List<NetUtil.NetworkDevice> connectedClients = new ArrayList<>();
+        try {
+            connectedClients = NetUtil.discoverConnectedDevices();
+        } catch (Exception e) {
+            LOG.error("Failed to retrieve connected clients", e);
+        }
+
+        return connectedClients;
+    }
+
+    @Override
+    public ZsWebResponse onWebRequest(ZsWebRequest zsRequest) {
+//        LOG.info("onHttpRequest: path: {} sourceAddr: {}", zsRequest.getRequestPath(), zsRequest.getSourceAddr());
+        return webProcessor.onWebRequest(zsRequest);
+    }
+
+    @Override
+    public void onWebConnection(String sourceId, WebConnectionType type, String userAgent) {
+        webProcessor.onWebConnection(sourceId, type, userAgent);
+    }
+
+    @Override
+    public void startWebServer() {
+        if(webServer == null) {
+            LOG.error("startWebServer: Invalid Web server");
+            return;
+        }
+
+        if(webServer.isRunning()) {
+            LOG.error("startWebServer: Web server is already running");
+            return;
+        }
+
+        webServer.start();
+    }
+
+    @Override
+    public void stopWebServer() {
+        if(webServer == null) {
+            LOG.error("stopWebServer: Invalid Web server");
+            return;
+        }
+
+        if(!webServer.isRunning()) {
+            LOG.error("stopWebServer: Web server is not running");
+            return;
+        }
+
+        webServer.stop();
+    }
+
+    @Override
+    public boolean isWebServerRunning() {
+        if(webServer == null) {
+            return false;
+        }
+
+        return webServer.isRunning();
+    }
+
+    @Override
+    public void onIncomingWebEvent(IncomingWebEvent webEvent) {
+        try {
+            scoreProcessor.onIncomingWebEvent(webEvent);
+        } catch (Exception e) {
+            LOG.error("Failed to process web event: {}", webEvent, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to process web event.", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void pushToWebClients(String data) {
+        webServer.pushToAll(data);
+    }
+
+    @Override
+    public void updateWebConnections(Set<WebConnection> connections) {
+        webProcessor.onUpdateWebConnections(connections);
+    }
+
+    public WebProcessor getWebProcessor() {
+        return webProcessor;
+    }
+
+    public ScoreProcessor getScoreProcessor() {
+        return scoreProcessor;
+    }
+
+    public void addInstrumentOutPort(String clientId, String instrument) {
+        OSCPortOut outPort = oscEventPublisher.getOutPort(clientId);
+        if (outPort == null) {
+            LOG.error("Add Instrument: Failed to find out port for instrument: " + instrument + " clientId: " + clientId);
+            return;
+        }
+
+        oscEventPublisher.addOscPort(instrument, outPort);
+    }
+
+    public void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst) {
+        scoreProcessor.processSelectInstrumentSlot(slotNo, slotInstrument, sourceInst);
+    }
+
+    public void sendScoreInfo(String instrument) {
+        if (instrument == null) {
             return;
         }
 
         Score score = scoreProcessor.getScore();
-        if(score == null){
+        if (score == null) {
             return;
         }
 
@@ -280,14 +524,14 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         events.add(eventFactory.createResetStavesEvent(instrument, clock.getSystemTimeMillis()));
 
         for (SzcoreEvent initEvent : events) {
-            eventPublisher.process(initEvent);
+            oscEventPublisher.process(initEvent);
             ThreadUtil.doSleep(Thread.currentThread(), Consts.DEFAULT_THREAD_SLEEP_MILLIS);
         }
 
     }
 
     public void addInPort(int port){
-        eventReceiver.addListener(serverEventReceiver, port);
+        oscEventReceiver.addListener(serverEventReceiver, port);
     }
 
     public void logEvent(SzcoreEvent event){
@@ -313,6 +557,17 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         } catch (Exception e) {
             LOG.error("Failed to load score: " + file, e);
             eventProcessor.notifyListeners(new ErrorEvent("Failed to load score: " + file, "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+        return null;
+    }
+
+    @Override
+    public WebScore loadWebScore(File file) {
+        try {
+            return scoreProcessor.loadWebScore(file);
+        } catch (Exception e) {
+            LOG.error("Failed to load score: " + file, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to load WebScore: " + file, "SzcoreServer", e, clock.getSystemTimeMillis()));
         }
         return null;
     }
@@ -365,6 +620,11 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
+    public void subscribe(WebScoreStateListener eventListener) {
+        scoreProcessor.subscribe(eventListener);
+    }
+
+    @Override
     public void setTempoModifier(Id transportId, TempoModifier tempoModifier) {
         try {
             scoreProcessor.setTempoModifier(transportId, tempoModifier);
@@ -374,8 +634,236 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         }
     }
 
-    protected void tick(){
-        if(pingEvent == null) {
+    @Override
+    public void setRandomisationStrategy(List<Integer> randomisationStrategy) {
+        try {
+            scoreProcessor.setRandomisationStrategy(randomisationStrategy);
+        } catch (Exception e) {
+            LOG.error("Failed to set randomisation strategy", e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set randomisation strategy", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void usePageRandomisation(Boolean value) {
+        try {
+            scoreProcessor.usePageRandomisation(value);
+        } catch (Exception e) {
+            LOG.error("Failed to set Use Randomisation Strategy: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Use Randomisation Strategy", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void useContinuousPageChange(Boolean value) {
+        try {
+            scoreProcessor.useContinuousPageChange(value);
+        } catch (Exception e) {
+            LOG.error("Failed to set Use Continuous Page Change: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Use Continuous Page Change", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void setDynamicsValue(long value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.setDynamicsValue(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Dynamics Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Dynamics Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void onUseDynamicsOverlay(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUseDynamicsOverlay(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Dynamics Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Dynamics Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void onUseDynamicsLine(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUseDynamicsLine(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Dynamics Line Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Dynamics Line Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void setPressureValue(long value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.setPressureValue(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Pressure Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Pressure Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void onUsePressureOverlay(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUsePressureOverlay(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Pressure Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Pressure Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void onUsePressureLine(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUsePressureLine(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Pressure Line Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Pressure Line Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void setSpeedValue(long value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.setSpeedValue(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Speed Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Speed Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void onUseSpeedOverlay(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUseSpeedOverlay(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Speed Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Speed Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void onUseSpeedLine(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUseSpeedLine(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Speed Line Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Speed Line Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void setPositionValue(long value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.setPositionValue(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Position Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Position Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void onUsePositionOverlay(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUsePositionOverlay(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Position Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Position Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void onUsePositionLine(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUsePositionLine(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Position Line Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Position Line Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void setContentValue(long value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.setContentValue(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Content Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Content Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void onUseContentOverlay(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUseContentOverlay(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Content Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Content Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void onUseContentLine(Boolean value, List<Id> instrumentIds) {
+        try {
+            scoreProcessor.onUseContentLine(value, instrumentIds);
+        } catch (Exception e) {
+            LOG.error("Failed to set Content Line Value: {}", value, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Content Line Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public InetAddress getServerAddress() {
+        return serverAddress;
+    }
+
+    @Override
+    public int getInscorePort() {
+        return inscorePort;
+    }
+
+    @Override
+    public void setInscorePort(int inscorePort) {
+        this.inscorePort = inscorePort;
+    }
+
+    @Override
+    public int getMaxPort() {
+        return maxPort;
+    }
+
+    @Override
+    public void setMaxPort(int maxPort) {
+        this.maxPort = maxPort;
+    }
+
+    @Override
+    public String getSubnetMask() {
+        return subnetMask;
+    }
+
+    @Override
+    public void setSubnetMask(String subnetMask) {
+        this.subnetMask = subnetMask;
+    }
+
+    private void systemCheck() {
+        long now = clock.getSystemTimeMillis();
+        for (String key : participantStats.keySet()) {
+            ParticipantStats stats = participantStats.get(key);
+            long pingTime = stats.getLastPingResponseTime();
+            long diff = now - pingTime;
+            if (diff > PING_EXPIRY_MILLIS) {
+                ClientInfo clientInfo = participants.get(key);
+                eventProcessor.expireParticipant(stats, clientInfo, diff);
+            }
+        }
+    }
+
+    protected void tick() {
+        if (pingEvent == null) {
             pingEvent = eventFactory.createPingEvent(Consts.ALL_DESTINATIONS, clock.getSystemTimeMillis());
         } else {
             pingEvent.addCommandArg(clock.getSystemTimeMillis());
@@ -383,6 +871,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
 //        LOG.debug("Sending ping event: " + pingEvent);
         publish(pingEvent);
+        systemCheck();
     }
 
 }

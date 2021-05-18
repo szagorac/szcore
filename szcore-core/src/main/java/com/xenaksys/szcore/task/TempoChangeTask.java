@@ -31,7 +31,7 @@ public class TempoChangeTask extends EventMusicTask {
     public void play() {
         //LOG.debug("Playing TempoChangeTask: ");
         SzcoreEvent event = getEvent();
-        if (event == null || !(event instanceof TempoChangeEvent)) {
+        if (!(event instanceof TempoChangeEvent)) {
             return;
         }
 
@@ -45,7 +45,7 @@ public class TempoChangeTask extends EventMusicTask {
         if(currentModifier != null){
             if(!currentModifier.equals(modifier)){
                 tempo = new TempoImpl(tempo, currentModifier);
-LOG.info("Setting new modified tempo: " + tempo);
+                LOG.info("Setting new modified tempo: " + tempo);
             }
         }
 

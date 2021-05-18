@@ -11,6 +11,7 @@ import com.xenaksys.szcore.gui.processor.GuiLoggerProcessor;
 import com.xenaksys.szcore.gui.view.LoggerController;
 import com.xenaksys.szcore.gui.view.RootLayoutController;
 import com.xenaksys.szcore.gui.view.ScoreController;
+import com.xenaksys.szcore.gui.view.SettingsController;
 import com.xenaksys.szcore.model.EventService;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.ScoreService;
@@ -20,6 +21,7 @@ import com.xenaksys.szcore.model.id.OscListenerId;
 import com.xenaksys.szcore.server.SzcoreServer;
 import com.xenaksys.szcore.time.clock.SimpleClock;
 import javafx.application.Application;
+import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
@@ -53,13 +55,14 @@ public class SzcoreClient extends Application {
     private GuiLoggerProcessor loggerProcessor;
 
     private ScoreController scoreController;
+    private SettingsController settingsController;
 
-    private ObservableList<Participant> participants = FXCollections.observableArrayList();
+    private ObservableList<Participant> participants = FXCollections.observableArrayList(param -> new Observable[] {param.getSelectProperty()});
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         this.primaryStage = primaryStage;
-        this.primaryStage.setTitle("SZCORE");
+        this.primaryStage.setTitle("ZSCORE");
         this.primaryStage.getIcons().add(new Image("file:resources/images/Address_Book.png"));
         AquaFx.style();
 
@@ -71,7 +74,7 @@ public class SzcoreClient extends Application {
 
         initRootLayout();
         initLoggerTab();
-//        initSetupTab();
+        initSettingsTab();
         initScoreTab();
 
         initProcessors();
@@ -139,26 +142,27 @@ public class SzcoreClient extends Application {
             e.printStackTrace();
         }
     }
-//
-//    public void initSetupTab() {
-//        try {
-//
-//            FXMLLoader loader = new FXMLLoader();
-//            loader.setLocation(SzcoreClient.class.getResource("/SetupTabLayout.fxml"));
-//            BorderPane setup = (BorderPane) loader.load();
-//
-//            Tab setupTab = rootController.getSetupTab();
-//
-//            setupTab.setContent(setup);
-//            SetupController controller = loader.getController();
-//
-//            controller.setMainApp(this);
-//
-//            controller.setPublisher(eventService);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
+
+    public void initSettingsTab() {
+        try {
+
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(SzcoreClient.class.getResource("/SettingsTabLayout.fxml"));
+            BorderPane setup = (BorderPane) loader.load();
+
+            Tab setupTab = rootController.getSettingsTab();
+
+            setupTab.setContent(setup);
+            settingsController = loader.getController();
+            settingsController.setMainApp(this);
+            settingsController.setScoreService(scoreService);
+            settingsController.setPublisher(eventService);
+
+            settingsController.populate();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public void initScoreTab() {
         try {
@@ -212,8 +216,8 @@ public class SzcoreClient extends Application {
             return;
         }
 
-        if(participants.contains(participant)){
-            LOG.warn("Participant is already registered: " + participant);
+        if (participants.contains(participant)) {
+            updateParticipant(participant);
             return;
         }
 
@@ -221,13 +225,26 @@ public class SzcoreClient extends Application {
         participants.add(participant);
     }
 
-    public Participant getParticipant(String hostAddress){
-        if(hostAddress == null){
+    public void updateParticipant(Participant participant) {
+        Participant toUpdate = getParticipant(participant.getHostAddress(), participant.getPortIn());
+        if (toUpdate == null) {
+            return;
+        }
+        LOG.info("Updating Participant: " + participant);
+        toUpdate.setInstrument(participant.getInstrument());
+        toUpdate.setPing(participant.getPing());
+        toUpdate.setPortErr(participant.getPortErr());
+        toUpdate.setPortOut(participant.getPortOut());
+        toUpdate.setSelect(participant.getSelect());
+    }
+
+    public Participant getParticipant(String hostAddress, int port) {
+        if (hostAddress == null) {
             return null;
         }
 
-        for(Participant participant : participants){
-            if(hostAddress.equals(participant.getHostAddress())){
+        for (Participant participant : participants) {
+            if (hostAddress.equals(participant.getHostAddress()) && port == participant.getPortIn()) {
                 return participant;
             }
         }

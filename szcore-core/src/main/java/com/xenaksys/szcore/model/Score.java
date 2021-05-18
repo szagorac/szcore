@@ -8,12 +8,15 @@ import gnu.trove.map.TIntObjectMap;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public interface Score extends Identifiable {
 
     List<SzcoreEvent> getInitEvents();
 
     List<SzcoreEvent> getClockTickEvents(Id transportId);
+
+    LinkedBlockingQueue<SzcoreEvent> getOneOffClockTickEvents(Id transportId);
 
     List<SzcoreEvent> getClockBaseBeatEvents(Id transportId);
 
@@ -30,6 +33,10 @@ public interface Score extends Identifiable {
     String getName();
 
     Collection<Instrument> getInstruments();
+
+    Collection<Instrument> getScoreInstruments();
+
+    Collection<Instrument> getAvInstruments();
 
     Collection<Page> getPages();
 

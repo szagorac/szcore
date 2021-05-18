@@ -1,5 +1,6 @@
 package com.xenaksys.szcore.server;
 
+import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.PropertyUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +90,7 @@ public class Server implements Runnable {
 
     protected void configureInternal() throws Exception {
 
-        serverAddress = InetAddress.getLocalHost();
+        serverAddress = NetUtil.getHostAddress();
 
         registerShutdownHandler();
 
@@ -244,7 +245,7 @@ public class Server implements Runnable {
         try {
             String propFileName = System.getProperty("propertyFile");
             if (propFileName == null) {
-                propFileName = "szcore.properties";
+                propFileName = "zscore.properties";
             }
 
             InputStream inputStream = Server.class.getClassLoader().getResourceAsStream(propFileName);
@@ -265,7 +266,4 @@ public class Server implements Runnable {
         return PropertyUtil.parsePropertyValue(propName, defaultValue, properties);
     }
 
-    public InetAddress getServerAddress() {
-        return serverAddress;
-    }
 }

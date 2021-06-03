@@ -16,30 +16,34 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
-<BorderPane prefHeight="729.0" prefWidth="870.0" xmlns="http://javafx.com/javafx/11.0.1"
+<BorderPane prefHeight="729.0" prefWidth="870.0" xmlns="http://javafx.com/javafx/8.0.171"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.xenaksys.szcore.gui.view.ScoreController">
-   <center>
-      <AnchorPane prefHeight="455.0" prefWidth="568.0" BorderPane.alignment="CENTER">
-         <children>
-            <VBox spacing="10.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0"
-                  AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
-               <children>
-                  <HBox alignment="CENTER_LEFT" spacing="10.0">
-                     <children>
-                        <Button fx:id="loadScoreBtn" minWidth="50.0" mnemonicParsing="false" onAction="#openScoreFile"
-                                prefWidth="100.0" stylesheets="@css/szcoreStyle.css" text="Load Score"/>
-                        <Label text="Playing: "/>
-                        <Label fx:id="scoreNameLbl" prefWidth="100.0" styleClass="label-subtitle-black"
-                               stylesheets="@css/szcoreStyle.css" text="___" textFill="#7c2828">
-                           <font>
-                              <Font size="14.0" />
-                           </font>
-                        </Label>
-                        <Label text="Parts:" />
-                        <ListView fx:id="instrumentsListView" prefHeight="100.0" prefWidth="150.0" />
-                        <Button fx:id="sendPartsBtn" minWidth="50.0" mnemonicParsing="false" onAction="#sendParts" stylesheets="@css/szcoreStyle.css" text="Send to Participants" />
-                        <Button fx:id="sendServerIpBtn" mnemonicParsing="false" onAction="#discoverParticipants" stylesheets="@css/szcoreStyle.css" text="Discover Participants" />
-                     </children>
+    <center>
+        <AnchorPane prefHeight="455.0" prefWidth="568.0" BorderPane.alignment="CENTER">
+            <children>
+                <VBox spacing="10.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0"
+                      AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+                    <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <children>
+                                <Button fx:id="loadScoreBtn" minWidth="50.0" mnemonicParsing="false"
+                                        onAction="#openScoreFile" prefWidth="100.0" stylesheets="@css/szcoreStyle.css"
+                                        text="Load Score"/>
+                                <Label text="Playing: "/>
+                                <Label fx:id="scoreNameLbl" prefWidth="100.0" styleClass="label-subtitle-black"
+                                       stylesheets="@css/szcoreStyle.css" text="___" textFill="#7c2828">
+                                    <font>
+                                        <Font size="14.0"/>
+                                    </font>
+                                </Label>
+                                <Label text="Parts:"/>
+                                <ListView fx:id="instrumentsListView" prefHeight="100.0" prefWidth="150.0"/>
+                                <Button fx:id="sendPartsBtn" minWidth="50.0" mnemonicParsing="false"
+                                        onAction="#sendParts" stylesheets="@css/szcoreStyle.css"
+                                        text="Send to Participants"/>
+                                <Button fx:id="sendServerIpBtn" mnemonicParsing="false" onAction="#discoverParticipants"
+                                        stylesheets="@css/szcoreStyle.css" text="Discover Participants"/>
+                            </children>
                   </HBox>
                   <Separator />
                   <HBox alignment="CENTER_LEFT" spacing="10.0" />
@@ -91,7 +95,8 @@
                   <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="327.0" spacing="10.0">
                      <children>
                         <CheckBox fx:id="useContinousPageChb" mnemonicParsing="false" text="Use Continuous Page" />
-                        <CheckBox fx:id="usePageRandomisationChb" mnemonicParsing="false" text="Use CP Randomisation" />
+                         <CheckBox fx:id="usePageRandomisationChb" mnemonicParsing="false"
+                                   text="Use Page Randomisation"/>
                         <Label text="Randomisation Strategy:" />
                         <ChoiceBox fx:id="randomStrategyChob" />
                      </children>
@@ -127,45 +132,46 @@
                      </children>
                   </HBox>
                   <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="402.0" spacing="6.0">
-                     <children>
-                        <Label prefHeight="20.0" prefWidth="69.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Speed" />
-                        <CheckBox fx:id="useSpeedOverlayChb" mnemonicParsing="false" text="Ovl"/>
-                        <CheckBox fx:id="useSpeedLineChb" layoutX="57.0" layoutY="21.0" mnemonicParsing="false"
-                                  text="Ln"/>
-                        <Label fx:id="speedValLbl" minWidth="40.0" styleClass="label-big-black"
-                               stylesheets="@css/szcoreStyle.css" text="___"/>
-                        <Slider fx:id="speedSldr" showTickLabels="true" showTickMarks="true"/>
-                        <Separator orientation="VERTICAL"/>
-                        <Label layoutX="36.0" layoutY="21.0" styleClass="label-ord-bold"
-                               stylesheets="@css/szcoreStyle.css" text="Position "/>
-                        <CheckBox fx:id="usePositionOverlayChb" layoutX="10.0" layoutY="21.0" mnemonicParsing="false"
-                                  text="Ovl"/>
-                        <CheckBox fx:id="usePositionLineChb" layoutX="396.0" layoutY="21.0" mnemonicParsing="false"
-                                  text="Ln"/>
-                        <Label fx:id="positionValLbl" layoutX="100.0" layoutY="12.0" minWidth="40.0"
-                               styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___"/>
-                        <Slider fx:id="positionSldr" layoutX="150.0" layoutY="10.0" showTickLabels="true"
-                                showTickMarks="true"/>
-                     </children>
+                      <children>
+                          <Label prefHeight="20.0" prefWidth="69.0" styleClass="label-ord-bold"
+                                 stylesheets="@css/szcoreStyle.css" text="Speed"/>
+                          <CheckBox fx:id="useSpeedOverlayChb" mnemonicParsing="false" text="Ovl"/>
+                          <CheckBox fx:id="useSpeedLineChb" layoutX="57.0" layoutY="21.0" mnemonicParsing="false"
+                                    text="Ln"/>
+                          <Label fx:id="speedValLbl" minWidth="40.0" styleClass="label-big-black"
+                                 stylesheets="@css/szcoreStyle.css" text="___"/>
+                          <Slider fx:id="speedSldr" showTickLabels="true" showTickMarks="true"/>
+                          <Separator orientation="VERTICAL"/>
+                          <Label layoutX="36.0" layoutY="21.0" styleClass="label-ord-bold"
+                                 stylesheets="@css/szcoreStyle.css" text="Position "/>
+                          <CheckBox fx:id="usePositionOverlayChb" layoutX="10.0" layoutY="21.0" mnemonicParsing="false"
+                                    text="Ovl"/>
+                          <CheckBox fx:id="usePositionLineChb" layoutX="396.0" layoutY="21.0" mnemonicParsing="false"
+                                    text="Ln"/>
+                          <Label fx:id="positionValLbl" layoutX="100.0" layoutY="12.0" minWidth="40.0"
+                                 styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___"/>
+                          <Slider fx:id="positionSldr" layoutX="150.0" layoutY="10.0" showTickLabels="true"
+                                  showTickMarks="true"/>
+                      </children>
                   </HBox>
-                  <Separator/>
+                        <Separator/>
                   <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="402.0" spacing="6.0">
-                     <children>
-                        <Label styleClass="label-subtitle" stylesheets="@css/szcoreStyle.css" text="Webscore "/>
-                        <Label text="Instructions"/>
-                        <VBox prefHeight="27.0" prefWidth="450">
-                           <children>
-                              <TextField fx:id="instL1Txt"/>
-                              <TextField fx:id="instL2Txt"/>
-                              <TextField fx:id="instL3Txt"/>
-                           </children>
-                        </VBox>
-                        <Button fx:id="sendWebscoreInstructionsBtn" mnemonicParsing="false"
-                                onAction="#sendWebscoreInstructions" styleClass="css/szcoreStyle.css" text="Send"/>
-                        <Button fx:id="clearWebscoreInstructionsBtn" mnemonicParsing="false"
-                                onAction="#clearWebscoreInstructions" text="Clear"/>
+                      <children>
+                          <Label styleClass="label-subtitle" stylesheets="@css/szcoreStyle.css" text="Webscore "/>
+                          <Label text="Instructions"/>
+                          <VBox prefHeight="27.0" prefWidth="450">
+                              <children>
+                                  <TextField fx:id="instL1Txt"/>
+                                  <TextField fx:id="instL2Txt"/>
+                                  <TextField fx:id="instL3Txt"/>
+                              </children>
+                          </VBox>
+                          <Button fx:id="sendWebscoreInstructionsBtn" mnemonicParsing="false"
+                                  onAction="#sendWebscoreInstructions" styleClass="css/szcoreStyle.css" text="Send"/>
+                          <Button fx:id="clearWebscoreInstructionsBtn" mnemonicParsing="false"
+                                  onAction="#clearWebscoreInstructions" text="Clear"/>
 
-                     </children>
+                      </children>
                   </HBox>
                </children>
             </VBox>
@@ -193,8 +199,8 @@
                         <TableColumn fx:id="errPortColumn" maxWidth="150.0" minWidth="50.0" prefWidth="70.0" text="Err port" />
                         <TableColumn fx:id="pingColumn" maxWidth="150.0" minWidth="50.0" prefWidth="70.0" text="Ping millis" />
                         <TableColumn fx:id="instrumentColumn" maxWidth="300.0" minWidth="100.0" prefWidth="150.0" text="Instrument" />
-                        <TableColumn fx:id="expiredColumn" maxWidth="70.0" minWidth="30.0" prefWidth="50.0"
-                                     text="Expired"/>
+                         <TableColumn fx:id="expiredColumn" maxWidth="70.0" minWidth="30.0" prefWidth="50.0"
+                                      text="Expired"/>
                         <TableColumn fx:id="selectColumn" maxWidth="70.0" minWidth="30.0" prefWidth="50.0" text="Select" />
                      </columns>
                   </TableView>

@@ -278,6 +278,13 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             }
             szcore.setContinuousPage(instrumentId, contPage);
 
+            InscorePageMap blankInScoreMap = new InscorePageMap(contPageId);
+            InscoreMapElement blankElement = new InscoreMapElement(0, 0, 0, 0, 0, 8, 0, 8);
+            blankInScoreMap.addElement(blankElement);
+
+            BasicPage endPage = new BasicPage(contPageId, contPageName, contPageName, blankInScoreMap, true);
+            szcore.setEndPage(instrumentId, endPage);
+
             if (szcore.isUseContinuousPage()) {
                 prepareContinuousPages(instrumentId, lastPage);
             }
@@ -777,33 +784,33 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     @Override
     public void onOpenModWindow(InstrumentId instId, Stave stave, Page nextPage, PageId currentPageId) {
-
-        LOG.info("onOpenModWindow: page: {}", nextPage);
         this.isUpdateWindowOpen = true;
         ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
-        Page currentPage = szcore.getPage(currentPageId);
 
-        boolean isInRndRange = strategy.isInActiveRange(instId, currentPage);
-        boolean isRecalcTime = strategy.isRecalcTime();
+        boolean isNextPageInRndRange = nextPage != null && strategy.isInActiveRange(instId, nextPage);
+        LOG.info("onOpenModWindow: isNextPageInRndRange : {} page: {}", isNextPageInRndRange, nextPage);
+
+//        Page currentPage = szcore.getPage(currentPageId);
+//        boolean isInRndRange = strategy.isInActiveRange(instId, currentPage);
+
+        boolean isRecalcTime = strategy.isRecalcTime() && isNextPageInRndRange;
         if (isRecalcTime) {
             strategy.recalcStrategy(nextPage);
         }
         String destination = szcore.getOscDestination(instId);
 
-        if (isInRndRange) {
+        if (isNextPageInRndRange) {
             List<InstrumentId> slotInstrumentIds = strategy.getInstrumentSlotIds();
             String instSlotsCsv = ParseUtil.convertToCsv(slotInstrumentIds);
             LOG.info("onOpenModWindow: rnd strategy selected instruments: {}", instSlotsCsv);
-            if (currentPage != null) {
-                OscEvent instrumentSlotsEvent = createInstrumentSlotsEvent(destination, instSlotsCsv, null);
-                if (instrumentSlotsEvent == null) {
-                    LOG.error("onOpenModWindow: Invalid instrumentSlotsEvent, isInRndRange: true, destination: {} instSlotsCsv: {}", destination, instSlotsCsv);
-                    instrumentSlotsEvent = createInstrumentResetSlotsEvent(destination, null);
-                    publishOscEvent(instrumentSlotsEvent);
-                    return;
-                }
+            OscEvent instrumentSlotsEvent = createInstrumentSlotsEvent(destination, instSlotsCsv, null);
+            if (instrumentSlotsEvent == null) {
+                LOG.error("onOpenModWindow: Invalid instrumentSlotsEvent, isInRndRange: true, destination: {} instSlotsCsv: {}", destination, instSlotsCsv);
+                instrumentSlotsEvent = createInstrumentResetSlotsEvent(destination, null);
                 publishOscEvent(instrumentSlotsEvent);
+                return;
             }
+            publishOscEvent(instrumentSlotsEvent);
 
             WebScorePlayTilesEvent playTilesEvent = eventFactory.createWebScorePlayTilesEvent(clock.getSystemTimeMillis());
             processWebScoreEvent(playTilesEvent);
@@ -819,9 +826,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         //TODO remove
         Transport transport = szcore.getInstrumentTransport(instId);
-        BeatId beatId = szcore.getInstrumentBeatIds(transport.getId(), instId, currentBeatNo);
-//        LOG.info("onCloseModWindow: instrument {} page: {} currentBeat: {}", instId.getName(), page.getPageNo(), beatId);
-
+        LOG.info("onCloseModWindow: instrument {} next page: {} ", instId.getName(), nextPage);
         ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
 
         boolean isInRange = strategy.isInActiveRange(instId, nextPage);
@@ -835,6 +840,10 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
             sendRndPageFileUpdate(nextPage, stave, instId);
         } else {
+            if (nextPage == null) {
+                //Last page should be blank
+                nextPage = szcore.getEndPage(instId);
+            }
             sendPageFileUpdate(nextPage, stave);
         }
 
@@ -851,9 +860,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String pageFileName = strategy.getRandomPageFileName(instId);
         if (pageFileName == null) {
             pageFileName = page.getFileName();
-            LOG.info("onCloseModWindow: Invalid random page file name, using: {}", pageFileName);
+            LOG.info("sendRndPageFileUpdate: Invalid random page file name, using: {}", pageFileName);
         } else {
-            LOG.info("onCloseModWindow: Using random page file name: {} for instrument: {}", pageFileName, instId);
+            LOG.info("sendRndPageFileUpdate: Using random page file name: {} for instrument: {}", pageFileName, instId);
         }
         List<OscEvent> out = createPageChangeEvents(page, pageFileName, (BasicStave) stave, null);
         publishOscEvents(out);
@@ -2966,15 +2975,20 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             publishOscEvent(instrumentSlotsEvent);
         }
 
-        Page defaultInstPage = szcore.getContinuousPage(inst.getId());
-        InstrumentId instId = (InstrumentId) inst.getId();
-        Stave stave = szcore.getNextStave(instId);
-        sendRndPageFileUpdate(defaultInstPage, stave, instId);
+//        InstrumentId instId = (InstrumentId) inst.getId();
+//        Page defaultInstPage = szcore.getContinuousPage(instId);
+//        Stave stave = szcore.getNextStave(instId);
+//        LOG.info("processSelectInstrumentSlot: prepare sending stave: {}, isActive: {},  instrument {}", stave.getId(), stave.isActive(), instId);
+//        sendRndPageFileUpdate(defaultInstPage, stave, instId);
+//
+//        InstrumentId replaceInstId = (InstrumentId) replaceInst.getId();
+//        if(!replaceInstId.equals(instId)) {
+//            Page defaultReplaceInstPage = szcore.getContinuousPage(replaceInstId);
+//            Stave replaceStave = szcore.getNextStave(replaceInstId);
+//            LOG.info("processSelectInstrumentSlot: prepare sending replace instrument stave: {}, isActive: {} to replace instrument {}", replaceStave.getId(), stave.isActive(), replaceInstId);
+//            sendRndPageFileUpdate(defaultReplaceInstPage, replaceStave, replaceInstId);
+//        }
 
-        Page defaultReplaceInstPage = szcore.getContinuousPage(replaceInst.getId());
-        InstrumentId replaceInstId = (InstrumentId) replaceInst.getId();
-        Stave replaceStave = szcore.getNextStave(replaceInstId);
-        sendRndPageFileUpdate(defaultReplaceInstPage, replaceStave, replaceInstId);
     }
 
     private void processTempoChange(Id transportId, Tempo tempo) {

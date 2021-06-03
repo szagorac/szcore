@@ -397,6 +397,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                     currentStave.setActive(false);
                     nextStave.setActive(true);
 
+                    // TODO both staves active between beatId and deactivateBeat so getCurrentStave can return wrong stave
                     Beat executeBeat = szcore.getOffsetBeat(beatId, -1);
                     Beat deactivateBeat = szcore.getOffsetBeat(beatId, 1);
                     Beat pageChangeBeat = szcore.getOffsetBeat(beatId, 4);
@@ -614,6 +615,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         Transport transport = szcore.getInstrumentTransport(instrumentId);
         Id transportId = transport.getId();
         Instrument instrument = szcore.getInstrument(instrumentId);
+        //TODO both staves active between activateBeatId and deactivateBeatId - getCurrentStave() might return wrong value
         addOneOffActiveStaveChangeEvent(nextStave.getId(), true, activateBeatId, transportId, instrument);
         addOneOffActiveStaveChangeEvent(currentStave.getId(), false, deactivateBeatId, transportId, instrument);
 
@@ -636,7 +638,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             isInRndRange = false;
         }
 
-        addOneOffNewPageEvents(nextPage, isInRndRange, currentStave, pageChangeBeatId, activateBeatId, transportId);
+        addOneOffNewPageEvents(nextPage, isInRndRange, currentStave, pageChangeBeatId, deactivateBeatId, transportId);
     }
 
     private Page prepareContinuousPage(Id instrumentId, PageId currentPageId) {

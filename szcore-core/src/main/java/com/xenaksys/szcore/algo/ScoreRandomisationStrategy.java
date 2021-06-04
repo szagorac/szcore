@@ -72,6 +72,10 @@ public class ScoreRandomisationStrategy {
         assignmentStrategy.addAll(strategy);
     }
 
+    public List<Integer> getAssignmentStrategy() {
+        return assignmentStrategy;
+    }
+
     public int getFirstRandomPageNo() {
         Collection<Integer> pageNos = instrumentPage.values();
         if (pageNos.isEmpty()) {
@@ -145,7 +149,7 @@ public class ScoreRandomisationStrategy {
                     break;
                 }
                 InstrumentId instrumentId = rndInst.get(j);
-                LOG.info("recalcStrategy() instrumentId: {}, pageNo: {}", instrumentId, pageNo);
+                LOG.debug("recalcStrategy() instrumentId: {}, pageNo: {}", instrumentId, pageNo);
                 instrumentPage.put(instrumentId, pageNo);
             }
             instStart = instEnd;
@@ -184,7 +188,7 @@ public class ScoreRandomisationStrategy {
                 if (!asp.equals(assignedPage)) {
                     LOG.error("setPageSelection: unexpected assigned page {}, expected: {}", asp, assignedPage);
                 }
-                LOG.info("setPageSelection: replacing page {}, with page: {} for instrument: {}", asp, selectedPage, insId);
+                LOG.debug("setPageSelection: replacing page {}, with page: {} for instrument: {}", asp, selectedPage, insId);
                 instrumentAssignments.put(insId, selectedPage);
             }
         }
@@ -193,7 +197,7 @@ public class ScoreRandomisationStrategy {
 
     public void optOutInstrument(Instrument instrument, Instrument replaceInst, boolean isOptOut) {
         InstrumentId instId = (InstrumentId) instrument.getId();
-        LOG.info("optOutInstrument: received opt-out: {} instrument: {} replaceInst: {}", isOptOut, instId, replaceInst);
+        LOG.debug("optOutInstrument: received opt-out: {} instrument: {} replaceInst: {}", isOptOut, instId, replaceInst);
 
         Integer pageNo = instrumentPage.get(instId);
         boolean isAssigned = pageNo != 0;
@@ -206,22 +210,22 @@ public class ScoreRandomisationStrategy {
             optOutInstruments.add(instId);
             if (isAssigned) {
                 if (unassignedInsts.isEmpty()) {
-                    LOG.info("optOutInstrument: can not opt out instrument: {}, all instruments assigned", instId);
+                    LOG.debug("optOutInstrument: can not opt out instrument: {}, all instruments assigned", instId);
                 } else {
                     for (InstrumentId iid : unassignedInsts) {
                         if (!iid.equals(instId) && !optOutInstruments.contains(iid)) {
                             replacementInst = iid;
-                            LOG.info("optOutInstrument: assigning replacement instrument: {}", replacementInst);
+                            LOG.debug("optOutInstrument: assigning replacement instrument: {}", replacementInst);
                             break;
                         }
                     }
                     if (instId.equals(replacementInst) && !optOutInstruments.isEmpty()) {
                         replacementInst = optOutInstruments.remove(0);
-                        LOG.info("optOutInstrument: could not find any available instruments, assigning opted-out instrument: {}", replacementInst);
+                        LOG.debug("optOutInstrument: could not find any available instruments, assigning opted-out instrument: {}", replacementInst);
                     }
                 }
             } else {
-                LOG.info("optOutInstrument: instrument: {}, is not assigned, not doing anything", instId);
+                LOG.debug("optOutInstrument: instrument: {}, is not assigned, not doing anything", instId);
             }
 
             //Do replace
@@ -235,7 +239,7 @@ public class ScoreRandomisationStrategy {
             optOutInstruments.remove(instId);
 
             if (isAssigned) {
-                LOG.info("optOutInstrument: Opt-in instrument: {}, is already assigned, not doing anything", instId);
+                LOG.debug("optOutInstrument: Opt-in instrument: {}, is already assigned, not doing anything", instId);
             } else {
                 Integer replacePageNo = instrumentPage.get(toReplaceInstId);
                 boolean isReplaceAssigned = replacePageNo != 0;
@@ -245,7 +249,7 @@ public class ScoreRandomisationStrategy {
                     instrumentPage.put(toReplaceInstId, 0);
                 } else {
                     if (assignedInsts.isEmpty()) {
-                        LOG.info("optOutInstrument: Opt-in instrument: {}, can not find any instruments to assign", instId);
+                        LOG.debug("optOutInstrument: Opt-in instrument: {}, can not find any instruments to assign", instId);
                     } else {
                         toReplaceInstId = assignedInsts.remove(0);
                         replacePageNo = instrumentPage.get(toReplaceInstId);

@@ -425,7 +425,7 @@ public class WebScore {
     }
 
     public void setSelectedElement(String elementId, boolean isSelected) {
-        LOG.info("setSelectedElement: Received elementId: {} isSelected: {}", elementId, isSelected);
+        LOG.debug("setSelectedElement: Received elementId: {} isSelected: {}", elementId, isSelected);
         if (ScoreUtil.isTileId(elementId)) {
             Tile tile = getTile(elementId);
             if (tile == null) {
@@ -444,18 +444,18 @@ public class WebScore {
             if (isSelected) {
                 state.setSelected(true);
                 state.incrementClickCount();
-                LOG.info("setSelectedElement: Received elementId: {} tile: {} click count: {} isSelected: true", elementId, tile.getId(), state.getClickCount());
+                LOG.debug("setSelectedElement: Received elementId: {} tile: {} click count: {} isSelected: true", elementId, tile.getId(), state.getClickCount());
             } else {
                 if (state.getClickCount() <= 0) {
                     state.setSelected(false);
                 }
                 state.decrementClickCount();
-                LOG.info("setSelectedElement: Received elementId: {} tile: {} click count: {} isSelected: {}", elementId, tile.getId(), state.getClickCount(), state.isSelected());
+                LOG.debug("setSelectedElement: Received elementId: {} tile: {} click count: {} isSelected: {}", elementId, tile.getId(), state.getClickCount(), state.isSelected());
             }
             if (isSortByClickCount) {
                 activeTiles.sort(CLICK_COMPARATOR);
             } else {
-                LOG.info("setSelectedElement: sort by click disabled, using natural order");
+                LOG.debug("setSelectedElement: sort by click disabled, using natural order");
             }
         }
     }
@@ -516,7 +516,7 @@ public class WebScore {
                 pageIds.add(pageNo);
                 tileIds.add(tileId);
             }
-            LOG.info("prepareNextTilesToPlay: Found pageId: {} for tile id: {}", pageNo, tileId);
+            LOG.debug("prepareNextTilesToPlay: Found pageId: {} for tile id: {}", pageNo, tileId);
         }
 
         WebScoreSelectTilesEvent playTilesEvent = eventFactory.createWebScoreSelectTilesEvent(tileIds, clock.getSystemTimeMillis());
@@ -581,7 +581,7 @@ public class WebScore {
     }
 
     public void setVisible(String[] elementIds, boolean isVisible) {
-        LOG.info("setVisible: {}", Arrays.toString(elementIds));
+        LOG.debug("setVisible: {}", Arrays.toString(elementIds));
         for (String elementId : elementIds) {
             WebElementState elementState = state.getElementState(elementId);
             if (elementState != null) {
@@ -591,7 +591,7 @@ public class WebScore {
     }
 
     public void setTileTexts(String[] tileIds, String[] values) {
-        LOG.info("setTileTexts: {}  {}", Arrays.toString(tileIds), Arrays.toString(values));
+        LOG.debug("setTileTexts: {}  {}", Arrays.toString(tileIds), Arrays.toString(values));
 
         for (int i = 0; i < tileIds.length; i++) {
             String tileId = tileIds[i];
@@ -694,7 +694,7 @@ public class WebScore {
     }
 
     public void playTiles(String[] tileIds) {
-        LOG.info("playTiles: {}", Arrays.toString(tileIds));
+        LOG.debug("playTiles: {}", Arrays.toString(tileIds));
         resetPlayingNextTiles();
         if (tileIds == null || tileIds.length == 0) {
             return;
@@ -713,7 +713,7 @@ public class WebScore {
         if (page != null) {
             long durationMs = page.getDurationMs();
             duration = MathUtil.roundTo2DecimalPlaces(durationMs / 1000.0);
-            LOG.info("setPlayTileActions: calculated duration: {} for page: {}", duration, page.getId());
+            LOG.debug("setPlayTileActions: calculated duration: {} for page: {}", duration, page.getId());
             duration = MathUtil.roundTo2DecimalPlaces(duration * WEB_TILE_PLAY_PAGE_DURATION_FACTOR);
         }
 
@@ -724,7 +724,7 @@ public class WebScore {
     }
 
     public void setPlayingTiles(String[] tileIds) {
-        LOG.info("setPlayingTiles: {}", Arrays.toString(tileIds));
+        LOG.debug("setPlayingTiles: {}", Arrays.toString(tileIds));
         resetPlayingTiles();
         for (String tileId : tileIds) {
             setPlayingTile(tileId);
@@ -758,7 +758,7 @@ public class WebScore {
     }
 
     public void setPlayingNextTiles(List<String> tileIds) {
-        LOG.info("setPlayingNextTiles: {}", tileIds);
+        LOG.debug("setPlayingNextTiles: {}", tileIds);
         resetPlayingNextTiles();
         for (String tileId : tileIds) {
             setPlayingNextTile(tileId);
@@ -780,7 +780,7 @@ public class WebScore {
     }
 
     public void setActiveRows(int[] rows, boolean isSortByClickCount) {
-        LOG.info("setActiveRows: {}", Arrays.toString(rows));
+        LOG.debug("setActiveRows: {}", Arrays.toString(rows));
         this.isSortByClickCount = isSortByClickCount;
         Tile[][] tiles = state.getTiles();
         TIntList tintRows = new TIntArrayList(rows);
@@ -806,7 +806,7 @@ public class WebScore {
     }
 
     public void setAction(String actionId, String type, String[] targetIds, Map<String, Object> params) {
-        LOG.info("setAction: {} target: {}", actionId, Arrays.toString(targetIds));
+        LOG.debug("setAction: {} target: {}", actionId, Arrays.toString(targetIds));
         try {
             WebAction action = createAction(actionId, type, targetIds, params);
             state.addAction(action);
@@ -979,7 +979,7 @@ public class WebScore {
 
     public void setSpeechSynthConfigParam(String name, Object value) {
         try {
-            LOG.info("setSpeechSynthConfigParam: setting config param: {} value: {}", name, value);
+            LOG.debug("setSpeechSynthConfigParam: setting config param: {} value: {}", name, value);
             WebSpeechSynthConfig config = state.getSpeechSynthConfig();
             switch (name) {
                 case WEB_CONFIG_VOLUME:
@@ -1063,7 +1063,7 @@ public class WebScore {
             setSpeechSynthConfigParam(param, value);
         }
         state.getSpeechSynthConfig().validate();
-        LOG.info("setSpeechSynthConfig: new config: {}", state.getSpeechSynthConfig());
+        LOG.debug("setSpeechSynthConfig: new config: {}", state.getSpeechSynthConfig());
     }
 
     public WebSpeechSynthConfig getSpeechSynthConfig() {
@@ -1072,7 +1072,7 @@ public class WebScore {
 
     public void setSpeechSynthStateParam(String name, Object value) {
         try {
-            LOG.info("setSpeechSynthStateParam: setting config param: {} value: {}", name, value);
+            LOG.debug("setSpeechSynthStateParam: setting config param: {} value: {}", name, value);
             WebSpeechSynthState speechSynthState = state.getSpeechSynthState();
             switch (name) {
                 case WEB_CONFIG_IS_PLAY_SPEECH_ON_CLICK:
@@ -1121,12 +1121,12 @@ public class WebScore {
             setSpeechSynthStateParam(param, value);
         }
         state.getSpeechSynthState().validate();
-        LOG.info("setSpeechSynthState: new config: {}", state.getSpeechSynthState());
+        LOG.debug("setSpeechSynthState: new config: {}", state.getSpeechSynthState());
     }
 
     public void setGranulatorConfigParam(String name, Object value) {
         try {
-            LOG.info("setGranulatorConfig: setting config param: {} value: {}", name, value);
+            LOG.debug("setGranulatorConfig: setting config param: {} value: {}", name, value);
             String[] names = name.split("\\.");
             if (names.length == 1) {
                 setGranulatorBaseConfig(names[0], value);
@@ -1155,7 +1155,7 @@ public class WebScore {
     }
 
     public void setGranulatorBaseConfig(String name, Object value) {
-        LOG.info("setGranulatorBaseConfig: setting config param: {} value: {}", name, value);
+        LOG.debug("setGranulatorBaseConfig: setting config param: {} value: {}", name, value);
         WebGranulatorConfig config = state.getGranulatorConfig();
         switch (name) {
             case WEB_CONFIG_MASTER_GAIN_VAL:
@@ -1219,7 +1219,7 @@ public class WebScore {
             setGranulatorConfigParam(param, value);
         }
         state.getGranulatorConfig().validate();
-        LOG.info("setGranulatorConfig: new config: {}", state.getGranulatorConfig());
+        LOG.debug("setGranulatorConfig: new config: {}", state.getGranulatorConfig());
     }
 
     public WebGranulatorConfig getGranulatorConfig() {
@@ -1413,7 +1413,7 @@ public class WebScore {
         speechSynthStateExport.populate(state.getSpeechSynthState());
 
         List<WebAction> actions = state.getActions();
-        LOG.info("WebScoreStateExport sending actions: {}", actions);
+        LOG.debug("WebScoreStateExport sending actions: {}", actions);
 
         return new WebScoreStateExport(tes, actions, centreShape, innerCircle, outerCircle, state.getZoomLevel(),
                 instructions, granulatorConfig, speechSynthConfigExport, speechSynthStateExport, state.getStageAlpha());
@@ -1456,7 +1456,7 @@ public class WebScore {
     }
 
     public void processWebScoreEvent(WebScoreEvent event) {
-        LOG.info("processWebScoreEvent: execute event: {}", event);
+        LOG.debug("processWebScoreEvent: execute event: {}", event);
         WebScoreEventType type = event.getWebScoreEventType();
         try {
             resetStateDelta();
@@ -1585,7 +1585,7 @@ public class WebScore {
         boolean isOn = event.getIsOn();
         int colourId = event.getColourId();
 
-        LOG.info("processPrecountEvent: count: {}, isOn: {}, colId: {}", count, isOn, colourId);
+        LOG.debug("processPrecountEvent: count: {}, isOn: {}, colId: {}", count, isOn, colourId);
         if (count == 1 && isOn && colourId == 4) {
             reset(WEB_CONFIG_READY_PRESET);
             return true;
@@ -2096,7 +2096,7 @@ public class WebScore {
             if (action == null) {
                 return;
             }
-            LOG.info("WebScoreServerState addAction: {}", action);
+            LOG.debug("WebScoreServerState addAction: {}", action);
             actions.add(action);
             pcs.firePropertyChange(WEB_OBJ_ACTIONS, action.getId(), action);
         }

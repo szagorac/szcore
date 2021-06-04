@@ -24,7 +24,7 @@ public class WebPositionOscillatorConfig extends WebOscillatorConfig {
     private static final double DEFAULT_MIN_VALUE = 500.0;
     private static final double DEFAULT_MAX_VALUE = 4500.0;
     private static final OscillatorType DEFAULT_TYPE = TRIANGLE;
-    private static final double DEFAULT_FREQUENCY = 0.2;
+    private static final double DEFAULT_FREQUENCY = 0.1;
 
     private WebPositionFrequencyLfoConfig frequencyLfoConfig;
     private WebPositionStartLfoConfig startLfoConfig;

@@ -1,5 +1,7 @@
 package com.xenaksys.szcore.model;
 
+import com.xenaksys.szcore.model.id.StaveId;
+
 public interface Stave extends Identifiable {
 
     String getOscAddress();
@@ -77,4 +79,6 @@ public interface Stave extends Identifiable {
     double getBeaterYPositionMax();
 
     double getBeaterYPositionDelta();
+
+    StaveId getStaveId();
 }

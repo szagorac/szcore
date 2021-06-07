@@ -838,7 +838,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             List<Integer> selectedPageIds = null;
             if (strategy.isPageRecalcTime()) {
                 int pageQuantity = strategy.getNumberOfRequiredPages();
-                LOG.debug("onCloseModWindow: pageQuantity {} next assignment Strategy: {} pageId: {} nextPage: {}", pageQuantity, Arrays.toString(strategy.getAssignmentStrategy().toArray()), currentPageId.getPageNo(), nextPage.getPageNo());
+                LOG.info("onCloseModWindow: pageQuantity {} next assignment Strategy: {} pageId: {} nextPage: {}  stave: {}", pageQuantity, Arrays.toString(strategy.getAssignmentStrategy().toArray()), currentPageId.getPageNo(), nextPage.getPageNo(), stave.getStaveId().getStaveNo());
                 selectedPageIds = webScore.prepareNextTilesToPlay(pageQuantity);
                 strategy.setPageSelection(selectedPageIds);
             }
@@ -867,7 +867,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             pageFileName = page.getFileName();
             LOG.debug("sendRndPageFileUpdate: Invalid random page file name, using: {} for page: {}", pageFileName, page.getPageNo());
         } else {
-            LOG.info("sendRndPageFileUpdate: Using random page file name: {} for instrument: {}", pageFileName, instId);
+            LOG.debug("sendRndPageFileUpdate: Using random page file name: {} for instrument: {}", pageFileName, instId);
         }
         List<OscEvent> out = createPageChangeEvents(page, pageFileName, (BasicStave) stave, null);
         publishOscEvents(out);

@@ -849,6 +849,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 //Last page should be blank
                 nextPage = szcore.getEndPage(instId);
             }
+            LOG.info("onCloseModWindow: instrument {} next page: {} stave: {} ", instId.getName(), nextPage.getPageNo(), stave.getStaveId().getStaveNo());
             sendPageFileUpdate(nextPage, stave);
         }
 
@@ -869,6 +870,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         } else {
             LOG.debug("sendRndPageFileUpdate: Using random page file name: {} for instrument: {}", pageFileName, instId);
         }
+        LOG.info("sendRndPageFileUpdate: page file name: {} for instrument: {}: stave: {}", pageFileName, instId, stave.getStaveId().getStaveNo());
         List<OscEvent> out = createPageChangeEvents(page, pageFileName, (BasicStave) stave, null);
         publishOscEvents(out);
     }
@@ -971,6 +973,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         if (page == null) {
             return;
         }
+        LOG.info("sendPageFileUpdate: page: {} for instrument: {}: stave: {}", page.getPageNo(), stave.getStaveId().getInstrumentId(), stave.getStaveId().getStaveNo());
         List<OscEvent> out = createPageChangeEvents(page, page.getFileName(), (BasicStave) stave, null);
         publishOscEvents(out);
     }
@@ -989,6 +992,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         StaveId staveId = stave.getId();
         String pageName = page.getFileName();
 
+        LOG.debug("addNewPageEvents: instrument {} next page: {} stave: {} ", staveId.getInstrumentId(), pageName, staveId.getStaveNo());
         OscEvent pageDisplayEvent = createDisplayPageEvent(pageName, stave, eventBaseBeat);
         if (initEvents == null) {
             szcore.addScoreBaseBeatEvent(transportId, pageDisplayEvent);
@@ -1037,7 +1041,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             }
             LOG.debug("Close Window Event page first beat: {} last: {}, calculated beatId: {} ", first, last, closeWindowBeatId);
         }
-
+        LOG.info("addOneOffNewPageEvents: Add Open/Close Window Event instrument: {} stave: {} ", stave.getStaveId().getInstrumentId(), stave.getStaveId().getStaveNo());
         ModWindowEvent closeWindowEvent = createModWindowEvent(closeWindowBeatId, page, (PageId) pageChangeBeat.getPageId(), stave, false);
         szcore.addOneOffBaseBeatEvent(transportId, closeWindowEvent);
     }
@@ -1790,6 +1794,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         args.add(filename);
 
         String destination = szcore.getOscDestination(id.getInstrumentId());
+        LOG.info("createDisplayPageEvent: pageName: {} destination: {} staveId: {} stave address: {} beat: {}", pageName, destination, id.getStaveNo(), address, (eventBeatId == null) ? null : eventBeatId.getBeatNo());
+
         return eventFactory.createPageDisplayEvent(address, args, eventBeatId, destination, clock.getSystemTimeMillis());
 
     }
@@ -2089,8 +2095,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 addNewPageInstrumentEvents(instrument, null, initEvents);
 
                 ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
-                boolean isInRange = strategy.isInActiveRange(instrumentId, page);
-                if (isInRange) {
+                boolean isInRndRange = strategy.isInActiveRange(instrumentId, page);
+                if (isInRndRange) {
                     if (strategy.isPageRecalcTime()) {
                         strategy.recalcStrategy(page);
                         int pageQuantity = strategy.getNumberOfRequiredPages();
@@ -2104,8 +2110,16 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                     } else {
                         LOG.info("createRequiredEventsForNewPosition: Using random page file name: {} for instrument: {} page: {}", pageFileName, instrumentId, page.getPageNo());
                     }
+                    LOG.info("createRequiredEventsForNewPosition: page: {} for instrument: {}: stave: {}", pageFileName, currentStave.getStaveId().getInstrumentId(), currentStave.getStaveId().getStaveNo());
                     List<OscEvent> pageChangeEvents = createPageChangeEvents(page, pageFileName, currentStave, null);
                     initEvents.addAll(pageChangeEvents);
+                }
+                BeatId firstBeat = page.getFirstBeat().getBeatId();
+                BeatId activatePageBeat = szcore.getOffsetBeat(firstBeat, 1).getBeatId();
+                BeatId pageChangeBeat = szcore.getOffsetBeat(activatePageBeat, 3).getBeatId();
+                Page nextPage = szcore.getNextPage(page.getPageId());
+                if (nextPage != null) {
+                    addOneOffNewPageEvents(nextPage, isInRndRange, nextStave, pageChangeBeat, activatePageBeat, transportId);
                 }
             } else {
                 addInitAvEvent(transport, instrument, initEvents, startBeatId);

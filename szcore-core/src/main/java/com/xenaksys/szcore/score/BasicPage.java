@@ -123,6 +123,11 @@ public class BasicPage implements Page {
         return end - start;
     }
 
+    @Override
+    public PageId getPageId() {
+        return id;
+    }
+
     public boolean isSendInscoreMap() {
         return isSendInscoreMap;
     }

@@ -28,6 +28,8 @@ public interface Score extends Identifiable {
 
     List<SzcoreEvent> getOneOffBaseBeatEvents(Id transportId, int baseBeatNo);
 
+    void replaceOneOffBaseBeatEvents(Id transportId, int baseBeatNo, List<SzcoreEvent> events);
+
     void removeOneOffBeatEvents(Id transportId, int baseBeatNo);
 
     String getName();
@@ -97,4 +99,6 @@ public interface Score extends Identifiable {
     Beat getUpbeat(BeatId beatId);
 
     List<Script> getBeatScripts(BeatId beatId);
+
+    void resetOnStop();
 }

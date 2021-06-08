@@ -153,6 +153,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private List<SzcoreEngineEventListener> scoreEventListeners = new CopyOnWriteArrayList<>();
     protected List<WebScoreStateListener> webScoreStateListeners = new CopyOnWriteArrayList<>();
     private Map<Id, TempoModifier> transportTempoModifiers = new ConcurrentHashMap<>();
+    private Map<InstrumentId, Long> instrumentTime = new ConcurrentHashMap<>();
 
     private ValueScaler dynamicsValueScaler = new ValueScaler(0.0, 100.0, 0.0, DYNAMICS_LINE_Y_MAX);
     private ValueScaler dynamicsForteColorValueScaler = new ValueScaler(50.0, 100.0, 255, 0);
@@ -271,6 +272,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
             String contPageName = instrument.getName() + UNDERSCORE + CONTINUOUS_PAGE_NAME;
             PageId contPageId = new PageId(CONTINUOUS_PAGE_NO, instrumentId, lastPage.getScoreId());
+            InscorePageMap contInscorePageMap = ScoreLoader.loadPageInscoreMap(contPageId, contPageName);
             BasicPage contPage = new BasicPage(contPageId, contPageName, contPageName, lastPage.getInscorePageMap(), true);
             Collection<Bar> lpBars = lastPage.getBars();
             for (Bar bar : lpBars) {
@@ -278,11 +280,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             }
             szcore.setContinuousPage(instrumentId, contPage);
 
-            InscorePageMap blankInScoreMap = new InscorePageMap(contPageId);
-            InscoreMapElement blankElement = new InscoreMapElement(0, 0, 0, 0, 0, 8, 0, 8);
-            blankInScoreMap.addElement(blankElement);
-
-            BasicPage endPage = new BasicPage(contPageId, contPageName, contPageName, blankInScoreMap, true);
+            BasicPage endPage = new BasicPage(contPageId, contPageName, contPageName, contInscorePageMap, true);
             szcore.setEndPage(instrumentId, endPage);
 
             if (szcore.isUseContinuousPage()) {
@@ -615,19 +613,30 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         Transport transport = szcore.getInstrumentTransport(instrumentId);
         Id transportId = transport.getId();
         Instrument instrument = szcore.getInstrument(instrumentId);
+
         //TODO both staves active between activateBeatId and deactivateBeatId - getCurrentStave() might return wrong value
         addOneOffActiveStaveChangeEvent(nextStave.getId(), true, activateBeatId, transportId, instrument);
         addOneOffActiveStaveChangeEvent(currentStave.getId(), false, deactivateBeatId, transportId, instrument);
 
-        //change next stave page after 4 beats of the current page
+        //change next stave page after x beats of the current page
         PageId pageId = (PageId) pageChangeBeatId.getPageId();
         Page nextPage = szcore.getPage(nextPageId);
         if (nextPage == null) {
             nextPage = szcore.getNextPage(pageId);
         }
 
-        if (nextPage == null && szcore.isUseContinuousPage()) {
-            nextPage = prepareContinuousPage(instrumentId, pageId);
+        if (nextPage == null) {
+            if (szcore.isUseContinuousPage()) {
+                nextPage = prepareContinuousPage(instrumentId, pageId);
+            } else {
+                LOG.info("processPrepStaveChange: nextPage is NULL for instrument: {}, assuming score end ...", instrumentId);
+                nextPage = szcore.getEndPage(instrumentId);
+            }
+        }
+
+        if (nextPage == null) {
+            LOG.error("processPrepStaveChange: nextPage is NULL, ignoring prep stave change ...");
+            return;
         }
 
         LOG.debug("processPrepStaveChange: nextPage: {}", nextPage);
@@ -838,7 +847,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             List<Integer> selectedPageIds = null;
             if (strategy.isPageRecalcTime()) {
                 int pageQuantity = strategy.getNumberOfRequiredPages();
-                LOG.info("onCloseModWindow: pageQuantity {} next assignment Strategy: {} pageId: {} nextPage: {}  stave: {}", pageQuantity, Arrays.toString(strategy.getAssignmentStrategy().toArray()), currentPageId.getPageNo(), nextPage.getPageNo(), stave.getStaveId().getStaveNo());
+                LOG.debug("onCloseModWindow: pageQuantity {} next assignment Strategy: {} pageId: {} nextPage: {}  stave: {}", pageQuantity, Arrays.toString(strategy.getAssignmentStrategy().toArray()), currentPageId.getPageNo(), nextPage.getPageNo(), stave.getStaveId().getStaveNo());
                 selectedPageIds = webScore.prepareNextTilesToPlay(pageQuantity);
                 strategy.setPageSelection(selectedPageIds);
             }
@@ -849,7 +858,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 //Last page should be blank
                 nextPage = szcore.getEndPage(instId);
             }
-            LOG.info("onCloseModWindow: instrument {} next page: {} stave: {} ", instId.getName(), nextPage.getPageNo(), stave.getStaveId().getStaveNo());
+            LOG.debug("onCloseModWindow: instrument {} next page: {} stave: {} ", instId.getName(), nextPage.getPageNo(), stave.getStaveId().getStaveNo());
             sendPageFileUpdate(nextPage, stave);
         }
 
@@ -870,7 +879,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         } else {
             LOG.debug("sendRndPageFileUpdate: Using random page file name: {} for instrument: {}", pageFileName, instId);
         }
-        LOG.info("sendRndPageFileUpdate: page file name: {} for instrument: {}: stave: {}", pageFileName, instId, stave.getStaveId().getStaveNo());
+        LOG.debug("sendRndPageFileUpdate: page file name: {} for instrument: {}: stave: {}", pageFileName, instId, stave.getStaveId().getStaveNo());
         List<OscEvent> out = createPageChangeEvents(page, pageFileName, (BasicStave) stave, null);
         publishOscEvents(out);
     }
@@ -973,7 +982,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         if (page == null) {
             return;
         }
-        LOG.info("sendPageFileUpdate: page: {} for instrument: {}: stave: {}", page.getPageNo(), stave.getStaveId().getInstrumentId(), stave.getStaveId().getStaveNo());
+        LOG.debug("sendPageFileUpdate: page: {} for instrument: {}: stave: {}", page.getPageNo(), stave.getStaveId().getInstrumentId(), stave.getStaveId().getStaveNo());
         List<OscEvent> out = createPageChangeEvents(page, page.getFileName(), (BasicStave) stave, null);
         publishOscEvents(out);
     }
@@ -995,7 +1004,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         LOG.debug("addNewPageEvents: instrument {} next page: {} stave: {} ", staveId.getInstrumentId(), pageName, staveId.getStaveNo());
         OscEvent pageDisplayEvent = createDisplayPageEvent(pageName, stave, eventBaseBeat);
         if (initEvents == null) {
-            szcore.addScoreBaseBeatEvent(transportId, pageDisplayEvent);
+            LOG.error("addNewPageEvents: NULL initEvents, should not happen. instrument {} next page: {} stave: {}", staveId.getInstrumentId(), pageName, staveId.getStaveNo());
+            //szcore.addScoreBaseBeatEvent(transportId, pageDisplayEvent);
         } else {
             initEvents.add(pageDisplayEvent);
         }
@@ -1008,9 +1018,34 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
         OscEvent pageMapDisplayEvent = createPageMapFileEvent(pageName, address, destination, eventBaseBeat);
         if (initEvents == null) {
-            szcore.addScoreBaseBeatEvent(transportId, pageMapDisplayEvent);
+            LOG.error("addNewPageEvents: pageMapDisplayEvent NULL initEvents, should not happen. instrument {} next page: {} stave: {}", staveId.getInstrumentId(), pageName, staveId.getStaveNo());
+            //szcore.addScoreBaseBeatEvent(transportId, pageMapDisplayEvent);
         } else {
             initEvents.add(pageMapDisplayEvent);
+        }
+    }
+
+    private void removeOneOffModEvents(Id transportId, int baseBeatNo, Id instrumentId) {
+        List<SzcoreEvent> oneOffBeatEvents = szcore.getOneOffBaseBeatEvents(transportId, baseBeatNo);
+        if (oneOffBeatEvents == null || oneOffBeatEvents.isEmpty()) {
+            return;
+        }
+        List<SzcoreEvent> filteredEvents = new ArrayList<>(5);
+        boolean isReplace = false;
+        for (SzcoreEvent bev : oneOffBeatEvents) {
+            if (bev instanceof ModWindowEvent) {
+                ModWindowEvent mev = (ModWindowEvent) bev;
+                Id bIns = mev.getCurrentPageId().getInstrumentId();
+                if (bIns.equals(instrumentId)) {
+                    LOG.debug("removeOneOffModEvents: removing one off Mod event: {}", mev);
+                    isReplace = true;
+                } else {
+                    filteredEvents.add(mev);
+                }
+            }
+        }
+        if (isReplace) {
+            szcore.replaceOneOffBaseBeatEvents(transportId, baseBeatNo, filteredEvents);
         }
     }
 
@@ -1020,11 +1055,11 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
 
         LOG.debug("addOneOffNewPageEvents: Add Open/Close Window Event beatId: {} ", activatePageBeat);
+        removeOneOffModEvents(transportId, activatePageBeat.getBaseBeatNo(), page.getInstrumentId());
         ModWindowEvent openWindowEvent = createModWindowEvent(activatePageBeat, page, (PageId) pageChangeBeat.getPageId(), stave, true);
         szcore.addOneOffBaseBeatEvent(transportId, openWindowEvent);
 
         BeatId closeWindowBeatId = pageChangeBeat;
-
         if (isInRndRange) {
             PageId currentPageId = (PageId) activatePageBeat.getPageId();
             Page currentPage = szcore.getPage(currentPageId);
@@ -1041,7 +1076,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             }
             LOG.debug("Close Window Event page first beat: {} last: {}, calculated beatId: {} ", first, last, closeWindowBeatId);
         }
-        LOG.info("addOneOffNewPageEvents: Add Open/Close Window Event instrument: {} stave: {} ", stave.getStaveId().getInstrumentId(), stave.getStaveId().getStaveNo());
+
+        LOG.debug("addOneOffNewPageEvents: Add Open/Close Window Event instrument: {} stave: {} ", stave.getStaveId().getInstrumentId(), stave.getStaveId().getStaveNo());
+        removeOneOffModEvents(transportId, closeWindowBeatId.getBaseBeatNo(), page.getInstrumentId());
         ModWindowEvent closeWindowEvent = createModWindowEvent(closeWindowBeatId, page, (PageId) pageChangeBeat.getPageId(), stave, false);
         szcore.addOneOffBaseBeatEvent(transportId, closeWindowEvent);
     }
@@ -1633,7 +1670,6 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         if (toRemove >= 0) {
             scoreBeatEvents.remove(toRemove);
         }
-
     }
 
     public void addTimeSigChangeEvent(TimeSignature timeSignature, BeatId beatId, Id transportId) {
@@ -1754,14 +1790,20 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             return;
         }
 
-        Collection<Transport>transports = szcore.getTransports();
+        Collection<Transport> transports = szcore.getTransports();
         for (Transport transport : transports) {
             transport.stop();
         }
 
         sendStopToClients();
 
-        LOG.info("Stopped all transports");
+        resetScoreOnStop();
+
+        LOG.info("Stopped play");
+    }
+
+    private void resetScoreOnStop() {
+        szcore.resetOnStop();
     }
 
     private void sendStopToClients() {
@@ -2110,7 +2152,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                     } else {
                         LOG.info("createRequiredEventsForNewPosition: Using random page file name: {} for instrument: {} page: {}", pageFileName, instrumentId, page.getPageNo());
                     }
-                    LOG.info("createRequiredEventsForNewPosition: page: {} for instrument: {}: stave: {}", pageFileName, currentStave.getStaveId().getInstrumentId(), currentStave.getStaveId().getStaveNo());
+                    LOG.debug("createRequiredEventsForNewPosition: page: {} for instrument: {}: stave: {}", pageFileName, currentStave.getStaveId().getInstrumentId(), currentStave.getStaveId().getStaveNo());
                     List<OscEvent> pageChangeEvents = createPageChangeEvents(page, pageFileName, currentStave, null);
                     initEvents.addAll(pageChangeEvents);
                 }

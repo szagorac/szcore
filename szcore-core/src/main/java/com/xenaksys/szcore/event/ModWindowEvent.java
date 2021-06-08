@@ -42,4 +42,13 @@ public class ModWindowEvent extends MusicEvent {
         return MusicEventType.MOD_WINDOW;
     }
 
+    @Override
+    public String toString() {
+        return "ModWindowEvent{" +
+                "isOpen=" + isOpen +
+                ", nextPage=" + nextPage +
+                ", nextStave=" + nextStave +
+                ", currentPageId=" + currentPageId +
+                '}';
+    }
 }

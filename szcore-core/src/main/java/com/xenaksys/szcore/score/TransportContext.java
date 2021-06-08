@@ -150,4 +150,13 @@ public class TransportContext {
 
         oneOffBaseBeatEvents.remove(baseBeatNo);
     }
+
+    public void resetOnStop() {
+        oneOffBaseBeatEvents.clear();
+        oneOffClockTickEvents.clear();
+    }
+
+    public void replaceOneOffBaseBeatEvents(int baseBeatNo, List<SzcoreEvent> events) {
+        oneOffBaseBeatEvents.put(baseBeatNo, events);
+    }
 }

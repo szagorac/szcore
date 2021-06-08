@@ -315,6 +315,15 @@ public class BasicScore implements Score {
     }
 
     @Override
+    public void replaceOneOffBaseBeatEvents(Id transportId, int baseBeatNo, List<SzcoreEvent> events) {
+        TransportContext transportContext = transportSpecificData.get(transportId);
+        if (transportContext == null) {
+            return;
+        }
+        transportContext.replaceOneOffBaseBeatEvents(baseBeatNo, events);
+    }
+
+    @Override
     public void removeOneOffBeatEvents(Id transportId, int baseBeatNo) {
         TransportContext transportContext = transportSpecificData.get(transportId);
         if (transportContext == null) {
@@ -845,6 +854,15 @@ public class BasicScore implements Score {
     @Override
     public List<Script> getBeatScripts(BeatId beatId) {
         return beatScripts.get(beatId);
+    }
+
+    @Override
+    public void resetOnStop() {
+        LOG.info("Reset Score on stop");
+        Collection<TransportContext> transportContexts = transportSpecificData.values();
+        for (TransportContext tc : transportContexts) {
+            tc.resetOnStop();
+        }
     }
 
     public void setIsPrecount(boolean isPrecount) {

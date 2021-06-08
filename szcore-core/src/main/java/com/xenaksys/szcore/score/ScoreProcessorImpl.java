@@ -2561,8 +2561,10 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 StopEvent stopEvent = (StopEvent) event;
                 BeatId beatId = event.getEventBaseBeat();
                 long elapsedTime = clock.getElapsedTimeMillis();
-                long duration = getBeatDuration(beatId);
+                transport = szcore.getTransport(stopEvent.getTransportId());
+                int duration = transport.getCurrentBeatDuration();
                 long stopTime = elapsedTime + duration;
+                LOG.debug("processMusicEvent: STOP time event beat duration: {} elapsedTime: {} stopTime: {}", duration, elapsedTime, stopTime);
                 task = taskFactory.createStopPlayTask(stopEvent, stopTime, this);
                 break;
             case MOD_WINDOW:

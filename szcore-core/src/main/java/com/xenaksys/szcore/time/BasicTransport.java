@@ -152,6 +152,16 @@ public class BasicTransport implements Transport {
         tickIntervalMillis = calculateTickIntervalMillis(tempoBeatIntervalMillis);
     }
 
+    public int getCurrentBeatDuration() {
+        if (tempo == null || tempo.getBpm() == 0) {
+            LOG.error("NO Tempo set");
+            return 0;
+        }
+
+        int bpm = tempo.getBpm();
+        return MILLIS_IN_MINUTE / bpm;
+    }
+
     private void caluclateNextBeatTime(long previousPublishBeatTime) {
         if (baseBeatIntervalMillis == 0) {
             LOG.error("Invalid beat interval millis");
@@ -159,7 +169,7 @@ public class BasicTransport implements Transport {
             return;
         }
 
-        if(!isStarted){
+        if (!isStarted) {
             return;
         }
 

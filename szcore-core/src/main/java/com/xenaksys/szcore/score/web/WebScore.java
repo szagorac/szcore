@@ -10,6 +10,7 @@ import com.xenaksys.szcore.event.WebScoreInstructionsEvent;
 import com.xenaksys.szcore.event.WebScorePlayTilesEvent;
 import com.xenaksys.szcore.event.WebScorePrecountEvent;
 import com.xenaksys.szcore.event.WebScoreSelectTilesEvent;
+import com.xenaksys.szcore.event.WebScoreStateUpdateEvent;
 import com.xenaksys.szcore.event.WebScoreStopEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Instrument;
@@ -41,6 +42,7 @@ import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.ScoreUtil;
 import com.xenaksys.szcore.web.WebAction;
 import com.xenaksys.szcore.web.WebActionType;
+import com.xenaksys.szcore.web.WebScoreStateType;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import org.slf4j.Logger;
@@ -871,7 +873,9 @@ public class WebScore {
         params.put(WEB_CONFIG_DURATION, durationSec);
         params.put(WEB_CONFIG_VALUE, endValue);
         setAction(WEB_ACTION_ID_START, WebActionType.ALPHA.name(), targetIds, params);
-        state.setStageAlpha(endValue);
+        WebScoreStateUpdateEvent stateUpdateEvent = eventFactory.createWebScoreStateUpdateEvent(WebScoreStateType.STAGE_ALPHA, endValue, clock.getSystemTimeMillis());
+        scoreProcessor.scheduleEvent(stateUpdateEvent, (long) durationSec * Consts.THOUSAND);
+//        state.setStageAlpha(endValue);
     }
 
     public void granulatorRampLinear(String paramName, Object endValue, int durationMs) {
@@ -1477,6 +1481,9 @@ public class WebScore {
                 case SELECT_TILES:
                     isSendStateUpdate = selectNextTilesInternal((WebScoreSelectTilesEvent) event);
                     break;
+                case STATE_UPDATE:
+                    isSendStateUpdate = updateState((WebScoreStateUpdateEvent) event);
+                    break;
                 case RESET:
                 case SCRIPT:
                     List<WebScoreScript> jsScripts = event.getScripts();
@@ -1496,6 +1503,21 @@ public class WebScore {
         } catch (Exception e) {
             LOG.error("Failed to evaluate script", e);
         }
+    }
+
+    private boolean updateState(WebScoreStateUpdateEvent event) {
+        WebScoreStateType propType = event.getPropertyType();
+        Object value = event.getPropertyValue();
+
+        switch (propType) {
+            case STAGE_ALPHA:
+                state.setStageAlpha((double) value);
+                return true;
+            default:
+                LOG.error("updateState: unknown property type: {}", propType);
+        }
+
+        return false;
     }
 
     private boolean addClickCounts() {

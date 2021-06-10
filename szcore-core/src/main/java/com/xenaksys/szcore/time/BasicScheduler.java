@@ -198,7 +198,9 @@ public class BasicScheduler implements Scheduler {
     @Override
     public void resetScheduledTasks() {
         playTimeTasks.clear();
-        updateTaskPlayTimes(clock.getElapsedTimeMillis());
+        futurePlayTimes.clear();
+        inQueue.clear();
+        processPlayTimes.clear();
     }
 
     //must be on single thread

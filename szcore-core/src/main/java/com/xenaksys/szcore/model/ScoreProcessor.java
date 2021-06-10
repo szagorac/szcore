@@ -94,4 +94,8 @@ public interface  ScoreProcessor extends Processor {
     void sendOscInstrumentRndPageUpdate(int bufferNo);
 
     void setUpContinuousTempoChange(int endTempo, int timeInBeats);
+
+    void scheduleEvent(SzcoreEvent event, long timeDeltaMs);
+
+    public void scheduleTask(MusicTask task);
 }

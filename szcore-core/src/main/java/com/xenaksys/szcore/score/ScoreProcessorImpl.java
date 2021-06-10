@@ -89,6 +89,7 @@ import com.xenaksys.szcore.score.web.export.WebScoreStateExport;
 import com.xenaksys.szcore.scripting.ScoreScriptingEngine;
 import com.xenaksys.szcore.scripting.ScriptingEngineConfig;
 import com.xenaksys.szcore.scripting.ScriptingEngineScript;
+import com.xenaksys.szcore.task.ScheduledEventTask;
 import com.xenaksys.szcore.task.ScriptingEngineEventTask;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.task.WebScoreEventTask;
@@ -951,6 +952,21 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
     }
 
+    @Override
+    public void scheduleEvent(SzcoreEvent event, long timeDeltaMs) {
+        long elapsedTime = clock.getElapsedTimeMillis();
+        long eventTime = elapsedTime + timeDeltaMs;
+        ScheduledEventTask task = taskFactory.createScheduledEventTask(eventTime, event, this);
+        scheduleTask(task);
+    }
+
+    public void scheduleTask(MusicTask task) {
+        if (task == null) {
+            return;
+        }
+        scheduler.add(task);
+    }
+
     public void sendOscPlayerRndPageUpdate(InstrumentId instId, BeatId beatId, Collection<Integer> selectedPageIds, Page nextPage, int bufferNo, Transport transport) {
         if (!szcore.isOscPlayer(instId)) {
             return;
@@ -1804,6 +1820,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void resetScoreOnStop() {
         szcore.resetOnStop();
+        scheduler.resetScheduledTasks();
     }
 
     private void sendStopToClients() {
@@ -2476,9 +2493,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void processScriptingEngineEvent(ScriptingEngineEvent event, int beatNo, int tickNo) {
         ScriptingEngineEventTask task = taskFactory.createScriptingEngineEventTask(0, event, scriptingEngine);
-        if (task != null) {
-            scheduler.add(task);
-        }
+        scheduleTask(task);
     }
 
     private void processWebScoreEvent(WebScoreEvent event) {
@@ -2495,14 +2510,13 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             case PLAY_TILES:
             case SELECT_TILES:
             case INSTRUCTIONS:
+            case STATE_UPDATE:
                 webScore.processWebScoreEvent(event);
                 break;
             case SCRIPT:
             default:
                 WebScoreEventTask task = taskFactory.createWebScoreEventTask(0, event, webScore);
-                if (task != null) {
-                    scheduler.add(task);
-                }
+                scheduleTask(task);
         }
     }
 
@@ -2551,11 +2565,11 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 PrecountBeatSetupEvent precountBeatSetupEvent = (PrecountBeatSetupEvent) event;
                 Id transportId = precountBeatSetupEvent.getInstrumentId();
                 transport = szcore.getTransport(transportId);
-                task = taskFactory.createPrecountBeatSetupTask(precountBeatSetupEvent, Consts.ALL_DESTINATIONS, transport, scheduler, oscPublisher, eventFactory, taskFactory, webScore, clock);
+                task = taskFactory.createPrecountBeatSetupTask(precountBeatSetupEvent, Consts.ALL_DESTINATIONS, transport, this, oscPublisher, eventFactory, taskFactory, webScore, clock);
                 break;
             case TRANSITION:
                 TransitionEvent transitionEvent = (TransitionEvent) event;
-                task = taskFactory.createTransitionSetupTask(transitionEvent, transitionEvent.getDestination(), scheduler, oscPublisher, eventFactory, clock);
+                task = taskFactory.createTransitionSetupTask(transitionEvent, transitionEvent.getDestination(), this, oscPublisher, eventFactory, clock);
                 break;
             case STOP:
                 StopEvent stopEvent = (StopEvent) event;
@@ -2575,10 +2589,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 LOG.error("Unknown event: " + event);
 
         }
-
-        if (task != null) {
-            scheduler.add(task);
-        }
+        scheduleTask(task);
     }
 
     private long getBeatPlayTime(BeatId beatId, int currentBeat) {

@@ -92,7 +92,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     }
 
     private void processWebPoll(WebPollEvent pollEvent) {
-//        LOG.info("processWebPoll: ");
+        LOG.debug("processWebPoll: ");
         if(pollEvent.getSourceAddr() == null) {
             return;
         }
@@ -103,7 +103,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     }
 
     private void processWebConnectionUpdate(UpdateWebConnectionsEvent connectionsEvent) {
-        LOG.info("processWebConnectionUpdate: ");
+        LOG.debug("processWebConnectionUpdate: ");
         updateWebConnections(connectionsEvent.getClientConnections());
     }
 
@@ -142,7 +142,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     }
 
     public ZsWebResponse onWebRequest(ZsWebRequest zsRequest) {
-//        LOG.debug("onHttpRequest: path: {} sourceAddr: {}", zsRequest.getRequestPath(), zsRequest.getSourceAddr());
+        LOG.debug("onHttpRequest: path: {} sourceAddr: {}", zsRequest.getRequestPath(), zsRequest.getSourceAddr());
         String out;
         try {
             Map<String, String> stringParams = zsRequest.getStringParams();
@@ -281,7 +281,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         String out = GSON.toJson(webScoreStateExport);
         int stringLenBytes = Util.getStringLengthUtf8(out);
         long stringLenKb = stringLenBytes / 1024;
-        LOG.info("onWebScoreEvent: WebState size: {}Kb json: {}", stringLenKb, out);
+        LOG.debug("onWebScoreEvent: WebState size: {}Kb json: {}", stringLenKb, out);
         if (stringLenKb > 64) {
             LOG.error("onWebScoreEvent: ### WARNING ### WebState size {}Kb larger than 64Kb", stringLenKb);
         }
@@ -297,7 +297,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         String out = GSON.toJson(webScoreStateDeltaExport);
         int stringLenBytes = Util.getStringLengthUtf8(out);
         long stringLenKb = stringLenBytes / 1024;
-        LOG.info("onWebScoreStateDeltaChange: WebState size: {}Kb json: {}", stringLenKb, out);
+        LOG.debug("onWebScoreStateDeltaChange: WebState size: {}Kb json: {}", stringLenKb, out);
         if (stringLenKb > 64) {
             LOG.error("onWebScoreStateDeltaChange: ### WARNING ### WebState size {}Kb larger than 64Kb", stringLenKb);
         }

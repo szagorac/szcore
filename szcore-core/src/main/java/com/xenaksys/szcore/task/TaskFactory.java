@@ -14,9 +14,9 @@ import com.xenaksys.szcore.event.TransportPositionEvent;
 import com.xenaksys.szcore.event.WebScoreEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.OscPublisher;
-import com.xenaksys.szcore.model.Scheduler;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.Stave;
+import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.Transport;
 import com.xenaksys.szcore.score.ScoreProcessorImpl;
@@ -51,18 +51,22 @@ public class TaskFactory {
         return new StaveActiveChangeTask(playTime, event, stave, oscPublisher);
     }
 
+    public ScheduledEventTask createScheduledEventTask(long playTime, SzcoreEvent event, ScoreProcessor scoreProcessor) {
+        return new ScheduledEventTask(playTime, event, scoreProcessor);
+    }
+
     public PrepStaveChangeTask createPrepStaveChangeTask(PrepStaveChangeEvent event, long playTime, ScoreProcessorImpl scoreProcessor) {
         return new PrepStaveChangeTask(playTime, event, scoreProcessor);
     }
 
-    public PrecountBeatSetupTask createPrecountBeatSetupTask(PrecountBeatSetupEvent precountBeatSetupEvent, String destination, Transport transport, Scheduler scheduler,
+    public PrecountBeatSetupTask createPrecountBeatSetupTask(PrecountBeatSetupEvent precountBeatSetupEvent, String destination, Transport transport, ScoreProcessor processor,
                                                              OscPublisher oscPublisher, EventFactory eventFactory, TaskFactory taskFactory, WebScore webScore, Clock clock) {
-        return new PrecountBeatSetupTask(precountBeatSetupEvent, destination, transport, scheduler, oscPublisher, eventFactory, taskFactory, webScore, clock);
+        return new PrecountBeatSetupTask(precountBeatSetupEvent, destination, transport, processor, oscPublisher, eventFactory, taskFactory, webScore, clock);
     }
 
-    public TransitionSetupTask createTransitionSetupTask(TransitionEvent transitionEvent, String destination, Scheduler scheduler,
+    public TransitionSetupTask createTransitionSetupTask(TransitionEvent transitionEvent, String destination, ScoreProcessor processor,
                                                          OscPublisher oscPublisher, EventFactory eventFactory, Clock clock) {
-        return new TransitionSetupTask(transitionEvent, destination, scheduler, oscPublisher, eventFactory, clock);
+        return new TransitionSetupTask(transitionEvent, destination, processor, oscPublisher, eventFactory, clock);
     }
 
     public WebScoreEventTask createWebScoreEventTask(long playTime, WebScoreEvent event, WebScore webScore) {

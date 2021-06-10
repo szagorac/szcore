@@ -38,12 +38,12 @@ public class ZsWsConnectionCallback implements WebSocketConnectionCallback {
     @Override
     public void onConnect(WebSocketHttpExchange exchange, WebSocketChannel channel) {
         webServer.onWsChannelConnected(channel, exchange);
-        LOG.info("onConnect: connected channel: {}", channel.getSourceAddress());
+        LOG.debug("onConnect: connected channel: {}", channel.getSourceAddress());
         channel.getReceiveSetter().set(new AbstractReceiveListener() {
             @Override
             protected void onFullTextMessage(WebSocketChannel channel, BufferedTextMessage message) {
                 try {
-                    if(channel == null || message == null) {
+                    if (channel == null || message == null) {
                         return;
                     }
                     processRequest(exchange, channel, message);
@@ -57,7 +57,7 @@ public class ZsWsConnectionCallback implements WebSocketConnectionCallback {
 
     private void processRequest(WebSocketHttpExchange exchange, WebSocketChannel channel, BufferedTextMessage message) {
         final String messageData = message.getData();
-        LOG.info("onFullTextMessage: received message: {}", messageData);
+        LOG.debug("onFullTextMessage: received message: {}", messageData);
 
         // {"id":"GET_SERVER_STATE","time":1587909588704,"propertyBag":{"ev":"GET_SERVER_STATE","evt":1587909588704}}
         JsonObject request = JSON_PARSER.parse(messageData).getAsJsonObject();

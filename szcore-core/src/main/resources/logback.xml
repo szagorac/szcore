@@ -27,8 +27,8 @@
     <logger name="io.undertow" level="WARN"/>
 
 
-    <root level="debug">
-        <appender-ref ref="ASYNCSTDOUT" />
-        <appender-ref ref="ASYNCFILE" />
+    <root level="info">
+        <appender-ref ref="ASYNCSTDOUT"/>
+        <appender-ref ref="ASYNCFILE"/>
     </root>
 </configuration>

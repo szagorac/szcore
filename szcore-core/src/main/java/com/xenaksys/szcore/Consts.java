@@ -10,6 +10,9 @@ public interface Consts {
 
     AtomicInteger ID_SOURCE = new AtomicInteger(0);
 
+    long THOUSAND = 1000L;
+    long HUNDRED = 100L;
+
     String ERROR_TASK_QUEUE = " Failed to process task Queue";
     String ERROR_SCHEDULED_TASKS = " Failed to process scheduled tasks";
     String ERROR_TANSPORTS = " Failed to process transports";

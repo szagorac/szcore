@@ -228,7 +228,7 @@ public class ScoreController {
         randomStrategyChob.setItems(randomisationStrategies);
         presetsChob.setItems(presets);
         usePageRandomisationChb.setSelected(true);
-        useContinousPageChb.setSelected(true);
+        useContinousPageChb.setSelected(false);
         useDynamicsOverlayChb.setSelected(false);
         useDynamicsLineChb.setSelected(false);
         sendToAllChb.setSelected(true);
@@ -1122,7 +1122,7 @@ public class ScoreController {
         beatNoCbx.getSelectionModel().select(Consts.ONE_I);
 
         usePageRandomisationChb.setSelected(true);
-        useContinousPageChb.setSelected(true);
+        useContinousPageChb.setSelected(false);
 //        useDynamicsOverlayChb.setSelected(false);
 //        usePressureOverlayChb.setSelected(false);
 //        useSpeedOverlayChb.setSelected(false);

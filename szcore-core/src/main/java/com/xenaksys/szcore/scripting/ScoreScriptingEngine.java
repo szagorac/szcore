@@ -45,7 +45,7 @@ public class ScoreScriptingEngine {
     }
 
     public void resetState() {
-        LOG.info("ScoreScriptingEngine: resetState()");
+        LOG.debug("ScoreScriptingEngine: resetState()");
     }
 
     public void reset(int presetNo) {
@@ -63,7 +63,7 @@ public class ScoreScriptingEngine {
     }
 
     public void processEvent(ScriptingEngineEvent event) {
-        LOG.info("processScriptingEngineEvent: execute event: {}", event);
+        LOG.debug("processScriptingEngineEvent: execute event: {}", event);
         try {
             List<ScriptingEngineScript> jsScripts = event.getScripts();
             if (jsScripts == null) {
@@ -171,7 +171,7 @@ public class ScoreScriptingEngine {
     }
 
     public void sendRndPageUpdates(String target) {
-        LOG.info("sendRndPageUpdates: target: {}", target);
+        LOG.debug("sendRndPageUpdates: target: {}", target);
         try {
             if (Consts.MAXMSP_ID.equals(target)) {
                 scoreProcessor.sendOscInstrumentRndPageUpdate(0);
@@ -184,7 +184,7 @@ public class ScoreScriptingEngine {
     }
 
     public void timedAction(String action, Object endValue, int timeInBeats) {
-        LOG.info("timedAction: action: {}", action);
+        LOG.debug("timedAction: action: {}", action);
         if (action == null) {
             return;
         }
@@ -207,7 +207,7 @@ public class ScoreScriptingEngine {
 
 
     public void sendMaxMspRndPageUpdates(int buffer) {
-        LOG.info("sendMaxMspRndPageUpdates: buffer: {}", buffer);
+        LOG.debug("sendMaxMspRndPageUpdates: buffer: {}", buffer);
         try {
             scoreProcessor.sendOscInstrumentRndPageUpdate(buffer);
         } catch (Exception e) {
@@ -216,7 +216,7 @@ public class ScoreScriptingEngine {
     }
 
     public void setRndStrategy(List<Integer> randomisationStrategy) {
-        LOG.info("setRndStrategy: {}", randomisationStrategy);
+        LOG.debug("setRndStrategy: {}", randomisationStrategy);
         try {
             scoreProcessor.setRandomisationStrategy(randomisationStrategy);
         } catch (Exception e) {

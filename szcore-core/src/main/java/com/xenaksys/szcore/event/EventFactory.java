@@ -13,6 +13,7 @@ import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.score.web.WebScoreScript;
 import com.xenaksys.szcore.scripting.ScriptingEngineScript;
 import com.xenaksys.szcore.web.WebConnection;
+import com.xenaksys.szcore.web.WebScoreStateType;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -303,6 +304,10 @@ public class EventFactory {
 
     public WebScoreInstructionsEvent createWebScoreInstructionsEvent(String l1, String l2, String l3, boolean isVisible, long creationTime) {
         return new WebScoreInstructionsEvent(l1, l2, l3, isVisible, creationTime);
+    }
+
+    public WebScoreStateUpdateEvent createWebScoreStateUpdateEvent(WebScoreStateType propertyName, Object propertyValue, long creationTime) {
+        return new WebScoreStateUpdateEvent(propertyName, propertyValue, creationTime);
     }
 
     public WebScorePrecountEvent createWebScorePrecountEvent(int count, boolean isOn, int colourId, long creationTime) {

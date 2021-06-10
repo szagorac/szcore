@@ -74,6 +74,7 @@ public class BasicScore implements Score {
 
     private Page blankPage;
     private Map<Id, Page> instrumentContinuousPage = new HashMap<>();
+    private Map<Id, Page> instrumentEndPage = new HashMap<>();
 
     private boolean isUseContinuousPage = false;
     public int noContinuousPages = 10;
@@ -153,8 +154,16 @@ public class BasicScore implements Score {
         return instrumentContinuousPage.get(instrumentId);
     }
 
+    public Page getEndPage(Id instrumentId) {
+        return instrumentEndPage.get(instrumentId);
+    }
+
     public void setContinuousPage(Id instrumentId, Page continuousPage) {
         this.instrumentContinuousPage.put(instrumentId, continuousPage);
+    }
+
+    public void setEndPage(Id instrumentId, Page endPage) {
+        this.instrumentEndPage.put(instrumentId, endPage);
     }
 
     public void addInstrumentTransport(Instrument instrument, Transport transport) {
@@ -164,7 +173,7 @@ public class BasicScore implements Score {
         transports.put(transportId, transport);
         instrumentTransports.put(instrumentId, transportId);
         List<Id> instrumentIds = transportInstruments.computeIfAbsent(transportId, k -> new ArrayList<>());
-        if(!instrumentIds.contains(instrumentId)){
+        if (!instrumentIds.contains(instrumentId)) {
             instrumentIds.add(instrumentId);
         }
     }
@@ -303,6 +312,15 @@ public class BasicScore implements Score {
             return null;
         }
         return transportContext.getOneOffBaseBeatEvents(baseBeatNo);
+    }
+
+    @Override
+    public void replaceOneOffBaseBeatEvents(Id transportId, int baseBeatNo, List<SzcoreEvent> events) {
+        TransportContext transportContext = transportSpecificData.get(transportId);
+        if (transportContext == null) {
+            return;
+        }
+        transportContext.replaceOneOffBaseBeatEvents(baseBeatNo, events);
     }
 
     @Override
@@ -836,6 +854,15 @@ public class BasicScore implements Score {
     @Override
     public List<Script> getBeatScripts(BeatId beatId) {
         return beatScripts.get(beatId);
+    }
+
+    @Override
+    public void resetOnStop() {
+        LOG.info("Reset Score on stop");
+        Collection<TransportContext> transportContexts = transportSpecificData.values();
+        for (TransportContext tc : transportContexts) {
+            tc.resetOnStop();
+        }
     }
 
     public void setIsPrecount(boolean isPrecount) {

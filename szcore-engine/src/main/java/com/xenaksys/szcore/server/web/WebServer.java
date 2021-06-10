@@ -133,13 +133,13 @@ public class WebServer {
     }
 
     public void pushToChannel(String data, WebSocketChannel channel) {
-        LOG.info("pushToChannel: ip: {}, isCloseInitiatedByRemotePeer: {}", channel.getSourceAddress(), channel.isCloseInitiatedByRemotePeer());
+        LOG.debug("pushToChannel: ip: {}, isCloseInitiatedByRemotePeer: {}", channel.getSourceAddress(), channel.isCloseInitiatedByRemotePeer());
         WebSockets.sendText(data, channel, null);
     }
 
     public void pushToAll(String data) {
         byte[] bytes = data.getBytes();
-        LOG.info("pushToAll:  size {} data: {}", bytes.length, data);
+        LOG.debug("pushToAll:  size {} data: {}", bytes.length, data);
         if (wsHandler != null && data != null) {
             Set<WebSocketChannel> channels = wsHandler.getPeerConnections();
             for (WebSocketChannel channel : channels) {

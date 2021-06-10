@@ -276,6 +276,11 @@ public class BasicStave implements Stave {
     }
 
     @Override
+    public StaveId getStaveId() {
+        return id;
+    }
+
+    @Override
     public StaveId getId() {
         return id;
     }

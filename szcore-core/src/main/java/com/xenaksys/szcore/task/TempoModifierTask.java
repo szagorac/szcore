@@ -31,7 +31,7 @@ public class TempoModifierTask extends EventMusicTask {
         Id instrumentId = executeBeatId.getInstrumentId();
 
 //LOG.debug("### About to execute PrepStaveChangeTask beatid: " + executeBeatId);
-        scoreProcessor.processPrepStaveChange(instrumentId, executeBeatId,
-                prepEvent.getActivateBaseBeat(), prepEvent.getDeactivateBaseBeat(), prepEvent.getPageChangeOnBaseBeat(), prepEvent.getNextPageId());
+//        scoreProcessor.processPrepStaveChange(instrumentId, executeBeatId,
+//                prepEvent.getActivateBaseBeat(), prepEvent.getDeactivateBaseBeat(), prepEvent.getPageChangeOnBaseBeat(), prepEvent.getNextPageId());
     }
 }

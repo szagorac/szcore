@@ -3,19 +3,23 @@ package com.xenaksys.szcore.task;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.TransitionEvent;
 import com.xenaksys.szcore.event.TransitionScriptEvent;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.model.Clock;
+import com.xenaksys.szcore.model.OscPublisher;
+import com.xenaksys.szcore.model.ScoreProcessor;
+import com.xenaksys.szcore.model.SzcoreEvent;
+import com.xenaksys.szcore.model.Transition;
 
 public class TransitionSetupTask extends EventMusicTask {
-    private final Scheduler scheduler;
+    private final ScoreProcessor processor;
     private final OscPublisher oscPublisher;
     private final EventFactory eventFactory;
     private final String destination;
     private final Clock clock;
 
-    public TransitionSetupTask(TransitionEvent transitionEvent, String destination, Scheduler scheduler,
+    public TransitionSetupTask(TransitionEvent transitionEvent, String destination, ScoreProcessor processor,
                                OscPublisher oscPublisher, EventFactory eventFactory, Clock clock) {
         super(0, transitionEvent);
-        this.scheduler = scheduler;
+        this.processor = processor;
         this.oscPublisher = oscPublisher;
         this.eventFactory = eventFactory;
         this.destination = destination;
@@ -96,7 +100,7 @@ public class TransitionSetupTask extends EventMusicTask {
         event.addCommandArg(component, alpha);
         OscEventTask task = new OscEventTask(playTime, event, oscPublisher);
 //        LOG.info("Create Transition Task playTime: " + playTime + " component: " + component + " alpha: " + alpha);
-        scheduler.add(task);
+        processor.scheduleTask(task);
     }
 
 }

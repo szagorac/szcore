@@ -1,5 +1,6 @@
 package com.xenaksys.szcore.util;
 
+import com.xenaksys.szcore.Consts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,6 +97,31 @@ public class NetUtil {
         int firstSeparator = currentIP.lastIndexOf("/");
         int lastSeparator = currentIP.lastIndexOf(".");
         return currentIP.substring(firstSeparator + 1, lastSeparator + 1);
+    }
+
+    public static String[] getHostPort(String inetAddr) {
+        if (inetAddr == null || !inetAddr.contains(Consts.COLUMN)) {
+            return null;
+        }
+
+        long columnCount = inetAddr.chars().filter(ch -> ch == COLUMN.charAt(0)).count();
+        if (columnCount < 1) {
+            return null;
+        }
+
+        int lastColumn = inetAddr.lastIndexOf(COLUMN.charAt(0));
+        String port = "-1";
+        if (lastColumn < inetAddr.length()) {
+            port = inetAddr.substring(lastColumn + 1);
+        }
+        String host = inetAddr.substring(0, lastColumn);
+
+        if (!ParseUtil.isInteger(port)) {
+            port = "-1";
+        }
+        host = ParseUtil.removeSlashes(host);
+
+        return new String[]{host, port};
     }
 
     public static List<NetworkDevice> discoverConnectedDevices() throws Exception {

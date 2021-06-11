@@ -71,15 +71,21 @@
                         </HBox>
                   <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="81.0" spacing="10.0">
                      <children>
-                        <Label stylesheets="@css/szcoreStyle.css" text="Web Server:" />
-                        <Label fx:id="webServerStatusLbl" stylesheets="@css/szcoreStyle.css" text="status" />
+                        <Label stylesheets="@css/szcoreStyle.css" text="Audience Web Server:"/>
+                        <Label fx:id="audienceWebServerStatusLbl" stylesheets="@css/szcoreStyle.css" text="status"/>
                         <HBox alignment="CENTER_LEFT">
                            <children>
-                              <ToggleButton fx:id="webServerOnTgl" alignment="CENTER_LEFT" mnemonicParsing="false" onAction="#setWebServerOn" stylesheets="@css/szcoreStyle.css" text="On" />
-                              <ToggleButton fx:id="webServerOffTgl" alignment="CENTER_LEFT" mnemonicParsing="false" onAction="#setWebServerOff" stylesheets="@css/szcoreStyle.css" text="Off" />
+                              <ToggleButton fx:id="audienceWebServerOnTgl" alignment="CENTER_LEFT"
+                                            mnemonicParsing="false" onAction="#setAudienceWebServerOn"
+                                            stylesheets="@css/szcoreStyle.css" text="On"/>
+                              <ToggleButton fx:id="audienceWebServerOffTgl" alignment="CENTER_LEFT"
+                                            mnemonicParsing="false" onAction="#setAudienceWebServerOff"
+                                            stylesheets="@css/szcoreStyle.css" text="Off"/>
                            </children>
                         </HBox>
-                        <Button fx:id="getServerStatusBtn" mnemonicParsing="false" onAction="#detectWebServerStatus" stylesheets="@css/szcoreStyle.css" text="Get Status" />
+                        <Button fx:id="getServerStatusBtn" mnemonicParsing="false"
+                                onAction="#detectAudienceWebServerStatus" stylesheets="@css/szcoreStyle.css"
+                                text="Get Status"/>
                      </children>
                   </HBox>
                         <Separator />
@@ -91,9 +97,18 @@
                         </HBox>
                         <TableView fx:id="networkClientsTableView">
                            <columns>
-                              <TableColumn fx:id="hostAddressColumn" maxWidth="200.0" minWidth="100.0" prefWidth="120.0" text="HostIp" />
-                              <TableColumn fx:id="hostNameColumn" maxWidth="300.0" minWidth="100.0" prefWidth="120.0" text="HostName" />
-                              <TableColumn fx:id="isParticipantColumn" maxWidth="300.0" minWidth="100.0" prefWidth="120.0" text="IsParticipant" />
+                              <TableColumn fx:id="hostAddressColumn" maxWidth="200.0" minWidth="100.0" prefWidth="120.0"
+                                           text="HostAddr"/>
+                              <TableColumn fx:id="hostNameColumn" maxWidth="300.0" minWidth="100.0" prefWidth="120.0"
+                                           text="HostName"/>
+                              <TableColumn fx:id="portColumn" maxWidth="300.0" minWidth="100.0" prefWidth="120.0"
+                                           text="Port"/>
+                              <TableColumn fx:id="browserColumn" maxWidth="300.0" minWidth="100.0" prefWidth="120.0"
+                                           text="Browser"/>
+                              <TableColumn fx:id="mobileColumn" maxWidth="300.0" minWidth="100.0" prefWidth="120.0"
+                                           text="IsMobile"/>
+                              <TableColumn fx:id="osColumn" maxWidth="300.0" minWidth="100.0" prefWidth="120.0"
+                                           text="OS"/>
                            </columns>
                         </TableView>
                      </children>

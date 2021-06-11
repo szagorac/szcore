@@ -1,16 +1,18 @@
 package com.xenaksys.szcore.gui.view;
 
 
+import com.xenaksys.szcore.event.WebClientInfoUpdateEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
+import com.xenaksys.szcore.gui.model.AudienceClient;
 import com.xenaksys.szcore.gui.model.IpAddress;
-import com.xenaksys.szcore.gui.model.NetworkClient;
-import com.xenaksys.szcore.gui.model.Participant;
 import com.xenaksys.szcore.model.EventService;
 import com.xenaksys.szcore.model.ScoreService;
-import com.xenaksys.szcore.util.NetUtil;
+import com.xenaksys.szcore.web.WebClientInfo;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
+import javafx.collections.SetChangeListener;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -24,13 +26,14 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.util.converter.NumberStringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -67,28 +70,35 @@ public class SettingsController {
     @FXML
     private Button detectConnectedClientsBtn;
     @FXML
-    private TableView<NetworkClient> networkClientsTableView;
+    private TableView<AudienceClient> networkClientsTableView;
     @FXML
-    private TableColumn<NetworkClient, String> hostAddressColumn;
+    private TableColumn<AudienceClient, String> hostAddressColumn;
     @FXML
-    private TableColumn<NetworkClient, String> hostNameColumn;
+    private TableColumn<AudienceClient, String> hostNameColumn;
     @FXML
-    private TableColumn<NetworkClient, Boolean> isParticipantColumn;
+    private TableColumn<AudienceClient, Integer> portColumn;
+    @FXML
+    private TableColumn<AudienceClient, String> browserColumn;
+    @FXML
+    private TableColumn<AudienceClient, Boolean> mobileColumn;
+    @FXML
+    private TableColumn<AudienceClient, String> osColumn;
     @FXML
     public Button setBroadcastAddressBtn;
     @FXML
     public Button setSubnetMaskBtn;
     @FXML
-    private Label webServerStatusLbl;
+    private Label audienceWebServerStatusLbl;
     @FXML
-    private ToggleButton webServerOnTgl;
+    private ToggleButton audienceWebServerOnTgl;
     @FXML
-    private ToggleButton webServerOffTgl;
+    private ToggleButton audienceWebServerOffTgl;
 
-    private ToggleGroup webServerStatusTglGroup = new ToggleGroup();
+    private ToggleGroup audienceWebServerStatusTglGroup = new ToggleGroup();
     private IpAddress broadCastAddress = new IpAddress();
     private IpAddress subnetMask = new IpAddress();
-    private ObservableList<NetworkClient> networkClients = FXCollections.observableArrayList();
+    private ObservableList<AudienceClient> audienceClients = FXCollections.observableArrayList();
+    private ObservableSet<AudienceClient> audienceClientSet = FXCollections.observableSet(new HashSet<>());
 
     public void populate() {
         if (serverAddress != null) {
@@ -100,7 +110,16 @@ public class SettingsController {
         populateSubnetMask();
         populateDetectedBroadcastAddresses();
 
-        networkClientsTableView.setItems(networkClients);
+        networkClientsTableView.setItems(audienceClients);
+
+        audienceClientSet.addListener((SetChangeListener.Change<? extends AudienceClient> c) -> {
+            if (c.wasAdded()) {
+                audienceClients.add(c.getElementAdded());
+            }
+            if (c.wasRemoved()) {
+                audienceClients.remove(c.getElementRemoved());
+            }
+        });
     }
 
     public void populateBroadcastAddress() {
@@ -161,30 +180,32 @@ public class SettingsController {
 
         hostAddressColumn.setCellValueFactory(cellData -> cellData.getValue().getHostAddressProperty());
         hostNameColumn.setCellValueFactory(cellData -> cellData.getValue().getHostNameProperty());
-        isParticipantColumn.setCellValueFactory(cellData -> cellData.getValue().getIsParticipantProperty());
-        isParticipantColumn.setCellFactory(CheckBoxTableCell.forTableColumn(isParticipantColumn));
+        portColumn.setCellValueFactory(cellData -> cellData.getValue().getPortProperty().asObject());
+        browserColumn.setCellValueFactory(cellData -> cellData.getValue().browserProperty());
+        mobileColumn.setCellValueFactory(cellData -> cellData.getValue().isMobileProperty());
+        osColumn.setCellValueFactory(cellData -> cellData.getValue().osProperty());
 
-        webServerOnTgl.setToggleGroup(webServerStatusTglGroup);
-        webServerOffTgl.setToggleGroup(webServerStatusTglGroup);
-        detectWebServerStatus(null);
+        audienceWebServerOnTgl.setToggleGroup(audienceWebServerStatusTglGroup);
+        audienceWebServerOffTgl.setToggleGroup(audienceWebServerStatusTglGroup);
+        detectAudienceWebServerStatus(null);
     }
 
     @FXML
-    private void detectWebServerStatus(ActionEvent event) {
-        Service<Void> retrieveWebServerStatus = createRetrieveWebServerStatus();
+    private void detectAudienceWebServerStatus(ActionEvent event) {
+        Service<Void> retrieveWebServerStatus = createRetrieveAudienceWebServerStatus();
         retrieveWebServerStatus.start();
     }
 
     @FXML
-    private void setWebServerOn(ActionEvent event) {
+    private void setAudienceWebServerOn(ActionEvent event) {
         scoreService.startWebServer();
-        detectWebServerStatus(null);
+        detectAudienceWebServerStatus(null);
     }
 
     @FXML
-    private void setWebServerOff(ActionEvent event) {
+    private void setAudienceWebServerOff(ActionEvent event) {
         scoreService.stopWebServer();
-        detectWebServerStatus(null);
+        detectAudienceWebServerStatus(null);
     }
 
     @FXML
@@ -259,32 +280,9 @@ public class SettingsController {
                 return new Task<Void>() {
                     @Override
                     protected Void call() throws Exception {
-                        List<NetUtil.NetworkDevice> devices = scoreService.getParallelConnectedNetworkClients();
-                        ObservableList<Participant> participants = mainApp.getParticipants();
-                        List<String> participantIps = new ArrayList<>();
-                        for(Participant participant : participants) {
-                            participantIps.add(participant.getHostAddress());
-                        }
-                        final CountDownLatch latch = new CountDownLatch(1);
-                        List<NetworkClient> netClients = new ArrayList<>();
-                        for(NetUtil.NetworkDevice device : devices) {
-                            NetworkClient networkClient = new NetworkClient();
-                            networkClient.setHostAddress(device.getHostIp());
-                            networkClient.setHostName(device.getHostName());
-                            networkClient.setIsParticipant(participantIps.contains(device.getHostIp()));
-                            netClients.add(networkClient);
-                        }
+                        HashMap<String, AudienceClient> clientUpdates = new HashMap<>();
+                        ;
 
-                        Platform.runLater(() -> {
-                            try {
-                                networkClients.clear();
-                                networkClients.addAll(netClients);
-                            } finally {
-                                latch.countDown();
-                            }
-                        });
-                        latch.await();
-                        detectConnectedClientsBtn.setDisable(false);
                         return null;
                     }
                 };
@@ -292,29 +290,29 @@ public class SettingsController {
         };
     }
 
-    private Service<Void> createRetrieveWebServerStatus() {
+    private Service<Void> createRetrieveAudienceWebServerStatus() {
         return new Service<Void>() {
             @Override
             protected Task<Void> createTask() {
                 return new Task<Void>() {
                     @Override
                     protected Void call() throws Exception {
-                        final boolean isWebServerRunning = scoreService.isWebServerRunning();
+                        final boolean isAudienceWebServerRunning = scoreService.isAudienceWebServerRunning();
                         final CountDownLatch latch = new CountDownLatch(1);
                         Platform.runLater(() -> {
                             try {
-                                if(isWebServerRunning) {
-                                    webServerOnTgl.setSelected(true);
-                                    webServerStatusLbl.setText("Running");
+                                if (isAudienceWebServerRunning) {
+                                    audienceWebServerOnTgl.setSelected(true);
+                                    audienceWebServerStatusLbl.setText("Running");
                                     LOG.info("Web server running. Setting label green");
-                                    webServerStatusLbl.getStyleClass().remove("label-red");
-                                    webServerStatusLbl.getStyleClass().add("label-green");
+                                    audienceWebServerStatusLbl.getStyleClass().remove("label-red");
+                                    audienceWebServerStatusLbl.getStyleClass().add("label-green");
                                 } else {
-                                    webServerOffTgl.setSelected(true);
-                                    webServerStatusLbl.setText("Stopped");
+                                    audienceWebServerOffTgl.setSelected(true);
+                                    audienceWebServerStatusLbl.setText("Stopped");
                                     LOG.info("Web server stopped. Setting label red");
-                                    webServerStatusLbl.getStyleClass().remove("label-green");
-                                    webServerStatusLbl.getStyleClass().add("label-red");
+                                    audienceWebServerStatusLbl.getStyleClass().remove("label-green");
+                                    audienceWebServerStatusLbl.getStyleClass().add("label-red");
                                 }
                             } finally {
                                 latch.countDown();
@@ -326,6 +324,54 @@ public class SettingsController {
                 };
             }
         };
+    }
+
+    public void processWebClientInfos(WebClientInfoUpdateEvent event) {
+        if (event == null) {
+            return;
+        }
+        HashMap<String, AudienceClient> clientUpdates = new HashMap<>();
+        ;
+        try {
+            ArrayList<WebClientInfo> webClientInfos = event.getWebClientInfos();
+            for (WebClientInfo clientInfo : webClientInfos) {
+                String addr = clientInfo.getClientAddr();
+                AudienceClient audienceClient = new AudienceClient(addr);
+                audienceClient.setHostAddress(addr);
+                audienceClient.setHostName(clientInfo.getHost());
+                audienceClient.setPort(clientInfo.getPort());
+                if (clientInfo.getBrowserType() != null) {
+                    audienceClient.setBrowser(clientInfo.getBrowserType().name());
+                }
+                audienceClient.setIsMobile(clientInfo.isMobile());
+                if (clientInfo.getOs() != null) {
+                    audienceClient.setOs(clientInfo.getOs().name());
+                }
+                clientUpdates.put(addr, audienceClient);
+            }
+        } catch (Exception e) {
+            LOG.error("Failed to process web vlient infos", e);
+        }
+        Platform.runLater(() -> {
+            ArrayList<AudienceClient> toRemove = new ArrayList<>();
+            for (AudienceClient client : audienceClientSet) {
+                if (!clientUpdates.containsKey(client.getId())) {
+                    toRemove.add(client);
+                } else {
+                    AudienceClient update = clientUpdates.get(client.getId());
+                    client.setHostAddress(update.getHostAddress());
+                    client.setPort(update.getPort());
+                    client.setBrowser(update.getBrowser());
+                    client.setIsMobile(update.getIsMobile());
+                    client.setOs(update.getOs());
+                }
+            }
+            for (AudienceClient client : toRemove) {
+                audienceClientSet.remove(client);
+            }
+            audienceClientSet.addAll(clientUpdates.values());
+            detectConnectedClientsBtn.setDisable(false);
+        });
     }
 }
 

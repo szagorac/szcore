@@ -8,14 +8,19 @@ import com.xenaksys.szcore.event.IncomingWebEventType;
 import com.xenaksys.szcore.event.OutgoingWebEvent;
 import com.xenaksys.szcore.event.OutgoingWebEventType;
 import com.xenaksys.szcore.event.UpdateWebConnectionsEvent;
+import com.xenaksys.szcore.event.WebClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.WebPollEvent;
 import com.xenaksys.szcore.event.WebStartEvent;
 import com.xenaksys.szcore.model.Clock;
+import com.xenaksys.szcore.model.EventReceiver;
 import com.xenaksys.szcore.model.EventService;
 import com.xenaksys.szcore.model.Processor;
 import com.xenaksys.szcore.model.ScoreService;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.ZsResponseType;
+import com.xenaksys.szcore.net.browser.BrowserOS;
+import com.xenaksys.szcore.net.browser.BrowserType;
+import com.xenaksys.szcore.net.browser.UAgentInfo;
 import com.xenaksys.szcore.score.web.export.WebScoreStateDeltaExport;
 import com.xenaksys.szcore.score.web.export.WebScoreStateExport;
 import com.xenaksys.szcore.util.Util;
@@ -23,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,6 +57,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     private final ScoreService scoreService;
     private final EventService eventService;
     private final EventFactory eventFactory;
+    private final EventReceiver eventReceiver;
     private final Clock clock;
 
     private final Map<String, WebClientInfo> clientInfos = new ConcurrentHashMap<>();
@@ -60,10 +67,11 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     private volatile long stateUpdateTime = 0;
     private volatile long stateDeltaUpdateTime = 0;
 
-    public WebProcessor(ScoreService scoreService, EventService eventService, Clock clock, EventFactory eventFactory) {
+    public WebProcessor(ScoreService scoreService, EventService eventService, Clock clock, EventFactory eventFactory, EventReceiver eventReceiver) {
         this.scoreService = scoreService;
         this.eventService = eventService;
         this.eventFactory = eventFactory;
+        this.eventReceiver = eventReceiver;
         this.clock = clock;
     }
 
@@ -122,22 +130,56 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     }
 
     public WebClientInfo getOrCreateClientInfo(String sourceAddr) {
-        if(sourceAddr == null) {
+        if (sourceAddr == null) {
             return null;
         }
         return clientInfos.computeIfAbsent(sourceAddr, WebClientInfo::new);
     }
 
-    public void updateOrCreateClientInfo(String sourceAddr, WebConnectionType type, String userAgent) {
-        WebClientInfo clientInfo = getOrCreateClientInfo(sourceAddr);
-        if(clientInfo == null) {
+    public void updateOrCreateClientInfo(WebConnection webConnection) {
+        if (webConnection == null) {
             return;
         }
-        if(type != null && clientInfo.getConnectionType() != type) {
+
+        String sourceAddr = webConnection.getClientAddr();
+        WebClientInfo clientInfo = getOrCreateClientInfo(sourceAddr);
+        if (clientInfo == null) {
+            return;
+        }
+
+        WebConnection conn = clientInfo.getWebConnection();
+        if (!webConnection.equals(conn)) {
+            clientInfo.setWebConnection(webConnection);
+        }
+
+        WebConnectionType type = webConnection.getConnectionType();
+        if (type != null && clientInfo.getConnectionType() != type) {
             clientInfo.setConnectionType(type);
         }
-        if(userAgent != null && !userAgent.equals(clientInfo.getUserAgent())) {
-            clientInfo.setUserAgent(userAgent);
+
+        String userAgent = webConnection.getUserAgent();
+        if (userAgent == null) {
+            return;
+        }
+        UAgentInfo agentInfo = new UAgentInfo(userAgent);
+        LOG.info("updateOrCreateClientInfo: userAgent: {}", userAgent);
+        if (!userAgent.equals(clientInfo.getUserAgent())) {
+            clientInfo.setUserAgentInfo(agentInfo);
+        }
+
+        BrowserType bt = agentInfo.getBrowserType();
+        if (bt != clientInfo.getBrowserType()) {
+            clientInfo.setBrowserType(bt);
+        }
+
+        BrowserOS os = agentInfo.getOs();
+        if (os != clientInfo.getOs()) {
+            clientInfo.setOs(os);
+        }
+
+        boolean isMobile = agentInfo.isMobile();
+        if (isMobile != clientInfo.isMobile()) {
+            clientInfo.setMobile(isMobile);
         }
     }
 
@@ -342,8 +384,8 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         return clock;
     }
 
-    public void onWebConnection(String sourceId, WebConnectionType type, String userAgent) {
-        updateOrCreateClientInfo(sourceId, type, userAgent);
+    public void onWebConnection(WebConnection webConnection) {
+        updateOrCreateClientInfo(webConnection);
     }
 
     public void onUpdateWebConnections(Set<WebConnection> connections) {
@@ -352,7 +394,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     }
 
     public void updateWebConnections(Set<WebConnection> currentConnections) {
-        if(currentConnections == null) {
+        if (currentConnections == null) {
             return;
         }
 
@@ -374,11 +416,20 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         }
 
         //Update or Create addresses in current connections
-        for(WebConnection connection : currentConnections) {
+        for (WebConnection connection : currentConnections) {
             String clientId = connection.getClientAddr();
             WebConnectionType type = connection.getConnectionType();
             LOG.debug("updateWsConnections: update/create addr: {} type: {}", clientId, type);
-            updateOrCreateClientInfo(clientId, type, null);
+            updateOrCreateClientInfo(connection);
         }
+
+        updateGuiClientInfos();
+    }
+
+    private void updateGuiClientInfos() {
+        Collection<WebClientInfo> wcis = clientInfos.values();
+        ArrayList<WebClientInfo> out = new ArrayList<>(wcis);
+        WebClientInfoUpdateEvent clientInfoUpdateEvent = eventFactory.createWebClientInfoUpdateEvent(out, clock.getSystemTimeMillis());
+        eventReceiver.notifyListeners(clientInfoUpdateEvent);
     }
 }

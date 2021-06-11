@@ -12,6 +12,7 @@ import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.score.web.WebScoreScript;
 import com.xenaksys.szcore.scripting.ScriptingEngineScript;
+import com.xenaksys.szcore.web.WebClientInfo;
 import com.xenaksys.szcore.web.WebConnection;
 import com.xenaksys.szcore.web.WebScoreStateType;
 
@@ -96,6 +97,10 @@ public class EventFactory {
 
     public ParticipantEvent createParticipantEvent(InetAddress inetAddress, String hostAddress, int portIn, int portOut, int portErr, int ping, String instrument, long creationTime) {
         return new ParticipantEvent(inetAddress, hostAddress, portIn, portOut, portErr, ping, instrument, creationTime);
+    }
+
+    public WebClientInfoUpdateEvent createWebClientInfoUpdateEvent(ArrayList<WebClientInfo> webClientInfos, long creationTime) {
+        return new WebClientInfoUpdateEvent(webClientInfos, creationTime);
     }
 
     public ParticipantStatsEvent createParticipantStatsEvent(InetAddress inetAddress, String hostAddress, int port, double pingLatencyMillis, double halfPingLatencyMillis, boolean isExpired, long lastPingLatency, long creationTime) {

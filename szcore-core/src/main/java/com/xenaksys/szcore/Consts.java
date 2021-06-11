@@ -282,6 +282,7 @@ public interface Consts {
     String WEB_PATH_STATIC = "/";
 
     String WEB_HTTP_HEADER_USER_AGENT = "User-Agent";
+    String WEB_HTTP_HEADER_ACCEPT = "Accept";
 
     String WEB_EVENT_NAME = "ev";
     String WEB_EVENT_TIME_NAME = "evt";

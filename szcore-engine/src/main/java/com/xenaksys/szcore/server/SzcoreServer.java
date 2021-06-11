@@ -55,7 +55,6 @@ import com.xenaksys.szcore.time.waitstrategy.BlockingWaitStrategy;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
 import com.xenaksys.szcore.web.WebConnection;
-import com.xenaksys.szcore.web.WebConnectionType;
 import com.xenaksys.szcore.web.WebProcessor;
 import com.xenaksys.szcore.web.WebScoreStateListener;
 import com.xenaksys.szcore.web.ZsWebRequest;
@@ -211,7 +210,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
         logProcessor = new ServerLogProcessor(new SimpleLogger());
 
-        webProcessor = new WebProcessor( this, this, clock, eventFactory);
+        webProcessor = new WebProcessor(this, this, clock, eventFactory, eventProcessor);
         outWebDisruptor = DisruptorFactory.createWebOutDisruptor();
         webEventPublisher = new WebPublisherDisruptorProcessor(outWebDisruptor, webProcessor);
 
@@ -219,7 +218,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         subscribe(webProcessor);
 
         String webRoot = props.getProperty(WEB_ROOT);
-        webServer = new WebServer(webRoot, 80, 1024, true, this);
+        webServer = new WebServer(webRoot, 80, 1024, 10, true, this);
 
         webServer.start();
     }
@@ -418,8 +417,8 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
-    public void onWebConnection(String sourceId, WebConnectionType type, String userAgent) {
-        webProcessor.onWebConnection(sourceId, type, userAgent);
+    public void onWebConnection(WebConnection webConnection) {
+        webProcessor.onWebConnection(webConnection);
     }
 
     @Override
@@ -429,7 +428,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
             return;
         }
 
-        if(webServer.isRunning()) {
+        if (webServer.isAudienceServerRunning()) {
             LOG.error("startWebServer: Web server is already running");
             return;
         }
@@ -444,7 +443,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
             return;
         }
 
-        if(!webServer.isRunning()) {
+        if (!webServer.isAudienceServerRunning()) {
             LOG.error("stopWebServer: Web server is not running");
             return;
         }
@@ -453,12 +452,12 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
-    public boolean isWebServerRunning() {
-        if(webServer == null) {
+    public boolean isAudienceWebServerRunning() {
+        if (webServer == null) {
             return false;
         }
 
-        return webServer.isRunning();
+        return webServer.isAudienceServerRunning();
     }
 
     @Override

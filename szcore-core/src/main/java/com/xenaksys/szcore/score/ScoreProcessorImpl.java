@@ -2437,6 +2437,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             case SCRIPTING_ENGINE:
                 processScriptingEngineEvent((ScriptingEngineEvent) event, beatNo, tickNo);
                 break;
+            case CLIENT:
+                //do nothing
+                break;
             default:
                 LOG.error("Unknown event type " + type);
         }

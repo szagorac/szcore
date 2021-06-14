@@ -9,6 +9,7 @@ import com.xenaksys.szcore.model.EventService;
 import com.xenaksys.szcore.model.ScoreService;
 import com.xenaksys.szcore.web.WebClientInfo;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
@@ -68,8 +69,6 @@ public class SettingsController {
     @FXML
     private Label detectedBroadcastAddrLbl;
     @FXML
-    private Button detectConnectedClientsBtn;
-    @FXML
     private TableView<AudienceClient> networkClientsTableView;
     @FXML
     private TableColumn<AudienceClient, String> hostAddressColumn;
@@ -93,6 +92,8 @@ public class SettingsController {
     private ToggleButton audienceWebServerOnTgl;
     @FXML
     private ToggleButton audienceWebServerOffTgl;
+    @FXML
+    private Label clientNoLbl;
 
     private ToggleGroup audienceWebServerStatusTglGroup = new ToggleGroup();
     private IpAddress broadCastAddress = new IpAddress();
@@ -120,6 +121,20 @@ public class SettingsController {
                 audienceClients.remove(c.getElementRemoved());
             }
         });
+
+        clientNoLbl.textProperty().bind(Bindings.size(audienceClients).asString());
+
+        String hostport = "6.6.6.6:666";
+        String host = "6.6.6.6";
+        int port = 666;
+        for (int i = 0; i < 100; i++) {
+            String addr = hostport + i;
+            AudienceClient audienceClient = new AudienceClient(addr);
+            audienceClient.setHostAddress(addr);
+            audienceClient.setHostName(host);
+            audienceClient.setPort(port);
+            audienceClients.add(audienceClient);
+        }
     }
 
     public void populateBroadcastAddress() {
@@ -206,13 +221,6 @@ public class SettingsController {
     private void setAudienceWebServerOff(ActionEvent event) {
         scoreService.stopWebServer();
         detectAudienceWebServerStatus(null);
-    }
-
-    @FXML
-    private void detectClients(ActionEvent event) {
-        detectConnectedClientsBtn.setDisable(true);
-        Service<Void> retrieveNetworkClientsService = createRetrieveConnectedClientsService();
-        retrieveNetworkClientsService.start();
     }
 
     @FXML
@@ -370,7 +378,6 @@ public class SettingsController {
                 audienceClientSet.remove(client);
             }
             audienceClientSet.addAll(clientUpdates.values());
-            detectConnectedClientsBtn.setDisable(false);
         });
     }
 }

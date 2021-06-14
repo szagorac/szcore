@@ -265,7 +265,7 @@ public class WebServer {
 
         @Override
         public void run() {
-            LOG.info("ClientUpdater: update client infos");
+            LOG.debug("ClientUpdater: update client infos");
             updateConnections();
         }
     }

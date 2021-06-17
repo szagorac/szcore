@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static com.xenaksys.szcore.Consts.COLUMN;
+import static com.xenaksys.szcore.Consts.COLON;
 import static com.xenaksys.szcore.Consts.EMPTY;
 
 public class NetUtil {
@@ -28,7 +28,7 @@ public class NetUtil {
         if (addr != null) {
             a = addr.getHostAddress();
         }
-        return a + COLUMN + port;
+        return a + COLON + port;
     }
 
     public static String createClientId(String addr, int port) {
@@ -36,7 +36,7 @@ public class NetUtil {
         if (addr != null) {
             a = addr;
         }
-        return a + COLUMN + port;
+        return a + COLON + port;
     }
 
     public static InetAddress getHostAddress() throws SocketException {
@@ -100,16 +100,16 @@ public class NetUtil {
     }
 
     public static String[] getHostPort(String inetAddr) {
-        if (inetAddr == null || !inetAddr.contains(Consts.COLUMN)) {
+        if (inetAddr == null || !inetAddr.contains(Consts.COLON)) {
             return null;
         }
 
-        long columnCount = inetAddr.chars().filter(ch -> ch == COLUMN.charAt(0)).count();
+        long columnCount = inetAddr.chars().filter(ch -> ch == COLON.charAt(0)).count();
         if (columnCount < 1) {
             return null;
         }
 
-        int lastColumn = inetAddr.lastIndexOf(COLUMN.charAt(0));
+        int lastColumn = inetAddr.lastIndexOf(COLON.charAt(0));
         String port = "-1";
         if (lastColumn < inetAddr.length()) {
             port = inetAddr.substring(lastColumn + 1);

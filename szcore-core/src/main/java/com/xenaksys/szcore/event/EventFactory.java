@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.event;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.model.HistoBucketView;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.Stave;
@@ -15,6 +16,7 @@ import com.xenaksys.szcore.scripting.ScriptingEngineScript;
 import com.xenaksys.szcore.web.WebClientInfo;
 import com.xenaksys.szcore.web.WebConnection;
 import com.xenaksys.szcore.web.WebScoreStateType;
+import com.xenaksys.szcore.web.ZsWebRequest;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -99,8 +101,8 @@ public class EventFactory {
         return new ParticipantEvent(inetAddress, hostAddress, portIn, portOut, portErr, ping, instrument, creationTime);
     }
 
-    public WebClientInfoUpdateEvent createWebClientInfoUpdateEvent(ArrayList<WebClientInfo> webClientInfos, long creationTime) {
-        return new WebClientInfoUpdateEvent(webClientInfos, creationTime);
+    public WebClientInfoUpdateEvent createWebClientInfoUpdateEvent(ArrayList<WebClientInfo> webClientInfos, List<HistoBucketView> histoBucketViews, int totalWebHits, long creationTime) {
+        return new WebClientInfoUpdateEvent(webClientInfos, histoBucketViews, totalWebHits, creationTime);
     }
 
     public ParticipantStatsEvent createParticipantStatsEvent(InetAddress inetAddress, String hostAddress, int port, double pingLatencyMillis, double halfPingLatencyMillis, boolean isExpired, long lastPingLatency, long creationTime) {
@@ -282,8 +284,12 @@ public class EventFactory {
         return new ElementSelectedEvent(elementId, isSelected, sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
-    public UpdateWebConnectionsEvent createUpdateWebConnectionsEvent(Set<WebConnection> clientConnections, long creationTime) {
-        return new UpdateWebConnectionsEvent(clientConnections, creationTime);
+    public UpdateWebStatusEvent createUpdateWebConnectionsEvent(Set<WebConnection> clientConnections, long creationTime) {
+        return new UpdateWebStatusEvent(clientConnections, creationTime);
+    }
+
+    public WebRequestLogEvent createWebRequestLogEvent(ZsWebRequest zsRequest, long creationTime) {
+        return new WebRequestLogEvent(zsRequest, creationTime);
     }
 
     public WebPollEvent createWebPollEvent(String eventId, String sourceAddr, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {

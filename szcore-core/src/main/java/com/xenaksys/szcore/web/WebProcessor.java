@@ -7,13 +7,15 @@ import com.xenaksys.szcore.event.IncomingWebEvent;
 import com.xenaksys.szcore.event.IncomingWebEventType;
 import com.xenaksys.szcore.event.OutgoingWebEvent;
 import com.xenaksys.szcore.event.OutgoingWebEventType;
-import com.xenaksys.szcore.event.UpdateWebConnectionsEvent;
+import com.xenaksys.szcore.event.UpdateWebStatusEvent;
 import com.xenaksys.szcore.event.WebClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.WebPollEvent;
+import com.xenaksys.szcore.event.WebRequestLogEvent;
 import com.xenaksys.szcore.event.WebStartEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.EventReceiver;
 import com.xenaksys.szcore.model.EventService;
+import com.xenaksys.szcore.model.HistoBucketView;
 import com.xenaksys.szcore.model.Processor;
 import com.xenaksys.szcore.model.ScoreService;
 import com.xenaksys.szcore.model.SzcoreEvent;
@@ -23,6 +25,8 @@ import com.xenaksys.szcore.net.browser.BrowserType;
 import com.xenaksys.szcore.net.browser.UAgentInfo;
 import com.xenaksys.szcore.score.web.export.WebScoreStateDeltaExport;
 import com.xenaksys.szcore.score.web.export.WebScoreStateExport;
+import com.xenaksys.szcore.util.Histogram;
+import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +38,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.xenaksys.szcore.Consts.COMMA;
 import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.Consts.SPACE;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_ELEMENT_ID;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_IS_POLL_NAME;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_IS_SELECTED;
@@ -67,6 +73,8 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     private volatile long stateUpdateTime = 0;
     private volatile long stateDeltaUpdateTime = 0;
 
+    private final Histogram serverHitHisto = new Histogram(10, 1000L);
+
     public WebProcessor(ScoreService scoreService, EventService eventService, Clock clock, EventFactory eventFactory, EventReceiver eventReceiver) {
         this.scoreService = scoreService;
         this.eventService = eventService;
@@ -92,27 +100,70 @@ public class WebProcessor implements Processor, WebScoreStateListener {
                 processWebPoll((WebPollEvent) webEvent);
                 break;
             case CONNECTIONS_UPDATE:
-                processWebConnectionUpdate((UpdateWebConnectionsEvent) webEvent);
+                processWebStatusUpdate((UpdateWebStatusEvent) webEvent);
+                break;
+            case REQUEST_LOG:
+                processWebRequestLog((WebRequestLogEvent) webEvent);
                 break;
             default:
                 LOG.info("onIncomingWebEvent: unknown IncomingWebEventType: {}", type);
         }
     }
 
+    private void processWebRequestLog(WebRequestLogEvent webEvent) {
+        ZsWebRequest request = webEvent.getZsRequest();
+        long reqTime = request.getTimeMs();
+
+        serverHitHisto.hit(reqTime);
+        boolean isClientHitLogged = false;
+
+        String sourceAddr = request.getSourceAddr();
+        WebClientInfo cInfo = getClientInfo(sourceAddr);
+        if (cInfo != null) {
+            cInfo.logHit(reqTime);
+            isClientHitLogged = true;
+        }
+
+        String[] hostPort = NetUtil.getHostPort(sourceAddr);
+        if (hostPort == null || hostPort.length != 2) {
+            return;
+        }
+        String host = hostPort[0];
+        List<WebClientInfo> hostClientInfos = getHostClientInfo(host);
+
+        String userAgent = request.getUserAgent();
+        for (WebClientInfo clientInfo : hostClientInfos) {
+            //Assume the same client for the same IP addr
+            if (cInfo == null && !isClientHitLogged) {
+                clientInfo.logHit(reqTime);
+                isClientHitLogged = true;
+            }
+
+            if (clientInfo.getConnectionType() == WebConnectionType.SSE) {
+                if (userAgent != null) {
+                    if (clientInfo.getUserAgent() == null) {
+                        clientInfo.getWebConnection().setUserAgent(userAgent);
+                    }
+                    setUserAgentCLientInfo(userAgent, clientInfo);
+                }
+            }
+        }
+    }
+
     private void processWebPoll(WebPollEvent pollEvent) {
         LOG.debug("processWebPoll: ");
-        if(pollEvent.getSourceAddr() == null) {
+        if (pollEvent.getSourceAddr() == null) {
             return;
         }
         WebClientInfo clientInfo = getOrCreateClientInfo(pollEvent.getSourceAddr());
-        if(clientInfo != null && WebConnectionType.POLL != clientInfo.getConnectionType()) {
+        if (clientInfo != null && WebConnectionType.POLL != clientInfo.getConnectionType()) {
             clientInfo.setConnectionType(WebConnectionType.POLL);
         }
     }
 
-    private void processWebConnectionUpdate(UpdateWebConnectionsEvent connectionsEvent) {
+    private void processWebStatusUpdate(UpdateWebStatusEvent connectionsEvent) {
         LOG.debug("processWebConnectionUpdate: ");
-        updateWebConnections(connectionsEvent.getClientConnections());
+        updateWebStatus(connectionsEvent.getClientConnections());
     }
 
     private void processWebScoreEvent(IncomingWebEvent webEvent) {
@@ -121,7 +172,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         long receiveTime = webEvent.getCreationTime();
         long latency = receiveTime - sendTime;
 
-        WebClientInfo clientInfo = getOrCreateClientInfo(sourceAddr);
+        WebClientInfo clientInfo = getClientInfo(sourceAddr);
         if(clientInfo != null) {
             clientInfo.addLatency(latency);
         }
@@ -134,6 +185,26 @@ public class WebProcessor implements Processor, WebScoreStateListener {
             return null;
         }
         return clientInfos.computeIfAbsent(sourceAddr, WebClientInfo::new);
+    }
+
+    public WebClientInfo getClientInfo(String sourceAddr) {
+        if (sourceAddr == null) {
+            return null;
+        }
+        return clientInfos.get(sourceAddr);
+    }
+
+    public List<WebClientInfo> getHostClientInfo(String host) {
+        if (host == null) {
+            return null;
+        }
+        List<WebClientInfo> out = new ArrayList<>();
+        for (WebClientInfo clientInfo : clientInfos.values()) {
+            if (host.equals(clientInfo.getHost())) {
+                out.add(clientInfo);
+            }
+        }
+        return out;
     }
 
     public void updateOrCreateClientInfo(WebConnection webConnection) {
@@ -161,8 +232,16 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         if (userAgent == null) {
             return;
         }
+        setUserAgentCLientInfo(userAgent, clientInfo);
+    }
+
+    private void setUserAgentCLientInfo(String userAgent, WebClientInfo clientInfo) {
+        if (userAgent == null || clientInfo == null) {
+            return;
+        }
+
         UAgentInfo agentInfo = new UAgentInfo(userAgent);
-        LOG.info("updateOrCreateClientInfo: userAgent: {}", userAgent);
+        LOG.debug("updateOrCreateClientInfo: userAgent: {}", userAgent);
         if (!userAgent.equals(clientInfo.getUserAgent())) {
             clientInfo.setUserAgentInfo(agentInfo);
         }
@@ -187,6 +266,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         LOG.debug("onHttpRequest: path: {} sourceAddr: {}", zsRequest.getRequestPath(), zsRequest.getSourceAddr());
         String out;
         try {
+            logRequest(zsRequest);
             Map<String, String> stringParams = zsRequest.getStringParams();
             String eventName = stringParams.get(WEB_EVENT_NAME);
             if (eventName != null) {
@@ -308,8 +388,13 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         }
     }
 
+    private void logRequest(ZsWebRequest zsRequest) {
+        WebRequestLogEvent selectedEvent = eventFactory.createWebRequestLogEvent(zsRequest, clock.getSystemTimeMillis());
+        eventService.receive(selectedEvent);
+    }
+
     private boolean isSendStateUpdate(long lastClientStateUpdateTime) {
-        if(stateUpdateTime == 0 || lastClientStateUpdateTime == 0) {
+        if (stateUpdateTime == 0 || lastClientStateUpdateTime == 0) {
             return true;
         }
         return stateUpdateTime > lastClientStateUpdateTime;
@@ -389,24 +474,24 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     }
 
     public void onUpdateWebConnections(Set<WebConnection> connections) {
-        UpdateWebConnectionsEvent selectedEvent = eventFactory.createUpdateWebConnectionsEvent(connections, getClock().getSystemTimeMillis());
+        UpdateWebStatusEvent selectedEvent = eventFactory.createUpdateWebConnectionsEvent(connections, getClock().getSystemTimeMillis());
         eventService.receive(selectedEvent);
     }
 
-    public void updateWebConnections(Set<WebConnection> currentConnections) {
+    public void updateWebStatus(Set<WebConnection> currentConnections) {
         if (currentConnections == null) {
             return;
         }
 
         //Remove addresses not in current connections
         List<String> toRemove = new ArrayList<>();
-        for(String sourceId : clientInfos.keySet()) {
+        for (String sourceId : clientInfos.keySet()) {
             WebClientInfo clientInfo = clientInfos.get(sourceId);
             WebConnection clientConnection = clientInfo.getConnection();
-            if(WebConnectionType.POLL == clientConnection.getConnectionType()) {
+            if (WebConnectionType.POLL == clientConnection.getConnectionType()) {
                 continue;
             }
-            if(!currentConnections.contains(clientConnection)) {
+            if (!currentConnections.contains(clientConnection)) {
                 LOG.debug("updateWsConnections: removing connection: {}", clientConnection);
                 toRemove.add(clientConnection.getClientAddr());
             }
@@ -423,13 +508,24 @@ public class WebProcessor implements Processor, WebScoreStateListener {
             updateOrCreateClientInfo(connection);
         }
 
-        updateGuiClientInfos();
+        List<HistoBucketView> histoBucketViews = serverHitHisto.getBucketViews(clock.getSystemTimeMillis());
+        String histoLog = EMPTY;
+        int totalHits = 0;
+        for (HistoBucketView bucketView : histoBucketViews) {
+            totalHits += bucketView.getCount();
+            histoLog = histoLog + bucketView.getDateLabel() + SPACE + bucketView.getCount() + COMMA;
+        }
+        if (totalHits > 0) {
+            LOG.info("updateWebStatus: web histogram: {}", histoLog);
+        }
+
+        updateGuiClientInfos(histoBucketViews, totalHits);
     }
 
-    private void updateGuiClientInfos() {
+    private void updateGuiClientInfos(List<HistoBucketView> histoBucketViews, int totalHits) {
         Collection<WebClientInfo> wcis = clientInfos.values();
         ArrayList<WebClientInfo> out = new ArrayList<>(wcis);
-        WebClientInfoUpdateEvent clientInfoUpdateEvent = eventFactory.createWebClientInfoUpdateEvent(out, clock.getSystemTimeMillis());
+        WebClientInfoUpdateEvent clientInfoUpdateEvent = eventFactory.createWebClientInfoUpdateEvent(out, histoBucketViews, totalHits, clock.getSystemTimeMillis());
         eventReceiver.notifyListeners(clientInfoUpdateEvent);
     }
 }

@@ -15,9 +15,11 @@ public class AudienceClient {
     private StringProperty hostAddress = new SimpleStringProperty(Consts.EMPTY);
     private StringProperty hostName = new SimpleStringProperty(Consts.EMPTY);
     private IntegerProperty port = new SimpleIntegerProperty(0);
+    private IntegerProperty hitNo = new SimpleIntegerProperty(0);
     private StringProperty browser = new SimpleStringProperty(Consts.EMPTY);
     private BooleanProperty isMobile = new SimpleBooleanProperty(false);
     private StringProperty os = new SimpleStringProperty(Consts.EMPTY);
+    private StringProperty connectionType = new SimpleStringProperty(Consts.EMPTY);
 
     public AudienceClient(String id) {
         this.id = id;
@@ -97,6 +99,30 @@ public class AudienceClient {
 
     public void setOs(String os) {
         this.os.set(os);
+    }
+
+    public String getConnectionType() {
+        return connectionType.get();
+    }
+
+    public StringProperty connectionTypeProperty() {
+        return connectionType;
+    }
+
+    public void setConnectionType(String connectionType) {
+        this.connectionType.set(connectionType);
+    }
+
+    public int getHitNo() {
+        return hitNo.get();
+    }
+
+    public IntegerProperty hitNoProperty() {
+        return hitNo;
+    }
+
+    public void setHitNo(int hitNo) {
+        this.hitNo.set(hitNo);
     }
 
     @Override

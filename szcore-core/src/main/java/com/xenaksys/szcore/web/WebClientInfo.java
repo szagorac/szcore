@@ -3,6 +3,7 @@ package com.xenaksys.szcore.web;
 import com.xenaksys.szcore.net.browser.BrowserOS;
 import com.xenaksys.szcore.net.browser.BrowserType;
 import com.xenaksys.szcore.net.browser.UAgentInfo;
+import com.xenaksys.szcore.util.Histogram;
 import gnu.trove.stack.array.TLongArrayStack;
 
 import static com.xenaksys.szcore.Consts.EMPTY;
@@ -11,10 +12,12 @@ public class WebClientInfo {
     private final String clientAddr;
 
     private WebConnection webConnection = new WebConnection(EMPTY, WebConnectionType.UNKNOWN);
+    private final Histogram clientHitHisto = new Histogram(10, 1000L);
     private UAgentInfo userAgentInfo;
     private BrowserType bt;
     private BrowserOS os;
     private boolean isMobile;
+
 
     private TLongArrayStack latencies = new TLongArrayStack(100);
 
@@ -88,6 +91,18 @@ public class WebClientInfo {
 
     public void setUserAgentInfo(UAgentInfo agentInfo) {
         this.userAgentInfo = agentInfo;
+    }
+
+    public Histogram getClientHitHisto() {
+        return clientHitHisto;
+    }
+
+    public void logHit(long now) {
+        clientHitHisto.hit(now);
+    }
+
+    public int getTotalHitCount(long now) {
+        return clientHitHisto.getTotalHitCount(now);
     }
 
     public long getLatency() {

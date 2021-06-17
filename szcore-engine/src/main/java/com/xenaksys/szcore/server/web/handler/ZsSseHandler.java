@@ -24,14 +24,13 @@ public class ZsSseHandler implements HttpHandler {
     private static final HttpString LAST_EVENT_ID = new HttpString("Last-Event-ID");
 
     private final ServerSentEventConnectionCallback callback;
-
     private final Set<ZsSseConnection> connections = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     public ZsSseHandler(ServerSentEventConnectionCallback callback) {
         this.callback = callback;
     }
 
-    public ZsSseHandler() {
+    public ZsSseHandler(ZsSseConnectionCallback zsSseConnectionCallback) {
         this.callback = null;
     }
 

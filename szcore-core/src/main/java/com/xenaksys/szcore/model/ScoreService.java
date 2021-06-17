@@ -109,5 +109,5 @@ public interface ScoreService {
 
     void pushToWebClients(String data);
 
-    void updateWebConnections(Set<WebConnection> connections);
+    void updateWebServerStatus(Set<WebConnection> connections);
 }

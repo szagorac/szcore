@@ -9,6 +9,7 @@ import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.form.FormData;
 import io.undertow.server.handlers.form.FormDataParser;
 import io.undertow.server.handlers.form.FormParserFactory;
+import io.undertow.util.HeaderValues;
 import io.undertow.util.Headers;
 import io.undertow.util.HttpString;
 import org.slf4j.Logger;
@@ -17,12 +18,14 @@ import org.slf4j.LoggerFactory;
 import java.util.Deque;
 import java.util.Map;
 
+import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.Consts.WEB_HTTP_HEADER_USER_AGENT;
+
 public class ZsHttpHandler implements HttpHandler {
     static final Logger LOG = LoggerFactory.getLogger(ZsHttpHandler.class);
     private final static HttpString POST_STR = new HttpString("POST");
 
     private final SzcoreServer szcoreServer;
-
 
     public ZsHttpHandler(SzcoreServer szcoreServer) {
         this.szcoreServer = szcoreServer;
@@ -30,20 +33,24 @@ public class ZsHttpHandler implements HttpHandler {
 
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {
-
-
+        long now = System.currentTimeMillis();
         String requestPath = exchange.getRequestPath();
         String sourceId = exchange.getSourceAddress().toString();
         HttpString method = exchange.getRequestMethod();
+        String userAgent = EMPTY;
+        HeaderValues hv = exchange.getRequestHeaders().get(WEB_HTTP_HEADER_USER_AGENT);
+        if (hv != null) {
+            userAgent = hv.getFirst();
+        }
 //        LOG.info("Received {} request {} {} from {}", method, requestPath, exchange.getQueryString(), sourceId);
 
-        if(method.equals(POST_STR)) {
+        if (method.equals(POST_STR)) {
             if (exchange.isInIoThread()) {
                 exchange.dispatch(this);
                 return;
             }
 
-            ZsWebRequest zsRequest = new ZsWebRequest(requestPath, sourceId);
+            ZsWebRequest zsRequest = new ZsWebRequest(requestPath, sourceId, userAgent, now);
             FormParserFactory.Builder builder = FormParserFactory.builder();
 
             final FormDataParser formDataParser = builder.build().createParser(exchange);
@@ -67,7 +74,7 @@ public class ZsHttpHandler implements HttpHandler {
             exchange.endExchange();
 
         } else {
-            ZsWebRequest zsRequest = new ZsWebRequest(requestPath, sourceId);
+            ZsWebRequest zsRequest = new ZsWebRequest(requestPath, sourceId, userAgent, now);
 
             Map<String, Deque<String>> queryParams = exchange.getQueryParameters();
             for(String key : queryParams.keySet()) {

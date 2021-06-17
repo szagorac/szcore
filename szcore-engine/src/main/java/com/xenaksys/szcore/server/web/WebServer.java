@@ -68,7 +68,6 @@ public class WebServer {
     private ScheduledExecutorService clientInfoScheduler = Executors.newSingleThreadScheduledExecutor();
     private volatile boolean isClientInfoSchedulerRunning = false;
 
-
     public WebServer(String staticDataPath, int port, int transferMinSize, long clientPollingIntervalSec, boolean isUseCaching, SzcoreServer szcoreServer) {
         this.staticDataPath = staticDataPath;
         this.port = port;
@@ -186,14 +185,16 @@ public class WebServer {
         }
     }
 
-    public void updateConnections() {
+    public void updateServerStatus() {
         Set<WebConnection> connections = new HashSet<>();
         connections.addAll(getWsConnections());
         connections.addAll(getSseConnections());
         if (connections.isEmpty()) {
             return;
         }
-        szcoreServer.updateWebConnections(connections);
+        long now = System.currentTimeMillis();
+
+        szcoreServer.updateWebServerStatus(connections);
     }
 
     public Set<WebConnection> getWsConnections() {
@@ -266,7 +267,7 @@ public class WebServer {
         @Override
         public void run() {
             LOG.debug("ClientUpdater: update client infos");
-            updateConnections();
+            updateServerStatus();
         }
     }
 }

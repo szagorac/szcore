@@ -6,6 +6,7 @@ import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.AudienceClient;
 import com.xenaksys.szcore.gui.model.IpAddress;
 import com.xenaksys.szcore.model.EventService;
+import com.xenaksys.szcore.model.HistoBucketView;
 import com.xenaksys.szcore.model.ScoreService;
 import com.xenaksys.szcore.web.WebClientInfo;
 import javafx.application.Platform;
@@ -18,6 +19,10 @@ import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -32,14 +37,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+import static com.xenaksys.szcore.Consts.EMPTY;
+
 public class SettingsController {
     static final Logger LOG = LoggerFactory.getLogger(SettingsController.class);
+
+    private static SimpleDateFormat WEB_REQ_HISTO_SDF = new SimpleDateFormat("HH:mm:ss");
+    private static int MAX_WER_REQ_CHART_SIZE = 60 * 10;
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -75,9 +87,13 @@ public class SettingsController {
     @FXML
     private TableColumn<AudienceClient, String> hostNameColumn;
     @FXML
+    private TableColumn<AudienceClient, String> connTypeColumn;
+    @FXML
     private TableColumn<AudienceClient, Integer> portColumn;
     @FXML
     private TableColumn<AudienceClient, String> browserColumn;
+    @FXML
+    private TableColumn<AudienceClient, Integer> hitNoColumn;
     @FXML
     private TableColumn<AudienceClient, Boolean> mobileColumn;
     @FXML
@@ -94,12 +110,22 @@ public class SettingsController {
     private ToggleButton audienceWebServerOffTgl;
     @FXML
     private Label clientNoLbl;
+    @FXML
+    private LineChart<String, Integer> webReqHistoChart;
+    @FXML
+    private CategoryAxis webReqHistoChartX;
+    @FXML
+    private NumberAxis webReqHistoChartY;
+    @FXML
+    private Label webReqNoLbl;
 
     private ToggleGroup audienceWebServerStatusTglGroup = new ToggleGroup();
     private IpAddress broadCastAddress = new IpAddress();
     private IpAddress subnetMask = new IpAddress();
     private ObservableList<AudienceClient> audienceClients = FXCollections.observableArrayList();
     private ObservableSet<AudienceClient> audienceClientSet = FXCollections.observableSet(new HashSet<>());
+    private ObservableList<XYChart.Series<String, Integer>> webReqHistoSeries = FXCollections.observableArrayList();
+    private ObservableList<XYChart.Data<String, Integer>> webReqHistoData = FXCollections.observableArrayList();
 
     public void populate() {
         if (serverAddress != null) {
@@ -124,16 +150,34 @@ public class SettingsController {
 
         clientNoLbl.textProperty().bind(Bindings.size(audienceClients).asString());
 
-        String hostport = "6.6.6.6:666";
-        String host = "6.6.6.6";
-        int port = 666;
-        for (int i = 0; i < 100; i++) {
-            String addr = hostport + i;
-            AudienceClient audienceClient = new AudienceClient(addr);
-            audienceClient.setHostAddress(addr);
-            audienceClient.setHostName(host);
-            audienceClient.setPort(port);
-            audienceClients.add(audienceClient);
+        webReqHistoChart.setCreateSymbols(false);
+        webReqHistoChart.setLegendVisible(false);
+        webReqHistoChart.setData(webReqHistoSeries);
+        XYChart.Series<String, Integer> series = new XYChart.Series<>();
+        series.setData(webReqHistoData);
+        webReqHistoSeries.add(series);
+        populateWebReqestHistoChart();
+
+//        String hostport = "6.6.6.6:666";
+//        String host = "6.6.6.6";
+//        int port = 666;
+//        for (int i = 0; i < 100; i++) {
+//            String addr = hostport + i;
+//            AudienceClient audienceClient = new AudienceClient(addr);
+//            audienceClient.setHostAddress(addr);
+//            audienceClient.setHostName(host);
+//            audienceClient.setPort(port);
+//            audienceClients.add(audienceClient);
+//        }
+    }
+
+    private void populateWebReqestHistoChart() {
+        long now = System.currentTimeMillis();
+        for (int i = 10; i > 0; i--) {
+            long slotTime = now - i * 1000L;
+            Date date = new Date(slotTime);
+            String lbl = WEB_REQ_HISTO_SDF.format(date);
+            webReqHistoData.add(new XYChart.Data<>(lbl, 0));
         }
     }
 
@@ -195,6 +239,8 @@ public class SettingsController {
 
         hostAddressColumn.setCellValueFactory(cellData -> cellData.getValue().getHostAddressProperty());
         hostNameColumn.setCellValueFactory(cellData -> cellData.getValue().getHostNameProperty());
+        connTypeColumn.setCellValueFactory(cellData -> cellData.getValue().connectionTypeProperty());
+        hitNoColumn.setCellValueFactory(cellData -> cellData.getValue().hitNoProperty().asObject());
         portColumn.setCellValueFactory(cellData -> cellData.getValue().getPortProperty().asObject());
         browserColumn.setCellValueFactory(cellData -> cellData.getValue().browserProperty());
         mobileColumn.setCellValueFactory(cellData -> cellData.getValue().isMobileProperty());
@@ -339,7 +385,11 @@ public class SettingsController {
             return;
         }
         HashMap<String, AudienceClient> clientUpdates = new HashMap<>();
-        ;
+        ArrayList<AudienceClient> toRemove = new ArrayList<>();
+        ArrayList<AudienceClient> toAdd = new ArrayList<>();
+        HashMap<String, AudienceClient> toUpdate = new HashMap<>();
+        List<HistoBucketView> bucketViews = new ArrayList<>();
+        long now = System.currentTimeMillis();
         try {
             ArrayList<WebClientInfo> webClientInfos = event.getWebClientInfos();
             for (WebClientInfo clientInfo : webClientInfos) {
@@ -348,6 +398,7 @@ public class SettingsController {
                 audienceClient.setHostAddress(addr);
                 audienceClient.setHostName(clientInfo.getHost());
                 audienceClient.setPort(clientInfo.getPort());
+                audienceClient.setHitNo(clientInfo.getTotalHitCount(now));
                 if (clientInfo.getBrowserType() != null) {
                     audienceClient.setBrowser(clientInfo.getBrowserType().name());
                 }
@@ -355,29 +406,66 @@ public class SettingsController {
                 if (clientInfo.getOs() != null) {
                     audienceClient.setOs(clientInfo.getOs().name());
                 }
+                if (clientInfo.getConnectionType() != null) {
+                    audienceClient.setConnectionType(clientInfo.getConnectionType().name());
+                }
                 clientUpdates.put(addr, audienceClient);
             }
+            for (AudienceClient client : audienceClientSet) {
+                String clientId = client.getId();
+                if (!clientUpdates.containsKey(clientId)) {
+                    toRemove.add(client);
+                } else {
+                    AudienceClient update = clientUpdates.get(clientId);
+                    toUpdate.put(clientId, update);
+                    clientUpdates.remove(clientId);
+                }
+            }
+            toAdd.addAll(clientUpdates.values());
+
+            List<HistoBucketView> histoBucketViews = event.getHistoBucketViews();
+            bucketViews.addAll(histoBucketViews);
         } catch (Exception e) {
             LOG.error("Failed to process web vlient infos", e);
         }
         Platform.runLater(() -> {
-            ArrayList<AudienceClient> toRemove = new ArrayList<>();
+            for (AudienceClient client : toRemove) {
+                audienceClientSet.remove(client);
+            }
             for (AudienceClient client : audienceClientSet) {
-                if (!clientUpdates.containsKey(client.getId())) {
-                    toRemove.add(client);
-                } else {
-                    AudienceClient update = clientUpdates.get(client.getId());
+                if (toUpdate.containsKey(client.getId())) {
+                    AudienceClient update = toUpdate.get(client.getId());
                     client.setHostAddress(update.getHostAddress());
+                    client.setConnectionType(update.getConnectionType());
                     client.setPort(update.getPort());
                     client.setBrowser(update.getBrowser());
                     client.setIsMobile(update.getIsMobile());
                     client.setOs(update.getOs());
+                    client.setHitNo(update.getHitNo());
                 }
             }
-            for (AudienceClient client : toRemove) {
-                audienceClientSet.remove(client);
+            audienceClientSet.addAll(toAdd);
+
+//            webReqHistoData.clear();
+            for (int i = 0; i < 10; i++) {
+                if (i < bucketViews.size()) {
+                    HistoBucketView bucketView = bucketViews.get(i);
+                    int count = bucketView.getCount();
+                    long bucketTime = bucketView.getStartTimeMs();
+                    String lbl = bucketView.getDateLabel();
+                    webReqHistoData.add(new XYChart.Data<>(lbl, count));
+                } else {
+                    webReqHistoData.add(new XYChart.Data<>(EMPTY, 0));
+                }
             }
-            audienceClientSet.addAll(clientUpdates.values());
+            int chartSize = webReqHistoData.size();
+            if (chartSize > MAX_WER_REQ_CHART_SIZE) {
+                int removeNo = chartSize - MAX_WER_REQ_CHART_SIZE;
+                webReqHistoData.remove(0, removeNo);
+            }
+
+
+            webReqNoLbl.setText("" + event.getTotalWebHits());
         });
     }
 }

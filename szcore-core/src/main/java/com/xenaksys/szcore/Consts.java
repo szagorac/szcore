@@ -24,7 +24,8 @@ public interface Consts {
     String PLUS_REGEX = "\\+";
     String DOT_REGEX = "\\.";
     String EMPTY = "";
-    String COLUMN = ":";
+    String COLON = ":";
+    String SEMI_COLON = ";";
     String SPACE = " ";
     String BRACKET_SQUARE_OPEN = "[";
     String BRACKET_SQUARE_CLOSE = "]";

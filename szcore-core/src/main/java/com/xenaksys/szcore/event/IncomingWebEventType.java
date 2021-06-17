@@ -5,5 +5,6 @@ public enum IncomingWebEventType {
     ELEMENT_SELECTED,
     WEB_START,
     POLL,
+    REQUEST_LOG,
     CONNECTIONS_UPDATE,
 }

@@ -10,16 +10,21 @@ public class ZsWebRequest {
     private final Map<String, String> stringParams = new HashMap<>();
     private List<Path> filePaths = null;
 
+    private final long timeMs;
     private final String requestPath;
     private final String sourceAddr;
+    private final String userAgent;
 
-    public ZsWebRequest(String requestPath, String sourceAddr) {
+
+    public ZsWebRequest(String requestPath, String sourceAddr, String userAgent, long timeMs) {
         this.requestPath = requestPath;
         this.sourceAddr = sourceAddr;
+        this.userAgent = userAgent;
+        this.timeMs = timeMs;
     }
 
     public void addStringParam(String name, String value) {
-        if(name == null) {
+        if (name == null) {
             return;
         }
         stringParams.put(name, value);
@@ -64,5 +69,13 @@ public class ZsWebRequest {
 
     public String getSourceAddr() {
         return sourceAddr;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
+    }
+
+    public long getTimeMs() {
+        return timeMs;
     }
 }

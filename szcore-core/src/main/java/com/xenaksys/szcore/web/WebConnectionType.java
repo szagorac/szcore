@@ -1,5 +1,5 @@
 package com.xenaksys.szcore.web;
 
 public enum WebConnectionType {
-    SSE, WS, POLL, UNKNOWN
+    HTTP, SSE, WS, POLL, UNKNOWN
 }

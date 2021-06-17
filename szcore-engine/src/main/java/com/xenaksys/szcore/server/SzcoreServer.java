@@ -476,7 +476,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
-    public void updateWebConnections(Set<WebConnection> connections) {
+    public void updateWebServerStatus(Set<WebConnection> connections) {
         webProcessor.onUpdateWebConnections(connections);
     }
 

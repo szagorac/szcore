@@ -2396,7 +2396,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         LOG.debug("processElementSelected: ");
         String elementId = webEvent.getElementId();
         boolean isSelected = webEvent.isSelected();
-
+        if (webScore == null) {
+            return;
+        }
         webScore.setSelectedElement(elementId, isSelected);
     }
 

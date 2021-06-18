@@ -47,6 +47,10 @@ public class ZsWsConnectionCallback implements WebSocketConnectionCallback {
                     if (channel == null || message == null) {
                         return;
                     }
+                    String sourceAddr = channel.getPeerAddress().toString();
+                    if (webServer.isSourceAddrBanned(sourceAddr)) {
+                        return;
+                    }
                     long now = System.currentTimeMillis();
                     processRequest(exchange, channel, message, now);
                 } catch (Exception e) {
@@ -70,7 +74,7 @@ public class ZsWsConnectionCallback implements WebSocketConnectionCallback {
         String uri = exchange.getRequestURI();
 
         String userAgent = exchange.getRequestHeader(WEB_HTTP_HEADER_USER_AGENT);
-        ZsWebRequest zsRequest = new ZsWebRequest(uri, sourceAddr, userAgent, now);
+        ZsWebRequest zsRequest = new ZsWebRequest(uri, sourceAddr, userAgent, false, now);
         zsRequest.addAllParams(requestParams);
 
         ZsWebResponse out = szcoreServer.onWebRequest(zsRequest);

@@ -3,6 +3,7 @@ package com.xenaksys.szcore.model;
 import com.xenaksys.szcore.event.IncomingWebEvent;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.score.web.WebScore;
+import com.xenaksys.szcore.web.WebClientInfo;
 import com.xenaksys.szcore.web.WebConnection;
 import com.xenaksys.szcore.web.WebScoreStateListener;
 import com.xenaksys.szcore.web.ZsWebRequest;
@@ -110,4 +111,6 @@ public interface ScoreService {
     void pushToWebClients(String data);
 
     void updateWebServerStatus(Set<WebConnection> connections);
+
+    void banWebClient(WebClientInfo clientInfo);
 }

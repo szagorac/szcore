@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.server.web.handler;
 
 import com.xenaksys.szcore.server.SzcoreServer;
+import com.xenaksys.szcore.server.web.WebServer;
 import com.xenaksys.szcore.util.HttpUtil;
 import com.xenaksys.szcore.web.ZsWebRequest;
 import com.xenaksys.szcore.web.ZsWebResponse;
@@ -26,9 +27,11 @@ public class ZsHttpHandler implements HttpHandler {
     private final static HttpString POST_STR = new HttpString("POST");
 
     private final SzcoreServer szcoreServer;
+    private final WebServer webServer;
 
-    public ZsHttpHandler(SzcoreServer szcoreServer) {
+    public ZsHttpHandler(SzcoreServer szcoreServer, WebServer webServer) {
         this.szcoreServer = szcoreServer;
+        this.webServer = webServer;
     }
 
     @Override
@@ -36,6 +39,9 @@ public class ZsHttpHandler implements HttpHandler {
         long now = System.currentTimeMillis();
         String requestPath = exchange.getRequestPath();
         String sourceId = exchange.getSourceAddress().toString();
+        if (webServer.isSourceAddrBanned(sourceId)) {
+            return;
+        }
         HttpString method = exchange.getRequestMethod();
         String userAgent = EMPTY;
         HeaderValues hv = exchange.getRequestHeaders().get(WEB_HTTP_HEADER_USER_AGENT);
@@ -50,7 +56,7 @@ public class ZsHttpHandler implements HttpHandler {
                 return;
             }
 
-            ZsWebRequest zsRequest = new ZsWebRequest(requestPath, sourceId, userAgent, now);
+            ZsWebRequest zsRequest = new ZsWebRequest(requestPath, sourceId, userAgent, false, now);
             FormParserFactory.Builder builder = FormParserFactory.builder();
 
             final FormDataParser formDataParser = builder.build().createParser(exchange);
@@ -74,7 +80,7 @@ public class ZsHttpHandler implements HttpHandler {
             exchange.endExchange();
 
         } else {
-            ZsWebRequest zsRequest = new ZsWebRequest(requestPath, sourceId, userAgent, now);
+            ZsWebRequest zsRequest = new ZsWebRequest(requestPath, sourceId, userAgent, false, now);
 
             Map<String, Deque<String>> queryParams = exchange.getQueryParameters();
             for(String key : queryParams.keySet()) {

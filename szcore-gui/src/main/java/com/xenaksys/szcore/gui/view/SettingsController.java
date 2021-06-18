@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.gui.view;
 
 
+import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.WebClientInfoUpdateEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.AudienceClient;
@@ -25,9 +26,12 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
@@ -51,12 +55,13 @@ public class SettingsController {
     static final Logger LOG = LoggerFactory.getLogger(SettingsController.class);
 
     private static SimpleDateFormat WEB_REQ_HISTO_SDF = new SimpleDateFormat("HH:mm:ss");
-    private static int MAX_WER_REQ_CHART_SIZE = 60 * 10;
 
     private SzcoreClient mainApp;
     private EventService publisher;
     private InetAddress serverAddress;
     private ScoreService scoreService;
+
+    private volatile boolean isChartEnabled;
 
     @FXML
     private Label serverInetAddrLbl;
@@ -118,6 +123,8 @@ public class SettingsController {
     private NumberAxis webReqHistoChartY;
     @FXML
     private Label webReqNoLbl;
+    @FXML
+    private CheckBox enableWebReqChartChb;
 
     private ToggleGroup audienceWebServerStatusTglGroup = new ToggleGroup();
     private IpAddress broadCastAddress = new IpAddress();
@@ -158,6 +165,10 @@ public class SettingsController {
         webReqHistoSeries.add(series);
         populateWebReqestHistoChart();
 
+        isChartEnabled = false;
+        enableWebReqChartChb.setSelected(isChartEnabled);
+        enableWebReqChartChb.selectedProperty().addListener((observable, oldValue, newValue) -> onEnableWebReqChart(newValue));
+
 //        String hostport = "6.6.6.6:666";
 //        String host = "6.6.6.6";
 //        int port = 666;
@@ -169,6 +180,15 @@ public class SettingsController {
 //            audienceClient.setPort(port);
 //            audienceClients.add(audienceClient);
 //        }
+    }
+
+    private void onEnableWebReqChart(Boolean isEnable) {
+        this.isChartEnabled = isEnable;
+        if (isEnable) {
+
+        } else {
+            webReqHistoData.clear();
+        }
     }
 
     private void populateWebReqestHistoChart() {
@@ -245,10 +265,33 @@ public class SettingsController {
         browserColumn.setCellValueFactory(cellData -> cellData.getValue().browserProperty());
         mobileColumn.setCellValueFactory(cellData -> cellData.getValue().isMobileProperty());
         osColumn.setCellValueFactory(cellData -> cellData.getValue().osProperty());
+        osColumn.setCellFactory(column -> {
+            return new TableCell<AudienceClient, String>() {
+                @Override
+                protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    TableRow<AudienceClient> currentRow = getTableRow();
+                    AudienceClient client = currentRow.getItem();
+                    if (client == null) {
+                        return;
+                    }
+                    if (client.getIsBanned()) {
+                        currentRow.setStyle("-fx-background-color:red");
+                    } else {
+                        currentRow.setStyle("-fx-background-color:inherit");
+                    }
+                    setText(item);
+                }
+            };
+        });
 
         audienceWebServerOnTgl.setToggleGroup(audienceWebServerStatusTglGroup);
         audienceWebServerOffTgl.setToggleGroup(audienceWebServerStatusTglGroup);
         detectAudienceWebServerStatus(null);
+    }
+
+    private void notifyBanned(String hostName) {
+        LOG.info("notifyBanned: host {}", hostName);
     }
 
     @FXML
@@ -399,6 +442,7 @@ public class SettingsController {
                 audienceClient.setHostName(clientInfo.getHost());
                 audienceClient.setPort(clientInfo.getPort());
                 audienceClient.setHitNo(clientInfo.getTotalHitCount(now));
+                audienceClient.setIsBanned(clientInfo.isBanned());
                 if (clientInfo.getBrowserType() != null) {
                     audienceClient.setBrowser(clientInfo.getBrowserType().name());
                 }
@@ -442,28 +486,31 @@ public class SettingsController {
                     client.setIsMobile(update.getIsMobile());
                     client.setOs(update.getOs());
                     client.setHitNo(update.getHitNo());
+                    client.setIsBanned(update.getIsBanned());
                 }
             }
             audienceClientSet.addAll(toAdd);
 
-//            webReqHistoData.clear();
-            for (int i = 0; i < 10; i++) {
-                if (i < bucketViews.size()) {
-                    HistoBucketView bucketView = bucketViews.get(i);
-                    int count = bucketView.getCount();
-                    long bucketTime = bucketView.getStartTimeMs();
-                    String lbl = bucketView.getDateLabel();
-                    webReqHistoData.add(new XYChart.Data<>(lbl, count));
-                } else {
-                    webReqHistoData.add(new XYChart.Data<>(EMPTY, 0));
+            if (isChartEnabled) {
+                for (int i = 0; i < 10; i++) {
+                    if (i < bucketViews.size()) {
+                        HistoBucketView bucketView = bucketViews.get(i);
+                        int count = bucketView.getCount();
+                        long bucketTime = bucketView.getStartTimeMs();
+                        String lbl = bucketView.getDateLabel();
+                        webReqHistoData.add(new XYChart.Data<>(lbl, count));
+                    } else {
+                        webReqHistoData.add(new XYChart.Data<>(EMPTY, 0));
+                    }
                 }
+                int chartSize = webReqHistoData.size();
+                if (chartSize > Consts.MAX_WEB_REQ_CHART_SIZE_SEC) {
+                    int removeNo = chartSize - Consts.MAX_WEB_REQ_CHART_SIZE_SEC;
+                    webReqHistoData.remove(0, removeNo);
+                }
+            } else {
+                webReqHistoData.clear();
             }
-            int chartSize = webReqHistoData.size();
-            if (chartSize > MAX_WER_REQ_CHART_SIZE) {
-                int removeNo = chartSize - MAX_WER_REQ_CHART_SIZE;
-                webReqHistoData.remove(0, removeNo);
-            }
-
 
             webReqNoLbl.setText("" + event.getTotalWebHits());
         });

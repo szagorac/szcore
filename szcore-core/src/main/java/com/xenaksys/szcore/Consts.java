@@ -142,6 +142,12 @@ public interface Consts {
     int DEFAULT_ALL_PORTS = Integer.MIN_VALUE;
     String DEFAULT_SUBNET_MASK = "255.255.255.0";
 
+    int MAX_ALLOWED_HIT_COUNT_10S = 50;
+    int HISTOGRAM_MAX_BUCKETS_NO = 10;
+    long HISTOGRAM_BUCKET_PERIOD_MS = 1000L;
+
+    int MAX_WEB_REQ_CHART_SIZE_SEC = 60 * 10;
+
     int MIN_BPM = 1;
     int MAX_BPM = 200;
 

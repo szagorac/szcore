@@ -54,6 +54,7 @@ import com.xenaksys.szcore.time.clock.MutableNanoClock;
 import com.xenaksys.szcore.time.waitstrategy.BlockingWaitStrategy;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
+import com.xenaksys.szcore.web.WebClientInfo;
 import com.xenaksys.szcore.web.WebConnection;
 import com.xenaksys.szcore.web.WebProcessor;
 import com.xenaksys.szcore.web.WebScoreStateListener;
@@ -478,6 +479,11 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     @Override
     public void updateWebServerStatus(Set<WebConnection> connections) {
         webProcessor.onUpdateWebConnections(connections);
+    }
+
+    @Override
+    public void banWebClient(WebClientInfo clientInfo) {
+        webServer.banWebClient(clientInfo);
     }
 
     public WebProcessor getWebProcessor() {

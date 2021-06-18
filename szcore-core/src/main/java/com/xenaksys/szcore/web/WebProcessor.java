@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.web;
 
 import com.google.gson.Gson;
+import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.ElementSelectedEvent;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.IncomingWebEvent;
@@ -73,7 +74,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     private volatile long stateUpdateTime = 0;
     private volatile long stateDeltaUpdateTime = 0;
 
-    private final Histogram serverHitHisto = new Histogram(10, 1000L);
+    private final Histogram serverHitHisto = new Histogram(Consts.HISTOGRAM_MAX_BUCKETS_NO, Consts.HISTOGRAM_BUCKET_PERIOD_MS);
 
     public WebProcessor(ScoreService scoreService, EventService eventService, Clock clock, EventFactory eventFactory, EventReceiver eventReceiver) {
         this.scoreService = scoreService;
@@ -267,6 +268,9 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         String out;
         try {
             logRequest(zsRequest);
+            if (zsRequest.isStatic()) {
+                return null;
+            }
             Map<String, String> stringParams = zsRequest.getStringParams();
             String eventName = stringParams.get(WEB_EVENT_NAME);
             if (eventName != null) {
@@ -495,6 +499,12 @@ public class WebProcessor implements Processor, WebScoreStateListener {
                 LOG.debug("updateWsConnections: removing connection: {}", clientConnection);
                 toRemove.add(clientConnection.getClientAddr());
             }
+
+            int totalHitCount = clientInfo.getTotalHitCount(clock.getSystemTimeMillis());
+            if (totalHitCount > Consts.MAX_ALLOWED_HIT_COUNT_10S) {
+                LOG.info("updateWebStatus: client {} exceeded max allowed number of requests {}", clientInfo.getClientAddr(), Consts.MAX_ALLOWED_HIT_COUNT_10S);
+                banClient(clientInfo);
+            }
         }
         for(String clientId : toRemove) {
             clientInfos.remove(clientId);
@@ -520,6 +530,11 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         }
 
         updateGuiClientInfos(histoBucketViews, totalHits);
+    }
+
+    private void banClient(WebClientInfo clientInfo) {
+        clientInfo.setBanned(true);
+        scoreService.banWebClient(clientInfo);
     }
 
     private void updateGuiClientInfos(List<HistoBucketView> histoBucketViews, int totalHits) {

@@ -20,6 +20,7 @@ public class AudienceClient {
     private BooleanProperty isMobile = new SimpleBooleanProperty(false);
     private StringProperty os = new SimpleStringProperty(Consts.EMPTY);
     private StringProperty connectionType = new SimpleStringProperty(Consts.EMPTY);
+    private BooleanProperty isBanned = new SimpleBooleanProperty(false);
 
     public AudienceClient(String id) {
         this.id = id;
@@ -123,6 +124,18 @@ public class AudienceClient {
 
     public void setHitNo(int hitNo) {
         this.hitNo.set(hitNo);
+    }
+
+    public boolean getIsBanned() {
+        return isBanned.get();
+    }
+
+    public BooleanProperty isBannedProperty() {
+        return isBanned;
+    }
+
+    public void setIsBanned(boolean isBanned) {
+        this.isBanned.set(isBanned);
     }
 
     @Override

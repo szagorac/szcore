@@ -17,6 +17,7 @@ public class WebClientInfo {
     private BrowserType bt;
     private BrowserOS os;
     private boolean isMobile;
+    private boolean isBanned;
 
 
     private TLongArrayStack latencies = new TLongArrayStack(100);
@@ -103,6 +104,14 @@ public class WebClientInfo {
 
     public int getTotalHitCount(long now) {
         return clientHitHisto.getTotalHitCount(now);
+    }
+
+    public boolean isBanned() {
+        return isBanned;
+    }
+
+    public void setBanned(boolean banned) {
+        isBanned = banned;
     }
 
     public long getLatency() {

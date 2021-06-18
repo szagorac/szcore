@@ -3,9 +3,8 @@ package com.xenaksys.szcore.model;
 import com.xenaksys.szcore.event.IncomingWebEvent;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.score.web.WebScore;
-import com.xenaksys.szcore.util.NetUtil;
+import com.xenaksys.szcore.web.WebClientInfo;
 import com.xenaksys.szcore.web.WebConnection;
-import com.xenaksys.szcore.web.WebConnectionType;
 import com.xenaksys.szcore.web.WebScoreStateListener;
 import com.xenaksys.szcore.web.ZsWebRequest;
 import com.xenaksys.szcore.web.ZsWebResponse;
@@ -97,21 +96,21 @@ public interface ScoreService {
 
     void initNetInfo();
 
-    List<NetUtil.NetworkDevice> getParallelConnectedNetworkClients();
-
     ZsWebResponse onWebRequest(ZsWebRequest zsRequest);
 
-    void onWebConnection(String sourceId, WebConnectionType type, String userAgent);
+    void onWebConnection(WebConnection webConnection);
 
     void startWebServer();
 
     void stopWebServer();
 
-    boolean isWebServerRunning();
+    boolean isAudienceWebServerRunning();
 
     void onIncomingWebEvent(IncomingWebEvent webEvent);
 
     void pushToWebClients(String data);
 
-    void updateWebConnections(Set<WebConnection> connections);
+    void updateWebServerStatus(Set<WebConnection> connections);
+
+    void banWebClient(WebClientInfo clientInfo);
 }

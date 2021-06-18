@@ -86,3 +86,10 @@
     -fx-border-radius: 5;
     -fx-padding: 3 6 6 6;
 }
+
+.chart-series-line {
+    -fx-stroke-width: 2px;
+    -fx-effect: null;
+}
+
+.default-color0.chart-series-line { -fx-stroke: #e9967a; }

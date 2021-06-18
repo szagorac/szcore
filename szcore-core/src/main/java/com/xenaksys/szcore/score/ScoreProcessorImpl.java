@@ -2396,7 +2396,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         LOG.debug("processElementSelected: ");
         String elementId = webEvent.getElementId();
         boolean isSelected = webEvent.isSelected();
-
+        if (webScore == null) {
+            return;
+        }
         webScore.setSelectedElement(elementId, isSelected);
     }
 
@@ -2436,6 +2438,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 break;
             case SCRIPTING_ENGINE:
                 processScriptingEngineEvent((ScriptingEngineEvent) event, beatNo, tickNo);
+                break;
+            case CLIENT:
+                //do nothing
                 break;
             default:
                 LOG.error("Unknown event type " + type);

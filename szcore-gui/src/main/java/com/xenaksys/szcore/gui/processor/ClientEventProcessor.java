@@ -16,6 +16,7 @@ import com.xenaksys.szcore.event.ParticipantStatsEvent;
 import com.xenaksys.szcore.event.StopEvent;
 import com.xenaksys.szcore.event.TempoChangeEvent;
 import com.xenaksys.szcore.event.TimeSigChangeEvent;
+import com.xenaksys.szcore.event.WebClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.WebScoreEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Participant;
@@ -183,24 +184,34 @@ public class ClientEventProcessor implements Processor {
         ClientEventType type = event.getClientEventType();
         switch (type){
             case PARTICIPANT:
-                processParticipantEvent((ParticipantEvent)event);
+                processParticipantEvent((ParticipantEvent) event);
                 break;
             case PARTICIPANT_STATS:
-                processParticipantStatsEvent((ParticipantStatsEvent)event);
+                processParticipantStatsEvent((ParticipantStatsEvent) event);
                 break;
             case INSTRUMENT:
-                processInstrumentEvent((InstrumentEvent)event);
+                processInstrumentEvent((InstrumentEvent) event);
                 break;
             case ERROR:
                 processErrorEvent((ErrorEvent) event);
+                break;
+            case WEB_CLIENT_INFOS:
+                processWebClientInfoEvent((WebClientInfoUpdateEvent) event);
                 break;
             default:
                 LOG.error("processClientEvent: Unknown event type: " + type);
         }
     }
 
+    private void processWebClientInfoEvent(WebClientInfoUpdateEvent event) {
+        if (event == null) {
+            return;
+        }
+        client.processWebClientInfos(event);
+    }
+
     private void processErrorEvent(ErrorEvent event) {
-        if(event == null){
+        if (event == null) {
             return;
         }
 

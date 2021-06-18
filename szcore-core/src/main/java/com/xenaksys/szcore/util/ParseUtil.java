@@ -1,5 +1,6 @@
 package com.xenaksys.szcore.util;
 
+import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.model.id.InstrumentId;
 
 import java.util.List;
@@ -33,6 +34,48 @@ public class ParseUtil {
             }
             return true;
         }
+    }
+
+    public static String removeSlashes(String str) {
+        return str.replaceAll(Consts.SLASH, EMPTY);
+    }
+
+    public static int getFirstDigitIndex(CharSequence cs) {
+        if (isEmpty(cs)) {
+            return -1;
+        } else {
+            int sz = cs.length();
+            for (int i = 0; i < sz; ++i) {
+                if (!Character.isDigit(cs.charAt(i))) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+    }
+
+    public static boolean isInteger(String str) {
+        if (str == null) {
+            return false;
+        }
+        int length = str.length();
+        if (length == 0) {
+            return false;
+        }
+        int i = 0;
+        if (str.charAt(0) == '-') {
+            if (length == 1) {
+                return false;
+            }
+            i = 1;
+        }
+        for (; i < length; i++) {
+            char c = str.charAt(i);
+            if (c < '0' || c > '9') {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static boolean isNumericSpace(CharSequence cs) {

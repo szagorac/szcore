@@ -10,16 +10,23 @@ public class ZsWebRequest {
     private final Map<String, String> stringParams = new HashMap<>();
     private List<Path> filePaths = null;
 
+    private final long timeMs;
     private final String requestPath;
     private final String sourceAddr;
+    private final String userAgent;
+    private final boolean isStatic;
 
-    public ZsWebRequest(String requestPath, String sourceAddr) {
+
+    public ZsWebRequest(String requestPath, String sourceAddr, String userAgent, boolean isStatic, long timeMs) {
         this.requestPath = requestPath;
         this.sourceAddr = sourceAddr;
+        this.userAgent = userAgent;
+        this.timeMs = timeMs;
+        this.isStatic = isStatic;
     }
 
     public void addStringParam(String name, String value) {
-        if(name == null) {
+        if (name == null) {
             return;
         }
         stringParams.put(name, value);
@@ -64,5 +71,17 @@ public class ZsWebRequest {
 
     public String getSourceAddr() {
         return sourceAddr;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
+    }
+
+    public long getTimeMs() {
+        return timeMs;
+    }
+
+    public boolean isStatic() {
+        return isStatic;
     }
 }

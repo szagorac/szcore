@@ -3,6 +3,7 @@ package com.xenaksys.szcore.gui;
 
 import com.aquafx_project.AquaFx;
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.event.WebClientInfoUpdateEvent;
 import com.xenaksys.szcore.gui.event.ClientIncomingEventReceiver;
 import com.xenaksys.szcore.gui.event.ClientScoreEngineEventReceiver;
 import com.xenaksys.szcore.gui.model.Participant;
@@ -277,4 +278,7 @@ public class SzcoreClient extends Application {
         scoreController.onTempoEvent(transportId, tempo);
     }
 
+    public void processWebClientInfos(WebClientInfoUpdateEvent event) {
+        settingsController.processWebClientInfos(event);
+    }
 }

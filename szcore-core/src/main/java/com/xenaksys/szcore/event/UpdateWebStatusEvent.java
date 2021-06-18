@@ -4,11 +4,11 @@ import com.xenaksys.szcore.web.WebConnection;
 
 import java.util.Set;
 
-public class UpdateWebConnectionsEvent extends IncomingWebEvent {
+public class UpdateWebStatusEvent extends IncomingWebEvent {
 
     private final Set<WebConnection> clientConnections;
 
-    public UpdateWebConnectionsEvent(Set<WebConnection> clientConnections, long creationTime) {
+    public UpdateWebStatusEvent(Set<WebConnection> clientConnections, long creationTime) {
         super(null, null, null, creationTime, 0L, 0L);
         this.clientConnections = clientConnections;
     }

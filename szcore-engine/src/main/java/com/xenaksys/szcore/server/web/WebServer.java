@@ -7,6 +7,8 @@ import com.xenaksys.szcore.server.web.handler.ZsSseConnectionCallback;
 import com.xenaksys.szcore.server.web.handler.ZsSseHandler;
 import com.xenaksys.szcore.server.web.handler.ZsStaticPathHandler;
 import com.xenaksys.szcore.server.web.handler.ZsWsConnectionCallback;
+import com.xenaksys.szcore.util.NetUtil;
+import com.xenaksys.szcore.web.WebClientInfo;
 import com.xenaksys.szcore.web.WebConnection;
 import com.xenaksys.szcore.web.WebConnectionType;
 import io.undertow.Handlers;
@@ -17,6 +19,7 @@ import io.undertow.server.handlers.resource.CachingResourceManager;
 import io.undertow.server.handlers.resource.ClassPathResourceManager;
 import io.undertow.server.handlers.resource.PathResourceManager;
 import io.undertow.server.handlers.sse.ServerSentEventConnection;
+import io.undertow.util.HeaderMap;
 import io.undertow.util.HttpString;
 import io.undertow.websockets.WebSocketConnectionCallback;
 import io.undertow.websockets.WebSocketProtocolHandshakeHandler;
@@ -31,7 +34,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static com.xenaksys.szcore.Consts.INDEX_HTML;
 import static com.xenaksys.szcore.Consts.WEB_BUFFER_SLICE_SIZE;
@@ -55,50 +63,65 @@ public class WebServer {
     private final int transferMinSize;
     private final boolean isUseCaching;
     private final SzcoreServer szcoreServer;
+    private final long clientPollingIntervalSec;
 
-    private volatile boolean isRunning = false;
-    private Undertow undertow = null;
+    private volatile boolean isAudienceServerRunning = false;
+    private Undertow udtowAudience = null;
     private ZsSseHandler sseHandler = null;
     private WebSocketProtocolHandshakeHandler wsHandler = null;
+    private ScheduledExecutorService clientInfoScheduler = Executors.newSingleThreadScheduledExecutor();
+    private volatile boolean isClientInfoSchedulerRunning = false;
 
-    public WebServer(String staticDataPath, int port, int transferMinSize, boolean isUseCaching, SzcoreServer szcoreServer) {
+    private final List<String> bannedHosts = new CopyOnWriteArrayList<>();
+
+    public WebServer(String staticDataPath, int port, int transferMinSize, long clientPollingIntervalSec, boolean isUseCaching, SzcoreServer szcoreServer) {
         this.staticDataPath = staticDataPath;
         this.port = port;
         this.transferMinSize = transferMinSize;
+        this.clientPollingIntervalSec = clientPollingIntervalSec;
         this.isUseCaching = isUseCaching;
         this.szcoreServer = szcoreServer;
     }
 
-    public boolean isRunning(){
-        return isRunning;
+    public boolean isAudienceServerRunning() {
+        return isAudienceServerRunning;
     }
 
-    public void start(){
-        LOG.info("Starting Web Server ...");
-        if(undertow == null) {
-            initUndertow();
+    public void start() {
+        LOG.info("Starting Audience Web Server ...");
+        if (udtowAudience == null) {
+            initUndertowAudience();
         }
 
-        if(isRunning) {
+        if (isAudienceServerRunning) {
             return;
         }
 
-        undertow.start();
-        isRunning = true;
-        LOG.info("Web Server is Running");
+        udtowAudience.start();
+        isAudienceServerRunning = true;
+
+
+        if (!isClientInfoSchedulerRunning) {
+            clientInfoScheduler.scheduleAtFixedRate(new ClientUpdater(), clientPollingIntervalSec, clientPollingIntervalSec, TimeUnit.SECONDS);
+            isClientInfoSchedulerRunning = true;
+        }
+
+        LOG.info("Audience Web Server is Running");
     }
 
-    public void stop(){
+    public void stop() {
         LOG.info("Stopping Web Server ...");
-        if(isRunning && undertow != null) {
-            undertow.stop();
-            isRunning = false;
-            LOG.info("Web Server is Stopped");
+        if (isAudienceServerRunning) {
+            if (udtowAudience != null) {
+                udtowAudience.stop();
+                isAudienceServerRunning = false;
+                LOG.info("Audience Web Server is Stopped");
+            }
         }
     }
 
-    private void initUndertow() {
-        HttpHandler staticDataHandler = new ZsStaticPathHandler(new ClassPathResourceManager(WebServer.class.getClassLoader(), ""))
+    private void initUndertowAudience() {
+        HttpHandler staticDataHandler = new ZsStaticPathHandler(new ClassPathResourceManager(WebServer.class.getClassLoader(), ""), szcoreServer, this)
                 .addWelcomeFiles(INDEX_HTML);
 
         this.sseHandler = new ZsSseHandler(new ZsSseConnectionCallback(this));
@@ -106,7 +129,7 @@ public class WebServer {
         WebSocketConnectionCallback wsConnectionCallback = new ZsWsConnectionCallback(this, szcoreServer);
         this.wsHandler = websocket(wsConnectionCallback);
 
-        if(staticDataPath != null) {
+        if (staticDataPath != null) {
             Path path = Paths.get(staticDataPath);
             Path indexPath = Paths.get(path.toAbsolutePath().toString(), INDEX_HTML);
 
@@ -121,13 +144,13 @@ public class WebServer {
             }
         }
 
-        undertow = Undertow.builder()
+        udtowAudience = Undertow.builder()
                 .addHttpListener(port, "0.0.0.0")
                 .setHandler(Handlers.path()
                         .addPrefixPath(WEB_PATH_STATIC, staticDataHandler)
                         .addPrefixPath(WEB_PATH_SSE, sseHandler)
                         .addPrefixPath(WEB_PATH_WEBSOCKETS, wsHandler)
-                        .addPrefixPath(WEB_PATH_HTTP, new ZsHttpHandler(szcoreServer))
+                        .addPrefixPath(WEB_PATH_HTTP, new ZsHttpHandler(szcoreServer, this))
                 ).build();
 
     }
@@ -163,24 +186,30 @@ public class WebServer {
             String userAgent = exchange.getRequestHeader(WEB_HTTP_HEADER_USER_AGENT);
             SocketAddress sourceAddr = channel.getPeerAddress();
             onConnection(sourceAddr, WebConnectionType.WS, userAgent);
-            updateConnections();
         } catch (Exception e) {
             LOG.error("onWsChannelConnected: faled to process new Websocket connection", e);
         }
     }
 
-    public void updateConnections() {
+    public void updateServerStatus() {
         Set<WebConnection> connections = new HashSet<>();
         connections.addAll(getWsConnections());
         connections.addAll(getSseConnections());
-        szcoreServer.updateWebConnections(connections);
+
+//        if (connections.isEmpty()) {
+//            return;
+//        }
+//        long now = System.currentTimeMillis();
+
+        szcoreServer.updateWebServerStatus(connections);
     }
 
     public Set<WebConnection> getWsConnections() {
         Set<WebConnection> webConnections = new HashSet<>();
         Set<WebSocketChannel>  channels =  wsHandler.getPeerConnections();
         for (WebSocketChannel c : channels) {
-            String clientAddr = c.getPeerAddress().toString();
+            SocketAddress socketAddress = c.getPeerAddress();
+            String clientAddr = socketAddress.toString();
             WebConnection webConnection = new WebConnection(clientAddr, WebConnectionType.WS);
             webConnections.add(webConnection);
         }
@@ -194,9 +223,9 @@ public class WebServer {
         try {
             ZsSseConnection zsConn = (ZsSseConnection) connection;
             SocketAddress sourceAddr = zsConn.getExchange().getSourceAddress();
-            String userAgent = zsConn.getExchange().getRequestHeaders().getFirst(HttpString.tryFromString(WEB_HTTP_HEADER_USER_AGENT));
+            HeaderMap headerMap = zsConn.getExchange().getRequestHeaders();
+            String userAgent = headerMap.getFirst(HttpString.tryFromString(WEB_HTTP_HEADER_USER_AGENT));
             onConnection(sourceAddr, WebConnectionType.SSE, userAgent);
-            updateConnections();
         } catch (Exception e) {
             LOG.error("onSseChannelConnected: faled to process new SSE connection", e);
         }
@@ -218,7 +247,9 @@ public class WebServer {
             return;
         }
         String sourceId = sourceAddr.toString();
-        szcoreServer.onWebConnection(sourceId, type, userAgent);
+        WebConnection webConnection = new WebConnection(sourceId, type);
+        webConnection.setUserAgent(userAgent);
+        szcoreServer.onWebConnection(webConnection);
     }
 
     private HttpHandler createStaticDataHandler(Path path) {
@@ -230,11 +261,48 @@ public class WebServer {
                     new PathResourceManager(path, transferMinSize),
                     -1);
 
-            return new ZsStaticPathHandler(cachingResourceManager)
+            return new ZsStaticPathHandler(cachingResourceManager, szcoreServer, this)
                     .setDirectoryListingEnabled(false)
                     .setWelcomeFiles(INDEX_HTML);
         }
 
         return resource(new PathResourceManager(path, transferMinSize)).setWelcomeFiles(INDEX_HTML);
+    }
+
+    public void banWebClient(WebClientInfo clientInfo) {
+        if (clientInfo == null) {
+            return;
+        }
+        String host = clientInfo.getHost();
+        if (bannedHosts.contains(host)) {
+            return;
+        }
+        LOG.info("banWebClient: host: {}", host);
+        bannedHosts.add(host);
+    }
+
+    public boolean isSourceAddrBanned(String sourceAddr) {
+        if (sourceAddr == null) {
+            return false;
+        }
+        String[] hostPort = NetUtil.getHostPort(sourceAddr);
+        if (hostPort == null || hostPort.length != 2) {
+            return isHostBanned(sourceAddr);
+        }
+
+        return isHostBanned(hostPort[0]);
+    }
+
+    public boolean isHostBanned(String host) {
+        return bannedHosts.contains(host);
+    }
+
+    class ClientUpdater implements Runnable {
+
+        @Override
+        public void run() {
+            LOG.debug("ClientUpdater: update client infos");
+            updateServerStatus();
+        }
     }
 }

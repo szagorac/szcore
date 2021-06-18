@@ -21,6 +21,7 @@ import java.util.Map;
 
 import static com.xenaksys.szcore.Consts.COMMA;
 import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.Consts.WEB_HTTP_HEADER_USER_AGENT;
 
 public class ZsWsConnectionCallback implements WebSocketConnectionCallback {
     static final Logger LOG = LoggerFactory.getLogger(ZsWsConnectionCallback.class);
@@ -38,7 +39,7 @@ public class ZsWsConnectionCallback implements WebSocketConnectionCallback {
     @Override
     public void onConnect(WebSocketHttpExchange exchange, WebSocketChannel channel) {
         webServer.onWsChannelConnected(channel, exchange);
-        LOG.debug("onConnect: connected channel: {}", channel.getSourceAddress());
+        LOG.info("onConnect: connected channel: {}", channel.getSourceAddress());
         channel.getReceiveSetter().set(new AbstractReceiveListener() {
             @Override
             protected void onFullTextMessage(WebSocketChannel channel, BufferedTextMessage message) {
@@ -46,7 +47,12 @@ public class ZsWsConnectionCallback implements WebSocketConnectionCallback {
                     if (channel == null || message == null) {
                         return;
                     }
-                    processRequest(exchange, channel, message);
+                    String sourceAddr = channel.getPeerAddress().toString();
+                    if (webServer.isSourceAddrBanned(sourceAddr)) {
+                        return;
+                    }
+                    long now = System.currentTimeMillis();
+                    processRequest(exchange, channel, message, now);
                 } catch (Exception e) {
                     LOG.error("Failed to process WebSocket request", e);
                 }
@@ -55,7 +61,7 @@ public class ZsWsConnectionCallback implements WebSocketConnectionCallback {
         channel.resumeReceives();
     }
 
-    private void processRequest(WebSocketHttpExchange exchange, WebSocketChannel channel, BufferedTextMessage message) {
+    private void processRequest(WebSocketHttpExchange exchange, WebSocketChannel channel, BufferedTextMessage message, long now) {
         final String messageData = message.getData();
         LOG.debug("onFullTextMessage: received message: {}", messageData);
 
@@ -67,11 +73,12 @@ public class ZsWsConnectionCallback implements WebSocketConnectionCallback {
         String sourceAddr = channel.getPeerAddress().toString();
         String uri = exchange.getRequestURI();
 
-        ZsWebRequest zsRequest = new ZsWebRequest(uri, sourceAddr);
+        String userAgent = exchange.getRequestHeader(WEB_HTTP_HEADER_USER_AGENT);
+        ZsWebRequest zsRequest = new ZsWebRequest(uri, sourceAddr, userAgent, false, now);
         zsRequest.addAllParams(requestParams);
 
         ZsWebResponse out = szcoreServer.onWebRequest(zsRequest);
-        if(out != null) {
+        if (out != null) {
             webServer.pushToChannel(out.getData(), channel);
         }
     }

@@ -12,6 +12,8 @@ public class HttpUtil {
                 return "application/xml";
             case HTML:
                 return "text/html";
+            case WASM:
+                return "application/wasm";
             case TEXT:
             default:
                 return "text/plain";

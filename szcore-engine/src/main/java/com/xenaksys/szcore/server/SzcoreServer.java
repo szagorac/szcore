@@ -45,6 +45,7 @@ import com.xenaksys.szcore.server.processor.InEventContainerDisruptorProcessor;
 import com.xenaksys.szcore.server.processor.ServerLogProcessor;
 import com.xenaksys.szcore.server.receive.ServerEventReceiver;
 import com.xenaksys.szcore.server.web.WebServer;
+import com.xenaksys.szcore.server.web.WebServerInscore;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.BasicScheduler;
 import com.xenaksys.szcore.time.BasicTimer;
@@ -219,7 +220,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         subscribe(webProcessor);
 
         String webRoot = props.getProperty(WEB_ROOT);
-        webServer = new WebServer(webRoot, 80, 1024, 10, true, this);
+        webServer = new WebServerInscore(webRoot, 8000, 1024, 10, true, this);
 
         webServer.start();
     }

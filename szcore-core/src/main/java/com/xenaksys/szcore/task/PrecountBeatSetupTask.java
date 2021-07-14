@@ -5,13 +5,13 @@ import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.PrecountBeatOffEvent;
 import com.xenaksys.szcore.event.PrecountBeatOnEvent;
 import com.xenaksys.szcore.event.PrecountBeatSetupEvent;
-import com.xenaksys.szcore.event.WebScoreEvent;
+import com.xenaksys.szcore.event.WebAudienceEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.OscPublisher;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.Transport;
-import com.xenaksys.szcore.score.web.WebScore;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
 
 public class PrecountBeatSetupTask extends EventMusicTask {
     private final Transport transport;
@@ -21,10 +21,10 @@ public class PrecountBeatSetupTask extends EventMusicTask {
     private final String destination;
     private final Clock clock;
     private final TaskFactory taskFactory;
-    private final WebScore webScore;
+    private final WebAudienceScore webAudienceScore;
 
     public PrecountBeatSetupTask(PrecountBeatSetupEvent precountBeatSetupEvent, String destination, Transport transport, ScoreProcessor processor,
-                                 OscPublisher oscPublisher, EventFactory eventFactory, TaskFactory taskFactory, WebScore webScore, Clock clock) {
+                                 OscPublisher oscPublisher, EventFactory eventFactory, TaskFactory taskFactory, WebAudienceScore webAudienceScore, Clock clock) {
         super(0, precountBeatSetupEvent);
         this.transport = transport;
         this.processor = processor;
@@ -33,7 +33,7 @@ public class PrecountBeatSetupTask extends EventMusicTask {
         this.destination = destination;
         this.clock = clock;
         this.taskFactory = taskFactory;
-        this.webScore = webScore;
+        this.webAudienceScore = webAudienceScore;
     }
 
     @Override
@@ -133,8 +133,8 @@ public class PrecountBeatSetupTask extends EventMusicTask {
     }
 
     private void addWebscorePrecountTask(long playTime, boolean isOn, int beaterNo, int colourId) {
-        WebScoreEvent event = eventFactory.createWebScorePrecountEvent(beaterNo, isOn, colourId, clock.getSystemTimeMillis());
-        WebScoreEventTask task = taskFactory.createWebScoreEventTask(playTime, event, webScore);
+        WebAudienceEvent event = eventFactory.createWebScorePrecountEvent(beaterNo, isOn, colourId, clock.getSystemTimeMillis());
+        WebAudienceEventTask task = taskFactory.createWebScoreEventTask(playTime, event, webAudienceScore);
         processor.scheduleTask(task);
     }
 }

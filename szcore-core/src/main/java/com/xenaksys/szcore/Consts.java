@@ -302,6 +302,7 @@ public interface Consts {
     String WEB_RESPONSE_TYPE = "type";
     String WEB_RESPONSE_MESSAGE = "msg";
     String WEB_RESPONSE_STATE = "st";
+    String WEB_RESPONSE_DATA = "d";
     String WEB_RESPONSE_TIME = "t";
     String WEB_RESPONSE_SUBMITTED = "Submitted";
 
@@ -418,6 +419,13 @@ public interface Consts {
     String WEB_CONFIG_TYPE = "type";
     double WEB_CONFIG_DOUBLE_CHANGE_THRESHOLD = 10E-3;
 
+    String WEB_DATA_SCORE_INFO = "SCORE_INFO";
+    String WEB_DATA_SCORE_STATE = "SCORE_STATE";
+    String WEB_DATA_TARGET = "TARGET";
+    String WEB_DATA_TARGET_TYPE = "TARGET_TYPE";
+    String WEB_DATA_TARGET_ALL = "ALL";
+
+    String WEB_WS_CLOSE_REASON_NORMAL = "Closed by the server";
 
     String NAME_FULL_SCORE = "FullScore";
 

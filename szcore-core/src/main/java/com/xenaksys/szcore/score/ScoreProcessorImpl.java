@@ -9,12 +9,12 @@ import com.xenaksys.szcore.event.BeatScriptEvent;
 import com.xenaksys.szcore.event.DateTickEvent;
 import com.xenaksys.szcore.event.ElementAlphaEvent;
 import com.xenaksys.szcore.event.ElementColorEvent;
-import com.xenaksys.szcore.event.ElementSelectedEvent;
+import com.xenaksys.szcore.event.ElementSelectedAudienceEvent;
 import com.xenaksys.szcore.event.ElementYPositionEvent;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.EventType;
-import com.xenaksys.szcore.event.IncomingWebEvent;
-import com.xenaksys.szcore.event.IncomingWebEventType;
+import com.xenaksys.szcore.event.IncomingWebAudienceEvent;
+import com.xenaksys.szcore.event.IncomingWebAudienceEventType;
 import com.xenaksys.szcore.event.ModWindowEvent;
 import com.xenaksys.szcore.event.MusicEvent;
 import com.xenaksys.szcore.event.MusicEventType;
@@ -41,12 +41,15 @@ import com.xenaksys.szcore.event.TimeSigChangeEvent;
 import com.xenaksys.szcore.event.TransitionEvent;
 import com.xenaksys.szcore.event.TransportEvent;
 import com.xenaksys.szcore.event.TransportPositionEvent;
-import com.xenaksys.szcore.event.WebScoreEvent;
-import com.xenaksys.szcore.event.WebScoreEventType;
-import com.xenaksys.szcore.event.WebScorePlayTilesEvent;
-import com.xenaksys.szcore.event.WebScoreResetEvent;
-import com.xenaksys.szcore.event.WebScoreStopEvent;
-import com.xenaksys.szcore.event.WebStartEvent;
+import com.xenaksys.szcore.event.WebAudienceEvent;
+import com.xenaksys.szcore.event.WebAudienceEventType;
+import com.xenaksys.szcore.event.WebAudiencePlayTilesEvent;
+import com.xenaksys.szcore.event.WebAudienceResetEvent;
+import com.xenaksys.szcore.event.WebAudienceStopEvent;
+import com.xenaksys.szcore.event.WebScoreConnectionEvent;
+import com.xenaksys.szcore.event.WebScoreInEvent;
+import com.xenaksys.szcore.event.WebScoreInEventType;
+import com.xenaksys.szcore.event.WebStartAudienceEvent;
 import com.xenaksys.szcore.model.Bar;
 import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.Id;
@@ -82,17 +85,18 @@ import com.xenaksys.szcore.model.id.StrId;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.process.OscDestinationEventListener;
 import com.xenaksys.szcore.score.web.WebScore;
-import com.xenaksys.szcore.score.web.WebScoreLoader;
-import com.xenaksys.szcore.score.web.WebScoreScript;
-import com.xenaksys.szcore.score.web.export.WebScoreStateDeltaExport;
-import com.xenaksys.szcore.score.web.export.WebScoreStateExport;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScoreLoader;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
+import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
+import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
 import com.xenaksys.szcore.scripting.ScoreScriptingEngine;
 import com.xenaksys.szcore.scripting.ScriptingEngineConfig;
 import com.xenaksys.szcore.scripting.ScriptingEngineScript;
 import com.xenaksys.szcore.task.ScheduledEventTask;
 import com.xenaksys.szcore.task.ScriptingEngineEventTask;
 import com.xenaksys.szcore.task.TaskFactory;
-import com.xenaksys.szcore.task.WebScoreEventTask;
+import com.xenaksys.szcore.task.WebAudienceEventTask;
 import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.ParseUtil;
@@ -167,6 +171,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private ValueScaler positionValueScaler = new ValueScaler(0.0, 100.0, POSITION_LINE_Y_MAX, 0.0);
     private ValueScaler contentValueScaler = new ValueScaler(0.0, 100.0, 0.0, CONTENT_LINE_Y_MAX);
 
+    private WebAudienceScore webAudienceScore = null;
     private WebScore webScore = null;
     private MaxMspScoreConfig maxMspConfig = null;
     private ScoreScriptingEngine scriptingEngine;
@@ -222,8 +227,10 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         ScoreRandomisationStrategyConfig randomisationStrategyConfig = StrategyConfigLoader.loadStrategyConfig(file.getParent(), szcore);
         szcore.setRandomisationStrategyConfig(randomisationStrategyConfig);
 
+        webAudienceScore = new WebAudienceScore(this, eventFactory, clock);
+        webAudienceScore.init(file.getParent());
+
         webScore = new WebScore(this, eventFactory, clock);
-        webScore.init(file.getParent());
 
         maxMspConfig = new MaxMspScoreConfig();
         maxMspConfig.setScoreName(szcore.getName());
@@ -235,13 +242,13 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     @Override
-    public WebScore loadWebScore(File file) throws Exception {
+    public WebAudienceScore loadWebScore(File file) throws Exception {
         if (scheduler.isActive()) {
             LOG.warn("Scheduler is active, can not perform load web score");
             throw new Exception("Scheduler is active, can not perform load web score");
         }
         LOG.info("LOADING WEB SCORE: " + file.getCanonicalPath());
-        WebScore score = WebScoreLoader.load(file);
+        WebAudienceScore score = WebAudienceScoreLoader.load(file);
         return null;
     }
 
@@ -304,6 +311,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         oscDestinationEventListener.reloadDestinations(maxClients);
 
         isScoreLoaded = true;
+
+        webScore.init();
     }
 
     private void prepareContinuousPages(Id instrumentId, Page lastPage) {
@@ -426,7 +435,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     private void addWebScoreBeatScripts(BeatId beatId, Id transportId) {
-        List<WebScoreScript> scripts = webScore.getBeatScripts(beatId);
+        List<WebAudienceScoreScript> scripts = webAudienceScore.getBeatScripts(beatId);
         if (scripts != null && !scripts.isEmpty()) {
             addWebScoreEvent(beatId, scripts, transportId);
         }
@@ -441,8 +450,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             case TRANSITION:
                 addBeatTransitionEvent(beatId, (BasicTransition) script, transportId);
                 break;
-            case WEB_SCORE:
-                webScore.addBeatScript(beatId, (WebScoreScript) script);
+            case WEB_AUDIENCE_SCORE:
+                webAudienceScore.addBeatScript(beatId, (WebAudienceScoreScript) script);
                 break;
             case OSC_PLAYER:
                 addOscScriptEvent(beatId, (OscScript) script, transportId);
@@ -538,9 +547,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         szcore.addScoreBaseBeatEvent(transportId, transitionEvent);
     }
 
-    private void addWebScoreEvent(BeatId beatId, List<WebScoreScript> scripts, Id transportId) {
-        WebScoreEvent webScoreEvent = createWebScoreEvent(scripts, beatId);
-        szcore.addScoreBaseBeatEvent(transportId, webScoreEvent);
+    private void addWebScoreEvent(BeatId beatId, List<WebAudienceScoreScript> scripts, Id transportId) {
+        WebAudienceEvent webAudienceEvent = createWebScoreEvent(scripts, beatId);
+        szcore.addScoreBaseBeatEvent(transportId, webAudienceEvent);
     }
 
     private void addTransportInitEvents(Tempo tempo, TimeSignature timeSignature, int startBaseBeatNo, int transportBeatNo, int tickNo, long positionMillis, Id transportId, List<SzcoreEvent> initEvents) {
@@ -580,7 +589,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
 
     private void addInitWebScoreEvent(Transport transport, List<SzcoreEvent> initEvents, BeatId startBeatId) {
-        WebScoreResetEvent webScoreResetEvent = createWebScoreResetEvent(startBeatId);
+        WebAudienceResetEvent webScoreResetEvent = createWebScoreResetEvent(startBeatId);
         if (webScoreResetEvent == null) {
             return;
         }
@@ -829,8 +838,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
 
         if (isCurrentPageInRndRange) {
-            WebScorePlayTilesEvent playTilesEvent = eventFactory.createWebScorePlayTilesEvent(clock.getSystemTimeMillis());
-            processWebScoreEvent(playTilesEvent);
+            WebAudiencePlayTilesEvent playTilesEvent = eventFactory.createWebScorePlayTilesEvent(clock.getSystemTimeMillis());
+            processWebAudienceEvent(playTilesEvent);
         }
     }
 
@@ -849,7 +858,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             if (strategy.isPageRecalcTime()) {
                 int pageQuantity = strategy.getNumberOfRequiredPages();
                 LOG.debug("onCloseModWindow: pageQuantity {} next assignment Strategy: {} pageId: {} nextPage: {}  stave: {}", pageQuantity, Arrays.toString(strategy.getAssignmentStrategy().toArray()), currentPageId.getPageNo(), nextPage.getPageNo(), stave.getStaveId().getStaveNo());
-                selectedPageIds = webScore.prepareNextTilesToPlay(pageQuantity);
+                selectedPageIds = webAudienceScore.prepareNextTilesToPlay(pageQuantity);
                 strategy.setPageSelection(selectedPageIds);
             }
 
@@ -1831,7 +1840,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         OscStopEvent oscStopEvent = eventFactory.createOscStopEvent(Consts.ALL_DESTINATIONS, clock.getSystemTimeMillis());
         publishOscEvent(oscStopEvent);
 
-        WebScoreStopEvent webStopEvent = eventFactory.createWebScoreStopEvent(clock.getSystemTimeMillis());
+        WebAudienceStopEvent webStopEvent = eventFactory.createWebScoreStopEvent(clock.getSystemTimeMillis());
         process(webStopEvent);
     }
 
@@ -1895,7 +1904,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         return eventFactory.createTransitionEvent(destination, eventBeatId, transition, clock.getSystemTimeMillis());
     }
 
-    private WebScoreEvent createWebScoreEvent(List<WebScoreScript> scripts, BeatId eventBeatId) {
+    private WebAudienceEvent createWebScoreEvent(List<WebAudienceScoreScript> scripts, BeatId eventBeatId) {
         if (scripts == null || eventBeatId == null) {
             return null;
         }
@@ -1927,12 +1936,12 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         return eventFactory.createResetInstrumentEvent(instrument, clock.getSystemTimeMillis());
     }
 
-    private WebScoreResetEvent createWebScoreResetEvent(BeatId beatId) {
+    private WebAudienceResetEvent createWebScoreResetEvent(BeatId beatId) {
         if (beatId == null) {
             return null;
         }
 
-        List<WebScoreScript> scripts = webScore.getBeatResetScripts(beatId);
+        List<WebAudienceScoreScript> scripts = webAudienceScore.getBeatResetScripts(beatId);
         LOG.debug("createWebScoreResetEvent: beat: {} scripts {}", beatId.getBeatNo(), scripts);
         if (scripts == null || scripts.isEmpty()) {
             return null;
@@ -2159,7 +2168,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                     if (strategy.isPageRecalcTime()) {
                         strategy.recalcStrategy(page);
                         int pageQuantity = strategy.getNumberOfRequiredPages();
-                        List<Integer> pageIds = webScore.prepareNextTilesToPlay(pageQuantity);
+                        List<Integer> pageIds = webAudienceScore.prepareNextTilesToPlay(pageQuantity);
                         strategy.setPageSelection(pageIds);
                     }
                     String pageFileName = strategy.getRandomPageFileName(instrumentId);
@@ -2362,29 +2371,29 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     @Override
-    public void onIncomingWebEvent(IncomingWebEvent webEvent) throws Exception {
+    public void onIncomingWebAudienceEvent(IncomingWebAudienceEvent webEvent) throws Exception {
 
-        IncomingWebEventType type = webEvent.getWebEventType();
+        IncomingWebAudienceEventType type = webEvent.getWebEventType();
         switch (type) {
             case ELEMENT_SELECTED:
-                processElementSelected((ElementSelectedEvent)webEvent);
+                processElementSelected((ElementSelectedAudienceEvent) webEvent);
                 break;
             case WEB_START:
-                processWebStart((WebStartEvent)webEvent);
+                processWebStart((WebStartAudienceEvent) webEvent);
                 break;
             default:
-                LOG.info("onIncomingWebEvent: unknown IncomingWebEventType: {}", type);
+                LOG.info("onIncomingWebEvent: unknown IncomingWebAudienceEventType: {}", type);
         }
     }
 
     @Override
-    public void onWebScoreStateChange(WebScoreStateExport webScoreStateExport) throws Exception {
-        notifyListeners(webScoreStateExport);
+    public void onWebAudienceStateChange(WebAudienceScoreStateExport webAudienceScoreStateExport) throws Exception {
+        notifyListeners(webAudienceScoreStateExport);
     }
 
     @Override
-    public void onWebScoreStateDeltaChange(WebScoreStateDeltaExport webScoreStateDeltaExport) throws Exception {
-        notifyListeners(webScoreStateDeltaExport);
+    public void onWebScoreStateDeltaChange(WebAudienceScoreStateDeltaExport webAudienceScoreStateDeltaExport) throws Exception {
+        notifyListeners(webAudienceScoreStateDeltaExport);
     }
 
     @Override
@@ -2392,21 +2401,21 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         publishWebEvent(webEvent);
     }
 
-    private void processElementSelected(ElementSelectedEvent webEvent) {
+    private void processElementSelected(ElementSelectedAudienceEvent webEvent) {
         LOG.debug("processElementSelected: ");
         String elementId = webEvent.getElementId();
         boolean isSelected = webEvent.isSelected();
-        if (webScore == null) {
+        if (webAudienceScore == null) {
             return;
         }
-        webScore.setSelectedElement(elementId, isSelected);
+        webAudienceScore.setSelectedElement(elementId, isSelected);
     }
 
-    private void processWebStart(WebStartEvent webEvent) {
+    private void processWebStart(WebStartAudienceEvent webEvent) {
         LOG.debug("processWebStart: ");
-        webScore.resetState();
-        webScore.pushServerState();
-        webScore.startScore();
+        webAudienceScore.resetState();
+        webAudienceScore.pushServerState();
+        webAudienceScore.startScore();
     }
 
     public boolean isReadyToPlay(){
@@ -2433,8 +2442,11 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             case MUSIC:
                 processMusicEvent((MusicEvent) event, beatNo, tickNo);
                 break;
-            case WEB_SCORE:
-                processWebScoreEvent((WebScoreEvent) event, beatNo, tickNo);
+            case WEB_AUDIENCE:
+                processWebAudienceEvent((WebAudienceEvent) event, beatNo, tickNo);
+                break;
+            case WEB_SCORE_IN:
+                processWebScoreInEvent((WebScoreInEvent) event, beatNo, tickNo);
                 break;
             case SCRIPTING_ENGINE:
                 processScriptingEngineEvent((ScriptingEngineEvent) event, beatNo, tickNo);
@@ -2455,15 +2467,15 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
     }
 
-    private void notifyListeners(WebScoreStateExport webScoreStateExport) {
+    private void notifyListeners(WebAudienceScoreStateExport webAudienceScoreStateExport) {
         for (WebScoreStateListener listener : webScoreStateListeners) {
-            listener.onWebScoreStateChange(webScoreStateExport);
+            listener.onWebAudienceScoreStateChange(webAudienceScoreStateExport);
         }
     }
 
-    private void notifyListeners(WebScoreStateDeltaExport deltaExport) {
+    private void notifyListeners(WebAudienceScoreStateDeltaExport deltaExport) {
         for (WebScoreStateListener listener : webScoreStateListeners) {
-            listener.onWebScoreStateDeltaChange(deltaExport);
+            listener.onWebAudienceScoreStateDeltaChange(deltaExport);
         }
     }
 
@@ -2501,12 +2513,28 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         scheduleTask(task);
     }
 
-    private void processWebScoreEvent(WebScoreEvent event) {
-        processWebScoreEvent(event, 0, 0);
+    private void processWebScoreInEvent(WebScoreInEvent event, int beatNo, int tickNo) {
+        WebScoreInEventType eventType = event.getWebScoreEventType();
+
+        switch (eventType) {
+            case CONNECTION:
+                if (webScore == null) {
+                    return;
+                }
+                webScore.processConnectionEvent((WebScoreConnectionEvent) event);
+                break;
+            case GENERIC:
+            default:
+                LOG.error("processWebScoreInEvent: unexpected event: {}", eventType);
+        }
     }
 
-    private void processWebScoreEvent(WebScoreEvent event, int beatNo, int tickNo) {
-        WebScoreEventType eventType = event.getWebScoreEventType();
+    private void processWebAudienceEvent(WebAudienceEvent event) {
+        processWebAudienceEvent(event, 0, 0);
+    }
+
+    private void processWebAudienceEvent(WebAudienceEvent event, int beatNo, int tickNo) {
+        WebAudienceEventType eventType = event.getWebAudienceEventType();
 
         switch (eventType) {
             case PRECOUNT:
@@ -2516,11 +2544,11 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             case SELECT_TILES:
             case INSTRUCTIONS:
             case STATE_UPDATE:
-                webScore.processWebScoreEvent(event);
+                webAudienceScore.processWebAudienceEvent(event);
                 break;
             case SCRIPT:
             default:
-                WebScoreEventTask task = taskFactory.createWebScoreEventTask(0, event, webScore);
+                WebAudienceEventTask task = taskFactory.createWebScoreEventTask(0, event, webAudienceScore);
                 scheduleTask(task);
         }
     }
@@ -2570,7 +2598,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 PrecountBeatSetupEvent precountBeatSetupEvent = (PrecountBeatSetupEvent) event;
                 Id transportId = precountBeatSetupEvent.getInstrumentId();
                 transport = szcore.getTransport(transportId);
-                task = taskFactory.createPrecountBeatSetupTask(precountBeatSetupEvent, Consts.ALL_DESTINATIONS, transport, this, oscPublisher, eventFactory, taskFactory, webScore, clock);
+                task = taskFactory.createPrecountBeatSetupTask(precountBeatSetupEvent, Consts.ALL_DESTINATIONS, transport, this, oscPublisher, eventFactory, taskFactory, webAudienceScore, clock);
                 break;
             case TRANSITION:
                 TransitionEvent transitionEvent = (TransitionEvent) event;

@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.xenaksys.szcore.server.SzcoreServer;
-import com.xenaksys.szcore.server.web.WebServer;
+import com.xenaksys.szcore.server.web.ZsWebServer;
 import com.xenaksys.szcore.web.ZsWebRequest;
 import com.xenaksys.szcore.web.ZsWebResponse;
 import io.undertow.websockets.WebSocketConnectionCallback;
@@ -28,10 +28,10 @@ public class ZsWsConnectionCallback implements WebSocketConnectionCallback {
 
     static final JsonParser JSON_PARSER = new JsonParser();
     private String lastReceivedMessage;
-    private WebServer webServer;
+    private ZsWebServer webServer;
     private SzcoreServer szcoreServer;
 
-    public ZsWsConnectionCallback(WebServer webServer, SzcoreServer szcoreServer) {
+    public ZsWsConnectionCallback(ZsWebServer webServer, SzcoreServer szcoreServer) {
         this.webServer = webServer;
         this.szcoreServer = szcoreServer;
     }

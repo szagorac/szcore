@@ -59,7 +59,7 @@ public class WebPublisherDisruptorProcessor implements WebPublisher {
             try {
                 processInternal(event);
             } catch (Exception e) {
-                LOG.error("Failed to process OutgoingWebEvent {}", event);
+                LOG.error("Failed to process OutgoingWebAudienceEvent {}", event);
             }
         }
     }

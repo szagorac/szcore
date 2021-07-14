@@ -1,7 +1,7 @@
 package com.xenaksys.szcore.server.web.handler;
 
 import com.xenaksys.szcore.server.SzcoreServer;
-import com.xenaksys.szcore.server.web.WebServer;
+import com.xenaksys.szcore.server.web.ZsWebServer;
 import com.xenaksys.szcore.server.web.mappings.ZsMimeMappings;
 import com.xenaksys.szcore.web.ZsWebRequest;
 import io.undertow.server.HttpServerExchange;
@@ -19,10 +19,10 @@ import static com.xenaksys.szcore.Consts.WEB_HTTP_HEADER_USER_AGENT;
 
 public class ZsStaticPathHandler extends ResourceHandler {
     static final Logger LOG = LoggerFactory.getLogger(ZsStaticPathHandler.class);
-    private final WebServer webServer;
+    private final ZsWebServer webServer;
     private final SzcoreServer szcoreServer;
 
-    public ZsStaticPathHandler(ResourceManager resourceManager, SzcoreServer szcoreServer, WebServer webServer) {
+    public ZsStaticPathHandler(ResourceManager resourceManager, SzcoreServer szcoreServer, ZsWebServer webServer) {
         super(resourceManager);
         this.webServer = webServer;
         this.szcoreServer = szcoreServer;

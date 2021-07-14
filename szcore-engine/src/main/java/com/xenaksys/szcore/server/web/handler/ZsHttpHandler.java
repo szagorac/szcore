@@ -1,7 +1,7 @@
 package com.xenaksys.szcore.server.web.handler;
 
 import com.xenaksys.szcore.server.SzcoreServer;
-import com.xenaksys.szcore.server.web.WebServer;
+import com.xenaksys.szcore.server.web.ZsWebServer;
 import com.xenaksys.szcore.util.HttpUtil;
 import com.xenaksys.szcore.web.ZsWebRequest;
 import com.xenaksys.szcore.web.ZsWebResponse;
@@ -27,9 +27,9 @@ public class ZsHttpHandler implements HttpHandler {
     private final static HttpString POST_STR = new HttpString("POST");
 
     private final SzcoreServer szcoreServer;
-    private final WebServer webServer;
+    private final ZsWebServer webServer;
 
-    public ZsHttpHandler(SzcoreServer szcoreServer, WebServer webServer) {
+    public ZsHttpHandler(SzcoreServer szcoreServer, ZsWebServer webServer) {
         this.szcoreServer = szcoreServer;
         this.webServer = webServer;
     }

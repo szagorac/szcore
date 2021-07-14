@@ -5,7 +5,7 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.AddPartsEvent;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.SendServerIpBroadcastEvent;
-import com.xenaksys.szcore.event.WebScoreInstructionsEvent;
+import com.xenaksys.szcore.event.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Participant;
 import com.xenaksys.szcore.gui.model.WebscoreInstructions;
@@ -23,7 +23,7 @@ import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.id.BarId;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
-import com.xenaksys.szcore.score.web.WebScore;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.Util;
 import javafx.application.Platform;
@@ -73,7 +73,7 @@ public class ScoreController {
     private ScoreService scoreService;
 
     private Score score;
-    private WebScore webScore;
+    private WebAudienceScore webAudienceScore;
 
     @FXML
     private Label scoreNameLbl;
@@ -678,7 +678,7 @@ public class ScoreController {
         String l3 = validateWebInstruction(webscoreInstructions.getLine3());
         boolean isVisible = webscoreInstructions.getVisible();
         EventFactory eventFactory = publisher.getEventFactory();
-        WebScoreInstructionsEvent instructionsEvent = eventFactory.createWebScoreInstructionsEvent(l1, l2, l3, isVisible, clock.getSystemTimeMillis());
+        WebAudienceInstructionsEvent instructionsEvent = eventFactory.createWebScoreInstructionsEvent(l1, l2, l3, isVisible, clock.getSystemTimeMillis());
         publisher.receive(instructionsEvent);
     }
 
@@ -1031,7 +1031,7 @@ public class ScoreController {
             String webName = name.substring(0, end) + Consts.WEB_SCORE_SUFFIX +  Consts.CSV_EXT;
             String webPath = dir + File.separator + webName;
             File webFile = new File(webPath);
-            this.webScore = scoreService.loadWebScore(webFile);
+            this.webAudienceScore = scoreService.loadWebScore(webFile);
             viewWebScore();
         } catch (Exception e) {
             LOG.error("Failed to open score", e);

@@ -32,8 +32,6 @@ abstract public class IncomingWebEvent implements SzcoreEvent {
         return null;
     }
 
-    abstract public IncomingWebEventType getWebEventType();
-
     public long getClientEventCreatedTime() {
         return clientEventCreatedTime;
     }
@@ -56,8 +54,7 @@ abstract public class IncomingWebEvent implements SzcoreEvent {
 
     @Override
     public String toString() {
-        return "WebEvent{" +
-                "type=" + getWebEventType() +
+        return "IncomingWebEvent{" +
                 '}';
     }
 

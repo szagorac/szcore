@@ -7,7 +7,7 @@ import com.xenaksys.szcore.event.ErrorEvent;
 import com.xenaksys.szcore.event.EventContainer;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.HelloEvent;
-import com.xenaksys.szcore.event.IncomingWebEvent;
+import com.xenaksys.szcore.event.IncomingWebAudienceEvent;
 import com.xenaksys.szcore.event.OscEvent;
 import com.xenaksys.szcore.event.OutgoingWebEvent;
 import com.xenaksys.szcore.event.PingEvent;
@@ -40,12 +40,13 @@ import com.xenaksys.szcore.receive.OscReceiveProcessor;
 import com.xenaksys.szcore.receive.SzcoreIncomingEventListener;
 import com.xenaksys.szcore.score.ScoreProcessorImpl;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
-import com.xenaksys.szcore.score.web.WebScore;
+import com.xenaksys.szcore.score.web.WebScoreTargetType;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
 import com.xenaksys.szcore.server.processor.InEventContainerDisruptorProcessor;
 import com.xenaksys.szcore.server.processor.ServerLogProcessor;
 import com.xenaksys.szcore.server.receive.ServerEventReceiver;
-import com.xenaksys.szcore.server.web.WebServer;
-import com.xenaksys.szcore.server.web.WebServerInscore;
+import com.xenaksys.szcore.server.web.AudienceWebServer;
+import com.xenaksys.szcore.server.web.ScoreWebServer;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.BasicScheduler;
 import com.xenaksys.szcore.time.BasicTimer;
@@ -93,7 +94,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     private ScoreProcessor scoreProcessor;
     private WebProcessor webProcessor;
     private ServerLogProcessor logProcessor;
-//    private OscReceiver eventProcessor;
+    //    private OscReceiver eventProcessor;
     private InEventContainerDisruptorProcessor eventProcessor;
     private Scheduler scheduler;
     private EventFactory eventFactory;
@@ -101,9 +102,10 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     private MutableNanoClock clock;
     private Disruptor<OscEvent> outOscDisruptor;
     private Disruptor<OutgoingWebEvent> outWebDisruptor;
-//    private Disruptor<IncomingOscEvent> inDisruptor;
+    //    private Disruptor<IncomingOscEvent> inDisruptor;
     private Disruptor<EventContainer> inDisruptor;
-    private WebServer webServer;
+    private AudienceWebServer audienceWebServer;
+    private ScoreWebServer scoreWebServer;
 
     private final Map<String, ClientInfo> participants = new ConcurrentHashMap<>();
     private final Map<String, ParticipantStats> participantStats = new ConcurrentHashMap<>();
@@ -220,9 +222,11 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         subscribe(webProcessor);
 
         String webRoot = props.getProperty(WEB_ROOT);
-        webServer = new WebServerInscore(webRoot, 8000, 1024, 10, true, this);
+//        audienceWebServer = new InscoreWebServer(webRoot, 8000, 1024, 10, true, this);
+//        audienceWebServer.start();
 
-        webServer.start();
+        scoreWebServer = new ScoreWebServer(webRoot, 8080, 1024, 10, true, this);
+        scoreWebServer.start();
     }
 
     protected void onStart() throws Exception {
@@ -424,48 +428,48 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
-    public void startWebServer() {
-        if(webServer == null) {
+    public void startAudienceWebServer() {
+        if (audienceWebServer == null) {
             LOG.error("startWebServer: Invalid Web server");
             return;
         }
 
-        if (webServer.isAudienceServerRunning()) {
+        if (audienceWebServer.isServerRunning()) {
             LOG.error("startWebServer: Web server is already running");
             return;
         }
 
-        webServer.start();
+        audienceWebServer.start();
     }
 
     @Override
-    public void stopWebServer() {
-        if(webServer == null) {
+    public void stopAudienceWebServer() {
+        if (audienceWebServer == null) {
             LOG.error("stopWebServer: Invalid Web server");
             return;
         }
 
-        if (!webServer.isAudienceServerRunning()) {
+        if (!audienceWebServer.isServerRunning()) {
             LOG.error("stopWebServer: Web server is not running");
             return;
         }
 
-        webServer.stop();
+        audienceWebServer.stop();
     }
 
     @Override
     public boolean isAudienceWebServerRunning() {
-        if (webServer == null) {
+        if (audienceWebServer == null) {
             return false;
         }
 
-        return webServer.isAudienceServerRunning();
+        return audienceWebServer.isServerRunning();
     }
 
     @Override
-    public void onIncomingWebEvent(IncomingWebEvent webEvent) {
+    public void onIncomingWebEvent(IncomingWebAudienceEvent webEvent) {
         try {
-            scoreProcessor.onIncomingWebEvent(webEvent);
+            scoreProcessor.onIncomingWebAudienceEvent(webEvent);
         } catch (Exception e) {
             LOG.error("Failed to process web event: {}", webEvent, e);
             eventProcessor.notifyListeners(new ErrorEvent("Failed to process web event.", "SzcoreServer", e, clock.getSystemTimeMillis()));
@@ -473,18 +477,38 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
-    public void pushToWebClients(String data) {
-        webServer.pushToAll(data);
+    public void pushToWebAudience(String data) {
+        if (audienceWebServer == null) {
+            return;
+        }
+        audienceWebServer.pushToAll(data);
     }
 
     @Override
-    public void updateWebServerStatus(Set<WebConnection> connections) {
+    public void updateAudienceWebServerStatus(Set<WebConnection> connections) {
+        if (webProcessor == null) {
+            return;
+        }
         webProcessor.onUpdateWebConnections(connections);
     }
 
     @Override
+    public void updateScoreServerStatus(Set<WebConnection> connections) {
+        //TODO
+    }
+
+
+    @Override
     public void banWebClient(WebClientInfo clientInfo) {
-        webServer.banWebClient(clientInfo);
+        audienceWebServer.banWebClient(clientInfo);
+    }
+
+    @Override
+    public void pushToScoreWeb(String target, WebScoreTargetType targetType, String data) {
+        if (scoreWebServer == null) {
+            return;
+        }
+        scoreWebServer.pushData(target, targetType, data);
     }
 
     public WebProcessor getWebProcessor() {
@@ -568,12 +592,12 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
-    public WebScore loadWebScore(File file) {
+    public WebAudienceScore loadWebScore(File file) {
         try {
             return scoreProcessor.loadWebScore(file);
         } catch (Exception e) {
             LOG.error("Failed to load score: " + file, e);
-            eventProcessor.notifyListeners(new ErrorEvent("Failed to load WebScore: " + file, "SzcoreServer", e, clock.getSystemTimeMillis()));
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to load WebAudienceScore: " + file, "SzcoreServer", e, clock.getSystemTimeMillis()));
         }
         return null;
     }

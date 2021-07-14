@@ -11,7 +11,7 @@ import com.xenaksys.szcore.model.Transition;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
-import com.xenaksys.szcore.score.web.WebScoreScript;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
 import com.xenaksys.szcore.scripting.ScriptingEngineScript;
 import com.xenaksys.szcore.web.WebClientInfo;
 import com.xenaksys.szcore.web.WebConnection;
@@ -99,6 +99,10 @@ public class EventFactory {
 
     public ParticipantEvent createParticipantEvent(InetAddress inetAddress, String hostAddress, int portIn, int portOut, int portErr, int ping, String instrument, long creationTime) {
         return new ParticipantEvent(inetAddress, hostAddress, portIn, portOut, portErr, ping, instrument, creationTime);
+    }
+
+    public WebScoreConnectionEvent createWebScoreConnectionEvent(WebClientInfo webClientInfo, long creationTime) {
+        return new WebScoreConnectionEvent(webClientInfo, creationTime);
     }
 
     public WebClientInfoUpdateEvent createWebClientInfoUpdateEvent(ArrayList<WebClientInfo> webClientInfos, List<HistoBucketView> histoBucketViews, int totalWebHits, long creationTime) {
@@ -279,30 +283,30 @@ public class EventFactory {
         return resetScoreEvent;
     }
 
-    public ElementSelectedEvent createElementSelectedEvent(String elementId, boolean isSelected, String eventId, String sourceAddr, String requestPath,
-                                                           long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        return new ElementSelectedEvent(elementId, isSelected, sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public ElementSelectedAudienceEvent createElementSelectedEvent(String elementId, boolean isSelected, String eventId, String sourceAddr, String requestPath,
+                                                                   long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new ElementSelectedAudienceEvent(elementId, isSelected, sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
-    public UpdateWebStatusEvent createUpdateWebConnectionsEvent(Set<WebConnection> clientConnections, long creationTime) {
-        return new UpdateWebStatusEvent(clientConnections, creationTime);
+    public UpdateWebStatusAudienceEvent createUpdateWebConnectionsEvent(Set<WebConnection> clientConnections, long creationTime) {
+        return new UpdateWebStatusAudienceEvent(clientConnections, creationTime);
     }
 
-    public WebRequestLogEvent createWebRequestLogEvent(ZsWebRequest zsRequest, long creationTime) {
-        return new WebRequestLogEvent(zsRequest, creationTime);
+    public WebRequestLogAudienceEvent createWebRequestLogEvent(ZsWebRequest zsRequest, long creationTime) {
+        return new WebRequestLogAudienceEvent(zsRequest, creationTime);
     }
 
-    public WebPollEvent createWebPollEvent(String eventId, String sourceAddr, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        return new WebPollEvent(eventId, sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public WebPollAudienceEvent createWebPollEvent(String eventId, String sourceAddr, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new WebPollAudienceEvent(eventId, sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
-    public WebStartEvent createWebStartEvent(String eventId, String sourceAddr, String requestPath,
-                                             long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        return new WebStartEvent(sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public WebStartAudienceEvent createWebStartEvent(String eventId, String sourceAddr, String requestPath,
+                                                     long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new WebStartAudienceEvent(sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
-    public WebScoreEvent createWebScoreEvent(BeatId beatId, List<WebScoreScript> scripts, long creationTime) {
-        return new WebScoreEvent(beatId, scripts, creationTime);
+    public WebAudienceEvent createWebScoreEvent(BeatId beatId, List<WebAudienceScoreScript> scripts, long creationTime) {
+        return new WebAudienceEvent(beatId, scripts, creationTime);
     }
 
     public ScriptingEngineEvent createScriptingEngineEvent(BeatId beatId, List<ScriptingEngineScript> scripts, long creationTime) {
@@ -313,36 +317,40 @@ public class EventFactory {
         return new ScriptingEngineResetEvent(beatId, scripts, creationTime);
     }
 
-    public WebScoreInstructionsEvent createWebScoreInstructionsEvent(String l1, String l2, String l3, boolean isVisible, long creationTime) {
-        return new WebScoreInstructionsEvent(l1, l2, l3, isVisible, creationTime);
+    public WebAudienceInstructionsEvent createWebScoreInstructionsEvent(String l1, String l2, String l3, boolean isVisible, long creationTime) {
+        return new WebAudienceInstructionsEvent(l1, l2, l3, isVisible, creationTime);
     }
 
-    public WebScoreStateUpdateEvent createWebScoreStateUpdateEvent(WebScoreStateType propertyName, Object propertyValue, long creationTime) {
-        return new WebScoreStateUpdateEvent(propertyName, propertyValue, creationTime);
+    public WebAudienceStateUpdateEvent createWebScoreStateUpdateEvent(WebScoreStateType propertyName, Object propertyValue, long creationTime) {
+        return new WebAudienceStateUpdateEvent(propertyName, propertyValue, creationTime);
     }
 
-    public WebScorePrecountEvent createWebScorePrecountEvent(int count, boolean isOn, int colourId, long creationTime) {
-        return new WebScorePrecountEvent(count, isOn, colourId, creationTime);
+    public WebAudiencePrecountEvent createWebScorePrecountEvent(int count, boolean isOn, int colourId, long creationTime) {
+        return new WebAudiencePrecountEvent(count, isOn, colourId, creationTime);
     }
 
-    public WebScoreResetEvent createWebScoreResetEvent(BeatId beatId, List<WebScoreScript> scripts, long creationTime) {
-        return new WebScoreResetEvent(beatId, scripts, creationTime);
+    public WebAudienceResetEvent createWebScoreResetEvent(BeatId beatId, List<WebAudienceScoreScript> scripts, long creationTime) {
+        return new WebAudienceResetEvent(beatId, scripts, creationTime);
     }
 
-    public WebScoreStopEvent createWebScoreStopEvent(long creationTime) {
-        return new WebScoreStopEvent(null, null, creationTime);
+    public WebAudienceStopEvent createWebScoreStopEvent(long creationTime) {
+        return new WebAudienceStopEvent(null, null, creationTime);
     }
 
-    public WebScorePlayTilesEvent createWebScorePlayTilesEvent(long creationTime) {
-        return new WebScorePlayTilesEvent(null, null, creationTime);
+    public WebAudiencePlayTilesEvent createWebScorePlayTilesEvent(long creationTime) {
+        return new WebAudiencePlayTilesEvent(null, null, creationTime);
     }
 
-    public WebScoreSelectTilesEvent createWebScoreSelectTilesEvent(List<String> tileIds, long creationTime) {
-        return new WebScoreSelectTilesEvent(null, null, tileIds, creationTime);
+    public WebAudienceSelectTilesEvent createWebScoreSelectTilesEvent(List<String> tileIds, long creationTime) {
+        return new WebAudienceSelectTilesEvent(null, null, tileIds, creationTime);
     }
 
-    public OutgoingWebEvent createOutgoingWebEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, long creationTime) {
-        return new OutgoingWebEvent(beatId, eventId, eventType, creationTime);
+    public OutgoingWebEvent createOutgoingWebAudienceEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, long creationTime) {
+        return new OutgoingWebEvent(eventId, beatId, EventType.WEB_AUDIENCE_OUT, eventType, creationTime);
+    }
+
+    public OutgoingWebEvent createWebScoreOutEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, long creationTime) {
+        return new OutgoingWebEvent(eventId, beatId, EventType.WEB_SCORE_OUT, eventType, creationTime);
     }
 
     public List<Object> createJavaScriptArgs() {

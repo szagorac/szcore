@@ -302,13 +302,13 @@ public class SettingsController {
 
     @FXML
     private void setAudienceWebServerOn(ActionEvent event) {
-        scoreService.startWebServer();
+        scoreService.startAudienceWebServer();
         detectAudienceWebServerStatus(null);
     }
 
     @FXML
     private void setAudienceWebServerOff(ActionEvent event) {
-        scoreService.stopWebServer();
+        scoreService.stopAudienceWebServer();
         detectAudienceWebServerStatus(null);
     }
 

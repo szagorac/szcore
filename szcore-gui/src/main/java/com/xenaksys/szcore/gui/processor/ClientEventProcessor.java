@@ -16,8 +16,9 @@ import com.xenaksys.szcore.event.ParticipantStatsEvent;
 import com.xenaksys.szcore.event.StopEvent;
 import com.xenaksys.szcore.event.TempoChangeEvent;
 import com.xenaksys.szcore.event.TimeSigChangeEvent;
+import com.xenaksys.szcore.event.WebAudienceEvent;
 import com.xenaksys.szcore.event.WebClientInfoUpdateEvent;
-import com.xenaksys.szcore.event.WebScoreEvent;
+import com.xenaksys.szcore.event.WebScoreInEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Participant;
 import com.xenaksys.szcore.model.Id;
@@ -66,8 +67,8 @@ public class ClientEventProcessor implements Processor {
                 }
                 break;
             case CLIENT:
-                if((event instanceof ClientEvent)){
-                    processClientEvent((ClientEvent)event);
+                if ((event instanceof ClientEvent)) {
+                    processClientEvent((ClientEvent) event);
                 }
                 break;
             case MUSIC:
@@ -75,10 +76,13 @@ public class ClientEventProcessor implements Processor {
                     processMusicEvent((MusicEvent) event);
                 }
                 break;
-            case WEB_SCORE:
-                if ((event instanceof WebScoreEvent)) {
-                    processWebScoreEvent((WebScoreEvent) event);
+            case WEB_AUDIENCE:
+                if ((event instanceof WebAudienceEvent)) {
+                    processWebScoreEvent((WebAudienceEvent) event);
                 }
+                break;
+            case WEB_SCORE_IN:
+                processWebScoreInEvent((WebScoreInEvent) event);
                 break;
             case SCRIPTING_ENGINE:
                 //TODO
@@ -107,8 +111,8 @@ public class ClientEventProcessor implements Processor {
             case MUSIC:
                 processMusicEvent((MusicEvent) event, beatNo, tickNo);
                 break;
-            case WEB_SCORE:
-                processWebScoreEvent((WebScoreEvent) event, beatNo, tickNo);
+            case WEB_AUDIENCE:
+                processWebScoreEvent((WebAudienceEvent) event, beatNo, tickNo);
                 break;
             case SCRIPTING_ENGINE:
                 //TODO
@@ -137,7 +141,7 @@ public class ClientEventProcessor implements Processor {
         }
     }
 
-    private void processWebScoreEvent(WebScoreEvent event, int beatNo, int tickNo) {
+    private void processWebScoreEvent(WebAudienceEvent event, int beatNo, int tickNo) {
 
     }
 
@@ -167,14 +171,18 @@ public class ClientEventProcessor implements Processor {
     public void processTransportTickEvent(Id transportId, int beatNo, int baseBeatNo, int tickNo) {
 
     }
+
     private void processMusicEvent(MusicEvent event) {
         LOG.debug("Received score MUSIC event: " + event);
     }
 
-    private void processWebScoreEvent(WebScoreEvent event) {
-        LOG.debug("Received WebScore MUSIC event: " + event);
+    private void processWebScoreEvent(WebAudienceEvent event) {
+        LOG.debug("Received WebAudienceScore MUSIC event: " + event);
     }
 
+    private void processWebScoreInEvent(WebScoreInEvent event) {
+        LOG.debug("Received WebScoreInEvent MUSIC event: " + event);
+    }
 
     private void processScoreOscEvent(OscEvent event) {
         LOG.debug("Received score OSC event: " + event);
@@ -182,7 +190,7 @@ public class ClientEventProcessor implements Processor {
 
     private void processClientEvent(ClientEvent event) {
         ClientEventType type = event.getClientEventType();
-        switch (type){
+        switch (type) {
             case PARTICIPANT:
                 processParticipantEvent((ParticipantEvent) event);
                 break;

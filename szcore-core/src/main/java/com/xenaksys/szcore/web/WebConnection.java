@@ -11,6 +11,8 @@ public class WebConnection {
     private final String host;
     private final int port;
     private String userAgent;
+    private String instrument;
+    private boolean isScoreClient;
 
     public WebConnection(String clientAddr, WebConnectionType connectionType) {
         this.clientAddr = clientAddr;
@@ -54,6 +56,22 @@ public class WebConnection {
         return userAgent;
     }
 
+    public String getInstrument() {
+        return instrument;
+    }
+
+    public void setInstrument(String instrument) {
+        this.instrument = instrument;
+    }
+
+    public boolean isScoreClient() {
+        return isScoreClient;
+    }
+
+    public void setScoreClient(boolean scoreClient) {
+        this.isScoreClient = scoreClient;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -75,6 +93,8 @@ public class WebConnection {
                 ", host='" + host + '\'' +
                 ", port=" + port +
                 ", userAgent=" + userAgent +
+                ", instrument=" + instrument +
+                ", isScoreClient=" + isScoreClient +
                 '}';
     }
 }

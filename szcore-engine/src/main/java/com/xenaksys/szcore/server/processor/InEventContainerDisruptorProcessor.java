@@ -6,12 +6,13 @@ import com.xenaksys.szcore.event.EventContainer;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.EventType;
 import com.xenaksys.szcore.event.IncomingOscEvent;
-import com.xenaksys.szcore.event.IncomingWebEvent;
+import com.xenaksys.szcore.event.IncomingWebAudienceEvent;
 import com.xenaksys.szcore.event.InstrumentEvent;
 import com.xenaksys.szcore.event.OscEvent;
 import com.xenaksys.szcore.event.ParticipantEvent;
 import com.xenaksys.szcore.event.ParticipantStatsEvent;
-import com.xenaksys.szcore.event.WebScoreEvent;
+import com.xenaksys.szcore.event.WebAudienceEvent;
+import com.xenaksys.szcore.event.WebScoreInEvent;
 import com.xenaksys.szcore.model.ClientInfo;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.SzcoreEvent;
@@ -65,12 +66,16 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
                 case OSC:
                     processOscEvent((OscEvent) event);
                     break;
-                case WEB_IN:
-                    processWebEvent((IncomingWebEvent) event);
+                case WEB_AUDIENCE_IN:
+                    processWebEvent((IncomingWebAudienceEvent) event);
                     break;
-                case WEB_SCORE:
-                    processWebScoreEvent((WebScoreEvent) event);
+                case WEB_AUDIENCE:
+                    processWebAudienceEvent((WebAudienceEvent) event);
                     break;
+                case WEB_SCORE_IN:
+                    processWebScoreInEvent((WebScoreInEvent) event);
+                    break;
+
             }
 
         } catch (Exception e) {
@@ -78,12 +83,16 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
         }
     }
 
-    private void processWebEvent(IncomingWebEvent event) {
+    private void processWebScoreInEvent(WebScoreInEvent event) {
+        server.getScoreProcessor().process(event);
+    }
+
+    private void processWebEvent(IncomingWebAudienceEvent event) {
 //        LOG.info("processWebEvent: {}", event);
         server.getWebProcessor().process(event);
     }
 
-    private void processWebScoreEvent(WebScoreEvent event) {
+    private void processWebAudienceEvent(WebAudienceEvent event) {
 //        LOG.info("processWebEvent: {}", event);
         server.getScoreProcessor().process(event);
     }

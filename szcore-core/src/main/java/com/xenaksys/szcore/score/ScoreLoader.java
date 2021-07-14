@@ -18,7 +18,7 @@ import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.IntId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StrId;
-import com.xenaksys.szcore.score.web.WebScoreScript;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
 import com.xenaksys.szcore.scripting.ScriptingEngineScript;
 import com.xenaksys.szcore.util.FileUtil;
 import com.xenaksys.szcore.util.ParseUtil;
@@ -529,7 +529,7 @@ public class ScoreLoader {
 
         script = ParseUtil.parseToken(script, COMMA_TOKEN, COMMA);
 
-        Script scriptObj = new WebScoreScript(id, beatId, script, isResetPoint, isResetOnly);
+        Script scriptObj = new WebAudienceScoreScript(id, beatId, script, isResetPoint, isResetOnly);
         LOG.info("Created script: {}", scriptObj);
         score.addScript(scriptObj);
     }

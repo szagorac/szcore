@@ -90,31 +90,42 @@ public class WebScore {
         }
     }
 
-    private void addOrUpdateClientInfo(WebClientInfo clientInfo) {
+    private void addOrUpdateClientInfo(WebClientInfo clientInfo) throws Exception {
         if (clientInfo == null) {
             return;
         }
         clients.put(clientInfo.getClientAddr(), clientInfo);
-        String instrument = clientInfo.getInstrument();
-        if (instrument != null) {
-            addInstrumentClient(instrument, clientInfo);
-        }
+        addInstrumentClient(clientInfo);
     }
 
-    private void addInstrumentClient(String instrument, WebClientInfo clientInfo) {
+    private void addInstrumentClient(WebClientInfo clientInfo) throws Exception {
+        String instrument = clientInfo.getInstrument();
+        if (instrument == null) {
+            return;
+        }
+
         List<WebClientInfo> clientInfos = instrumentClients.computeIfAbsent(instrument, k -> new ArrayList<>());
         if (!clientInfos.contains(clientInfo)) {
             clientInfos.add(clientInfo);
+            sendPartInfo(clientInfo);
         } else {
             LOG.debug("addInstrumentClient, client is already registered");
         }
     }
 
     public void sendScoreInfo(WebClientInfo clientInfo) throws Exception {
-        String target = clientInfo.getClientAddr();
-        WebScoreTargetType targetType = WebScoreTargetType.HOST;
         WebScoreState scoreState = new WebScoreState();
         scoreState.setScoreInfo(scoreInfo);
+        sendScoreState(clientInfo.getClientAddr(), WebScoreTargetType.HOST, scoreState);
+    }
+
+    public void sendPartInfo(WebClientInfo clientInfo) throws Exception {
+        WebScoreState scoreState = new WebScoreState();
+        scoreState.setPart(clientInfo.getInstrument());
+        sendScoreState(clientInfo.getClientAddr(), WebScoreTargetType.HOST, scoreState);
+    }
+
+    public void sendScoreState(String target, WebScoreTargetType targetType, WebScoreState scoreState) throws Exception {
         OutgoingWebEvent outEvent = eventFactory.createWebScoreOutEvent(null, null, OutgoingWebEventType.PUSH_SCORE_STATE, clock.getSystemTimeMillis());
         outEvent.addData(Consts.WEB_DATA_SCORE_STATE, scoreState);
         outEvent.addData(Consts.WEB_DATA_TARGET, target);
@@ -143,7 +154,7 @@ public class WebScore {
             } else {
                 clientInfo.setInstrument(instrument);
             }
-            addInstrumentClient(instrument, clientInfo);
+            addInstrumentClient(clientInfo);
         } catch (Exception e) {
             LOG.error("processPartRegistration: failed to process part registration", e);
         }

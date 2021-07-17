@@ -114,6 +114,8 @@ public class ScoreController {
     @FXML
     private TableColumn<Participant, Boolean> selectColumn;
     @FXML
+    private TableColumn<Participant, Boolean> webClientColumn;
+    @FXML
     private Label pageNoLbl;
     @FXML
     private Label barNoLbl;
@@ -520,10 +522,18 @@ public class ScoreController {
         instrumentColumn.setCellValueFactory(cellData -> cellData.getValue().getInstrumentProperty());
         selectColumn.setCellValueFactory(cellData -> cellData.getValue().getSelectProperty());
         expiredColumn.setCellValueFactory(cellData -> cellData.getValue().getLastPingMillisProperty());
-
         selectColumn.setCellFactory(CheckBoxTableCell.forTableColumn(selectColumn));
-        participantsTableView.setEditable(true);
         selectColumn.setEditable(true);
+        participantsTableView.setEditable(true);
+
+        webClientColumn.setCellValueFactory(cellData -> cellData.getValue().webClientProperty());
+        webClientColumn.setCellFactory(col -> new TableCell<Participant, Boolean>() {
+            @Override
+            protected void updateItem(Boolean item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item ? "Y" : "N");
+            }
+        });
 
         instrumentColumn.setCellFactory(column -> {
             return new TableCell<Participant, String>() {
@@ -678,7 +688,7 @@ public class ScoreController {
         String l3 = validateWebInstruction(webscoreInstructions.getLine3());
         boolean isVisible = webscoreInstructions.getVisible();
         EventFactory eventFactory = publisher.getEventFactory();
-        WebAudienceInstructionsEvent instructionsEvent = eventFactory.createWebScoreInstructionsEvent(l1, l2, l3, isVisible, clock.getSystemTimeMillis());
+        WebAudienceInstructionsEvent instructionsEvent = eventFactory.createWebAudienceInstructionsEvent(l1, l2, l3, isVisible, clock.getSystemTimeMillis());
         publisher.receive(instructionsEvent);
     }
 
@@ -994,7 +1004,7 @@ public class ScoreController {
     }
 
     private void sendAddParts(Participant participant, String instrumentsCsv) {
-        if (participant == null || instrumentsCsv == null || instrumentsCsv.length() < 1) {
+        if (participant == null || instrumentsCsv == null || instrumentsCsv.length() < 1 || participant.isWebClient()) {
             return;
         }
         EventFactory eventFactory = publisher.getEventFactory();

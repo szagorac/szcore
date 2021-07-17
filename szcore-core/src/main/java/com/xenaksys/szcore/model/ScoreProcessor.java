@@ -2,6 +2,7 @@ package com.xenaksys.szcore.model;
 
 import com.xenaksys.szcore.event.IncomingWebAudienceEvent;
 import com.xenaksys.szcore.event.OutgoingWebEvent;
+import com.xenaksys.szcore.event.WebScoreInEvent;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
@@ -98,4 +99,7 @@ public interface  ScoreProcessor extends Processor {
     void scheduleEvent(SzcoreEvent event, long timeDeltaMs);
 
     public void scheduleTask(MusicTask task);
+
+    void onIncomingWebScoreEvent(WebScoreInEvent webEvent) throws Exception;
+
 }

@@ -12,6 +12,7 @@ import com.xenaksys.szcore.event.OscEvent;
 import com.xenaksys.szcore.event.OutgoingWebEvent;
 import com.xenaksys.szcore.event.PingEvent;
 import com.xenaksys.szcore.event.ServerHelloEvent;
+import com.xenaksys.szcore.event.WebScoreInEvent;
 import com.xenaksys.szcore.model.BeatTimeStrategy;
 import com.xenaksys.szcore.model.ClientInfo;
 import com.xenaksys.szcore.model.Clock;
@@ -467,12 +468,23 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
-    public void onIncomingWebEvent(IncomingWebAudienceEvent webEvent) {
+    public void onIncomingWebAudienceEvent(IncomingWebAudienceEvent webEvent) {
         try {
             scoreProcessor.onIncomingWebAudienceEvent(webEvent);
         } catch (Exception e) {
-            LOG.error("Failed to process web event: {}", webEvent, e);
+            LOG.error("Failed to process web audience event: {}", webEvent, e);
             eventProcessor.notifyListeners(new ErrorEvent("Failed to process web event.", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+
+    @Override
+    public void onIncomingWebScoreEvent(WebScoreInEvent webEvent) {
+        try {
+            scoreProcessor.onIncomingWebScoreEvent(webEvent);
+        } catch (Exception e) {
+            LOG.error("Failed to process web Score event: {}", webEvent, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to process web Score event.", "SzcoreServer", e, clock.getSystemTimeMillis()));
         }
     }
 
@@ -485,16 +497,20 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
-    public void updateAudienceWebServerStatus(Set<WebConnection> connections) {
+    public void updateAudienceWebServerConnections(Set<WebConnection> connections) {
         if (webProcessor == null) {
             return;
         }
-        webProcessor.onUpdateWebConnections(connections);
+        webProcessor.onUpdateWebAudienceConnections(connections);
     }
 
     @Override
-    public void updateScoreServerStatus(Set<WebConnection> connections) {
-        //TODO
+    public void updateScoreServerConnections(Set<WebConnection> connections) {
+        if (webProcessor == null) {
+            return;
+        }
+        LOG.info("updateScoreServerConnections: have {} connections", connections.size());
+        webProcessor.onUpdateWebScoreConnections(connections);
     }
 
 
@@ -509,6 +525,14 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
             return;
         }
         scoreWebServer.pushData(target, targetType, data);
+    }
+
+    @Override
+    public void closeScoreConnections(List<String> connectionIds) {
+        if (scoreWebServer == null) {
+            return;
+        }
+        scoreWebServer.closeConnections(connectionIds);
     }
 
     public WebProcessor getWebProcessor() {

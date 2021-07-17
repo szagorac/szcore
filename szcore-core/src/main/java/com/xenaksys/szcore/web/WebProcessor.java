@@ -9,13 +9,16 @@ import com.xenaksys.szcore.event.IncomingWebAudienceEvent;
 import com.xenaksys.szcore.event.IncomingWebAudienceEventType;
 import com.xenaksys.szcore.event.OutgoingWebEvent;
 import com.xenaksys.szcore.event.OutgoingWebEventType;
-import com.xenaksys.szcore.event.UpdateWebStatusAudienceEvent;
-import com.xenaksys.szcore.event.WebClientInfoUpdateEvent;
+import com.xenaksys.szcore.event.UpdateWebAudienceConnectionsEvent;
+import com.xenaksys.szcore.event.UpdateWebScoreConnectionsEvent;
+import com.xenaksys.szcore.event.WebAudienceClientInfoUpdateEvent;
+import com.xenaksys.szcore.event.WebAudienceRequestLogEvent;
 import com.xenaksys.szcore.event.WebPollAudienceEvent;
-import com.xenaksys.szcore.event.WebRequestLogAudienceEvent;
+import com.xenaksys.szcore.event.WebScoreClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.WebScoreConnectionEvent;
 import com.xenaksys.szcore.event.WebScoreInEvent;
 import com.xenaksys.szcore.event.WebScoreInEventType;
+import com.xenaksys.szcore.event.WebScoreRemoveConnectionEvent;
 import com.xenaksys.szcore.event.WebStartAudienceEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.EventReceiver;
@@ -75,7 +78,8 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     private final EventReceiver eventReceiver;
     private final Clock clock;
 
-    private final Map<String, WebClientInfo> clientInfos = new ConcurrentHashMap<>();
+    private final Map<String, WebClientInfo> audienceClientInfos = new ConcurrentHashMap<>();
+    private final Map<String, WebClientInfo> scoreClientInfos = new ConcurrentHashMap<>();
 
     private volatile String currentWebAudienceScoreState;
     private volatile String currentWebAudienceScoreStateDelta;
@@ -107,10 +111,10 @@ public class WebProcessor implements Processor, WebScoreStateListener {
                     processWebPoll((WebPollAudienceEvent) webEvent);
                     break;
                 case CONNECTIONS_UPDATE:
-                    processWebStatusUpdate((UpdateWebStatusAudienceEvent) webEvent);
+                    processWebAudienceConnectionsUpdate((UpdateWebAudienceConnectionsEvent) webEvent);
                     break;
                 case REQUEST_LOG:
-                    processWebRequestLog((WebRequestLogAudienceEvent) webEvent);
+                    processWebRequestLog((WebAudienceRequestLogEvent) webEvent);
                     break;
                 default:
                     LOG.info("onIncomingWebEvent: unknown IncomingWebAudienceEventType: {}", type);
@@ -119,14 +123,20 @@ public class WebProcessor implements Processor, WebScoreStateListener {
             WebScoreInEvent webEvent = (WebScoreInEvent) event;
             WebScoreInEventType eventType = webEvent.getWebScoreEventType();
             switch (eventType) {
-                case GENERIC:
+                case CONNECTIONS_REMOVE:
+                case CONNECTION:
+                    scoreService.onIncomingWebScoreEvent(webEvent);
+                    break;
+                case CONNECTIONS_UPDATE:
+                    processWebScoreConnectionsUpdate((UpdateWebScoreConnectionsEvent) webEvent);
+                    break;
                 default:
                     LOG.error("process()  WebScoreInEvent: unexpected event: {}", eventType);
             }
         }
     }
 
-    private void processWebRequestLog(WebRequestLogAudienceEvent webEvent) {
+    private void processWebRequestLog(WebAudienceRequestLogEvent webEvent) {
         ZsWebRequest request = webEvent.getZsRequest();
         long reqTime = request.getTimeMs();
 
@@ -134,7 +144,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         boolean isClientHitLogged = false;
 
         String sourceAddr = request.getSourceAddr();
-        WebClientInfo cInfo = getClientInfo(sourceAddr);
+        WebClientInfo cInfo = getAudienceClientInfo(sourceAddr);
         if (cInfo != null) {
             cInfo.logHit(reqTime);
             isClientHitLogged = true;
@@ -145,7 +155,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
             return;
         }
         String host = hostPort[0];
-        List<WebClientInfo> hostClientInfos = getHostClientInfo(host);
+        List<WebClientInfo> hostClientInfos = getAudienceHostClientInfo(host);
 
         String userAgent = request.getUserAgent();
         for (WebClientInfo clientInfo : hostClientInfos) {
@@ -171,15 +181,20 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         if (pollEvent.getSourceAddr() == null) {
             return;
         }
-        WebClientInfo clientInfo = getOrCreateClientInfo(pollEvent.getSourceAddr());
+        WebClientInfo clientInfo = getOrCreateAudienceClientInfo(pollEvent.getSourceAddr());
         if (clientInfo != null && WebConnectionType.POLL != clientInfo.getConnectionType()) {
             clientInfo.setConnectionType(WebConnectionType.POLL);
         }
     }
 
-    private void processWebStatusUpdate(UpdateWebStatusAudienceEvent connectionsEvent) {
-        LOG.debug("processWebConnectionUpdate: ");
-        updateWebStatus(connectionsEvent.getClientConnections());
+    private void processWebAudienceConnectionsUpdate(UpdateWebAudienceConnectionsEvent connectionsEvent) {
+        LOG.debug("processWebAudienceConnectionsUpdate: ");
+        updateWebAudienceConnections(connectionsEvent.getClientConnections());
+    }
+
+    private void processWebScoreConnectionsUpdate(UpdateWebScoreConnectionsEvent connectionsEvent) {
+        LOG.debug("processWebScoreConnectionsUpdate: ");
+        updateWebScoreConnections(connectionsEvent.getClientConnections());
     }
 
     private void processWebScoreEvent(IncomingWebAudienceEvent webEvent) {
@@ -188,34 +203,34 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         long receiveTime = webEvent.getCreationTime();
         long latency = receiveTime - sendTime;
 
-        WebClientInfo clientInfo = getClientInfo(sourceAddr);
+        WebClientInfo clientInfo = getAudienceClientInfo(sourceAddr);
         if (clientInfo != null) {
             clientInfo.addLatency(latency);
         }
 
-        scoreService.onIncomingWebEvent(webEvent);
+        scoreService.onIncomingWebAudienceEvent(webEvent);
     }
 
-    public WebClientInfo getOrCreateClientInfo(String sourceAddr) {
+    public WebClientInfo getOrCreateAudienceClientInfo(String sourceAddr) {
         if (sourceAddr == null) {
             return null;
         }
-        return clientInfos.computeIfAbsent(sourceAddr, WebClientInfo::new);
+        return audienceClientInfos.computeIfAbsent(sourceAddr, WebClientInfo::new);
     }
 
-    public WebClientInfo getClientInfo(String sourceAddr) {
+    public WebClientInfo getAudienceClientInfo(String sourceAddr) {
         if (sourceAddr == null) {
             return null;
         }
-        return clientInfos.get(sourceAddr);
+        return audienceClientInfos.get(sourceAddr);
     }
 
-    public List<WebClientInfo> getHostClientInfo(String host) {
+    public List<WebClientInfo> getAudienceHostClientInfo(String host) {
         if (host == null) {
             return null;
         }
         List<WebClientInfo> out = new ArrayList<>();
-        for (WebClientInfo clientInfo : clientInfos.values()) {
+        for (WebClientInfo clientInfo : audienceClientInfos.values()) {
             if (host.equals(clientInfo.getHost())) {
                 out.add(clientInfo);
             }
@@ -223,13 +238,43 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         return out;
     }
 
-    public void updateOrCreateClientInfo(WebConnection webConnection) {
+    public WebClientInfo getOrCreateScoreClientInfo(String sourceAddr) {
+        if (sourceAddr == null) {
+            return null;
+        }
+        return scoreClientInfos.computeIfAbsent(sourceAddr, WebClientInfo::new);
+    }
+
+    public WebClientInfo getScoreClientInfo(String sourceAddr) {
+        if (sourceAddr == null) {
+            return null;
+        }
+        return scoreClientInfos.get(sourceAddr);
+    }
+
+    public List<WebClientInfo> getScoreHostClientInfo(String host) {
+        if (host == null) {
+            return null;
+        }
+        List<WebClientInfo> out = new ArrayList<>();
+        for (WebClientInfo clientInfo : scoreClientInfos.values()) {
+            if (host.equals(clientInfo.getHost())) {
+                out.add(clientInfo);
+            }
+        }
+        return out;
+    }
+
+    public void updateOrCreateAudienceClientInfo(WebConnection webConnection) {
         if (webConnection == null) {
             return;
         }
-
+        if (webConnection.isScoreClient()) {
+            updateOrCreateScoreClientInfo(webConnection);
+            return;
+        }
         String sourceAddr = webConnection.getClientAddr();
-        WebClientInfo clientInfo = getOrCreateClientInfo(sourceAddr);
+        WebClientInfo clientInfo = getOrCreateAudienceClientInfo(sourceAddr);
         if (clientInfo == null) {
             return;
         }
@@ -255,9 +300,50 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         }
     }
 
+    public void updateOrCreateScoreClientInfo(WebConnection webConnection) {
+        if (webConnection == null) {
+            return;
+        }
+        if (!webConnection.isScoreClient()) {
+            updateOrCreateAudienceClientInfo(webConnection);
+            return;
+        }
+        String sourceAddr = webConnection.getClientAddr();
+        WebClientInfo clientInfo = getOrCreateScoreClientInfo(sourceAddr);
+        if (clientInfo == null) {
+            return;
+        }
+
+        WebConnection conn = clientInfo.getWebConnection();
+        if (!webConnection.equals(conn)) {
+            clientInfo.setWebConnection(webConnection);
+        }
+
+        WebConnectionType type = webConnection.getConnectionType();
+        if (type != null && clientInfo.getConnectionType() != type) {
+            clientInfo.setConnectionType(type);
+        }
+
+        String userAgent = webConnection.getUserAgent();
+        if (userAgent != null) {
+            setUserAgentClientInfo(userAgent, clientInfo);
+        }
+
+        processScoreConnection(clientInfo);
+    }
+
     private void processScoreConnection(WebClientInfo clientInfo) {
         WebScoreConnectionEvent connectionEvent = eventFactory.createWebScoreConnectionEvent(clientInfo, clock.getSystemTimeMillis());
         eventService.receive(connectionEvent);
+    }
+
+    private void closeConnections(List<String> connectionIds) {
+        if (connectionIds.isEmpty()) {
+            return;
+        }
+        scoreService.closeScoreConnections(connectionIds);
+        WebScoreRemoveConnectionEvent clientInfoUpdateEvent = eventFactory.createRemoveWebScoreConnectionsEvent(connectionIds, clock.getSystemTimeMillis());
+        eventService.receive(clientInfoUpdateEvent);
     }
 
     private void setUserAgentClientInfo(String userAgent, WebClientInfo clientInfo) {
@@ -394,7 +480,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         switch (type) {
             case GET_SERVER_STATE:
                 if (isPoll) {
-                    WebPollAudienceEvent pollEvent = eventFactory.createWebPollEvent(eventId, sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+                    WebPollAudienceEvent pollEvent = eventFactory.createWebAudiencePollEvent(eventId, sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
                     eventService.receive(pollEvent);
                 }
                 if (currentWebAudienceScoreState != null) {
@@ -415,7 +501,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
                 eventService.receive(selectedEvent);
                 return createOkWebString(WEB_RESPONSE_SUBMITTED);
             case WEB_START:
-                WebStartAudienceEvent webStartEvent = eventFactory.createWebStartEvent(eventId,
+                WebStartAudienceEvent webStartEvent = eventFactory.createWebAudienceStartEvent(eventId,
                         sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
                 eventService.receive(webStartEvent);
                 return createOkWebString(WEB_RESPONSE_SUBMITTED);
@@ -425,7 +511,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     }
 
     private void logRequest(ZsWebRequest zsRequest) {
-        WebRequestLogAudienceEvent selectedEvent = eventFactory.createWebRequestLogEvent(zsRequest, clock.getSystemTimeMillis());
+        WebAudienceRequestLogEvent selectedEvent = eventFactory.createWebAudienceRequestLogEvent(zsRequest, clock.getSystemTimeMillis());
         eventService.receive(selectedEvent);
     }
 
@@ -583,40 +669,48 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     }
 
     public void onWebConnection(WebConnection webConnection) {
-        updateOrCreateClientInfo(webConnection);
+        if (webConnection.isScoreClient()) {
+            updateOrCreateScoreClientInfo(webConnection);
+        } else {
+            updateOrCreateAudienceClientInfo(webConnection);
+        }
     }
 
-    public void onUpdateWebConnections(Set<WebConnection> connections) {
-        UpdateWebStatusAudienceEvent selectedEvent = eventFactory.createUpdateWebConnectionsEvent(connections, getClock().getSystemTimeMillis());
+    public void onUpdateWebAudienceConnections(Set<WebConnection> connections) {
+        UpdateWebAudienceConnectionsEvent selectedEvent = eventFactory.createUpdateWebAudienceConnectionsEvent(connections, getClock().getSystemTimeMillis());
         eventService.receive(selectedEvent);
     }
 
-    public void updateWebStatus(Set<WebConnection> currentConnections) {
+    public void onUpdateWebScoreConnections(Set<WebConnection> connections) {
+        UpdateWebScoreConnectionsEvent selectedEvent = eventFactory.createUpdateWebScoreConnectionsEvent(connections, getClock().getSystemTimeMillis());
+        eventService.receive(selectedEvent);
+    }
+
+    public void updateWebAudienceConnections(Set<WebConnection> currentConnections) {
         if (currentConnections == null) {
             return;
         }
-
         //Remove addresses not in current connections
         List<String> toRemove = new ArrayList<>();
-        for (String sourceId : clientInfos.keySet()) {
-            WebClientInfo clientInfo = clientInfos.get(sourceId);
+        for (String sourceId : audienceClientInfos.keySet()) {
+            WebClientInfo clientInfo = audienceClientInfos.get(sourceId);
             WebConnection clientConnection = clientInfo.getConnection();
             if (WebConnectionType.POLL == clientConnection.getConnectionType()) {
                 continue;
             }
             if (!currentConnections.contains(clientConnection)) {
-                LOG.debug("updateWsConnections: removing connection: {}", clientConnection);
+                LOG.debug("updateWebAudienceConnections: removing connection: {}", clientConnection);
                 toRemove.add(clientConnection.getClientAddr());
             }
 
             int totalHitCount = clientInfo.getTotalHitCount(clock.getSystemTimeMillis());
             if (totalHitCount > Consts.MAX_ALLOWED_HIT_COUNT_10S) {
-                LOG.info("updateWebStatus: client {} exceeded max allowed number of requests {}", clientInfo.getClientAddr(), Consts.MAX_ALLOWED_HIT_COUNT_10S);
+                LOG.info("updateWebAudienceConnections: client {} exceeded max allowed number of requests {}", clientInfo.getClientAddr(), Consts.MAX_ALLOWED_HIT_COUNT_10S);
                 banClient(clientInfo);
             }
         }
         for(String clientId : toRemove) {
-            clientInfos.remove(clientId);
+            audienceClientInfos.remove(clientId);
         }
 
         //Update or Create addresses in current connections
@@ -624,7 +718,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
             String clientId = connection.getClientAddr();
             WebConnectionType type = connection.getConnectionType();
             LOG.debug("updateWsConnections: update/create addr: {} type: {}", clientId, type);
-            updateOrCreateClientInfo(connection);
+            updateOrCreateAudienceClientInfo(connection);
         }
 
         List<HistoBucketView> histoBucketViews = serverHitHisto.getBucketViews(clock.getSystemTimeMillis());
@@ -638,7 +732,48 @@ public class WebProcessor implements Processor, WebScoreStateListener {
             LOG.info("updateWebStatus: web histogram: {}", histoLog);
         }
 
-        updateGuiClientInfos(histoBucketViews, totalHits);
+        updateGuiAudienceClientInfos(histoBucketViews, totalHits);
+    }
+
+    public void updateWebScoreConnections(Set<WebConnection> currentConnections) {
+        if (currentConnections == null) {
+            return;
+        }
+
+        //Remove addresses not in current connections
+        List<String> toRemove = new ArrayList<>();
+        for (String sourceId : scoreClientInfos.keySet()) {
+            WebClientInfo clientInfo = scoreClientInfos.get(sourceId);
+            WebConnection clientConnection = clientInfo.getConnection();
+            if (WebConnectionType.POLL == clientConnection.getConnectionType()) {
+                continue;
+            }
+            if (!currentConnections.contains(clientConnection)) {
+                LOG.debug("updateWebScoreConnections: removing connection: {}", clientConnection);
+                toRemove.add(clientConnection.getClientAddr());
+            }
+        }
+
+        //Update or Create addresses in current connections
+        for (WebConnection connection : currentConnections) {
+            if (!connection.isScoreClient()) {
+                LOG.error("updateWebScoreConnections: Unexpected client connection: {}", connection);
+                continue;
+            }
+            if (!connection.isOpen()) {
+                toRemove.add(connection.getClientAddr());
+            }
+            String clientId = connection.getClientAddr();
+            WebConnectionType type = connection.getConnectionType();
+            LOG.debug("updateWebScoreConnections: update/create addr: {} type: {}", clientId, type);
+            updateOrCreateScoreClientInfo(connection);
+        }
+
+        for (String clientId : toRemove) {
+            scoreClientInfos.remove(clientId);
+        }
+        closeConnections(toRemove);
+        updateGuiScoreClientInfos();
     }
 
     private void banClient(WebClientInfo clientInfo) {
@@ -646,10 +781,17 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         scoreService.banWebClient(clientInfo);
     }
 
-    private void updateGuiClientInfos(List<HistoBucketView> histoBucketViews, int totalHits) {
-        Collection<WebClientInfo> wcis = clientInfos.values();
+    private void updateGuiAudienceClientInfos(List<HistoBucketView> histoBucketViews, int totalHits) {
+        Collection<WebClientInfo> wcis = audienceClientInfos.values();
         ArrayList<WebClientInfo> out = new ArrayList<>(wcis);
-        WebClientInfoUpdateEvent clientInfoUpdateEvent = eventFactory.createWebClientInfoUpdateEvent(out, histoBucketViews, totalHits, clock.getSystemTimeMillis());
+        WebAudienceClientInfoUpdateEvent clientInfoUpdateEvent = eventFactory.createWebAudienceClientInfoUpdateEvent(out, histoBucketViews, totalHits, clock.getSystemTimeMillis());
+        eventReceiver.notifyListeners(clientInfoUpdateEvent);
+    }
+
+    private void updateGuiScoreClientInfos() {
+        Collection<WebClientInfo> wcis = scoreClientInfos.values();
+        ArrayList<WebClientInfo> out = new ArrayList<>(wcis);
+        WebScoreClientInfoUpdateEvent clientInfoUpdateEvent = eventFactory.createWebScoreClientInfoUpdateEvent(out, clock.getSystemTimeMillis());
         eventReceiver.notifyListeners(clientInfoUpdateEvent);
     }
 }

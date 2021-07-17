@@ -6,7 +6,7 @@ public class WebScoreConnectionEvent extends WebScoreInEvent {
     private final WebClientInfo webClientInfo;
 
     public WebScoreConnectionEvent(WebClientInfo webClientInfo, long creationTime) {
-        super(WebScoreInEventType.CONNECTION.toString(), webClientInfo.getClientAddr(), webClientInfo.getConnectionType().toString(), creationTime, creationTime, creationTime);
+        super(WebScoreInEventType.CONNECTIONS_UPDATE.toString(), webClientInfo.getClientAddr(), webClientInfo.getConnectionType().toString(), creationTime, creationTime, creationTime);
         this.webClientInfo = webClientInfo;
     }
 

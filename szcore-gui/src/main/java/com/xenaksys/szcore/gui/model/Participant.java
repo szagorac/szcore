@@ -26,6 +26,7 @@ public class Participant {
     private BooleanProperty select = new SimpleBooleanProperty(false);
     private BooleanProperty expired = new SimpleBooleanProperty(false);
     private StringProperty lastPingTime = new SimpleStringProperty(Consts.EMPTY);
+    private BooleanProperty webClient = new SimpleBooleanProperty(false);
 
     public InetAddress getInetAddress() {
         return inetAddress.get();
@@ -141,6 +142,18 @@ public class Participant {
 
     public void setLastPingTime(String lastPing) {
         this.lastPingTime.set(lastPing);
+    }
+
+    public boolean isWebClient() {
+        return webClient.get();
+    }
+
+    public BooleanProperty webClientProperty() {
+        return webClient;
+    }
+
+    public void setWebClient(boolean webClient) {
+        this.webClient.set(webClient);
     }
 
     @Override

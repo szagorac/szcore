@@ -153,7 +153,7 @@ public class InscoreWebServer extends BaseZsWebServer {
         try {
             String userAgent = exchange.getRequestHeader(WEB_HTTP_HEADER_USER_AGENT);
             SocketAddress sourceAddr = channel.getPeerAddress();
-            onConnection(sourceAddr.toString(), WebConnectionType.WS, userAgent);
+            onConnection(sourceAddr.toString(), WebConnectionType.WS, userAgent, channel.isOpen());
         } catch (Exception e) {
             LOG.error("onWsChannelConnected: faled to process new Websocket connection", e);
         }
@@ -169,7 +169,7 @@ public class InscoreWebServer extends BaseZsWebServer {
 //        }
 //        long now = System.currentTimeMillis();
 
-        getSzcoreServer().updateAudienceWebServerStatus(connections);
+        getSzcoreServer().updateAudienceWebServerConnections(connections);
     }
 
     public Set<WebConnection> getWsConnections() {
@@ -178,7 +178,7 @@ public class InscoreWebServer extends BaseZsWebServer {
         for (WebSocketChannel c : channels) {
             SocketAddress socketAddress = c.getPeerAddress();
             String clientAddr = socketAddress.toString();
-            WebConnection webConnection = new WebConnection(clientAddr, WebConnectionType.WS);
+            WebConnection webConnection = new WebConnection(clientAddr, WebConnectionType.WS, c.isOpen());
             webConnections.add(webConnection);
         }
         return webConnections;
@@ -193,7 +193,7 @@ public class InscoreWebServer extends BaseZsWebServer {
             SocketAddress sourceAddr = zsConn.getExchange().getSourceAddress();
             HeaderMap headerMap = zsConn.getExchange().getRequestHeaders();
             String userAgent = headerMap.getFirst(HttpString.tryFromString(WEB_HTTP_HEADER_USER_AGENT));
-            onConnection(sourceAddr.toString(), WebConnectionType.SSE, userAgent);
+            onConnection(sourceAddr.toString(), WebConnectionType.SSE, userAgent, zsConn.isOpen());
         } catch (Exception e) {
             LOG.error("onSseChannelConnected: faled to process new SSE connection", e);
         }
@@ -204,8 +204,8 @@ public class InscoreWebServer extends BaseZsWebServer {
         return null;
     }
 
-    public void onConnection(String sourceId, WebConnectionType type, String userAgent) {
-        WebConnection webConnection = new WebConnection(sourceId, type);
+    public void onConnection(String sourceId, WebConnectionType type, String userAgent, boolean isOpen) {
+        WebConnection webConnection = new WebConnection(sourceId, type, isOpen);
         webConnection.setUserAgent(userAgent);
         getSzcoreServer().onWebConnection(webConnection);
     }

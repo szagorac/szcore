@@ -4,7 +4,9 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.OutgoingWebEvent;
 import com.xenaksys.szcore.event.OutgoingWebEventType;
+import com.xenaksys.szcore.event.UpdateWebScoreConnectionsEvent;
 import com.xenaksys.szcore.event.WebScoreConnectionEvent;
+import com.xenaksys.szcore.event.WebScoreRemoveConnectionEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.ScoreProcessor;
@@ -74,6 +76,10 @@ public class WebScore {
     public void resetState() {
     }
 
+    public void processUpdateConnectionsEvent(UpdateWebScoreConnectionsEvent event) {
+
+    }
+
     public void processConnectionEvent(WebScoreConnectionEvent event) {
         if (event == null) {
             return;
@@ -100,5 +106,9 @@ public class WebScore {
         } catch (Exception e) {
             LOG.error("processConnectionEvent: failed to process score connection", e);
         }
+    }
+
+    public void processRemoveConnectionEvent(WebScoreRemoveConnectionEvent webEvent) {
+        LOG.info("processRemoveConnectionEvent");
     }
 }

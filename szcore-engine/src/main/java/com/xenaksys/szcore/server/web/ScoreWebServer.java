@@ -180,7 +180,7 @@ public class ScoreWebServer extends BaseZsWebServer {
             SocketAddress sourceAddr = channel.getPeerAddress();
             String sourceId = sourceAddr.toString();
             clients.put(sourceId, channel);
-            onConnection(sourceId, WebConnectionType.WS, userAgent);
+            onConnection(sourceId, WebConnectionType.WS, userAgent, channel.isOpen());
         } catch (Exception e) {
             LOG.error("onWsChannelConnected: failed to process new Websocket connection", e);
         }
@@ -191,7 +191,7 @@ public class ScoreWebServer extends BaseZsWebServer {
         connections.addAll(getWsConnections());
         connections.addAll(getSseConnections());
 
-        getSzcoreServer().updateScoreServerStatus(connections);
+        getSzcoreServer().updateScoreServerConnections(connections);
     }
 
     public Set<WebConnection> getWsConnections() {
@@ -200,7 +200,8 @@ public class ScoreWebServer extends BaseZsWebServer {
         for (WebSocketChannel c : channels) {
             SocketAddress socketAddress = c.getPeerAddress();
             String clientAddr = socketAddress.toString();
-            WebConnection webConnection = new WebConnection(clientAddr, WebConnectionType.WS);
+            WebConnection webConnection = new WebConnection(clientAddr, WebConnectionType.WS, c.isOpen());
+            webConnection.setScoreClient(true);
             webConnections.add(webConnection);
         }
         return webConnections;
@@ -215,7 +216,7 @@ public class ScoreWebServer extends BaseZsWebServer {
             SocketAddress sourceAddr = zsConn.getExchange().getSourceAddress();
             HeaderMap headerMap = zsConn.getExchange().getRequestHeaders();
             String userAgent = headerMap.getFirst(HttpString.tryFromString(WEB_HTTP_HEADER_USER_AGENT));
-            onConnection(sourceAddr.toString(), WebConnectionType.SSE, userAgent);
+            onConnection(sourceAddr.toString(), WebConnectionType.SSE, userAgent, zsConn.isOpen());
         } catch (Exception e) {
             LOG.error("onSseChannelConnected: faled to process new SSE connection", e);
         }
@@ -227,14 +228,15 @@ public class ScoreWebServer extends BaseZsWebServer {
         Set<ZsSseConnection> connections = sseHandler.getConnections();
         for (ZsSseConnection c : connections) {
             String clientAddr = c.getExchange().getSourceAddress().toString();
-            WebConnection webConnection = new WebConnection(clientAddr, WebConnectionType.SSE);
+            WebConnection webConnection = new WebConnection(clientAddr, WebConnectionType.SSE, c.isOpen());
+            webConnection.setScoreClient(true);
             webConnections.add(webConnection);
         }
         return webConnections;
     }
 
-    public void onConnection(String sourceId, WebConnectionType type, String userAgent) {
-        WebConnection webConnection = new WebConnection(sourceId, type);
+    public void onConnection(String sourceId, WebConnectionType type, String userAgent, boolean isOpen) {
+        WebConnection webConnection = new WebConnection(sourceId, type, isOpen);
         webConnection.setScoreClient(true);
         webConnection.setUserAgent(userAgent);
         getSzcoreServer().onWebConnection(webConnection);
@@ -337,6 +339,18 @@ public class ScoreWebServer extends BaseZsWebServer {
             }
         } catch (Exception e) {
             LOG.error("closeWsConnection, Failed to close ");
+        }
+    }
+
+    public void closeConnections(List<String> connectionIds) {
+        for (String id : connectionIds) {
+            if (!clients.containsKey(id)) {
+                continue;
+            }
+            WebSocketChannel channel = clients.remove(id);
+            if (channel != null && channel.isOpen()) {
+                closeWsConnection(channel, null);
+            }
         }
     }
 

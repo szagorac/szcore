@@ -2,11 +2,11 @@ package com.xenaksys.szcore.event;
 
 import com.xenaksys.szcore.web.ZsWebRequest;
 
-public class WebRequestLogAudienceEvent extends IncomingWebAudienceEvent {
+public class WebAudienceRequestLogEvent extends IncomingWebAudienceEvent {
 
     private final ZsWebRequest zsRequest;
 
-    public WebRequestLogAudienceEvent(ZsWebRequest zsRequest, long creationTime) {
+    public WebAudienceRequestLogEvent(ZsWebRequest zsRequest, long creationTime) {
         super(null, null, null, creationTime, 0L, 0L);
         this.zsRequest = zsRequest;
     }

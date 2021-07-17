@@ -179,7 +179,7 @@ public class AudienceWebServer extends BaseZsWebServer {
         try {
             String userAgent = exchange.getRequestHeader(WEB_HTTP_HEADER_USER_AGENT);
             SocketAddress sourceAddr = channel.getPeerAddress();
-            onConnection(sourceAddr.toString(), WebConnectionType.WS, userAgent);
+            onConnection(sourceAddr.toString(), WebConnectionType.WS, userAgent, channel.isOpen());
         } catch (Exception e) {
             LOG.error("onWsChannelConnected: failed to process new Websocket connection", e);
         }
@@ -196,7 +196,7 @@ public class AudienceWebServer extends BaseZsWebServer {
 //        }
 //        long now = System.currentTimeMillis();
 
-        getSzcoreServer().updateAudienceWebServerStatus(connections);
+        getSzcoreServer().updateAudienceWebServerConnections(connections);
     }
 
     @Override
@@ -206,7 +206,7 @@ public class AudienceWebServer extends BaseZsWebServer {
         for (WebSocketChannel c : channels) {
             SocketAddress socketAddress = c.getPeerAddress();
             String clientAddr = socketAddress.toString();
-            WebConnection webConnection = new WebConnection(clientAddr, WebConnectionType.WS);
+            WebConnection webConnection = new WebConnection(clientAddr, WebConnectionType.WS, c.isOpen());
             webConnections.add(webConnection);
         }
         return webConnections;
@@ -222,7 +222,7 @@ public class AudienceWebServer extends BaseZsWebServer {
             SocketAddress sourceAddr = zsConn.getExchange().getSourceAddress();
             HeaderMap headerMap = zsConn.getExchange().getRequestHeaders();
             String userAgent = headerMap.getFirst(HttpString.tryFromString(WEB_HTTP_HEADER_USER_AGENT));
-            onConnection(sourceAddr.toString(), WebConnectionType.SSE, userAgent);
+            onConnection(sourceAddr.toString(), WebConnectionType.SSE, userAgent, zsConn.isOpen());
         } catch (Exception e) {
             LOG.error("onSseChannelConnected: faled to process new SSE connection", e);
         }
@@ -234,15 +234,15 @@ public class AudienceWebServer extends BaseZsWebServer {
         Set<ZsSseConnection> connections = sseHandler.getConnections();
         for (ZsSseConnection c : connections) {
             String clientAddr = c.getExchange().getSourceAddress().toString();
-            WebConnection webConnection = new WebConnection(clientAddr, WebConnectionType.SSE);
+            WebConnection webConnection = new WebConnection(clientAddr, WebConnectionType.SSE, c.isOpen());
             webConnections.add(webConnection);
         }
         return webConnections;
     }
 
     @Override
-    public void onConnection(String sourceId, WebConnectionType type, String userAgent) {
-        WebConnection webConnection = new WebConnection(sourceId, type);
+    public void onConnection(String sourceId, WebConnectionType type, String userAgent, boolean isOpen) {
+        WebConnection webConnection = new WebConnection(sourceId, type, isOpen);
         webConnection.setUserAgent(userAgent);
         getSzcoreServer().onWebConnection(webConnection);
     }

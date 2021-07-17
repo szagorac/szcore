@@ -49,6 +49,7 @@ import com.xenaksys.szcore.event.WebAudienceStopEvent;
 import com.xenaksys.szcore.event.WebScoreConnectionEvent;
 import com.xenaksys.szcore.event.WebScoreInEvent;
 import com.xenaksys.szcore.event.WebScoreInEventType;
+import com.xenaksys.szcore.event.WebScoreRemoveConnectionEvent;
 import com.xenaksys.szcore.event.WebStartAudienceEvent;
 import com.xenaksys.szcore.model.Bar;
 import com.xenaksys.szcore.model.Beat;
@@ -838,7 +839,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
 
         if (isCurrentPageInRndRange) {
-            WebAudiencePlayTilesEvent playTilesEvent = eventFactory.createWebScorePlayTilesEvent(clock.getSystemTimeMillis());
+            WebAudiencePlayTilesEvent playTilesEvent = eventFactory.createWebAudiencePlayTilesEvent(clock.getSystemTimeMillis());
             processWebAudienceEvent(playTilesEvent);
         }
     }
@@ -1840,7 +1841,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         OscStopEvent oscStopEvent = eventFactory.createOscStopEvent(Consts.ALL_DESTINATIONS, clock.getSystemTimeMillis());
         publishOscEvent(oscStopEvent);
 
-        WebAudienceStopEvent webStopEvent = eventFactory.createWebScoreStopEvent(clock.getSystemTimeMillis());
+        WebAudienceStopEvent webStopEvent = eventFactory.createWebAudienceStopEvent(clock.getSystemTimeMillis());
         process(webStopEvent);
     }
 
@@ -1909,7 +1910,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             return null;
         }
 
-        return eventFactory.createWebScoreEvent(eventBeatId, scripts, clock.getSystemTimeMillis());
+        return eventFactory.createWebAudienceEvent(eventBeatId, scripts, clock.getSystemTimeMillis());
     }
 
     private ScriptingEngineEvent createScriptingEngineEvent(List<ScriptingEngineScript> scripts, BeatId eventBeatId) {
@@ -1946,7 +1947,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         if (scripts == null || scripts.isEmpty()) {
             return null;
         }
-        return eventFactory.createWebScoreResetEvent(beatId, scripts, clock.getSystemTimeMillis());
+        return eventFactory.createWebAudienceResetEvent(beatId, scripts, clock.getSystemTimeMillis());
     }
 
     private ScriptingEngineResetEvent createScriptingEngineResetEvent(BeatId beatId) {
@@ -2382,7 +2383,26 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 processWebStart((WebStartAudienceEvent) webEvent);
                 break;
             default:
-                LOG.info("onIncomingWebEvent: unknown IncomingWebAudienceEventType: {}", type);
+                LOG.info("onIncomingWebAudienceEvent: unknown IncomingWebAudienceEventType: {}", type);
+        }
+    }
+
+
+    @Override
+    public void onIncomingWebScoreEvent(WebScoreInEvent webEvent) throws Exception {
+        if (webScore == null) {
+            return;
+        }
+        WebScoreInEventType type = webEvent.getWebScoreEventType();
+        switch (type) {
+            case CONNECTION:
+                webScore.processConnectionEvent((WebScoreConnectionEvent) webEvent);
+                break;
+            case CONNECTIONS_REMOVE:
+                webScore.processRemoveConnectionEvent((WebScoreRemoveConnectionEvent) webEvent);
+                break;
+            default:
+                LOG.info("onIncomingWebScoreEvent: unknown IncomingWebAudienceEventType: {}", type);
         }
     }
 
@@ -2444,9 +2464,6 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 break;
             case WEB_AUDIENCE:
                 processWebAudienceEvent((WebAudienceEvent) event, beatNo, tickNo);
-                break;
-            case WEB_SCORE_IN:
-                processWebScoreInEvent((WebScoreInEvent) event, beatNo, tickNo);
                 break;
             case SCRIPTING_ENGINE:
                 processScriptingEngineEvent((ScriptingEngineEvent) event, beatNo, tickNo);
@@ -2511,22 +2528,6 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private void processScriptingEngineEvent(ScriptingEngineEvent event, int beatNo, int tickNo) {
         ScriptingEngineEventTask task = taskFactory.createScriptingEngineEventTask(0, event, scriptingEngine);
         scheduleTask(task);
-    }
-
-    private void processWebScoreInEvent(WebScoreInEvent event, int beatNo, int tickNo) {
-        WebScoreInEventType eventType = event.getWebScoreEventType();
-
-        switch (eventType) {
-            case CONNECTION:
-                if (webScore == null) {
-                    return;
-                }
-                webScore.processConnectionEvent((WebScoreConnectionEvent) event);
-                break;
-            case GENERIC:
-            default:
-                LOG.error("processWebScoreInEvent: unexpected event: {}", eventType);
-        }
     }
 
     private void processWebAudienceEvent(WebAudienceEvent event) {

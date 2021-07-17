@@ -133,7 +133,7 @@ public class PrecountBeatSetupTask extends EventMusicTask {
     }
 
     private void addWebscorePrecountTask(long playTime, boolean isOn, int beaterNo, int colourId) {
-        WebAudienceEvent event = eventFactory.createWebScorePrecountEvent(beaterNo, isOn, colourId, clock.getSystemTimeMillis());
+        WebAudienceEvent event = eventFactory.createWebAudiencePrecountEvent(beaterNo, isOn, colourId, clock.getSystemTimeMillis());
         WebAudienceEventTask task = taskFactory.createWebScoreEventTask(playTime, event, webAudienceScore);
         processor.scheduleTask(task);
     }

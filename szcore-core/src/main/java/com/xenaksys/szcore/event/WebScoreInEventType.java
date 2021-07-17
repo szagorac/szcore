@@ -1,5 +1,5 @@
 package com.xenaksys.szcore.event;
 
 public enum WebScoreInEventType {
-    CONNECTION, GENERIC
+    CONNECTION, CONNECTIONS_UPDATE, CONNECTIONS_REMOVE
 }

@@ -6,13 +6,13 @@ import com.xenaksys.szcore.web.WebClientInfo;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WebClientInfoUpdateEvent extends ClientEvent {
+public class WebAudienceClientInfoUpdateEvent extends ClientEvent {
 
     private final ArrayList<WebClientInfo> webClientInfos;
     private final List<HistoBucketView> histoBucketViews;
     private final int totalWebHits;
 
-    public WebClientInfoUpdateEvent(ArrayList<WebClientInfo> webClientInfos, List<HistoBucketView> histoBucketViews, int totalWebHits, long time) {
+    public WebAudienceClientInfoUpdateEvent(ArrayList<WebClientInfo> webClientInfos, List<HistoBucketView> histoBucketViews, int totalWebHits, long time) {
         super(time);
         this.webClientInfos = webClientInfos;
         this.histoBucketViews = histoBucketViews;
@@ -33,7 +33,7 @@ public class WebClientInfoUpdateEvent extends ClientEvent {
 
     @Override
     public ClientEventType getClientEventType() {
-        return ClientEventType.WEB_CLIENT_INFOS;
+        return ClientEventType.WEB_AUDIENCE_CLIENT_INFOS;
     }
 
 }

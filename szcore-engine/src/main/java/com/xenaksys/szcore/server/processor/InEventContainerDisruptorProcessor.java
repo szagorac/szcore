@@ -84,7 +84,7 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
     }
 
     private void processWebScoreInEvent(WebScoreInEvent event) {
-        server.getScoreProcessor().process(event);
+        server.getWebProcessor().process(event);
     }
 
     private void processWebEvent(IncomingWebAudienceEvent event) {

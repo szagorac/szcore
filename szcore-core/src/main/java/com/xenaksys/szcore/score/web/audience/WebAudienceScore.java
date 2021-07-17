@@ -521,7 +521,7 @@ public class WebAudienceScore {
             LOG.debug("prepareNextTilesToPlay: Found pageId: {} for tile id: {}", pageNo, tileId);
         }
 
-        WebAudienceSelectTilesEvent playTilesEvent = eventFactory.createWebScoreSelectTilesEvent(tileIds, clock.getSystemTimeMillis());
+        WebAudienceSelectTilesEvent playTilesEvent = eventFactory.createWebAudienceSelectTilesEvent(tileIds, clock.getSystemTimeMillis());
         processWebAudienceEvent(playTilesEvent);
 
         return pageIds;
@@ -873,7 +873,7 @@ public class WebAudienceScore {
         params.put(WEB_CONFIG_DURATION, durationSec);
         params.put(WEB_CONFIG_VALUE, endValue);
         setAction(WEB_ACTION_ID_START, WebActionType.ALPHA.name(), targetIds, params);
-        WebAudienceStateUpdateEvent stateUpdateEvent = eventFactory.createWebScoreStateUpdateEvent(WebScoreStateType.STAGE_ALPHA, endValue, clock.getSystemTimeMillis());
+        WebAudienceStateUpdateEvent stateUpdateEvent = eventFactory.createWebAudienceStateUpdateEvent(WebScoreStateType.STAGE_ALPHA, endValue, clock.getSystemTimeMillis());
         scoreProcessor.scheduleEvent(stateUpdateEvent, (long) durationSec * Consts.THOUSAND);
 //        state.setStageAlpha(endValue);
     }

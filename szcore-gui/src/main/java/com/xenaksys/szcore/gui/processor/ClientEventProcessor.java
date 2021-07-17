@@ -16,8 +16,9 @@ import com.xenaksys.szcore.event.ParticipantStatsEvent;
 import com.xenaksys.szcore.event.StopEvent;
 import com.xenaksys.szcore.event.TempoChangeEvent;
 import com.xenaksys.szcore.event.TimeSigChangeEvent;
+import com.xenaksys.szcore.event.WebAudienceClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.WebAudienceEvent;
-import com.xenaksys.szcore.event.WebClientInfoUpdateEvent;
+import com.xenaksys.szcore.event.WebScoreClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.WebScoreInEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Participant;
@@ -28,6 +29,7 @@ import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.util.IpAddressValidator;
 import com.xenaksys.szcore.util.TimeUtil;
+import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,7 +90,7 @@ public class ClientEventProcessor implements Processor {
                 //TODO
                 break;
             default:
-                LOG.error("process event: Unknown event type: " + type);
+                LOG.error("process SzcoreEvent: Unknown event type: " + type);
         }
     }
 
@@ -113,6 +115,9 @@ public class ClientEventProcessor implements Processor {
                 break;
             case WEB_AUDIENCE:
                 processWebScoreEvent((WebAudienceEvent) event, beatNo, tickNo);
+                break;
+            case WEB_SCORE_IN:
+                processWebScoreInEvent((WebScoreInEvent) event);
                 break;
             case SCRIPTING_ENGINE:
                 //TODO
@@ -203,19 +208,29 @@ public class ClientEventProcessor implements Processor {
             case ERROR:
                 processErrorEvent((ErrorEvent) event);
                 break;
-            case WEB_CLIENT_INFOS:
-                processWebClientInfoEvent((WebClientInfoUpdateEvent) event);
+            case WEB_AUDIENCE_CLIENT_INFOS:
+                processWebAudienceClientInfoEvent((WebAudienceClientInfoUpdateEvent) event);
+                break;
+            case WEB_SCORE_CLIENT_INFOS:
+                processWebScoreClientInfoEvent((WebScoreClientInfoUpdateEvent) event);
                 break;
             default:
                 LOG.error("processClientEvent: Unknown event type: " + type);
         }
     }
 
-    private void processWebClientInfoEvent(WebClientInfoUpdateEvent event) {
+    private void processWebAudienceClientInfoEvent(WebAudienceClientInfoUpdateEvent event) {
         if (event == null) {
             return;
         }
-        client.processWebClientInfos(event);
+        client.processWebAudienceClientInfos(event);
+    }
+
+    private void processWebScoreClientInfoEvent(WebScoreClientInfoUpdateEvent event) {
+        if (event == null) {
+            return;
+        }
+        client.processWebScoreClientInfos(event);
     }
 
     private void processErrorEvent(ErrorEvent event) {
@@ -276,12 +291,11 @@ public class ClientEventProcessor implements Processor {
         participant.setPortErr(event.getPortErr());
         participant.setPing(event.getPing());
         participant.setInstrument(event.getInstrument());
-
         client.addParticipant(participant);
     }
 
     private void processParticipantStatsEvent(ParticipantStatsEvent event) {
-        if (event == null){
+        if (event == null) {
             return;
         }
 
@@ -290,25 +304,28 @@ public class ClientEventProcessor implements Processor {
             LOG.error("Can not find participant for event: " + event);
             return;
         }
+        Platform.runLater(() -> {
+            participant.setPing(event.getOneWayPingLatencyMillis());
+            participant.setExpired(event.isExpired());
+            String pingPeriod = TimeUtil.formatPeriod(event.getLastPingMillis());
+            participant.setLastPingTime(pingPeriod);
+        });
 
-        participant.setPing(event.getOneWayPingLatencyMillis());
-        participant.setExpired(event.isExpired());
-        String pingPeriod = TimeUtil.formatPeriod(event.getLastPingMillis());
-        participant.setLastPingTime(pingPeriod);
     }
 
     private void processInstrumentEvent(InstrumentEvent event) {
 
         String hostAddress = event.getHostAddress();
         Participant participant = client.getParticipant(hostAddress, event.getPort());
-        if(participant == null){
+        if (participant == null) {
             LOG.error("Failed to find participant for event: " + event);
             return;
         }
 
         String instrument = event.getInstrument();
-        participant.setInstrument(instrument);
-
+        Platform.runLater(() -> {
+            participant.setInstrument(instrument);
+        });
     }
 
 }

@@ -13,7 +13,7 @@ import static com.xenaksys.szcore.Consts.EMPTY;
 public class WebClientInfo {
     private final String clientAddr;
 
-    private WebConnection webConnection = new WebConnection(EMPTY, WebConnectionType.UNKNOWN);
+    private WebConnection webConnection = new WebConnection(EMPTY, WebConnectionType.UNKNOWN, false);
     private final Histogram clientHitHisto = new Histogram(10, 1000L);
     private UAgentInfo userAgentInfo;
     private BrowserType bt;

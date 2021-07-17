@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.model;
 
 import com.xenaksys.szcore.event.IncomingWebAudienceEvent;
+import com.xenaksys.szcore.event.WebScoreInEvent;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.score.web.WebScoreTargetType;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
@@ -107,15 +108,19 @@ public interface ScoreService {
 
     boolean isAudienceWebServerRunning();
 
-    void onIncomingWebEvent(IncomingWebAudienceEvent webEvent);
+    void onIncomingWebAudienceEvent(IncomingWebAudienceEvent webEvent);
 
     void pushToWebAudience(String data);
 
-    void updateAudienceWebServerStatus(Set<WebConnection> connections);
+    void updateAudienceWebServerConnections(Set<WebConnection> connections);
 
-    void updateScoreServerStatus(Set<WebConnection> connections);
+    void updateScoreServerConnections(Set<WebConnection> connections);
 
     void banWebClient(WebClientInfo clientInfo);
 
+    void onIncomingWebScoreEvent(WebScoreInEvent webEvent);
+
     void pushToScoreWeb(String target, WebScoreTargetType targetType, String data);
+
+    void closeScoreConnections(List<String> connectionIds);
 }

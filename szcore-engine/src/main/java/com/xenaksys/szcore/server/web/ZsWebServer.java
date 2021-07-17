@@ -43,7 +43,7 @@ public interface ZsWebServer {
 
     Set<WebConnection> getSseConnections();
 
-    void onConnection(String sourceId, WebConnectionType type, String userAgent);
+    void onConnection(String sourceId, WebConnectionType type, String userAgent, boolean isOpen);
 
     void banWebClient(WebClientInfo clientInfo);
 

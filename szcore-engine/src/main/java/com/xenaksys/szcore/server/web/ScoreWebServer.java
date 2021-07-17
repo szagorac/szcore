@@ -118,6 +118,11 @@ public class ScoreWebServer extends BaseZsWebServer {
         }
     }
 
+    @Override
+    public boolean isScoreServer() {
+        return true;
+    }
+
     private void initUndertowScoreServer() {
         HttpHandler staticDataHandler = new ZsStaticPathHandler(new ClassPathResourceManager(ScoreWebServer.class.getClassLoader(), ""), getSzcoreServer(), this)
                 .addWelcomeFiles(INDEX_HTML);

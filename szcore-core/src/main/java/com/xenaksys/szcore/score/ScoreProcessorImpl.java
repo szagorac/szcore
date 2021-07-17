@@ -49,6 +49,7 @@ import com.xenaksys.szcore.event.WebAudienceStopEvent;
 import com.xenaksys.szcore.event.WebScoreConnectionEvent;
 import com.xenaksys.szcore.event.WebScoreInEvent;
 import com.xenaksys.szcore.event.WebScoreInEventType;
+import com.xenaksys.szcore.event.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.WebScoreRemoveConnectionEvent;
 import com.xenaksys.szcore.event.WebStartAudienceEvent;
 import com.xenaksys.szcore.model.Bar;
@@ -2400,6 +2401,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 break;
             case CONNECTIONS_REMOVE:
                 webScore.processRemoveConnectionEvent((WebScoreRemoveConnectionEvent) webEvent);
+                break;
+            case PART_REG:
+                webScore.processPartRegistration((WebScorePartRegEvent) webEvent);
                 break;
             default:
                 LOG.info("onIncomingWebScoreEvent: unknown IncomingWebAudienceEventType: {}", type);

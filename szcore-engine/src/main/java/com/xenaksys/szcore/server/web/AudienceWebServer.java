@@ -111,6 +111,11 @@ public class AudienceWebServer extends BaseZsWebServer {
         }
     }
 
+    @Override
+    public boolean isScoreServer() {
+        return false;
+    }
+
     private void initUndertowAudience() {
         HttpHandler staticDataHandler = new ZsStaticPathHandler(new ClassPathResourceManager(AudienceWebServer.class.getClassLoader(), ""), getSzcoreServer(), this)
                 .addWelcomeFiles(INDEX_HTML);

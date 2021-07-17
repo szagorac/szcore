@@ -70,4 +70,7 @@ public abstract class BaseZsWebServer implements ZsWebServer {
 
     @Override
     public abstract void stop();
+
+    @Override
+    public abstract boolean isScoreServer();
 }

@@ -74,7 +74,7 @@ public class ZsWsConnectionCallback implements WebSocketConnectionCallback {
         String uri = exchange.getRequestURI();
 
         String userAgent = exchange.getRequestHeader(WEB_HTTP_HEADER_USER_AGENT);
-        ZsWebRequest zsRequest = new ZsWebRequest(uri, sourceAddr, userAgent, false, now);
+        ZsWebRequest zsRequest = new ZsWebRequest(uri, sourceAddr, userAgent, false, webServer.isScoreServer(), now);
         zsRequest.addAllParams(requestParams);
 
         ZsWebResponse out = szcoreServer.onWebRequest(zsRequest);

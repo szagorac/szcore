@@ -298,6 +298,7 @@ public interface Consts {
     String WEB_EVENT_IS_POLL_NAME = "poll";
     String WEB_EVENT_ELEMENT_ID = "elementId";
     String WEB_EVENT_IS_SELECTED = "selected";
+    String WEB_EVENT_PART = "part";
 
     String WEB_RESPONSE_TYPE = "type";
     String WEB_RESPONSE_MESSAGE = "msg";

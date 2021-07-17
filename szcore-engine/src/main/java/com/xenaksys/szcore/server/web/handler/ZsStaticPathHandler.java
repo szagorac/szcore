@@ -54,7 +54,7 @@ public class ZsStaticPathHandler extends ResourceHandler {
         if (hv != null) {
             userAgent = hv.getFirst();
         }
-        ZsWebRequest zsRequest = new ZsWebRequest(requestPath, sourceId, userAgent, true, now);
+        ZsWebRequest zsRequest = new ZsWebRequest(requestPath, sourceId, userAgent, true, webServer.isScoreServer(), now);
         szcoreServer.onWebRequest(zsRequest);
         super.handleRequest(exchange);
     }

@@ -56,7 +56,7 @@ public class ZsHttpHandler implements HttpHandler {
                 return;
             }
 
-            ZsWebRequest zsRequest = new ZsWebRequest(requestPath, sourceId, userAgent, false, now);
+            ZsWebRequest zsRequest = new ZsWebRequest(requestPath, sourceId, userAgent, false, webServer.isScoreServer(), now);
             FormParserFactory.Builder builder = FormParserFactory.builder();
 
             final FormDataParser formDataParser = builder.build().createParser(exchange);
@@ -80,7 +80,7 @@ public class ZsHttpHandler implements HttpHandler {
             exchange.endExchange();
 
         } else {
-            ZsWebRequest zsRequest = new ZsWebRequest(requestPath, sourceId, userAgent, false, now);
+            ZsWebRequest zsRequest = new ZsWebRequest(requestPath, sourceId, userAgent, false, webServer.isScoreServer(), now);
 
             Map<String, Deque<String>> queryParams = exchange.getQueryParameters();
             for(String key : queryParams.keySet()) {

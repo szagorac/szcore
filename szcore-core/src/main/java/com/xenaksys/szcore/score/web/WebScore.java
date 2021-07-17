@@ -4,8 +4,8 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.OutgoingWebEvent;
 import com.xenaksys.szcore.event.OutgoingWebEventType;
-import com.xenaksys.szcore.event.UpdateWebScoreConnectionsEvent;
 import com.xenaksys.szcore.event.WebScoreConnectionEvent;
+import com.xenaksys.szcore.event.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.WebScoreRemoveConnectionEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Instrument;
@@ -20,10 +20,8 @@ import org.slf4j.LoggerFactory;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WebScore {
@@ -33,8 +31,8 @@ public class WebScore {
     private final EventFactory eventFactory;
     private final BasicScore score;
     private final Clock clock;
-    private final Map<String, WebClientInfo> instrumentClient = new ConcurrentHashMap<>();
-    private final Set<WebClientInfo> clients = new HashSet<>();
+    private final Map<String, List<WebClientInfo>> instrumentClients = new ConcurrentHashMap<>();
+    private final Map<String, WebClientInfo> clients = new ConcurrentHashMap<>();
 
     private WebScoreInfo scoreInfo;
     private PropertyChangeSupport pcs = new PropertyChangeSupport(this);
@@ -76,39 +74,78 @@ public class WebScore {
     public void resetState() {
     }
 
-    public void processUpdateConnectionsEvent(UpdateWebScoreConnectionsEvent event) {
-
-    }
-
     public void processConnectionEvent(WebScoreConnectionEvent event) {
         if (event == null) {
             return;
         }
         try {
             WebClientInfo clientInfo = event.getWebClientInfo();
-            String target = clientInfo.getClientAddr();
-            WebScoreTargetType targetType = WebScoreTargetType.HOST;
-
-            clients.add(clientInfo);
-            String instrument = clientInfo.getInstrument();
-            if (instrument != null) {
-                instrumentClient.put(instrument, clientInfo);
-                target = instrument;
-                targetType = WebScoreTargetType.INSTRUMENT;
+            boolean isRegistered = clients.containsKey(clientInfo.getClientAddr());
+            addOrUpdateClientInfo(clientInfo);
+            if (!isRegistered) {
+                sendScoreInfo(clientInfo);
             }
-            WebScoreState scoreState = new WebScoreState();
-            scoreState.setScoreInfo(scoreInfo);
-            OutgoingWebEvent outEvent = eventFactory.createWebScoreOutEvent(null, null, OutgoingWebEventType.PUSH_SCORE_STATE, clock.getSystemTimeMillis());
-            outEvent.addData(Consts.WEB_DATA_SCORE_STATE, scoreState);
-            outEvent.addData(Consts.WEB_DATA_TARGET, target);
-            outEvent.addData(Consts.WEB_DATA_TARGET_TYPE, targetType);
-            scoreProcessor.onOutgoingWebEvent(outEvent);
         } catch (Exception e) {
             LOG.error("processConnectionEvent: failed to process score connection", e);
         }
     }
 
+    private void addOrUpdateClientInfo(WebClientInfo clientInfo) {
+        if (clientInfo == null) {
+            return;
+        }
+        clients.put(clientInfo.getClientAddr(), clientInfo);
+        String instrument = clientInfo.getInstrument();
+        if (instrument != null) {
+            addInstrumentClient(instrument, clientInfo);
+        }
+    }
+
+    private void addInstrumentClient(String instrument, WebClientInfo clientInfo) {
+        List<WebClientInfo> clientInfos = instrumentClients.computeIfAbsent(instrument, k -> new ArrayList<>());
+        if (!clientInfos.contains(clientInfo)) {
+            clientInfos.add(clientInfo);
+        } else {
+            LOG.debug("addInstrumentClient, client is already registered");
+        }
+    }
+
+    public void sendScoreInfo(WebClientInfo clientInfo) throws Exception {
+        String target = clientInfo.getClientAddr();
+        WebScoreTargetType targetType = WebScoreTargetType.HOST;
+        WebScoreState scoreState = new WebScoreState();
+        scoreState.setScoreInfo(scoreInfo);
+        OutgoingWebEvent outEvent = eventFactory.createWebScoreOutEvent(null, null, OutgoingWebEventType.PUSH_SCORE_STATE, clock.getSystemTimeMillis());
+        outEvent.addData(Consts.WEB_DATA_SCORE_STATE, scoreState);
+        outEvent.addData(Consts.WEB_DATA_TARGET, target);
+        outEvent.addData(Consts.WEB_DATA_TARGET_TYPE, targetType);
+        scoreProcessor.onOutgoingWebEvent(outEvent);
+    }
+
     public void processRemoveConnectionEvent(WebScoreRemoveConnectionEvent webEvent) {
         LOG.info("processRemoveConnectionEvent");
+    }
+
+    public void processPartRegistration(WebScorePartRegEvent event) {
+        try {
+            String clientId = event.getSourceAddr();
+            WebClientInfo clientInfo = clients.get(clientId);
+            if (clientInfo == null) {
+                LOG.error("processPartRegistration: Unknown client: {}", clientId);
+                return;
+            }
+            String instrument = event.getPart();
+            if (instrument == null) {
+                return;
+            }
+            if (instrument.equals(clientInfo.getInstrument())) {
+                LOG.debug("processPartRegistration, instrument is already registered");
+            } else {
+                clientInfo.setInstrument(instrument);
+            }
+            addInstrumentClient(instrument, clientInfo);
+        } catch (Exception e) {
+            LOG.error("processPartRegistration: failed to process part registration", e);
+        }
     }
 }

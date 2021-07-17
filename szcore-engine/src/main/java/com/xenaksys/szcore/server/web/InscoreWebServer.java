@@ -104,6 +104,11 @@ public class InscoreWebServer extends BaseZsWebServer {
         }
     }
 
+    @Override
+    public boolean isScoreServer() {
+        return true;
+    }
+
     private void initUndertowInscore() {
         HttpHandler staticDataHandler = new ZsStaticPathHandler(new ClassPathResourceManager(InscoreWebServer.class.getClassLoader(), ""), getSzcoreServer(), this)
                 .addWelcomeFiles(INDEX_HTML);

@@ -50,4 +50,6 @@ public interface ZsWebServer {
     boolean isSourceAddrBanned(String sourceAddr);
 
     boolean isHostBanned(String host);
+
+    boolean isScoreServer();
 }

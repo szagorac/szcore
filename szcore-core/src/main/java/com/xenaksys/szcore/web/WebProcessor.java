@@ -18,6 +18,7 @@ import com.xenaksys.szcore.event.WebScoreClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.WebScoreConnectionEvent;
 import com.xenaksys.szcore.event.WebScoreInEvent;
 import com.xenaksys.szcore.event.WebScoreInEventType;
+import com.xenaksys.szcore.event.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.WebScoreRemoveConnectionEvent;
 import com.xenaksys.szcore.event.WebStartAudienceEvent;
 import com.xenaksys.szcore.model.Clock;
@@ -57,6 +58,7 @@ import static com.xenaksys.szcore.Consts.WEB_EVENT_IS_POLL_NAME;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_IS_SELECTED;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_LAST_STATE_UPDATE_TIME;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_NAME;
+import static com.xenaksys.szcore.Consts.WEB_EVENT_PART;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_SENT_TIME_NAME;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_TIME_NAME;
 import static com.xenaksys.szcore.Consts.WEB_RESPONSE_MESSAGE;
@@ -130,6 +132,9 @@ public class WebProcessor implements Processor, WebScoreStateListener {
                 case CONNECTIONS_UPDATE:
                     processWebScoreConnectionsUpdate((UpdateWebScoreConnectionsEvent) webEvent);
                     break;
+                case PART_REG:
+                    processWebScoreRegisterPart((WebScorePartRegEvent) webEvent);
+                    break;
                 default:
                     LOG.error("process()  WebScoreInEvent: unexpected event: {}", eventType);
             }
@@ -195,6 +200,20 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     private void processWebScoreConnectionsUpdate(UpdateWebScoreConnectionsEvent connectionsEvent) {
         LOG.debug("processWebScoreConnectionsUpdate: ");
         updateWebScoreConnections(connectionsEvent.getClientConnections());
+    }
+
+    private void processWebScoreRegisterPart(WebScorePartRegEvent webEvent) {
+        LOG.debug("processWebScoreRegisterPart: ");
+        String addr = webEvent.getSourceAddr();
+        WebClientInfo clientInfo = scoreClientInfos.get(addr);
+        if (clientInfo == null) {
+            LOG.error("processWebScoreRegisterPart: Can not find client info for source addr: {}", addr);
+        } else {
+            clientInfo.setInstrument(webEvent.getPart());
+            updateGuiScoreClientInfo(clientInfo);
+        }
+
+        scoreService.onIncomingWebScoreEvent(webEvent);
     }
 
     private void processWebScoreEvent(IncomingWebAudienceEvent webEvent) {
@@ -300,18 +319,18 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         }
     }
 
-    public void updateOrCreateScoreClientInfo(WebConnection webConnection) {
+    public WebClientInfo updateOrCreateScoreClientInfo(WebConnection webConnection) {
         if (webConnection == null) {
-            return;
+            return null;
         }
         if (!webConnection.isScoreClient()) {
             updateOrCreateAudienceClientInfo(webConnection);
-            return;
+            return null;
         }
         String sourceAddr = webConnection.getClientAddr();
         WebClientInfo clientInfo = getOrCreateScoreClientInfo(sourceAddr);
         if (clientInfo == null) {
-            return;
+            return null;
         }
 
         WebConnection conn = clientInfo.getWebConnection();
@@ -330,6 +349,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         }
 
         processScoreConnection(clientInfo);
+        return clientInfo;
     }
 
     private void processScoreConnection(WebClientInfo clientInfo) {
@@ -439,6 +459,47 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         if (eventName == null) {
             return createErrorWebString("InvalidEventName");
         }
+        if (zsRequest.isScoreRequest()) {
+            return processIncomingWebScoreEvent(eventName, zsRequest);
+        } else {
+            return processIncomingWebAudienceEvent(eventName, zsRequest);
+        }
+    }
+
+    private String processIncomingWebScoreEvent(String eventName, ZsWebRequest zsRequest) throws Exception {
+        WebScoreInEventType type = null;
+        try {
+            type = WebScoreInEventType.valueOf(eventName.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            LOG.error("Invalid WebEventType: {}", eventName);
+        }
+
+        if (type == null) {
+            return createErrorWebString("InvalidEventType:" + eventName);
+        }
+
+        String sourceAddr = zsRequest.getSourceAddr();
+        String requestPath = zsRequest.getRequestPath();
+        String eventId = zsRequest.getParam(WEB_EVENT_NAME);
+
+        long creationTime = getClock().getSystemTimeMillis();
+        long clientEventCreatedTime = Long.parseLong(zsRequest.getParam(WEB_EVENT_TIME_NAME));
+        long clientEventSentTime = Long.parseLong(zsRequest.getParam(WEB_EVENT_SENT_TIME_NAME));
+
+        switch (type) {
+            case PART_REG:
+                String part = zsRequest.getParam(WEB_EVENT_PART);
+                WebScorePartRegEvent partRegEvent = eventFactory.createWebScorePartRegEvent(eventId,
+                        sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+                eventService.receive(partRegEvent);
+                return createOkWebString(WEB_RESPONSE_SUBMITTED);
+            default:
+                return createErrorWebString("Invalid event type: " + type);
+        }
+    }
+
+    private String processIncomingWebAudienceEvent(String eventName, ZsWebRequest zsRequest) throws Exception {
+
         IncomingWebAudienceEventType type = null;
         try {
             type = IncomingWebAudienceEventType.valueOf(eventName.toUpperCase());
@@ -670,7 +731,8 @@ public class WebProcessor implements Processor, WebScoreStateListener {
 
     public void onWebConnection(WebConnection webConnection) {
         if (webConnection.isScoreClient()) {
-            updateOrCreateScoreClientInfo(webConnection);
+            WebClientInfo clientInfo = updateOrCreateScoreClientInfo(webConnection);
+            updateGuiScoreClientInfo(clientInfo);
         } else {
             updateOrCreateAudienceClientInfo(webConnection);
         }
@@ -791,6 +853,16 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     private void updateGuiScoreClientInfos() {
         Collection<WebClientInfo> wcis = scoreClientInfos.values();
         ArrayList<WebClientInfo> out = new ArrayList<>(wcis);
+        WebScoreClientInfoUpdateEvent clientInfoUpdateEvent = eventFactory.createWebScoreClientInfoUpdateEvent(out, clock.getSystemTimeMillis());
+        eventReceiver.notifyListeners(clientInfoUpdateEvent);
+    }
+
+    private void updateGuiScoreClientInfo(WebClientInfo clientInfo) {
+        if (clientInfo == null) {
+            return;
+        }
+        ArrayList<WebClientInfo> out = new ArrayList<>(1);
+        out.add(clientInfo);
         WebScoreClientInfoUpdateEvent clientInfoUpdateEvent = eventFactory.createWebScoreClientInfoUpdateEvent(out, clock.getSystemTimeMillis());
         eventReceiver.notifyListeners(clientInfoUpdateEvent);
     }

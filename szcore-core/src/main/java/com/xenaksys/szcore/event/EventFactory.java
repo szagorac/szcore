@@ -365,6 +365,9 @@ public class EventFactory {
         return new WebScoreConnectionEvent(webClientInfo, creationTime);
     }
 
+    public WebScorePartRegEvent createWebScorePartRegEvent(String eventId, String sourceAddr, String part, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new WebScorePartRegEvent(eventId, sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    }
 
     public List<Object> createJavaScriptArgs() {
         List<Object> jsArgs = new ArrayList<>();

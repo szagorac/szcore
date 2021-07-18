@@ -1,7 +1,7 @@
 package com.xenaksys.szcore.task;
 
-import com.xenaksys.szcore.event.OscStaveActivateEvent;
-import com.xenaksys.szcore.event.StaveActiveChangeEvent;
+import com.xenaksys.szcore.event.osc.OscStaveActivateEvent;
+import com.xenaksys.szcore.event.osc.StaveActiveChangeEvent;
 import com.xenaksys.szcore.model.OscPublisher;
 import com.xenaksys.szcore.model.Stave;
 import com.xenaksys.szcore.model.SzcoreEvent;

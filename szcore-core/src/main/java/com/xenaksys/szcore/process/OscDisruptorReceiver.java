@@ -1,7 +1,7 @@
 package com.xenaksys.szcore.process;
 
 import com.lmax.disruptor.RingBuffer;
-import com.xenaksys.szcore.event.IncomingOscEvent;
+import com.xenaksys.szcore.event.osc.IncomingOscEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

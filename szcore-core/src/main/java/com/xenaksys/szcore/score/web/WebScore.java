@@ -2,11 +2,11 @@ package com.xenaksys.szcore.score.web;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.OutgoingWebEvent;
-import com.xenaksys.szcore.event.OutgoingWebEventType;
-import com.xenaksys.szcore.event.WebScoreConnectionEvent;
-import com.xenaksys.szcore.event.WebScorePartRegEvent;
-import com.xenaksys.szcore.event.WebScoreRemoveConnectionEvent;
+import com.xenaksys.szcore.event.web.OutgoingWebEvent;
+import com.xenaksys.szcore.event.web.OutgoingWebEventType;
+import com.xenaksys.szcore.event.web.WebScoreConnectionEvent;
+import com.xenaksys.szcore.event.web.WebScorePartRegEvent;
+import com.xenaksys.szcore.event.web.WebScoreRemoveConnectionEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.ScoreProcessor;
@@ -46,6 +46,11 @@ public class WebScore {
 
     public void init() {
         this.scoreInfo = initScoreInfo();
+        try {
+            sendScoreInfo();
+        } catch (Exception e) {
+            LOG.error("Failed to send score info to all", e);
+        }
     }
 
     private WebScoreInfo initScoreInfo() {
@@ -111,6 +116,12 @@ public class WebScore {
         } else {
             LOG.debug("addInstrumentClient, client is already registered");
         }
+    }
+
+    public void sendScoreInfo() throws Exception {
+        WebScoreState scoreState = new WebScoreState();
+        scoreState.setScoreInfo(scoreInfo);
+        sendScoreState(WebScoreTargetType.ALL.name(), WebScoreTargetType.ALL, scoreState);
     }
 
     public void sendScoreInfo(WebClientInfo clientInfo) throws Exception {

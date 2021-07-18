@@ -2,7 +2,7 @@ package com.xenaksys.szcore.scripting;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.ScriptingEngineEvent;
+import com.xenaksys.szcore.event.script.ScriptingEngineEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Score;
 import com.xenaksys.szcore.model.ScoreProcessor;

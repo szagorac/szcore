@@ -1,6 +1,6 @@
 package com.xenaksys.szcore.task;
 
-import com.xenaksys.szcore.event.StopEvent;
+import com.xenaksys.szcore.event.music.StopEvent;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.SzcoreEvent;
 

@@ -1,7 +1,7 @@
 package com.xenaksys.szcore.task;
 
-import com.xenaksys.szcore.event.OscStaveTempoEvent;
-import com.xenaksys.szcore.event.TempoChangeEvent;
+import com.xenaksys.szcore.event.osc.OscStaveTempoEvent;
+import com.xenaksys.szcore.event.osc.TempoChangeEvent;
 import com.xenaksys.szcore.model.OscPublisher;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.Tempo;

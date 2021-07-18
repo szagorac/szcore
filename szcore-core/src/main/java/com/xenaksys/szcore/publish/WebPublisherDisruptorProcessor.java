@@ -2,7 +2,7 @@ package com.xenaksys.szcore.publish;
 
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.dsl.Disruptor;
-import com.xenaksys.szcore.event.OutgoingWebEvent;
+import com.xenaksys.szcore.event.web.OutgoingWebEvent;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.process.WebDisruptorPublisher;

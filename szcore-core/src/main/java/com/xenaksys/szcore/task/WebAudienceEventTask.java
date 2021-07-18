@@ -1,6 +1,6 @@
 package com.xenaksys.szcore.task;
 
-import com.xenaksys.szcore.event.WebAudienceEvent;
+import com.xenaksys.szcore.event.web.WebAudienceEvent;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
 

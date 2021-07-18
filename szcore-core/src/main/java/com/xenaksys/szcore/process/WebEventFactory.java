@@ -1,7 +1,7 @@
 package com.xenaksys.szcore.process;
 
 import com.lmax.disruptor.EventFactory;
-import com.xenaksys.szcore.event.OutgoingWebEvent;
+import com.xenaksys.szcore.event.web.OutgoingWebEvent;
 
 public class WebEventFactory implements EventFactory<OutgoingWebEvent> {
 

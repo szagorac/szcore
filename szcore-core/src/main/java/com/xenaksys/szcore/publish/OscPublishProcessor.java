@@ -2,7 +2,7 @@ package com.xenaksys.szcore.publish;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventType;
-import com.xenaksys.szcore.event.OscEvent;
+import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.model.OscPublisher;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.net.osc.OSCMessage;

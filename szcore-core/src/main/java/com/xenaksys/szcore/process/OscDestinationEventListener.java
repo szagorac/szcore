@@ -2,7 +2,7 @@ package com.xenaksys.szcore.process;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.OscScriptEvent;
+import com.xenaksys.szcore.event.osc.OscScriptEvent;
 import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Id;

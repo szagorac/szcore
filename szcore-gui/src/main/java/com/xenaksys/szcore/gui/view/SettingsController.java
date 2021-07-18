@@ -2,7 +2,7 @@ package com.xenaksys.szcore.gui.view;
 
 
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.event.WebAudienceClientInfoUpdateEvent;
+import com.xenaksys.szcore.event.web.WebAudienceClientInfoUpdateEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.AudienceClient;
 import com.xenaksys.szcore.gui.model.IpAddress;

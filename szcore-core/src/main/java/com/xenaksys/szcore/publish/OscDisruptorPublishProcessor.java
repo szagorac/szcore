@@ -2,7 +2,7 @@ package com.xenaksys.szcore.publish;
 
 import com.lmax.disruptor.dsl.Disruptor;
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.event.OscEvent;
+import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.net.osc.OSCMessage;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.process.AbstractOscPublisherDisruptorProcessor;

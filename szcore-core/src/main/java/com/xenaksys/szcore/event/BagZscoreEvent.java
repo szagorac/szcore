@@ -6,13 +6,13 @@ import com.xenaksys.szcore.model.id.BeatId;
 import java.util.EnumMap;
 import java.util.Set;
 
-public class BagSzcoreEvent implements SzcoreEvent {
+public class BagZscoreEvent implements SzcoreEvent {
 
-    private final EnumMap<SzcoreEventParam, Object> params;
+    private final EnumMap<ZscoreEventParam, Object> params;
     private EventType type;
 
-    public BagSzcoreEvent() {
-        this.params = new EnumMap<>(SzcoreEventParam.class);
+    public BagZscoreEvent() {
+        this.params = new EnumMap<>(ZscoreEventParam.class);
         this.type = EventType.UNKNOWN;
     }
 
@@ -21,7 +21,7 @@ public class BagSzcoreEvent implements SzcoreEvent {
         this.type = EventType.UNKNOWN;
     }
 
-    public void addParam(SzcoreEventParam type, Object value) {
+    public void addParam(ZscoreEventParam type, Object value) {
         params.put(type, value);
     }
 
@@ -29,15 +29,15 @@ public class BagSzcoreEvent implements SzcoreEvent {
         this.type = type;
     }
 
-    public Set<SzcoreEventParam> getParamTypes() {
+    public Set<ZscoreEventParam> getParamTypes() {
         return params.keySet();
     }
 
-    public Object getParam(SzcoreEventParam type) {
+    public Object getParam(ZscoreEventParam type) {
         return params.get(type);
     }
 
-    public Object removeParam(SzcoreEventParam type) {
+    public Object removeParam(ZscoreEventParam type) {
         return params.remove(type);
     }
 
@@ -48,13 +48,13 @@ public class BagSzcoreEvent implements SzcoreEvent {
 
     @Override
     public BeatId getEventBaseBeat() {
-        Object bid = getValue(SzcoreEventParam.EVENT_PARAM_BEAT_ID, BeatId.class);
+        Object bid = getValue(ZscoreEventParam.EVENT_PARAM_BEAT_ID, BeatId.class);
         return (bid == null)?null:(BeatId)bid;
     }
 
     @Override
     public long getCreationTime() {
-        Object time = getValue(SzcoreEventParam.EVENT_PARAM_CREATION_TIME, Long.class);
+        Object time = getValue(ZscoreEventParam.EVENT_PARAM_CREATION_TIME, Long.class);
         return (time == null)?0L:(Long)time;
     }
 
@@ -66,9 +66,9 @@ public class BagSzcoreEvent implements SzcoreEvent {
                 '}';
     }
 
-    public Object getValue(SzcoreEventParam param, Class clazz) {
+    public Object getValue(ZscoreEventParam param, Class clazz) {
         Object bid = getParam(param);
-        if(!validate(bid, clazz)){
+        if (!validate(bid, clazz)) {
             return null;
         }
         return bid;

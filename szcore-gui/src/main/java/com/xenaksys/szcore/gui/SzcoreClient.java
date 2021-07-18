@@ -294,22 +294,25 @@ public class SzcoreClient extends Application {
 
     public void processWebScoreClientInfos(WebScoreClientInfoUpdateEvent event) {
         ArrayList<WebClientInfo> webClientInfos = event.getWebClientInfos();
+        boolean isFullUpdate = event.isFullUpdate();
         ArrayList<Participant> toRemove = new ArrayList<>();
 
-        for (Participant participant : participants) {
-            String host = participant.getHostAddress();
-            int port = participant.getPortIn();
-            boolean isPresent = false;
-            for (WebClientInfo clientInfo : webClientInfos) {
-                String chost = clientInfo.getHost();
-                int cport = clientInfo.getPort();
-                if (host.equals(chost) && port == cport) {
-                    isPresent = true;
-                    continue;
+        if (isFullUpdate) {
+            for (Participant participant : participants) {
+                String host = participant.getHostAddress();
+                int port = participant.getPortIn();
+                boolean isPresent = false;
+                for (WebClientInfo clientInfo : webClientInfos) {
+                    String chost = clientInfo.getHost();
+                    int cport = clientInfo.getPort();
+                    if (host.equals(chost) && port == cport) {
+                        isPresent = true;
+                        continue;
+                    }
                 }
-            }
-            if (!isPresent && participant.isWebClient()) {
-                toRemove.add(participant);
+                if (!isPresent && participant.isWebClient()) {
+                    toRemove.add(participant);
+                }
             }
         }
 
@@ -332,8 +335,10 @@ public class SzcoreClient extends Application {
             addParticipant(participant);
         }
 
-        for (Participant participant : toRemove) {
-            participants.remove(participant);
+        if (isFullUpdate) {
+            for (Participant participant : toRemove) {
+                participants.remove(participant);
+            }
         }
     }
 }

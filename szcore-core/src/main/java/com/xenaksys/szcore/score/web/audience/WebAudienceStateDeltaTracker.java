@@ -12,7 +12,7 @@ import com.xenaksys.szcore.score.web.audience.export.WebGranulatorConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthStateExport;
 import com.xenaksys.szcore.util.ScoreUtil;
-import com.xenaksys.szcore.web.WebAction;
+import com.xenaksys.szcore.web.WebAudienceAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -194,8 +194,8 @@ public class WebAudienceStateDeltaTracker {
         if (id == null || newValue == null) {
             return;
         }
-        if (newValue instanceof WebAction) {
-            addAction((WebAction) newValue);
+        if (newValue instanceof WebAudienceAction) {
+            addAction((WebAudienceAction) newValue);
         } else {
             LOG.error("processAction: invalid object type: {}", newValue);
         }
@@ -208,7 +208,7 @@ public class WebAudienceStateDeltaTracker {
         delta.put(WEB_OBJ_ZOOM_LEVEL, zoomLevel);
     }
 
-    private void addAction(WebAction action) {
+    private void addAction(WebAudienceAction action) {
         if (action == null) {
             return;
         }

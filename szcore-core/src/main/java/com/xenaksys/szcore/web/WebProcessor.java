@@ -39,6 +39,7 @@ import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaE
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
 import com.xenaksys.szcore.util.Histogram;
 import com.xenaksys.szcore.util.NetUtil;
+import com.xenaksys.szcore.util.ParseUtil;
 import com.xenaksys.szcore.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +61,7 @@ import static com.xenaksys.szcore.Consts.WEB_EVENT_LAST_STATE_UPDATE_TIME;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_NAME;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_PART;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_SENT_TIME_NAME;
+import static com.xenaksys.szcore.Consts.WEB_EVENT_SERVER_TIME;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_TIME_NAME;
 import static com.xenaksys.szcore.Consts.WEB_RESPONSE_MESSAGE;
 import static com.xenaksys.szcore.Consts.WEB_RESPONSE_STATE;
@@ -493,9 +495,31 @@ public class WebProcessor implements Processor, WebScoreStateListener {
                         sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
                 eventService.receive(partRegEvent);
                 return createOkWebString(WEB_RESPONSE_SUBMITTED);
+            case PING:
+                String serverTimeStr = zsRequest.getParam(WEB_EVENT_SERVER_TIME);
+                onClientPing(serverTimeStr, sourceAddr, creationTime);
+                return createOkWebString(WEB_RESPONSE_SUBMITTED);
             default:
                 return createErrorWebString("Invalid event type: " + type);
         }
+    }
+
+    private void onClientPing(String serverTimeStr, String sourceAddr, long eventTime) {
+        if (!ParseUtil.isNumeric(serverTimeStr)) {
+            LOG.error("onClientPing: Invalid server time");
+            return;
+        }
+
+        long serverTime = Long.parseLong(serverTimeStr);
+        if (serverTime == 0L) {
+            return;
+        }
+        WebClientInfo clientInfo = scoreClientInfos.get(sourceAddr);
+        if (clientInfo == null) {
+            LOG.error("onClientPing: Ping from Invalid participant: " + sourceAddr);
+            return;
+        }
+        scoreService.onWebScorePing(clientInfo, serverTime, eventTime);
     }
 
     private String processIncomingWebAudienceEvent(String eventName, ZsWebRequest zsRequest) throws Exception {
@@ -853,7 +877,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
     private void updateGuiScoreClientInfos() {
         Collection<WebClientInfo> wcis = scoreClientInfos.values();
         ArrayList<WebClientInfo> out = new ArrayList<>(wcis);
-        WebScoreClientInfoUpdateEvent clientInfoUpdateEvent = eventFactory.createWebScoreClientInfoUpdateEvent(out, clock.getSystemTimeMillis());
+        WebScoreClientInfoUpdateEvent clientInfoUpdateEvent = eventFactory.createWebScoreClientInfoUpdateEvent(out, true, clock.getSystemTimeMillis());
         eventReceiver.notifyListeners(clientInfoUpdateEvent);
     }
 
@@ -863,7 +887,7 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         }
         ArrayList<WebClientInfo> out = new ArrayList<>(1);
         out.add(clientInfo);
-        WebScoreClientInfoUpdateEvent clientInfoUpdateEvent = eventFactory.createWebScoreClientInfoUpdateEvent(out, clock.getSystemTimeMillis());
+        WebScoreClientInfoUpdateEvent clientInfoUpdateEvent = eventFactory.createWebScoreClientInfoUpdateEvent(out, false, clock.getSystemTimeMillis());
         eventReceiver.notifyListeners(clientInfoUpdateEvent);
     }
 }

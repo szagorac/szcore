@@ -5,17 +5,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class WebAction {
+public class WebAudienceAction {
     private final String id;
-    private final WebActionType actionType;
+    private final WebAudienceActionType actionType;
     private final List<String> elementIds;
     private final Map<String, Object> params;
 
-    public WebAction(String id, WebActionType actionType, List<String> elementIds) {
+    public WebAudienceAction(String id, WebAudienceActionType actionType, List<String> elementIds) {
         this(id, actionType, elementIds, new HashMap<>());
     }
 
-    public WebAction(String id, WebActionType actionType, List<String> elementIds, Map<String, Object> params) {
+    public WebAudienceAction(String id, WebAudienceActionType actionType, List<String> elementIds, Map<String, Object> params) {
         this.id = id;
         this.actionType = actionType;
         this.elementIds = elementIds;
@@ -26,7 +26,7 @@ public class WebAction {
         return id;
     }
 
-    public WebActionType getActionType() {
+    public WebAudienceActionType getActionType() {
         return actionType;
     }
 
@@ -42,8 +42,8 @@ public class WebAction {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        WebAction webAction = (WebAction) o;
-        return id.equals(webAction.id);
+        WebAudienceAction webAudienceAction = (WebAudienceAction) o;
+        return id.equals(webAudienceAction.id);
     }
 
     @Override
@@ -53,7 +53,7 @@ public class WebAction {
 
     @Override
     public String toString() {
-        return "WebAction{" +
+        return "WebAudienceAction{" +
                 "id='" + id + '\'' +
                 ", actionType=" + actionType +
                 ", elementIds=" + elementIds +

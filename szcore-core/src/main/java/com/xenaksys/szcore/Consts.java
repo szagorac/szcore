@@ -299,6 +299,7 @@ public interface Consts {
     String WEB_EVENT_ELEMENT_ID = "elementId";
     String WEB_EVENT_IS_SELECTED = "selected";
     String WEB_EVENT_PART = "part";
+    String WEB_EVENT_SERVER_TIME = "serverTime";
 
     String WEB_RESPONSE_TYPE = "type";
     String WEB_RESPONSE_MESSAGE = "msg";
@@ -358,6 +359,7 @@ public interface Consts {
 
     String WEB_ACTION_PARAM_LEVEL = "level";
     String WEB_ACTION_PARAM_TIME_MS = "timeMs";
+    String WEB_ACTION_PARAM_SEND_TIME_MS = "sendTimeMs";
 
     int WEB_CONFIG_READY_PRESET = 0;
     int WEB_CONFIG_GO_PRESET = -1;

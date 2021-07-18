@@ -1,12 +1,9 @@
 package com.xenaksys.szcore.score.web;
 
-import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
-import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
-import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.ScoreProcessor;
@@ -119,29 +116,27 @@ public class WebScore {
     }
 
     public void sendScoreInfo() throws Exception {
-        WebScoreState scoreState = new WebScoreState();
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         scoreState.setScoreInfo(scoreInfo);
-        sendScoreState(WebScoreTargetType.ALL.name(), WebScoreTargetType.ALL, scoreState);
+        scoreProcessor.sendWebScoreState(WebScoreTargetType.ALL.name(), WebScoreTargetType.ALL, scoreState);
     }
 
     public void sendScoreInfo(WebClientInfo clientInfo) throws Exception {
-        WebScoreState scoreState = new WebScoreState();
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         scoreState.setScoreInfo(scoreInfo);
-        sendScoreState(clientInfo.getClientAddr(), WebScoreTargetType.HOST, scoreState);
+        scoreProcessor.sendWebScoreState(clientInfo.getClientAddr(), WebScoreTargetType.HOST, scoreState);
+    }
+
+    public void sendCurrentBeat(int beatNo) throws Exception {
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
+        scoreState.setBeatNo(beatNo);
+        scoreProcessor.sendWebScoreState(WebScoreTargetType.ALL.name(), WebScoreTargetType.ALL, scoreState);
     }
 
     public void sendPartInfo(WebClientInfo clientInfo) throws Exception {
-        WebScoreState scoreState = new WebScoreState();
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         scoreState.setPart(clientInfo.getInstrument());
-        sendScoreState(clientInfo.getClientAddr(), WebScoreTargetType.HOST, scoreState);
-    }
-
-    public void sendScoreState(String target, WebScoreTargetType targetType, WebScoreState scoreState) throws Exception {
-        OutgoingWebEvent outEvent = eventFactory.createWebScoreOutEvent(null, null, OutgoingWebEventType.PUSH_SCORE_STATE, clock.getSystemTimeMillis());
-        outEvent.addData(Consts.WEB_DATA_SCORE_STATE, scoreState);
-        outEvent.addData(Consts.WEB_DATA_TARGET, target);
-        outEvent.addData(Consts.WEB_DATA_TARGET_TYPE, targetType);
-        scoreProcessor.onOutgoingWebEvent(outEvent);
+        scoreProcessor.sendWebScoreState(clientInfo.getClientAddr(), WebScoreTargetType.HOST, scoreState);
     }
 
     public void processRemoveConnectionEvent(WebScoreRemoveConnectionEvent webEvent) {

@@ -22,7 +22,7 @@ import com.xenaksys.szcore.score.web.audience.export.WebGranulatorConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthStateExport;
 import com.xenaksys.szcore.time.TstClock;
-import com.xenaksys.szcore.web.WebActionType;
+import com.xenaksys.szcore.web.WebAudienceActionType;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -247,7 +247,7 @@ public class TestWebAudienceScore {
         assertEquals(1, actions.size());
         WebAudienceActionExport action = actions.iterator().next();
         assertEquals(WEB_ACTION_ID_START, action.getId());
-        assertEquals(WebActionType.ALPHA, action.getActionType());
+        assertEquals(WebAudienceActionType.ALPHA, action.getActionType());
         List<String> actionElements = action.getElementIds();
         assertEquals(1, actionElements.size());
         String elId = actionElements.get(0);

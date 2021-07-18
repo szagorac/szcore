@@ -40,8 +40,8 @@ import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthStateExport;
 import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.ScoreUtil;
-import com.xenaksys.szcore.web.WebAction;
-import com.xenaksys.szcore.web.WebActionType;
+import com.xenaksys.szcore.web.WebAudienceAction;
+import com.xenaksys.szcore.web.WebAudienceActionType;
 import com.xenaksys.szcore.web.WebScoreStateType;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
@@ -195,7 +195,7 @@ public class WebAudienceScore {
         pcs.addPropertyChangeListener(new WebAudienceChangeListener());
 
         Tile[][] tiles = new Tile[8][8];
-        List<WebAction> currentActions = new ArrayList<>();
+        List<WebAudienceAction> currentActions = new ArrayList<>();
         Map<String, WebAudienceElementState> elementStates = new HashMap<>();
         WebTextState instructions = new WebTextState(WEB_OBJ_INSTRUCTIONS, 3);
         WebGranulatorConfig granulatorConfig = createDefaultGranulatorConfig();
@@ -618,7 +618,7 @@ public class WebAudienceScore {
             txt.setVisible(false);
             targets.add(t.getId());
         }
-//        setAction(WEB_ACTION_ID_RESET, WebActionType.ROTATE.name(), targets.toArray(new String[0]));
+//        setAction(WEB_ACTION_ID_RESET, WebAudienceActionType.ROTATE.name(), targets.toArray(new String[0]));
         playingTiles.clear();
     }
 
@@ -722,7 +722,7 @@ public class WebAudienceScore {
         Map<String, Object> params = new HashMap<>(2);
         params.put(WEB_CONFIG_DURATION, duration);
         params.put(WEB_CONFIG_VALUE, 0);
-        setAction(WEB_ACTION_ID_START, WebActionType.ALPHA.name(), tileIds, params);
+        setAction(WEB_ACTION_ID_START, WebAudienceActionType.ALPHA.name(), tileIds, params);
     }
 
     public void setPlayingTiles(String[] tileIds) {
@@ -810,16 +810,16 @@ public class WebAudienceScore {
     public void setAction(String actionId, String type, String[] targetIds, Map<String, Object> params) {
         LOG.debug("setAction: {} target: {}", actionId, Arrays.toString(targetIds));
         try {
-            WebAction action = createAction(actionId, type, targetIds, params);
+            WebAudienceAction action = createAction(actionId, type, targetIds, params);
             state.addAction(action);
         } catch (IllegalArgumentException e) {
             LOG.error("Failed to setAction id: {} type: {}", actionId, type);
         }
     }
 
-    public WebAction createAction(String actionId, String type, String[] targetIds, Map<String, Object> params) {
-        WebActionType t = WebActionType.valueOf(type.toUpperCase());
-        return new WebAction(actionId, t, Arrays.asList(targetIds), params);
+    public WebAudienceAction createAction(String actionId, String type, String[] targetIds, Map<String, Object> params) {
+        WebAudienceActionType t = WebAudienceActionType.valueOf(type.toUpperCase());
+        return new WebAudienceAction(actionId, t, Arrays.asList(targetIds), params);
     }
 
     public boolean processStopAll(WebAudienceStopEvent event) {
@@ -829,24 +829,24 @@ public class WebAudienceScore {
 
     public void sendStopAll() {
         String[] target = {WEB_TARGET_ALL};
-        setAction(WEB_ACTION_ID_STOP, WebActionType.STOP.name(), target, null);
+        setAction(WEB_ACTION_ID_STOP, WebAudienceActionType.STOP.name(), target, null);
     }
 
     public void sendGranulatorConfig() {
         String[] target = {WEB_GRANULATOR};
         Map<String, Object> params = state.getGranulatorConfig().toJsMap();
-        setAction(WEB_ACTION_ID_CONFIG, WebActionType.AUDIO.name(), target, params);
+        setAction(WEB_ACTION_ID_CONFIG, WebAudienceActionType.AUDIO.name(), target, params);
     }
 
     public void playGranulator() {
         String[] target = {WEB_GRANULATOR};
-        WebAction action = createAction(WEB_ACTION_ID_PLAY, WebActionType.AUDIO.name(), target, null);
+        WebAudienceAction action = createAction(WEB_ACTION_ID_PLAY, WebAudienceActionType.AUDIO.name(), target, null);
         state.addAction(action);
     }
 
     public void stopGranulator() {
         String[] target = {WEB_GRANULATOR};
-        setAction(WEB_ACTION_ID_STOP, WebActionType.AUDIO.name(), target, null);
+        setAction(WEB_ACTION_ID_STOP, WebAudienceActionType.AUDIO.name(), target, null);
     }
 
     public void validateGranulatorConfig() {
@@ -855,12 +855,12 @@ public class WebAudienceScore {
 
     public void resetSelectedTiles() {
         String[] target = {WEB_SELECTED_TILES};
-        setAction(WEB_ACTION_ID_ALL, WebActionType.RESET.name(), target, null);
+        setAction(WEB_ACTION_ID_ALL, WebAudienceActionType.RESET.name(), target, null);
     }
 
     public void removeOverlays() {
         String[] target = {WEB_OVERLAYS};
-        setAction(WEB_ACTION_ID_DISPLAY, WebActionType.DEACTIVATE.name(), target, null);
+        setAction(WEB_ACTION_ID_DISPLAY, WebAudienceActionType.DEACTIVATE.name(), target, null);
     }
 
     public void setStageAlpha(double endValue, double durationSec) {
@@ -872,7 +872,7 @@ public class WebAudienceScore {
         Map<String, Object> params = new HashMap<>(2);
         params.put(WEB_CONFIG_DURATION, durationSec);
         params.put(WEB_CONFIG_VALUE, endValue);
-        setAction(WEB_ACTION_ID_START, WebActionType.ALPHA.name(), targetIds, params);
+        setAction(WEB_ACTION_ID_START, WebAudienceActionType.ALPHA.name(), targetIds, params);
         WebAudienceStateUpdateEvent stateUpdateEvent = eventFactory.createWebAudienceStateUpdateEvent(WebScoreStateType.STAGE_ALPHA, endValue, clock.getSystemTimeMillis());
         scoreProcessor.scheduleEvent(stateUpdateEvent, (long) durationSec * Consts.THOUSAND);
 //        state.setStageAlpha(endValue);
@@ -884,7 +884,7 @@ public class WebAudienceScore {
         params.put(WEB_CONFIG_PARAM_NAME, paramName);
         params.put(WEB_CONFIG_END_VALUE, endValue);
         params.put(WEB_CONFIG_DURATION, durationMs);
-        setAction(WEB_ACTION_ID_RAMP_LINEAR, WebActionType.AUDIO.name(), target, params);
+        setAction(WEB_ACTION_ID_RAMP_LINEAR, WebAudienceActionType.AUDIO.name(), target, params);
     }
 
     public void granulatorRampSin(String paramName, Double amplitude, Double frequency, int durationMs) {
@@ -894,7 +894,7 @@ public class WebAudienceScore {
         params.put(WEB_CONFIG_AMPLITUDE, amplitude);
         params.put(WEB_CONFIG_FREQUENCY, frequency);
         params.put(WEB_CONFIG_DURATION, durationMs);
-        setAction(WEB_ACTION_ID_RAMP_SIN, WebActionType.AUDIO.name(), target, params);
+        setAction(WEB_ACTION_ID_RAMP_SIN, WebAudienceActionType.AUDIO.name(), target, params);
     }
 
     public void setGranulatorVolume(Double level, int millis) {
@@ -902,13 +902,13 @@ public class WebAudienceScore {
         Map<String, Object> params = new HashMap<>();
         params.put(WEB_ACTION_PARAM_LEVEL, level);
         params.put(WEB_ACTION_PARAM_TIME_MS, millis);
-        setAction(WEB_ACTION_VOLUME, WebActionType.AUDIO.name(), target, params);
+        setAction(WEB_ACTION_VOLUME, WebAudienceActionType.AUDIO.name(), target, params);
     }
 
     public void sendSpeechSynthConfig() {
         String[] target = {WEB_SPEECH_SYNTH};
         Map<String, Object> params = state.getSpeechSynthConfig().toJsMap();
-        setAction(WEB_ACTION_ID_CONFIG, WebActionType.AUDIO.name(), target, params);
+        setAction(WEB_ACTION_ID_CONFIG, WebAudienceActionType.AUDIO.name(), target, params);
     }
 
     public void validateSpeechSynthConfig() {
@@ -918,7 +918,7 @@ public class WebAudienceScore {
     public void sendSpeechSynthState() {
         String[] target = {WEB_SPEECH_SYNTH};
         Map<String, Object> params = state.getSpeechSynthState().toJsMap();
-        setAction(WEB_ACTION_ID_STATE, WebActionType.AUDIO.name(), target, params);
+        setAction(WEB_ACTION_ID_STATE, WebAudienceActionType.AUDIO.name(), target, params);
     }
 
     public void validateSpeechSynthState() {
@@ -953,7 +953,7 @@ public class WebAudienceScore {
     public void speak() {
         String[] target = {WEB_SPEECH_SYNTH};
         Map<String, Object> params = state.getSpeechSynthState().toJsMap();
-        setAction(WEB_ACTION_ID_PLAY, WebActionType.AUDIO.name(), target, params);
+        setAction(WEB_ACTION_ID_PLAY, WebAudienceActionType.AUDIO.name(), target, params);
     }
 
     public void speak(String text) {
@@ -963,13 +963,13 @@ public class WebAudienceScore {
         String[] target = {WEB_SPEECH_SYNTH};
         Map<String, Object> params = state.getSpeechSynthState().toJsMap();
         params.put(WEB_CONFIG_SPEECH_TEXT, text);
-        setAction(WEB_ACTION_ID_PLAY, WebActionType.AUDIO.name(), target, params);
+        setAction(WEB_ACTION_ID_PLAY, WebAudienceActionType.AUDIO.name(), target, params);
     }
 
     public void stopSpeech() {
         String[] target = {WEB_SPEECH_SYNTH};
         Map<String, Object> params = state.getSpeechSynthState().toJsMap();
-        setAction(WEB_ACTION_ID_STOP, WebActionType.AUDIO.name(), target, params);
+        setAction(WEB_ACTION_ID_STOP, WebAudienceActionType.AUDIO.name(), target, params);
     }
 
     public void rampLinearSpeechParam(String name, Object endValue, double durationSec) {
@@ -978,7 +978,7 @@ public class WebAudienceScore {
         params.put(WEB_CONFIG_PARAM_NAME, name);
         params.put(WEB_CONFIG_END_VALUE, endValue);
         params.put(WEB_CONFIG_DURATION, durationSec);
-        setAction(WEB_ACTION_ID_RAMP_LINEAR, WebActionType.AUDIO.name(), target, params);
+        setAction(WEB_ACTION_ID_RAMP_LINEAR, WebAudienceActionType.AUDIO.name(), target, params);
     }
 
     public void setSpeechSynthConfigParam(String name, Object value) {
@@ -1416,7 +1416,7 @@ public class WebAudienceScore {
         WebSpeechSynthStateExport speechSynthStateExport = new WebSpeechSynthStateExport();
         speechSynthStateExport.populate(state.getSpeechSynthState());
 
-        List<WebAction> actions = state.getActions();
+        List<WebAudienceAction> actions = state.getActions();
         LOG.debug("WebAudienceScoreStateExport sending actions: {}", actions);
 
         return new WebAudienceScoreStateExport(tes, actions, centreShape, innerCircle, outerCircle, state.getZoomLevel(),
@@ -2048,7 +2048,7 @@ public class WebAudienceScore {
 
     public class WebAudienceServerState {
         private volatile WebAudienceScore.Tile[][] tiles;
-        private final List<WebAction> actions;
+        private final List<WebAudienceAction> actions;
         private volatile String zoomLevel;
         private final Map<String, WebAudienceElementState> elementStates;
         private final WebTextState instructions;
@@ -2057,7 +2057,7 @@ public class WebAudienceScore {
         private volatile WebSpeechSynthState speechSynthState;
         private volatile double stageAlpha;
 
-        public WebAudienceServerState(WebAudienceScore.Tile[][] tiles, List<WebAction> currentActions, Map<String, WebAudienceElementState> elementStates,
+        public WebAudienceServerState(WebAudienceScore.Tile[][] tiles, List<WebAudienceAction> currentActions, Map<String, WebAudienceElementState> elementStates,
                                       String zoomLevel, WebTextState instructions, WebGranulatorConfig granulatorConfig,
                                       WebSpeechSynthConfig speechSynthConfig, WebSpeechSynthState speechSynthState, double stageAlpha) {
             this.tiles = tiles;
@@ -2105,7 +2105,7 @@ public class WebAudienceScore {
             pcs.firePropertyChange(WEB_OBJ_TILE, tile.getId(), tile);
         }
 
-        public List<WebAction> getActions() {
+        public List<WebAudienceAction> getActions() {
             return actions;
         }
 
@@ -2114,7 +2114,7 @@ public class WebAudienceScore {
             pcs.firePropertyChange(WEB_OBJ_ACTIONS, WEB_OBJ_ACTIONS, null);
         }
 
-        public void addAction(WebAction action) {
+        public void addAction(WebAudienceAction action) {
             if (action == null) {
                 return;
             }

@@ -1,7 +1,7 @@
 package com.xenaksys.szcore.score.web.audience.export;
 
-import com.xenaksys.szcore.web.WebAction;
-import com.xenaksys.szcore.web.WebActionType;
+import com.xenaksys.szcore.web.WebAudienceAction;
+import com.xenaksys.szcore.web.WebAudienceActionType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class WebAudienceActionExport {
     private String id;
-    private WebActionType actionType;
+    private WebAudienceActionType actionType;
     private List<String> elementIds;
     private Map<String, Object> params;
 
@@ -18,7 +18,7 @@ public class WebAudienceActionExport {
         return id;
     }
 
-    public WebActionType getActionType() {
+    public WebAudienceActionType getActionType() {
         return actionType;
     }
 
@@ -30,7 +30,7 @@ public class WebAudienceActionExport {
         return params;
     }
 
-    public void populate(WebAction from) {
+    public void populate(WebAudienceAction from) {
         if (from == null) {
             return;
         }

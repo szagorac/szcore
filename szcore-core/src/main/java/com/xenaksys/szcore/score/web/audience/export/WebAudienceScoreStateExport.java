@@ -1,12 +1,12 @@
 package com.xenaksys.szcore.score.web.audience.export;
 
-import com.xenaksys.szcore.web.WebAction;
+import com.xenaksys.szcore.web.WebAudienceAction;
 
 import java.util.List;
 
 public class WebAudienceScoreStateExport {
     private volatile TileExport[][] tiles;
-    private final List<WebAction> actions;
+    private final List<WebAudienceAction> actions;
     private volatile String zoomLevel;
     private final WebElementStateExport centreShape;
     private final WebElementStateExport innerCircle;
@@ -17,7 +17,7 @@ public class WebAudienceScoreStateExport {
     private final WebSpeechSynthStateExport speechSynthState;
     private volatile double stageAlpha;
 
-    public WebAudienceScoreStateExport(TileExport[][] tiles, List<WebAction> currentActions,
+    public WebAudienceScoreStateExport(TileExport[][] tiles, List<WebAudienceAction> currentActions,
                                        WebElementStateExport centreShape, WebElementStateExport innerCircle, WebElementStateExport outerCircle,
                                        String zoomLevel, WebAudienceInstructionsExport instructions, WebGranulatorConfigExport granulatorConfig,
                                        WebSpeechSynthConfigExport speechSynthConfig, WebSpeechSynthStateExport speechSynthState, double stageAlpha) {
@@ -38,7 +38,7 @@ public class WebAudienceScoreStateExport {
         return tiles;
     }
 
-    public List<WebAction> getActions() {
+    public List<WebAudienceAction> getActions() {
         return actions;
     }
 

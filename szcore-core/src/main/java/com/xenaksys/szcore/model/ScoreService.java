@@ -123,4 +123,7 @@ public interface ScoreService {
     void pushToScoreWeb(String target, WebScoreTargetType targetType, String data);
 
     void closeScoreConnections(List<String> connectionIds);
+
+    void onWebScorePing(WebClientInfo clientInfo, long serverTime, long eventTime);
+
 }

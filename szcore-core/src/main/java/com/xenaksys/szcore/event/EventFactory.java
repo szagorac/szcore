@@ -169,8 +169,8 @@ public class EventFactory {
         return new WebAudienceClientInfoUpdateEvent(webClientInfos, histoBucketViews, totalWebHits, creationTime);
     }
 
-    public WebScoreClientInfoUpdateEvent createWebScoreClientInfoUpdateEvent(ArrayList<WebClientInfo> webClientInfos, long creationTime) {
-        return new WebScoreClientInfoUpdateEvent(webClientInfos, creationTime);
+    public WebScoreClientInfoUpdateEvent createWebScoreClientInfoUpdateEvent(ArrayList<WebClientInfo> webClientInfos, boolean isFullUpdate, long creationTime) {
+        return new WebScoreClientInfoUpdateEvent(webClientInfos, isFullUpdate, creationTime);
     }
 
     public ParticipantStatsEvent createParticipantStatsEvent(InetAddress inetAddress, String hostAddress, int port, double pingLatencyMillis, double halfPingLatencyMillis, boolean isExpired, long lastPingLatency, long creationTime) {

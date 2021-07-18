@@ -52,6 +52,7 @@ import com.xenaksys.szcore.event.web.in.WebScoreInEventType;
 import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
+import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import com.xenaksys.szcore.model.Bar;
 import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.Id;
@@ -87,6 +88,8 @@ import com.xenaksys.szcore.model.id.StrId;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.process.OscDestinationEventListener;
 import com.xenaksys.szcore.score.web.WebScore;
+import com.xenaksys.szcore.score.web.WebScoreState;
+import com.xenaksys.szcore.score.web.WebScoreTargetType;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreLoader;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
@@ -103,6 +106,8 @@ import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.ParseUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
+import com.xenaksys.szcore.web.WebScoreAction;
+import com.xenaksys.szcore.web.WebScoreActionType;
 import com.xenaksys.szcore.web.WebScoreStateListener;
 import gnu.trove.map.TIntObjectMap;
 import org.slf4j.Logger;
@@ -2882,8 +2887,60 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             LOG.debug("publishOscEvent: destination {} is not active, ignoring event: {}", destination, event);
             return;
         }
-
+        // mimic osc events for web score - TODO create separate web events
+        publishToWebScore(event);
         oscPublisher.process(event);
+    }
+
+    public void sendWebScoreState(String target, WebScoreTargetType targetType, WebScoreState scoreState) throws Exception {
+        OutgoingWebEvent outEvent = eventFactory.createWebScoreOutEvent(null, null, OutgoingWebEventType.PUSH_SCORE_STATE, clock.getSystemTimeMillis());
+        outEvent.addData(Consts.WEB_DATA_SCORE_STATE, scoreState);
+        outEvent.addData(Consts.WEB_DATA_TARGET, target);
+        outEvent.addData(Consts.WEB_DATA_TARGET_TYPE, targetType);
+        onOutgoingWebEvent(outEvent);
+    }
+
+    public void sendWebScorePing(long sendTime) throws Exception {
+        WebScoreState scoreState = getOrCreateWebScoreState();
+        Map<String, Object> params = new HashMap<>(1);
+        params.put(Consts.WEB_ACTION_PARAM_SEND_TIME_MS, sendTime);
+        WebScoreAction action = getOrCreateWebScoreAction(WebScoreActionType.PING, null, params);
+        scoreState.addAction(action);
+        sendWebScoreState(WebScoreTargetType.ALL.name(), WebScoreTargetType.ALL, scoreState);
+    }
+
+    public WebScoreState getOrCreateWebScoreState() {
+        //TODO create pool?
+        return new WebScoreState();
+    }
+
+    public WebScoreAction getOrCreateWebScoreAction(WebScoreActionType actionType, List<String> targets, Map<String, Object> params) {
+        //TODO create pool?
+        return new WebScoreAction(actionType, targets, params);
+    }
+
+    @Override
+    public void publishToWebScore(SzcoreEvent event) {
+        EventType type = event.getEventType();
+        switch (type) {
+            case OSC:
+                publishToWebScore((OscEvent) event);
+            default:
+                //DO nothing
+        }
+    }
+
+    //HACK - replace with separate events
+    private void publishToWebScore(OscEvent event) {
+        OscEventType oscEventType = event.getOscEventType();
+        try {
+            switch (oscEventType) {
+                case PING:
+                    sendWebScorePing(event.getCreationTime());
+            }
+        } catch (Exception e) {
+            LOG.error("publishToWebScoreHack: failed to publish web score event", e);
+        }
     }
 
     private void publishWebEvent(OutgoingWebEvent event) {

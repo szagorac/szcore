@@ -6,6 +6,8 @@ import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
+import com.xenaksys.szcore.score.web.WebScoreState;
+import com.xenaksys.szcore.score.web.WebScoreTargetType;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
@@ -102,4 +104,9 @@ public interface  ScoreProcessor extends Processor {
 
     void onIncomingWebScoreEvent(WebScoreInEvent webEvent) throws Exception;
 
+    void publishToWebScore(SzcoreEvent event);
+
+    void sendWebScoreState(String clientAddr, WebScoreTargetType host, WebScoreState scoreState) throws Exception;
+
+    WebScoreState getOrCreateWebScoreState();
 }

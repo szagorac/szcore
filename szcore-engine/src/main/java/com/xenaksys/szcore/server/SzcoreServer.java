@@ -6,6 +6,8 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventContainer;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.gui.ErrorEvent;
+import com.xenaksys.szcore.event.gui.ParticipantEvent;
+import com.xenaksys.szcore.event.gui.ParticipantStatsEvent;
 import com.xenaksys.szcore.event.osc.HelloEvent;
 import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.event.osc.PingEvent;
@@ -67,6 +69,7 @@ import org.apache.commons.net.util.SubnetUtils;
 
 import java.io.File;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -275,6 +278,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     public void publish(SzcoreEvent event){
+        scoreProcessor.publishToWebScore(event);
         oscEventPublisher.process(event);
     }
 
@@ -533,6 +537,42 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
             return;
         }
         scoreWebServer.closeConnections(connectionIds);
+    }
+
+    @Override
+    public void onWebScorePing(WebClientInfo clientInfo, long serverTime, long eventTime) {
+        try {
+            String ipAddress = clientInfo.getHost();
+            String clientId = clientInfo.getClientAddr();
+            InetAddress inetAddress = InetAddress.getByName(ipAddress);
+            ParticipantStats stats = getParticipantStats(clientId);
+            int port = clientInfo.getPort();
+            if (stats == null) {
+                stats = new ParticipantStats(clientId, ipAddress);
+                addParticipantStats(stats);
+            }
+
+            double latency = 1.0 * (eventTime - serverTime);
+            double oneWayLatency = latency / 2.0;
+            oneWayLatency = Math.round(oneWayLatency * 100.0) / 100.0;
+
+            if (!participants.containsKey(clientId)) {
+                addParticipant(clientId, inetAddress, port);
+                ParticipantEvent participantEvent = eventFactory.createParticipantEvent(inetAddress, ipAddress, port, 0,
+                        0, 0, Consts.NAME_NA, clock.getSystemTimeMillis());
+                eventProcessor.notifyListeners(participantEvent);
+            }
+
+            stats.setPingLatency(latency);
+            stats.setOneWayPingLatency(oneWayLatency);
+            stats.setLastPingResponseTime(eventTime);
+
+            ParticipantStatsEvent statsEvent = eventFactory.createParticipantStatsEvent(inetAddress, ipAddress, port, latency,
+                    oneWayLatency, false, 0L, clock.getSystemTimeMillis());
+            eventProcessor.notifyListeners(statsEvent);
+        } catch (UnknownHostException e) {
+            LOG.error("onWebScorePing: failed to process web score ping");
+        }
     }
 
     public WebProcessor getWebProcessor() {

@@ -1,5 +1,5 @@
 package com.xenaksys.szcore.web;
 
-public enum WebActionType {
+public enum WebAudienceActionType {
     RESET, ROTATE, DEACTIVATE, ACTIVATE, VISIBLE, INVISIBLE, ANIMATION, ZOOM, TIMELINE, AUDIO, ALPHA, STOP
 }

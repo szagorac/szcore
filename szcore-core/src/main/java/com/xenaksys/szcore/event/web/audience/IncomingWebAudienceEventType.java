@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.event.web;
+package com.xenaksys.szcore.event.web.audience;
 
 public enum IncomingWebAudienceEventType {
     GET_SERVER_STATE,

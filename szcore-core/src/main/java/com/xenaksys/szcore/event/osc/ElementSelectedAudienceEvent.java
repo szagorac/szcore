@@ -1,8 +1,8 @@
 package com.xenaksys.szcore.event.osc;
 
 
-import com.xenaksys.szcore.event.web.IncomingWebAudienceEvent;
-import com.xenaksys.szcore.event.web.IncomingWebAudienceEventType;
+import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
+import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEventType;
 
 public class ElementSelectedAudienceEvent extends IncomingWebAudienceEvent {
     private final String elementId;

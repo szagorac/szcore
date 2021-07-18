@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.event.web;
+package com.xenaksys.szcore.event.web.in;
 
 import com.xenaksys.szcore.web.WebClientInfo;
 

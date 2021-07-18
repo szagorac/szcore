@@ -5,7 +5,7 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.osc.AddPartsEvent;
 import com.xenaksys.szcore.event.osc.SendServerIpBroadcastEvent;
-import com.xenaksys.szcore.event.web.WebAudienceInstructionsEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Participant;
 import com.xenaksys.szcore.gui.model.WebscoreInstructions;

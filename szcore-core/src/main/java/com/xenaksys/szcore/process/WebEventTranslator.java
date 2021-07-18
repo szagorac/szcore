@@ -1,8 +1,8 @@
 package com.xenaksys.szcore.process;
 
 import com.lmax.disruptor.EventTranslatorOneArg;
-import com.xenaksys.szcore.event.web.OutgoingWebEvent;
-import com.xenaksys.szcore.event.web.OutgoingWebEventType;
+import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
+import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

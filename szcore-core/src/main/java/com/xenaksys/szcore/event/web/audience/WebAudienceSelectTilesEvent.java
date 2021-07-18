@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.event.web;
+package com.xenaksys.szcore.event.web.audience;
 
 
 import com.xenaksys.szcore.model.id.BeatId;

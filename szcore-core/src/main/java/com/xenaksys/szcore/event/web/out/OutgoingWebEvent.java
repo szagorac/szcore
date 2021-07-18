@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.event.web;
+package com.xenaksys.szcore.event.web.out;
 
 
 import com.xenaksys.szcore.event.EventType;

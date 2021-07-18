@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.event.web;
+package com.xenaksys.szcore.event.web.in;
 
 public class WebScorePartRegEvent extends WebScoreInEvent {
     private final String part;

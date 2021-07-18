@@ -1,7 +1,7 @@
 package com.xenaksys.szcore.process;
 
 import com.lmax.disruptor.RingBuffer;
-import com.xenaksys.szcore.event.web.OutgoingWebEvent;
+import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

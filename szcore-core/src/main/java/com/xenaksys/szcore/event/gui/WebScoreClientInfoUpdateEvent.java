@@ -1,7 +1,5 @@
-package com.xenaksys.szcore.event.web;
+package com.xenaksys.szcore.event.gui;
 
-import com.xenaksys.szcore.event.gui.ClientEvent;
-import com.xenaksys.szcore.event.gui.ClientEventType;
 import com.xenaksys.szcore.web.WebClientInfo;
 
 import java.util.ArrayList;

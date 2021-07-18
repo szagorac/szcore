@@ -3,8 +3,8 @@ package com.xenaksys.szcore.gui;
 
 import com.aquafx_project.AquaFx;
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.event.web.WebAudienceClientInfoUpdateEvent;
-import com.xenaksys.szcore.event.web.WebScoreClientInfoUpdateEvent;
+import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
+import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
 import com.xenaksys.szcore.gui.event.ClientIncomingEventReceiver;
 import com.xenaksys.szcore.gui.event.ClientScoreEngineEventReceiver;
 import com.xenaksys.szcore.gui.model.Participant;

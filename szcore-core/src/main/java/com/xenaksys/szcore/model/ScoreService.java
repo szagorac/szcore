@@ -1,7 +1,7 @@
 package com.xenaksys.szcore.model;
 
-import com.xenaksys.szcore.event.web.IncomingWebAudienceEvent;
-import com.xenaksys.szcore.event.web.WebScoreInEvent;
+import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.score.web.WebScoreTargetType;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScore;

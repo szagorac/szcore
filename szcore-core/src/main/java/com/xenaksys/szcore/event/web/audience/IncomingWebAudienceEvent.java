@@ -1,7 +1,8 @@
-package com.xenaksys.szcore.event.web;
+package com.xenaksys.szcore.event.web.audience;
 
 
 import com.xenaksys.szcore.event.EventType;
+import com.xenaksys.szcore.event.web.in.IncomingWebEvent;
 
 abstract public class IncomingWebAudienceEvent extends IncomingWebEvent {
 

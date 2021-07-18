@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.event.web;
+package com.xenaksys.szcore.event.web.audience;
 
 
 import com.xenaksys.szcore.model.id.BeatId;
@@ -6,19 +6,19 @@ import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
 
 import java.util.List;
 
-public class WebAudiencePlayTilesEvent extends WebAudienceEvent {
+public class WebAudienceStopEvent extends WebAudienceEvent {
 
-    public WebAudiencePlayTilesEvent(BeatId beatId, List<WebAudienceScoreScript> scripts, long creationTime) {
+    public WebAudienceStopEvent(BeatId beatId, List<WebAudienceScoreScript> scripts, long creationTime) {
         super(beatId, scripts, creationTime);
     }
 
     public WebAudienceEventType getWebAudienceEventType() {
-        return WebAudienceEventType.PLAY_TILES;
+        return WebAudienceEventType.STOP;
     }
 
     @Override
     public String toString() {
-        return "WebAudiencePlayTilesEvent{ " +
+        return "WebAudienceStopEvent{ " +
                 super.toString() +
                 '}';
     }

@@ -11,7 +11,7 @@ import com.xenaksys.szcore.event.music.TransportPositionEvent;
 import com.xenaksys.szcore.event.osc.StaveActiveChangeEvent;
 import com.xenaksys.szcore.event.osc.TempoChangeEvent;
 import com.xenaksys.szcore.event.script.ScriptingEngineEvent;
-import com.xenaksys.szcore.event.web.WebAudienceEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.OscPublisher;
 import com.xenaksys.szcore.model.ScoreProcessor;

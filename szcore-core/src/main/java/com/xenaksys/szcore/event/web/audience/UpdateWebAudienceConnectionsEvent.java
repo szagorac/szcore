@@ -1,14 +1,14 @@
-package com.xenaksys.szcore.event.web;
+package com.xenaksys.szcore.event.web.audience;
 
 import com.xenaksys.szcore.web.WebConnection;
 
 import java.util.Set;
 
-public class UpdateWebScoreConnectionsEvent extends WebScoreInEvent {
+public class UpdateWebAudienceConnectionsEvent extends IncomingWebAudienceEvent {
 
     private final Set<WebConnection> clientConnections;
 
-    public UpdateWebScoreConnectionsEvent(Set<WebConnection> clientConnections, long creationTime) {
+    public UpdateWebAudienceConnectionsEvent(Set<WebConnection> clientConnections, long creationTime) {
         super(null, null, null, creationTime, 0L, 0L);
         this.clientConnections = clientConnections;
     }
@@ -17,9 +17,9 @@ public class UpdateWebScoreConnectionsEvent extends WebScoreInEvent {
         return clientConnections;
     }
 
-
     @Override
-    public WebScoreInEventType getWebScoreEventType() {
-        return WebScoreInEventType.CONNECTIONS_UPDATE;
+    public IncomingWebAudienceEventType getWebEventType() {
+        return IncomingWebAudienceEventType.CONNECTIONS_UPDATE;
     }
+
 }

@@ -2,11 +2,11 @@ package com.xenaksys.szcore.score.web;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.web.OutgoingWebEvent;
-import com.xenaksys.szcore.event.web.OutgoingWebEventType;
-import com.xenaksys.szcore.event.web.WebScoreConnectionEvent;
-import com.xenaksys.szcore.event.web.WebScorePartRegEvent;
-import com.xenaksys.szcore.event.web.WebScoreRemoveConnectionEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
+import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
+import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
+import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.ScoreProcessor;

@@ -1,8 +1,8 @@
 package com.xenaksys.szcore.model;
 
-import com.xenaksys.szcore.event.web.IncomingWebAudienceEvent;
-import com.xenaksys.szcore.event.web.OutgoingWebEvent;
-import com.xenaksys.szcore.event.web.WebScoreInEvent;
+import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
+import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;

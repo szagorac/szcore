@@ -4,6 +4,7 @@ import java.util.List;
 
 public class WebScoreInfo {
     private String title;
+    private String scoreDir;
     private List<String> instruments;
     private int bpm;
 
@@ -29,5 +30,13 @@ public class WebScoreInfo {
 
     public void setBpm(int bpm) {
         this.bpm = bpm;
+    }
+
+    public String getScoreDir() {
+        return scoreDir;
+    }
+
+    public void setScoreDir(String scoreDir) {
+        this.scoreDir = scoreDir;
     }
 }

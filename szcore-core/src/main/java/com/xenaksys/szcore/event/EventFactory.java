@@ -27,6 +27,8 @@ import com.xenaksys.szcore.event.osc.OscScriptEvent;
 import com.xenaksys.szcore.event.osc.OscStaveActivateEvent;
 import com.xenaksys.szcore.event.osc.OscStaveTempoEvent;
 import com.xenaksys.szcore.event.osc.OscStopEvent;
+import com.xenaksys.szcore.event.osc.PageDisplayEvent;
+import com.xenaksys.szcore.event.osc.PageMapDisplayEvent;
 import com.xenaksys.szcore.event.osc.PartEvent;
 import com.xenaksys.szcore.event.osc.PingEvent;
 import com.xenaksys.szcore.event.osc.PrecountBeatOffEvent;
@@ -177,10 +179,6 @@ public class EventFactory {
         return new ParticipantStatsEvent(inetAddress, hostAddress, port, pingLatencyMillis, halfPingLatencyMillis, isExpired, lastPingLatency, creationTime);
     }
 
-    public OscEvent createOscEvent(String address, List<Object> arguments, BeatId eventBaseBeat, long creationTime) {
-        return new OscEvent(address, arguments, eventBaseBeat, creationTime);
-    }
-
     public OscEvent createOscEvent(String address, List<Object> args, String destination, long creationTime) {
         return new OscEvent(address, args, null, destination, creationTime);
     }
@@ -229,12 +227,12 @@ public class EventFactory {
         return new ElementColorEvent(address, oscColorArgs, destination, creationTime);
     }
 
-    public OscEvent createPageDisplayEvent(String address, List<Object> args, BeatId eventBaseBeat, String destination, long creationTime) {
-        return new OscEvent(address, args, eventBaseBeat, destination, creationTime);
+    public PageDisplayEvent createPageDisplayEvent(PageId pageId, String filename, StaveId staveId, String address, List<Object> args, BeatId eventBaseBeat, String destination, long creationTime) {
+        return new PageDisplayEvent(pageId, filename, staveId, address, args, eventBaseBeat, destination, creationTime);
     }
 
-    public OscEvent createPageMapDisplayEvent(String address, List<Object> args, BeatId eventBaseBeat, String destination, long creationTime) {
-        return new OscEvent(address, args, eventBaseBeat, destination, creationTime);
+    public PageMapDisplayEvent createPageMapDisplayEvent(String address, List<Object> args, BeatId eventBaseBeat, String destination, long creationTime) {
+        return new PageMapDisplayEvent(address, args, eventBaseBeat, destination, creationTime);
     }
 
     public OscStaveActivateEvent createStaveActivateEvent(String destination, long creationTime) {

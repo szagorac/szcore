@@ -428,6 +428,10 @@ public interface Consts {
     String WEB_DATA_TARGET_TYPE = "TARGET_TYPE";
     String WEB_DATA_TARGET_ALL = "ALL";
 
+    String WEB_SCORE_ROOT_DIR = "/score/";
+    String WEB_SCORE_STAVE_TOP = "topStave";
+    String WEB_SCORE_STAVE_BOTTOM = "bottomStave";
+
     String WEB_WS_CLOSE_REASON_NORMAL = "Closed by the server";
 
     String NAME_FULL_SCORE = "FullScore";

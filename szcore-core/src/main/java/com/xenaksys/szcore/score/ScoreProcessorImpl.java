@@ -29,6 +29,7 @@ import com.xenaksys.szcore.event.osc.OscScriptEvent;
 import com.xenaksys.szcore.event.osc.OscStaveActivateEvent;
 import com.xenaksys.szcore.event.osc.OscStaveTempoEvent;
 import com.xenaksys.szcore.event.osc.OscStopEvent;
+import com.xenaksys.szcore.event.osc.PageMapDisplayEvent;
 import com.xenaksys.szcore.event.osc.StaveActiveChangeEvent;
 import com.xenaksys.szcore.event.osc.StaveClockTickEvent;
 import com.xenaksys.szcore.event.osc.StaveDateTickEvent;
@@ -155,28 +156,28 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private boolean isScoreLoaded = false;
     private boolean isInitDone = true;
     private List<SzcoreEvent> initEvents = new ArrayList<>();
-    private List<SzcoreEvent> baseBeatEventsToProcess = new ArrayList<>();
-    private int threadSleepMillis = Consts.DEFAULT_THREAD_SLEEP_MILLIS;
+    private final List<SzcoreEvent> baseBeatEventsToProcess = new ArrayList<>();
+    private final int threadSleepMillis = Consts.DEFAULT_THREAD_SLEEP_MILLIS;
 
     private volatile static int instrumentPortRequestCount = 0;
     private volatile int startBaseBeat = 0;
-    private Map<Id, InstrumentBeatTracker> instrumentBeatTrackers = new HashMap<>();
-    private BeatFollowerPositionStrategy beatFollowerPositionStrategy = new BeatFollowerPositionStrategy();
-    private List<SzcoreEngineEventListener> scoreEventListeners = new CopyOnWriteArrayList<>();
+    private final Map<Id, InstrumentBeatTracker> instrumentBeatTrackers = new HashMap<>();
+    private final BeatFollowerPositionStrategy beatFollowerPositionStrategy = new BeatFollowerPositionStrategy();
+    private final List<SzcoreEngineEventListener> scoreEventListeners = new CopyOnWriteArrayList<>();
     protected List<WebScoreStateListener> webScoreStateListeners = new CopyOnWriteArrayList<>();
-    private Map<Id, TempoModifier> transportTempoModifiers = new ConcurrentHashMap<>();
-    private Map<InstrumentId, Long> instrumentTime = new ConcurrentHashMap<>();
+    private final Map<Id, TempoModifier> transportTempoModifiers = new ConcurrentHashMap<>();
+    private final Map<InstrumentId, Long> instrumentTime = new ConcurrentHashMap<>();
 
-    private ValueScaler dynamicsValueScaler = new ValueScaler(0.0, 100.0, 0.0, DYNAMICS_LINE_Y_MAX);
-    private ValueScaler dynamicsForteColorValueScaler = new ValueScaler(50.0, 100.0, 255, 0);
-    private ValueScaler dynamicsPianoColorValueScaler = new ValueScaler(0.0, 50.0, 0, 255);
-    private ValueScaler pressureLineValueScaler = new ValueScaler(0.0, 100.0, PRESSURE_LINE_Y_MAX, 0.0);
-    private ValueScaler pressureColorValueScaler = new ValueScaler(50.0, 100.0, 255, 0);
-    private ValueScaler speedValueScaler = new ValueScaler(0.0, 100.0, 0.0, SPEED_LINE_Y_MAX);
-    private ValueScaler speedFastColorValueScaler = new ValueScaler(50.0, 100.0, 255, 0);
-    private ValueScaler speedSlowColorValueScaler = new ValueScaler(0.0, 50.0, 0, 255);
-    private ValueScaler positionValueScaler = new ValueScaler(0.0, 100.0, POSITION_LINE_Y_MAX, 0.0);
-    private ValueScaler contentValueScaler = new ValueScaler(0.0, 100.0, 0.0, CONTENT_LINE_Y_MAX);
+    private final ValueScaler dynamicsValueScaler = new ValueScaler(0.0, 100.0, 0.0, DYNAMICS_LINE_Y_MAX);
+    private final ValueScaler dynamicsForteColorValueScaler = new ValueScaler(50.0, 100.0, 255, 0);
+    private final ValueScaler dynamicsPianoColorValueScaler = new ValueScaler(0.0, 50.0, 0, 255);
+    private final ValueScaler pressureLineValueScaler = new ValueScaler(0.0, 100.0, PRESSURE_LINE_Y_MAX, 0.0);
+    private final ValueScaler pressureColorValueScaler = new ValueScaler(50.0, 100.0, 255, 0);
+    private final ValueScaler speedValueScaler = new ValueScaler(0.0, 100.0, 0.0, SPEED_LINE_Y_MAX);
+    private final ValueScaler speedFastColorValueScaler = new ValueScaler(50.0, 100.0, 255, 0);
+    private final ValueScaler speedSlowColorValueScaler = new ValueScaler(0.0, 50.0, 0, 255);
+    private final ValueScaler positionValueScaler = new ValueScaler(0.0, 100.0, POSITION_LINE_Y_MAX, 0.0);
+    private final ValueScaler contentValueScaler = new ValueScaler(0.0, 100.0, 0.0, CONTENT_LINE_Y_MAX);
 
     private WebAudienceScore webAudienceScore = null;
     private WebScore webScore = null;
@@ -208,10 +209,10 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         isScoreLoaded = false;
 
         File scoreFile = new File(filePath);
-        if(!scoreFile.exists()) {
+        if (!scoreFile.exists()) {
             ClassLoader classLoader = getClass().getClassLoader();
             File file = new File(classLoader.getResource(filePath).getFile());
-            if(file.exists()) {
+            if (file.exists()) {
                 scoreFile = file;
             }
         }
@@ -260,7 +261,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     @Override
-    public void  prepare(Score score) {
+    public void prepare(Score score) {
         this.szcore = (BasicScore) score;
 
         List<Beat> beats = new ArrayList<>(score.getBeats());
@@ -324,7 +325,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void prepareContinuousPages(Id instrumentId, Page lastPage) {
         for (int i = 0; i < szcore.noContinuousPages; i++) {
-            lastPage = prepareContinuousPage(instrumentId, (PageId)lastPage.getId());
+            lastPage = prepareContinuousPage(instrumentId, (PageId) lastPage.getId());
         }
     }
 
@@ -332,7 +333,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         Id transportId = transport.getId();
         boolean isAudioVideoInstrument = instrument.isAv();
         boolean isScoreInstrument = !isAudioVideoInstrument;
-        if(isScoreInstrument) {
+        if (isScoreInstrument) {
             createInstrumentStaves(instrument);
         }
         szcore.addInstrumentTransport(instrument, transport);
@@ -367,7 +368,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             BasicStave currentStave = null;
             BasicStave nextStave = null;
             Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
-            if(isScoreInstrument) {
+            if (isScoreInstrument) {
                 currentStave = (BasicStave) szcore.getCurrentStave(instrumentId);
                 nextStave = (BasicStave) szcore.getNextStave(instrumentId);
             }
@@ -422,10 +423,10 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             }
 
             List<Script> beatScripts = szcore.getBeatScripts(beatId);
-            if(beatScripts != null && !beatScripts.isEmpty()) {
-                 for(Script script : beatScripts) {
-                     addScript(beatId, script, transportId);
-                 }
+            if (beatScripts != null && !beatScripts.isEmpty()) {
+                for (Script script : beatScripts) {
+                    addScript(beatId, script, transportId);
+                }
             }
             addWebScoreBeatScripts(beatId, transportId);
             addScriptingEngineBeatScripts(beatId, transportId);
@@ -536,7 +537,6 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         ScriptingEngineConfig config = scriptingEngine.getConfig();
         ScriptPreset scriptPreset = config.getPreset(id);
         if (scriptPreset == null) {
-            ;
             scriptPreset = new ScriptPreset(id);
             config.addPreset(scriptPreset);
         }
@@ -568,11 +568,11 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     private void addPageInitEvents(Transport transport, Instrument instrument, BasicStave currentStave, BasicStave nextStave,
-                                   Page page, List<SzcoreEvent> initEvents){
+                                   Page page, List<SzcoreEvent> initEvents) {
         addActiveStaveChangeEvent(currentStave.getId(), true, null, transport.getId(), instrument, initEvents);
         addActiveStaveChangeEvent(nextStave.getId(), false, null, transport.getId(), instrument, initEvents);
         addNewPageEvents(page, currentStave, null, transport.getId(), initEvents);
-        Page nextPage = szcore.getNextPage((PageId)page.getId());
+        Page nextPage = szcore.getNextPage((PageId) page.getId());
         if (nextPage != null) {
             addNewPageEvents(nextPage, nextStave, null, transport.getId(), initEvents);
         }
@@ -672,10 +672,10 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         Page currentPage = szcore.getPage(currentPageId);
         Transport transport = szcore.getInstrumentTransport(instrumentId);
 
-        List<Bar> bars = (List<Bar>)currentPage.getBars();
+        List<Bar> bars = (List<Bar>) currentPage.getBars();
         Bar lastBar = bars.get(bars.size() - 1);
         int lastBarNo = lastBar.getBarNo();
-        List<Beat> beats  = (List<Beat>) lastBar.getBeats();
+        List<Beat> beats = (List<Beat>) lastBar.getBeats();
         Beat lastBeat = beats.get(beats.size() - 1);
         int lastBeatNo = lastBeat.getBeatNo();
 
@@ -692,9 +692,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             szcore.addPage(newPage);
         }
 
-        bars = (List<Bar>)continuousPage.getBars();
+        bars = (List<Bar>) continuousPage.getBars();
         BeatId firstBeatId = null;
-        for(Bar bar : bars) {
+        for (Bar bar : bars) {
             BarId newBarId = new BarId(lastBarNo, instrumentId, newPageId, scoreId);
             lastBarNo++;
             BasicBar newBar = new BasicBar(newBarId, bar.getBarName(), bar.getTempo(), bar.getTimeSignature());
@@ -704,11 +704,11 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
             beats = (List<Beat>) bar.getBeats();
 
-            for(Beat beat : beats) {
+            for (Beat beat : beats) {
                 BeatId newBeatId;
-                if(beat.isUpbeat()) {
+                if (beat.isUpbeat()) {
                     newBeatId = new BeatId(lastBeatNo, instrumentId, newPageId, scoreId, newBarId, lastBeat.getBaseBeatUnitsNoAtStart());
-                    if(firstBeatId == null) {
+                    if (firstBeatId == null) {
                         firstBeatId = newBeatId;
                     }
                     BasicBeat newBeat = new BasicBeat(newBeatId, lastBeat.getStartTimeMillis(), beat.getDurationMillis(), lastBeat.getEndTimeMillis(),
@@ -727,7 +727,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                     long startTimeMillis = lastBeat.getEndTimeMillis();
                     int baseBeatUnitsNoAtStart = lastBeat.getBaseBeatUnitsNoOnEnd();
                     newBeatId = new BeatId(lastBeatNo, instrumentId, newPageId, scoreId, newBarId, baseBeatUnitsNoAtStart);
-                    if(firstBeatId == null) {
+                    if (firstBeatId == null) {
                         firstBeatId = newBeatId;
                     }
 
@@ -1034,7 +1034,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String pageName = page.getFileName();
 
         LOG.debug("addNewPageEvents: instrument {} next page: {} stave: {} ", staveId.getInstrumentId(), pageName, staveId.getStaveNo());
-        OscEvent pageDisplayEvent = createDisplayPageEvent(pageName, stave, eventBaseBeat);
+        OscEvent pageDisplayEvent = createDisplayPageEvent(page.getPageId(), pageName, stave, eventBaseBeat);
         if (initEvents == null) {
             LOG.error("addNewPageEvents: NULL initEvents, should not happen. instrument {} next page: {} stave: {}", staveId.getInstrumentId(), pageName, staveId.getStaveNo());
             //szcore.addScoreBaseBeatEvent(transportId, pageDisplayEvent);
@@ -1042,7 +1042,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             initEvents.add(pageDisplayEvent);
         }
 
-        if(page.getPageName().equals(Consts.BLANK_PAGE_NAME)){
+        if (page.getPageName().equals(Consts.BLANK_PAGE_NAME)) {
             return;
         }
 
@@ -1122,7 +1122,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
 
         StaveId staveId = nextStave.getId();
-        OscEvent pageDisplayEvent = createDisplayPageEvent(nextPageName, nextStave, changeBeatId);
+        OscEvent pageDisplayEvent = createDisplayPageEvent(nextPage.getPageId(), nextPageName, nextStave, changeBeatId);
         out.add(pageDisplayEvent);
 
         BasicPage basicPage = (BasicPage) nextPage;
@@ -1228,8 +1228,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         y = MathUtil.roundTo5DecimalPlaces(y);
         double current = stave.getDynamicsValue();
         double diff = Math.abs(y - current);
-        double threshold = Math.abs(2 * DYNAMICS_LINE_Y_MAX/100.0);
-        if(diff < threshold) {
+        double threshold = Math.abs(2 * DYNAMICS_LINE_Y_MAX / 100.0);
+        if (diff < threshold) {
             LOG.debug("addDynamicsYPositionEvent y position change: {} is less than threshold: {}, ignoring update ... ", diff, threshold);
             return;
         }
@@ -1267,8 +1267,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         y = MathUtil.roundTo5DecimalPlaces(y);
         double current = stave.getSpeedValue();
         double diff = Math.abs(y - current);
-        double threshold = Math.abs(2 * SPEED_LINE_Y_MAX/100.0);
-        if(diff < threshold) {
+        double threshold = Math.abs(2 * SPEED_LINE_Y_MAX / 100.0);
+        if (diff < threshold) {
             LOG.debug("sendSpeedYPositionEvent y position change: {} is less than threshold: {}, ignoring update ... ", diff, threshold);
             return;
         }
@@ -1306,8 +1306,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         y = MathUtil.roundTo5DecimalPlaces(y);
         double current = stave.getPositionValue();
         double diff = Math.abs(y - current);
-        double threshold = Math.abs(2 * POSITION_LINE_Y_MAX/100.0);
-        if(diff < threshold) {
+        double threshold = Math.abs(2 * POSITION_LINE_Y_MAX / 100.0);
+        if (diff < threshold) {
             LOG.debug("sendPositionLineYEvent y position change: {} is less than threshold: {}, ignoring update ... ", diff, threshold);
             return;
         }
@@ -1344,8 +1344,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         y = MathUtil.roundTo5DecimalPlaces(y);
         double current = stave.getContentValue();
         double diff = Math.abs(y - current);
-        double threshold = Math.abs(2 * CONTENT_LINE_Y_MAX/100.0);
-        if(diff < threshold) {
+        double threshold = Math.abs(2 * CONTENT_LINE_Y_MAX / 100.0);
+        if (diff < threshold) {
             LOG.debug("sendContentLineYEvent y position change: {} is less than threshold: {}, ignoring update ... ", diff, threshold);
             return;
         }
@@ -1364,7 +1364,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
 
         int alpha = 0;
-        if(isEnabled) {
+        if (isEnabled) {
             alpha = 255;
         }
 
@@ -1377,7 +1377,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
 
         int alpha = 0;
-        if(isEnabled) {
+        if (isEnabled) {
             alpha = 255;
         }
 
@@ -1403,7 +1403,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
 
         int alpha = 0;
-        if(isEnabled) {
+        if (isEnabled) {
             alpha = 255;
         }
 
@@ -1416,7 +1416,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
 
         int alpha = 0;
-        if(isEnabled) {
+        if (isEnabled) {
             alpha = 255;
         }
 
@@ -1428,7 +1428,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
 
         int alpha = 0;
-        if(isEnabled) {
+        if (isEnabled) {
             alpha = 255;
         }
 
@@ -1441,10 +1441,10 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
 
         int alpha = 0;
-        if(isEnabled) {
+        if (isEnabled) {
             alpha = 255;
         }
-       sendElementPenAlphaEvent(instrumentId, stave.getOscAddressScoreSpeedLine(), destination, alpha);
+        sendElementPenAlphaEvent(instrumentId, stave.getOscAddressScoreSpeedLine(), destination, alpha);
     }
 
     public void sendPositionBoxAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled) throws Exception {
@@ -1452,7 +1452,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
 
         int alpha = 0;
-        if(isEnabled) {
+        if (isEnabled) {
             alpha = 255;
         }
         sendElementAlphaEvent(instrumentId, stave.getOscAddressScorePositionBox(), destination, alpha);
@@ -1465,7 +1465,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
 
         int alpha = 0;
-        if(isEnabled) {
+        if (isEnabled) {
             alpha = 255;
         }
         sendElementPenAlphaEvent(instrumentId, stave.getOscAddressScorePositionLine(), destination, alpha);
@@ -1476,7 +1476,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
 
         int alpha = 0;
-        if(isEnabled) {
+        if (isEnabled) {
             alpha = 255;
         }
         sendElementAlphaEvent(instrumentId, stave.getOscAddressScoreContentBox(), destination, alpha);
@@ -1487,7 +1487,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
 
         int alpha = 0;
-        if(isEnabled) {
+        if (isEnabled) {
             alpha = 255;
         }
         sendElementPenAlphaEvent(instrumentId, stave.getOscAddressScoreContentLine(), destination, alpha);
@@ -1547,8 +1547,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         y = MathUtil.roundTo5DecimalPlaces(y);
         double current = stave.getPressureValue();
         double diff = Math.abs(y - current);
-        double threshold = Math.abs(2 * PRESSURE_LINE_Y_MAX/100.0);
-        if(diff < threshold) {
+        double threshold = Math.abs(2 * PRESSURE_LINE_Y_MAX / 100.0);
+        if (diff < threshold) {
             LOG.debug("sendPressureChangeEvent y position change: {} is less than threshold: {}, ignoring update ... ", diff, threshold);
             return;
         }
@@ -1567,7 +1567,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         long now = clock.getSystemTimeMillis();
         List<OscStaveTempoEvent> oscEvents = new ArrayList<>();
 
-        if(isSendOscEvents) {
+        if (isSendOscEvents) {
             OscStaveTempoEvent oscTemoEvent = eventFactory.createOscStaveTempoEvent(Consts.ALL_DESTINATIONS, 0, now);
             oscEvents.add(oscTemoEvent);
         }
@@ -1661,21 +1661,21 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         szcore.addOneOffBaseBeatEvent(transportId, tempoChangeEvent);
     }
 
-    public TempoChangeEvent createTempoChangeEvent(Tempo tempo, BeatId beatId, String destination, Id transportId){
+    public TempoChangeEvent createTempoChangeEvent(Tempo tempo, BeatId beatId, String destination, Id transportId) {
         long now = clock.getSystemTimeMillis();
         List<OscStaveTempoEvent> oscEvents = new ArrayList<>();
         OscStaveTempoEvent oscTempoEvent = eventFactory.createOscStaveTempoEvent(destination, tempo.getBpm(), now);
         oscEvents.add(oscTempoEvent);
-        return eventFactory.createTempoChangeEvent(tempo, beatId, transportId, oscEvents, now) ;
+        return eventFactory.createTempoChangeEvent(tempo, beatId, transportId, oscEvents, now);
     }
 
-    public TransportPositionEvent createTransportPositionEvent(Id transportId, int startBaseBeatNo, int transportBeatNo, int tickNo, long positionMillis){
+    public TransportPositionEvent createTransportPositionEvent(Id transportId, int startBaseBeatNo, int transportBeatNo, int tickNo, long positionMillis) {
         long now = clock.getSystemTimeMillis();
         return eventFactory.createTransportPositionEvent(transportId, startBaseBeatNo, transportBeatNo, tickNo, positionMillis, now);
     }
 
-    public void removeExistingBeatTransportEvents(BeatId beatId, Id transportId, TIntObjectMap<List<SzcoreEvent>> baseBeatEvents, MusicEventType type){
-        if(beatId == null){
+    public void removeExistingBeatTransportEvents(BeatId beatId, Id transportId, TIntObjectMap<List<SzcoreEvent>> baseBeatEvents, MusicEventType type) {
+        if (beatId == null) {
             return;
         }
         List<SzcoreEvent> scoreBeatEvents = baseBeatEvents.get(beatId.getBaseBeatNo());
@@ -1719,7 +1719,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         LOG.debug("Added stop event: " + stopEvent);
     }
 
-    public void addPrepStaveChangeEvent(BeatId executeOnBaseBeat, BeatId activateOnBaseBeat, BeatId deactivateOnBaseBeat, BeatId pageChangeOnBaseBeat, PageId nextPageId, Id transportId){
+    public void addPrepStaveChangeEvent(BeatId executeOnBaseBeat, BeatId activateOnBaseBeat, BeatId deactivateOnBaseBeat, BeatId pageChangeOnBaseBeat, PageId nextPageId, Id transportId) {
         PrepStaveChangeEvent event = eventFactory.createPrepStaveChangeEvent(executeOnBaseBeat, activateOnBaseBeat, deactivateOnBaseBeat, pageChangeOnBaseBeat, nextPageId, clock.getSystemTimeMillis());
         szcore.addScoreBaseBeatEvent(transportId, event);
     }
@@ -1736,7 +1736,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     }
 
-    private StaveActiveChangeEvent createActiveStateChangeEvent(StaveId staveId, boolean isActive, BeatId changeOnBaseBeat, Instrument instrument){
+    private StaveActiveChangeEvent createActiveStateChangeEvent(StaveId staveId, boolean isActive, BeatId changeOnBaseBeat, Instrument instrument) {
         String destination = szcore.getOscDestination(instrument.getId());
         StaveActiveChangeEvent activeStaveChangeEvent = eventFactory.createActiveStaveChangeEvent(staveId, isActive, changeOnBaseBeat, destination, clock.getSystemTimeMillis());
         OscStaveActivateEvent oscStaveActivateEvent = activeStaveChangeEvent.getOscStaveActivateEvent();
@@ -1794,7 +1794,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     @Override
-    public void play()  throws Exception {
+    public void play() throws Exception {
         LOG.info("##### Play");
         if (szcore == null) {
             LOG.error("Invalid Score NULL");
@@ -1805,7 +1805,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             throw new Exception("System not ready to play. Check score instrumentation and position");
         }
 
-        Collection<Transport>transports = szcore.getTransports();
+        Collection<Transport> transports = szcore.getTransports();
 
         for (Transport transport : transports) {
             transport.start();
@@ -1855,12 +1855,12 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         return eventFactory.createModWindowEvent(beatId, nextPage, currentPageId, stave, isOpen, clock.getSystemTimeMillis());
     }
 
-    private OscEvent createDisplayPageEvent(String pageName, BasicStave stave, BeatId eventBeatId) {
+    private OscEvent createDisplayPageEvent(PageId pageId, String pageName, BasicStave stave, BeatId eventBeatId) {
         if (pageName == null || stave == null) {
             return null;
         }
 
-        StaveId id = stave.getId();
+        StaveId staveId = stave.getId();
         String address = stave.getOscAddress();
         String filename = Consts.RSRC_DIR + pageName + Consts.PNG_FILE_EXTENSION;
         ArrayList<Object> args = new ArrayList<>();
@@ -1868,14 +1868,14 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         args.add(Consts.OSC_INSCORE_FILE);
         args.add(filename);
 
-        String destination = szcore.getOscDestination(id.getInstrumentId());
-        LOG.info("createDisplayPageEvent: pageName: {} destination: {} staveId: {} stave address: {} beat: {}", pageName, destination, id.getStaveNo(), address, (eventBeatId == null) ? null : eventBeatId.getBeatNo());
+        String destination = szcore.getOscDestination(staveId.getInstrumentId());
+        LOG.info("createDisplayPageEvent: pageName: {} destination: {} staveId: {} stave address: {} beat: {}", pageName, destination, staveId.getStaveNo(), address, (eventBeatId == null) ? null : eventBeatId.getBeatNo());
 
-        return eventFactory.createPageDisplayEvent(address, args, eventBeatId, destination, clock.getSystemTimeMillis());
+        return eventFactory.createPageDisplayEvent(pageId, filename, staveId, address, args, eventBeatId, destination, clock.getSystemTimeMillis());
 
     }
 
-    private OscEvent createBeatScriptEvent(Script script, BeatId eventBeatId){
+    private OscEvent createBeatScriptEvent(Script script, BeatId eventBeatId) {
         if (script == null || eventBeatId == null) {
             return null;
         }
@@ -1969,7 +1969,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         return eventFactory.createScriptingEngineResetEvent(beatId, scripts, clock.getSystemTimeMillis());
     }
 
-    private OscEvent createPageMapFileEvent(String pageName, String address, String destination, BeatId eventBeatId) {
+    private PageMapDisplayEvent createPageMapFileEvent(String pageName, String address, String destination, BeatId eventBeatId) {
         if (pageName == null || address == null) {
             return null;
         }
@@ -1983,7 +1983,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     }
 
-    private OscEvent createPageMapEvent(String pageName, String address, String destination, String map, BeatId eventBeatId){
+    private PageMapDisplayEvent createPageMapEvent(String pageName, String address, String destination, String map, BeatId eventBeatId) {
         if (pageName == null || address == null) {
             return null;
         }
@@ -2018,17 +2018,17 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         for (Instrument instrument : instruments) {
             publishOscEvent(createResetScoreEvent(instrument.getName()));
         }
-   }
+    }
 
     @Override
     public void setPosition(long millis) {
         LOG.debug("setPosition time: " + millis);
-        if(isInitDone){
+        if (isInitDone) {
             resetTasks();
         }
 
         isInitDone = false;
-        Collection<Transport>transports = szcore.getTransports();
+        Collection<Transport> transports = szcore.getTransports();
         Transport transport = transports.iterator().next();
 
         BeatId beatId = szcore.getBeatForTime(millis, transport.getId());
@@ -2038,13 +2038,13 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
 
         Beat startBeat = szcore.getBeat(beatId);
-        if(startBeat == null){
+        if (startBeat == null) {
             LOG.error("Invalid start beat NULL ");
             return;
         }
 
         Beat upbeat = szcore.getUpbeat(beatId);
-        if(upbeat != null){
+        if (upbeat != null) {
             startBeat = upbeat;
         }
 
@@ -2088,7 +2088,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             Transport transport = szcore.getInstrumentTransport(instrumentId);
             Id transportId = transport.getId();
             BeatId instrumentBeatId = szcore.getInstrumentBeatIds(transport.getId(), instrumentId, beatNo);
-            if(instrumentBeatId == null){
+            if (instrumentBeatId == null) {
                 continue;
             }
 
@@ -2097,28 +2097,28 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             int startBaseBeatNo = startBeat.getBaseBeatUnitsNoAtStart();
 
             Beat upbeat = szcore.getUpbeat(instrumentBeatId);
-            if(upbeat != null){
-               startBeat = upbeat;
+            if (upbeat != null) {
+                startBeat = upbeat;
             }
             BeatId startBeatId = startBeat.getBeatId();
             int upbeatBaseBeatNo = startBeat.getBaseBeatUnitsNoAtStart();
             long startMillis = szcore.getBeatTime(startBeatId);
 
             InstrumentBeatTracker instrumentBeatTracker = instrumentBeatTrackers.get(instrumentId);
-            if(instrumentBeatTracker == null){
+            if (instrumentBeatTracker == null) {
                 instrumentBeatTracker = new InstrumentBeatTracker(transport, instrumentId);
                 instrumentBeatTrackers.put(instrumentId, instrumentBeatTracker);
             }
             instrumentBeatTracker.setCurrentBeat(startBeat);
 
             Bar bar = szcore.getBar(instrumentBeatId.getBarId());
-            if(bar == null){
+            if (bar == null) {
                 continue;
             }
 
             Tempo tempo = bar.getTempo();
             TempoModifier tempoModifier = transportTempoModifiers.get(transportId);
-            if(tempoModifier != null) {
+            if (tempoModifier != null) {
                 tempo = new TempoImpl(tempo, tempoModifier);
             }
             TimeSignature timeSignature = bar.getTimeSignature();
@@ -2126,7 +2126,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
             BasicStave currentStave = null;
             BasicStave nextStave = null;
-            if(isScoreInstrument) {
+            if (isScoreInstrument) {
                 List<Stave> instrumentStaves = szcore.getInstrumentStaves(instrumentId);
                 int minStaveNo = Integer.MAX_VALUE;
                 for (Stave stave : instrumentStaves) {
@@ -2147,7 +2147,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             }
 
 
-            if(!transportIds.contains(transportId)) {
+            if (!transportIds.contains(transportId)) {
                 //set beatNo -1 as transport increments on startup
                 LOG.debug("Adding transport and time start events, upbeatBaseBeatNo: " + (upbeatBaseBeatNo - 1) + "  startBeatId: " + startBeatId);
                 int transportStartBeat = upbeatBaseBeatNo - 1;
@@ -2159,7 +2159,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 transportIds.add(transportId);
             }
 
-            if(isScoreInstrument) {
+            if (isScoreInstrument) {
                 addNewPageEvents(szcore.getBlankPage(), currentStave, null, transportId, initEvents);
                 addNewPageEvents(szcore.getBlankPage(), nextStave, null, transportId, initEvents);
 
@@ -2212,8 +2212,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     @Override
-    public void reset() throws Exception{
-        if(scheduler.isActive()){
+    public void reset() throws Exception {
+        if (scheduler.isActive()) {
             LOG.warn("Scheduler is active, can not perform reset");
             throw new Exception("Scheduler is active, can not perform reset");
         }
@@ -2223,8 +2223,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         resetClients();
 
-        if(szcore != null){
-            for(Instrument instrument : szcore.getInstruments()){
+        if (szcore != null) {
+            for (Instrument instrument : szcore.getInstruments()) {
                 oscPublisher.removeDestination(instrument.getName());
             }
         }
@@ -2232,7 +2232,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         szcore = null;
 
         isScoreLoaded = false;
-        if(scheduler != null) {
+        if (scheduler != null) {
             scheduler.reset();
         }
     }
@@ -2249,7 +2249,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     @Override
     public void setTempoModifier(Id transportId, TempoModifier tempoModifier) {
-        if(transportId == null || tempoModifier == null){
+        if (transportId == null || tempoModifier == null) {
             return;
         }
         transportTempoModifiers.put(transportId, tempoModifier);
@@ -2257,7 +2257,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         Transport transport = szcore.getTransport(transportId);
         Tempo currentTempo = transport.getTempo();
         TempoModifier currentModifier = currentTempo.getTempoModifier();
-        if(tempoModifier.equals(currentModifier)){
+        if (tempoModifier.equals(currentModifier)) {
             return;
         }
 
@@ -2269,7 +2269,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     @Override
     public void setRandomisationStrategy(List<Integer> randomisationStrategy) {
-        if(randomisationStrategy == null) {
+        if (randomisationStrategy == null) {
             return;
         }
         szcore.setRandomisationStrategy(randomisationStrategy);
@@ -2447,7 +2447,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         webAudienceScore.startScore();
     }
 
-    public boolean isReadyToPlay(){
+    public boolean isReadyToPlay() {
         return isScoreLoaded && isInitDone;
     }
 
@@ -2515,7 +2515,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void notifyListenersOnTempoChange(Id transportId, Tempo tempo) {
         LOG.debug("Sending tempo change tempo: " + tempo);
-        for(SzcoreEngineEventListener listener : scoreEventListeners){
+        for (SzcoreEngineEventListener listener : scoreEventListeners) {
             listener.onTransportTempoChange(transportId, tempo);
         }
     }
@@ -2523,7 +2523,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private void notifyListenersOnTransportPositionChange(Id transportId, int beatNo) {
         LOG.debug("Sending transport position change beatNo: " + beatNo);
 
-        for(SzcoreEngineEventListener listener : scoreEventListeners){
+        for (SzcoreEngineEventListener listener : scoreEventListeners) {
             listener.onTransportPositionChange(transportId, beatNo);
         }
     }
@@ -2597,7 +2597,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             case PREP_STAVE_ACTIVE_CHANGE:
                 PrepStaveChangeEvent prepStaveChangeEvent = (PrepStaveChangeEvent) event;
                 LOG.debug("Processing PrepStaveChangeEvent beatNo: " + beatNo + " startBaseBeat: " + startBaseBeat + " event: " + event);
-                if(beatNo == startBaseBeat){
+                if (beatNo == startBaseBeat) {
                     task = null;
                     LOG.debug("Ignoring PrepStaveChangeEvent as its starting position beatNo: " + beatNo + " startBaseBeat: " + startBaseBeat);
                     break;
@@ -2652,11 +2652,11 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private long getBeatDuration(BeatId beatId) {
         long duration = 0L;
         if (beatId == null) {
-           return duration;
+            return duration;
         }
 
         Beat beat = szcore.getBeat(beatId);
-        if(beat != null) {
+        if (beat != null) {
             duration = beat.getDurationMillis();
         }
 
@@ -2701,6 +2701,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             case RESET_STAVES:
             case INSTRUMENT_SLOTS:
             case INSTRUMENT_RESET_SLOTS:
+            case PAGE_DISPLAY:
+            case PAGE_MAP_DISPLAY:
             case GENERIC:
                 publishOscEvent(event);
                 break;
@@ -2725,7 +2727,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         int beatToSend = beatNo;
         int eventBeat = event.getBeatNo();
-        if(eventBeat > 0){
+        if (eventBeat > 0) {
             beatToSend = eventBeat;
         }
 
@@ -2743,7 +2745,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void processDateTickEvent(DateTickEvent event, int beatNo) {
         int beatToSend = beatNo;
-        if(beatNo == 0){
+        if (beatNo == 0) {
             beatToSend = event.getBeatNo();
         }
         event.setBeatNo(beatToSend);
@@ -2799,7 +2801,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         boolean isRunning = transport.isRunning();
         InstrumentBeatTracker beatTracker = instrumentBeatTrackers.get(instrumentId);
         int trackerBeat = beatTracker.getStartBaseBeatNo();
-        if(isRunning && (beatNo < trackerBeat)){
+        if (isRunning && (beatNo < trackerBeat)) {
             LOG.debug("Not publishing DY, trackerBeat: " + trackerBeat + " beatNo: " + beatNo);
             return;
         }
@@ -2808,8 +2810,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         double y = stave.getBeaterYPositionMin();
         double dyMax = stave.getBeaterYPositionDelta();
         int dyPerc = beatFollowerPositionStrategy.getYPercent(beatPercComplete);
-        double dy = dyMax * dyPerc/100.0;
-        if(y > 0.0){
+        double dy = dyMax * dyPerc / 100.0;
+        if (y > 0.0) {
             y += dy;
         } else {
             y -= dy;
@@ -2853,8 +2855,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         int beatPercComplete = beatTracker.getPercentCompleted();
         double y = stave.getBeaterYPositionMin();
         double dyMax = stave.getBeaterYPositionDelta();
-        double dy = dyMax * beatPercComplete/100.0;
-        if(y > 0.0){
+        double dy = dyMax * beatPercComplete / 100.0;
+        if (y > 0.0) {
             y += dy;
         } else {
             y -= dy;
@@ -2882,13 +2884,6 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     public void publishOscEvent(OscEvent event) {
-        String destination = event.getDestination();
-        if (!oscPublisher.isDestination(destination)) {
-            LOG.debug("publishOscEvent: destination {} is not active, ignoring event: {}", destination, event);
-            return;
-        }
-        // mimic osc events for web score - TODO create separate web events
-        publishToWebScore(event);
         oscPublisher.process(event);
     }
 
@@ -2914,20 +2909,18 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         return new WebScoreState();
     }
 
+    @Override
+    public void onInterceptedOscOutEvent(OscEvent event) {
+        String destination = event.getDestination();
+        boolean isWebScoreDestination = Consts.ALL_DESTINATIONS.equals(destination) || (webScore != null && webScore.isDestination(destination));
+        if (isWebScoreDestination) {
+            publishToWebScore(event);
+        }
+    }
+
     public WebScoreAction getOrCreateWebScoreAction(WebScoreActionType actionType, List<String> targets, Map<String, Object> params) {
         //TODO create pool?
         return new WebScoreAction(actionType, targets, params);
-    }
-
-    @Override
-    public void publishToWebScore(SzcoreEvent event) {
-        EventType type = event.getEventType();
-        switch (type) {
-            case OSC:
-                publishToWebScore((OscEvent) event);
-            default:
-                //DO nothing
-        }
     }
 
     //HACK - replace with separate events
@@ -2937,6 +2930,15 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             switch (oscEventType) {
                 case PING:
                     sendWebScorePing(event.getCreationTime());
+                    break;
+                case GENERIC:
+                    LOG.error("Received generic OSC event: {}", event);
+                    break;
+                default:
+                    if (webScore == null) {
+                        break;
+                    }
+                    webScore.processInterceptedOscEvent(event);
             }
         } catch (Exception e) {
             LOG.error("publishToWebScoreHack: failed to publish web score event", e);
@@ -2975,14 +2977,14 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         int currentBeatNo = 0;
         int currentBaseBeatNo = 0;
         int currentTick = 0;
-        if(instrumentIds != null){
-            for(Id instrumentId : instrumentIds){
+        if (instrumentIds != null) {
+            for (Id instrumentId : instrumentIds) {
                 InstrumentBeatTracker instrumentBeatTracker = instrumentBeatTrackers.get(instrumentId);
-                if(instrumentBeatTracker == null){
+                if (instrumentBeatTracker == null) {
                     continue;
                 }
                 Beat beat = null;
-                if(beatIds != null) {
+                if (beatIds != null) {
                     for (BeatId beatId : beatIds) {
                         if (instrumentId.equals(beatId.getInstrumentId())) {
                             beat = szcore.getBeat(beatId);
@@ -2991,7 +2993,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                     }
                 }
 
-                if(beat != null) {
+                if (beat != null) {
                     Beat currentBeat = instrumentBeatTracker.getCurrent();
                     if (currentBeat == null || currentBeat.getBeatNo() < beat.getBeatNo()) {
                         instrumentBeatTracker.setCurrentBeat(beat);
@@ -3020,7 +3022,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         if (oneOffClockTickEvents != null) {
             while (oneOffClockTickEvents.size() != 0) {
                 SzcoreEvent event = oneOffClockTickEvents.poll();
-                if(event == null) {
+                if (event == null) {
                     continue;
                 }
                 process(event, beatNo, tickNo);
@@ -3042,12 +3044,12 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         int currentBeat = 0;
         int currentBaseBeat = 0;
         List<BeatId> beatIds = szcore.findBeatIds(transportId, beatNo);
-        if(beatIds != null && !beatIds.isEmpty()){
-            for(BeatId beatId : beatIds) {
+        if (beatIds != null && !beatIds.isEmpty()) {
+            for (BeatId beatId : beatIds) {
                 Beat beat = szcore.getBeat(beatId);
                 Id instrumentId = beatId.getInstrumentId();
                 InstrumentBeatTracker instrumentBeatTracker = instrumentBeatTrackers.get(instrumentId);
-                if(instrumentBeatTracker == null){
+                if (instrumentBeatTracker == null) {
                     continue;
                 }
                 instrumentBeatTracker.setCurrentBeat(beat);
@@ -3123,10 +3125,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             return;
         }
 
-        boolean isOptOut = false;
-        if (slotInstrument.equals(sourceInst)) {
-            isOptOut = true;
-        }
+        boolean isOptOut = slotInstrument.equals(sourceInst);
 
         ScoreRandomisationStrategy randomisationStrategy = szcore.getRandomisationStrategy();
         randomisationStrategy.optOutInstrument(inst, replaceInst, isOptOut);
@@ -3170,7 +3169,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
 
     private void onDynamicsValueChange(long value, List<Id> instrumentIds) throws Exception {
-        if(instrumentIds == null) {
+        if (instrumentIds == null) {
             return;
         }
         int r = 255;
@@ -3179,15 +3178,15 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         double scaled = dynamicsValueScaler.scaleValue(value);
         LOG.debug("onDynamicsValueChange scaled value: {} to: {}, instruments: {}", value, scaled, Arrays.toString(instrumentIds.toArray()));
 
-        if(value > 50) {
+        if (value > 50) {
             g = (int) Math.round(dynamicsForteColorValueScaler.scaleValue(value));
             b = g;
-        } else if(value < 50) {
+        } else if (value < 50) {
             r = (int) Math.round(dynamicsPianoColorValueScaler.scaleValue(value));
             g = r;
         }
 
-        for(Id instrumentId : instrumentIds) {
+        for (Id instrumentId : instrumentIds) {
             Instrument instrument = szcore.getInstrument(instrumentId);
             if (inNotOverlayInstrument(instrument)) {
                 continue;
@@ -3202,7 +3201,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void setDynamicsOverlay(Boolean value, List<Id> instrumentIds) throws Exception {
         LOG.debug("setDynamicsOverlay value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
-        for(Id instrumentId : instrumentIds) {
+        for (Id instrumentId : instrumentIds) {
             Instrument instrument = szcore.getInstrument(instrumentId);
             if (inNotOverlayInstrument(instrument)) {
                 continue;
@@ -3216,7 +3215,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void setDynamicsLine(Boolean value, List<Id> instrumentIds) throws Exception {
         LOG.debug("setDynamicsLine value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
-        for(Id instrumentId : instrumentIds) {
+        for (Id instrumentId : instrumentIds) {
             Instrument instrument = szcore.getInstrument(instrumentId);
             if (inNotOverlayInstrument(instrument)) {
                 continue;
@@ -3229,11 +3228,11 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     private void onPressureValueChange(long value, List<Id> instrumentIds) throws Exception {
-        if(instrumentIds == null) {
+        if (instrumentIds == null) {
             return;
         }
 
-        for(Id instrumentId : instrumentIds) {
+        for (Id instrumentId : instrumentIds) {
             Instrument instrument = szcore.getInstrument(instrumentId);
             if (inNotOverlayInstrument(instrument)) {
                 continue;
@@ -3241,7 +3240,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
             for (Stave stave : staves) {
 
-                if(value > 50) {
+                if (value > 50) {
                     int scaled = (int) Math.round(pressureColorValueScaler.scaleValue(value));
                     LOG.debug("onPressureValueChange scaled value: {} to: {}, instruments: {}", value, scaled, Arrays.toString(instrumentIds.toArray()));
                     sendPressureColorEvent(instrumentId, stave, scaled, scaled, scaled);
@@ -3254,12 +3253,12 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     private void setPressureOverlay(Boolean value, List<Id> instrumentIds) throws Exception {
-        if(instrumentIds == null) {
+        if (instrumentIds == null) {
             return;
         }
         LOG.debug("setPressureOverlay value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
 
-        for(Id instrumentId : instrumentIds) {
+        for (Id instrumentId : instrumentIds) {
             Instrument instrument = szcore.getInstrument(instrumentId);
             if (inNotOverlayInstrument(instrument)) {
                 continue;
@@ -3273,7 +3272,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void setPressureLine(Boolean value, List<Id> instrumentIds) throws Exception {
         LOG.debug("setPressureLine value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
-        for(Id instrumentId : instrumentIds) {
+        for (Id instrumentId : instrumentIds) {
             Instrument instrument = szcore.getInstrument(instrumentId);
             if (inNotOverlayInstrument(instrument)) {
                 continue;
@@ -3286,7 +3285,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     private void onSpeedValueChange(long value, List<Id> instrumentIds) throws Exception {
-        if(instrumentIds == null) {
+        if (instrumentIds == null) {
             return;
         }
 
@@ -3296,14 +3295,14 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         double scaled = speedValueScaler.scaleValue(value);
         LOG.debug("onSpeedValueChange scaled value: {} to: {}, instruments: {}", value, scaled, Arrays.toString(instrumentIds.toArray()));
 
-        if(value > 50) {
+        if (value > 50) {
             b = (int) Math.round(speedFastColorValueScaler.scaleValue(value));
             r = b;
-        } else if(value < 50) {
+        } else if (value < 50) {
             g = (int) Math.round(speedSlowColorValueScaler.scaleValue(value));
         }
 
-        for(Id instrumentId : instrumentIds) {
+        for (Id instrumentId : instrumentIds) {
             Instrument instrument = szcore.getInstrument(instrumentId);
             if (inNotOverlayInstrument(instrument)) {
                 continue;
@@ -3317,12 +3316,12 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     private void setSpeedOverlay(Boolean value, List<Id> instrumentIds) throws Exception {
-        if(instrumentIds == null) {
+        if (instrumentIds == null) {
             return;
         }
         LOG.debug("setSpeedOverlay value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
 
-        for(Id instrumentId : instrumentIds) {
+        for (Id instrumentId : instrumentIds) {
             Instrument instrument = szcore.getInstrument(instrumentId);
             if (inNotOverlayInstrument(instrument)) {
                 continue;
@@ -3336,7 +3335,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void setSpeedLine(Boolean value, List<Id> instrumentIds) throws Exception {
         LOG.debug("setSpeedLine value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
-        for(Id instrumentId : instrumentIds) {
+        for (Id instrumentId : instrumentIds) {
             Instrument instrument = szcore.getInstrument(instrumentId);
             if (inNotOverlayInstrument(instrument)) {
                 continue;
@@ -3349,13 +3348,13 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     private void onPositionValueChange(long value, List<Id> instrumentIds) throws Exception {
-        if(instrumentIds == null) {
+        if (instrumentIds == null) {
             return;
         }
         double scaled = positionValueScaler.scaleValue(value);
         LOG.debug("onPositionValueChange scaled value: {} to: {}, instruments: {}", value, scaled, Arrays.toString(instrumentIds.toArray()));
 
-        for(Id instrumentId : instrumentIds) {
+        for (Id instrumentId : instrumentIds) {
             Instrument instrument = szcore.getInstrument(instrumentId);
             if (inNotOverlayInstrument(instrument)) {
                 continue;
@@ -3368,12 +3367,12 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     private void setPositionOverlay(Boolean value, List<Id> instrumentIds) throws Exception {
-        if(instrumentIds == null) {
+        if (instrumentIds == null) {
             return;
         }
         LOG.debug("setPositionOverlay value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
 
-        for(Id instrumentId : instrumentIds) {
+        for (Id instrumentId : instrumentIds) {
             Instrument instrument = szcore.getInstrument(instrumentId);
             if (inNotOverlayInstrument(instrument)) {
                 continue;
@@ -3387,7 +3386,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void setPositionLine(Boolean value, List<Id> instrumentIds) throws Exception {
         LOG.debug("setPositionLine value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
-        for(Id instrumentId : instrumentIds) {
+        for (Id instrumentId : instrumentIds) {
             Instrument instrument = szcore.getInstrument(instrumentId);
             if (inNotOverlayInstrument(instrument)) {
                 continue;
@@ -3400,13 +3399,13 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     private void onContentValueChange(long value, List<Id> instrumentIds) throws Exception {
-        if(instrumentIds == null) {
+        if (instrumentIds == null) {
             return;
         }
         double scaled = contentValueScaler.scaleValue(value);
         LOG.debug("onContentValueChange scaled value: {} to: {}, instruments: {}", value, scaled, Arrays.toString(instrumentIds.toArray()));
 
-        for(Id instrumentId : instrumentIds) {
+        for (Id instrumentId : instrumentIds) {
             Instrument instrument = szcore.getInstrument(instrumentId);
             if (inNotOverlayInstrument(instrument)) {
                 continue;
@@ -3420,7 +3419,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void setContentOverlay(Boolean value, List<Id> instrumentIds) throws Exception {
         LOG.debug("setContentOverlay value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
-        for(Id instrumentId : instrumentIds) {
+        for (Id instrumentId : instrumentIds) {
             Instrument instrument = szcore.getInstrument(instrumentId);
             if (inNotOverlayInstrument(instrument)) {
                 continue;
@@ -3434,7 +3433,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void setContentLine(Boolean value, List<Id> instrumentIds) throws Exception {
         LOG.debug("setContentLine value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
-        for(Id instrumentId : instrumentIds) {
+        for (Id instrumentId : instrumentIds) {
             Instrument instrument = szcore.getInstrument(instrumentId);
             if (inNotOverlayInstrument(instrument)) {
                 continue;
@@ -3486,6 +3485,4 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             processTransportPositionChange(transportId, beatNo);
         }
     }
-
-
 }

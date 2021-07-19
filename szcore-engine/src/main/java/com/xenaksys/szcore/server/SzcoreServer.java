@@ -36,7 +36,7 @@ import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.process.DisruptorFactory;
 import com.xenaksys.szcore.process.SimpleLogger;
 import com.xenaksys.szcore.process.SzcoreThreadFactory;
-import com.xenaksys.szcore.publish.OscDisruptorPublishProcessor;
+import com.xenaksys.szcore.publish.OscDisruptorPublishProcessorWebWrapper;
 import com.xenaksys.szcore.publish.OscPortFactory;
 import com.xenaksys.szcore.publish.WebPublisherDisruptorProcessor;
 import com.xenaksys.szcore.receive.OscReceiveProcessor;
@@ -206,9 +206,6 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
         Timer timer = new BasicTimer(waitStrategy, clock);
 
-        outOscDisruptor = DisruptorFactory.createOscOutDisruptor();
-        oscEventPublisher = new OscDisruptorPublishProcessor(outOscDisruptor);
-
         SzcoreThreadFactory threadFactory = new SzcoreThreadFactory(Consts.SCHEDULER_THREAD_FACTORY + "_" +  DEFAULT_POOL_NUMBER.getAndIncrement());
         ExecutorService executor = Executors.newSingleThreadExecutor(threadFactory);
 
@@ -221,6 +218,9 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         webProcessor = new WebProcessor(this, this, clock, eventFactory, eventProcessor);
         outWebDisruptor = DisruptorFactory.createWebOutDisruptor();
         webEventPublisher = new WebPublisherDisruptorProcessor(outWebDisruptor, webProcessor);
+
+        outOscDisruptor = DisruptorFactory.createOscOutDisruptor();
+        oscEventPublisher = new OscDisruptorPublishProcessorWebWrapper(outOscDisruptor, webProcessor);
 
         scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, oscEventPublisher, webEventPublisher, scheduler, eventFactory, taskFactory);
         subscribe(webProcessor);
@@ -278,7 +278,6 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     public void publish(SzcoreEvent event){
-        scoreProcessor.publishToWebScore(event);
         oscEventPublisher.process(event);
     }
 
@@ -573,6 +572,11 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         } catch (UnknownHostException e) {
             LOG.error("onWebScorePing: failed to process web score ping");
         }
+    }
+
+    @Override
+    public void onInterceptedOscOutEvent(OscEvent event) {
+        scoreProcessor.onInterceptedOscOutEvent(event);
     }
 
     public WebProcessor getWebProcessor() {

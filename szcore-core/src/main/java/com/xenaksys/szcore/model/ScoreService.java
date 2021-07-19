@@ -1,5 +1,6 @@
 package com.xenaksys.szcore.model;
 
+import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
@@ -125,5 +126,7 @@ public interface ScoreService {
     void closeScoreConnections(List<String> connectionIds);
 
     void onWebScorePing(WebClientInfo clientInfo, long serverTime, long eventTime);
+
+    void onInterceptedOscOutEvent(OscEvent event);
 
 }

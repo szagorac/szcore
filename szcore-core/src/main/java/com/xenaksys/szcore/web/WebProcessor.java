@@ -7,6 +7,7 @@ import com.xenaksys.szcore.event.EventType;
 import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.osc.ElementSelectedAudienceEvent;
+import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
 import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEventType;
 import com.xenaksys.szcore.event.web.audience.UpdateWebAudienceConnectionsEvent;
@@ -889,5 +890,9 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         out.add(clientInfo);
         WebScoreClientInfoUpdateEvent clientInfoUpdateEvent = eventFactory.createWebScoreClientInfoUpdateEvent(out, false, clock.getSystemTimeMillis());
         eventReceiver.notifyListeners(clientInfoUpdateEvent);
+    }
+
+    public void onInterceptedOscOutEvent(OscEvent event) {
+        scoreService.onInterceptedOscOutEvent(event);
     }
 }

@@ -30,7 +30,7 @@ abstract public class AbstractOscPublisherDisruptorProcessor implements OscPubli
 
     @Override
     public void process(SzcoreEvent event) {
-        if(event == null || !(event instanceof OscEvent)){
+        if (!(event instanceof OscEvent)) {
             return;
         }
 

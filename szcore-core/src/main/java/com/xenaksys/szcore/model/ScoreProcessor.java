@@ -1,5 +1,6 @@
 package com.xenaksys.szcore.model;
 
+import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
@@ -104,9 +105,9 @@ public interface  ScoreProcessor extends Processor {
 
     void onIncomingWebScoreEvent(WebScoreInEvent webEvent) throws Exception;
 
-    void publishToWebScore(SzcoreEvent event);
-
     void sendWebScoreState(String clientAddr, WebScoreTargetType host, WebScoreState scoreState) throws Exception;
 
     WebScoreState getOrCreateWebScoreState();
+
+    void onInterceptedOscOutEvent(OscEvent event);
 }

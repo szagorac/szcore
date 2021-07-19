@@ -7,6 +7,8 @@ import java.util.List;
 
 public class WebScoreState {
     private WebScoreInfo scoreInfo;
+    private WebPageInfo pageInfo;
+    private WebPartInfo partInfo;
     private List<WebScoreAction> actions;
     private String part;
     private int beatNo;
@@ -18,6 +20,22 @@ public class WebScoreState {
 
     public void setScoreInfo(WebScoreInfo scoreInfo) {
         this.scoreInfo = scoreInfo;
+    }
+
+    public WebPageInfo getPageInfo() {
+        return pageInfo;
+    }
+
+    public void setPageInfo(WebPageInfo pageInfo) {
+        this.pageInfo = pageInfo;
+    }
+
+    public WebPartInfo getPartInfo() {
+        return partInfo;
+    }
+
+    public void setPartInfo(WebPartInfo partInfo) {
+        this.partInfo = partInfo;
     }
 
     public String getPart() {

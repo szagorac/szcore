@@ -1,15 +1,22 @@
 package com.xenaksys.szcore.score.web;
 
+import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
+import com.xenaksys.szcore.event.osc.OscEvent;
+import com.xenaksys.szcore.event.osc.OscEventType;
+import com.xenaksys.szcore.event.osc.PageDisplayEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Instrument;
-import com.xenaksys.szcore.model.ScoreProcessor;
+import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.Transport;
+import com.xenaksys.szcore.model.id.PageId;
+import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.score.BasicScore;
+import com.xenaksys.szcore.score.ScoreProcessorImpl;
 import com.xenaksys.szcore.web.WebClientInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WebScore {
     static final Logger LOG = LoggerFactory.getLogger(WebScore.class);
 
-    private final ScoreProcessor scoreProcessor;
+    private final ScoreProcessorImpl scoreProcessor;
     private final EventFactory eventFactory;
     private final BasicScore score;
     private final Clock clock;
@@ -34,7 +41,7 @@ public class WebScore {
     private WebScoreInfo scoreInfo;
     private PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
-    public WebScore(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock) {
+    public WebScore(ScoreProcessorImpl scoreProcessor, EventFactory eventFactory, Clock clock) {
         this.scoreProcessor = scoreProcessor;
         this.eventFactory = eventFactory;
         this.clock = clock;
@@ -69,11 +76,66 @@ public class WebScore {
         if (tempo != null) {
             info.setBpm(tempo.getBpm());
         }
+        String scoreNameDir = info.getTitle().replaceAll("\\s+", "");
+        String scoreDir = Consts.WEB_SCORE_ROOT_DIR + scoreNameDir + Consts.SLASH;
+        info.setScoreDir(scoreDir);
 
         return info;
     }
 
     public void resetState() {
+    }
+
+    public void processInterceptedOscEvent(OscEvent event) {
+        OscEventType oscEventType = event.getOscEventType();
+        try {
+            switch (oscEventType) {
+                case PAGE_DISPLAY:
+                    processPageDisplayEvent((PageDisplayEvent) event);
+                case PAGE_MAP_DISPLAY:
+                case ELEMENT_COLOR:
+                    LOG.info("Received ELEMENT_COLOR event: {}", event);
+                    break;
+                case ELEMENT_ALPHA:
+                    LOG.info("Received ELEMENT_ALPHA event: {}", event);
+                    break;
+                case HELLO:
+                case SERVER_HELLO:
+                case SET_TITLE:
+                case SET_PART:
+                case RESET_STAVES:
+                case DATE_TICK:
+                case STAVE_START_MARK:
+                case STAVE_TICK_DY:
+                case INSTRUMENT_RESET_SLOTS:
+                case ELEMENT_Y_POSITION:
+                default:
+                    LOG.error("processInterceptedOscEvent: Unhandled event: {}", oscEventType);
+            }
+        } catch (Exception e) {
+            LOG.error("publishToWebScoreHack: failed to publish web score event", e);
+        }
+    }
+
+    private void processPageDisplayEvent(PageDisplayEvent event) throws Exception {
+        String destination = event.getDestination();
+        String fileName = event.getFilename();
+        StaveId staveId = event.getStaveId();
+        int staveNo = staveId.getStaveNo();
+        PageId pageId = event.getPageId();
+        String webPageId = "" + pageId.getPageNo();
+        String webStaveId = null;
+        switch (staveNo) {
+            case 1:
+                webStaveId = Consts.WEB_SCORE_STAVE_TOP;
+                break;
+            case 2:
+                webStaveId = Consts.WEB_SCORE_STAVE_BOTTOM;
+                break;
+            default:
+                LOG.error("processPageDisplayEvent: Unexpected stave number: " + staveNo);
+        }
+        sendPageInfo(destination, webPageId, fileName, webStaveId);
     }
 
     public void processConnectionEvent(WebScoreConnectionEvent event) {
@@ -127,16 +189,55 @@ public class WebScore {
         scoreProcessor.sendWebScoreState(clientInfo.getClientAddr(), WebScoreTargetType.HOST, scoreState);
     }
 
-    public void sendCurrentBeat(int beatNo) throws Exception {
-        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
-        scoreState.setBeatNo(beatNo);
-        scoreProcessor.sendWebScoreState(WebScoreTargetType.ALL.name(), WebScoreTargetType.ALL, scoreState);
-    }
-
     public void sendPartInfo(WebClientInfo clientInfo) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
-        scoreState.setPart(clientInfo.getInstrument());
+        String instrumentName = clientInfo.getInstrument();
+        Instrument instrument = score.getInstrument(instrumentName);
+        if (instrument == null) {
+            LOG.error("sendPartInfo: unknown instrument: {}", instrumentName);
+            return;
+        }
+        int firstPageNo = 1;
+        int lastPageNo = 1;
+        Page lastPage = score.getLastInstrumentPage(instrument.getId());
+        if (lastPage != null) {
+            lastPageNo = lastPage.getPageNo();
+        }
+
+        WebPartInfo partInfo = new WebPartInfo();
+        partInfo.setName(instrumentName);
+        scoreState.setPartInfo(partInfo);
         scoreProcessor.sendWebScoreState(clientInfo.getClientAddr(), WebScoreTargetType.HOST, scoreState);
+    }
+
+    public void sendPageInfo(String destination, String pageId, String filename, String staveId) throws Exception {
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
+        WebPageInfo webPageInfo = new WebPageInfo();
+        webPageInfo.setFilename(filename);
+        webPageInfo.setStaveId(staveId);
+        webPageInfo.setId(pageId);
+        scoreState.setPageInfo(webPageInfo);
+        sendToDestination(destination, scoreState);
+    }
+
+    private void sendToDestination(String destination, WebScoreState scoreState) throws Exception {
+        if (Consts.ALL_DESTINATIONS.equals(destination)) {
+            scoreProcessor.sendWebScoreState(Consts.ALL_DESTINATIONS, WebScoreTargetType.ALL, scoreState);
+            return;
+        }
+
+        if (instrumentClients.containsKey(destination)) {
+            List<WebClientInfo> clients = instrumentClients.get(destination);
+            for (WebClientInfo clientInfo : clients) {
+                scoreProcessor.sendWebScoreState(clientInfo.getClientAddr(), WebScoreTargetType.HOST, scoreState);
+            }
+            return;
+        }
+
+        if (clients.containsKey(destination)) {
+            WebClientInfo client = clients.get(destination);
+            scoreProcessor.sendWebScoreState(client.getClientAddr(), WebScoreTargetType.HOST, scoreState);
+        }
     }
 
     public void processRemoveConnectionEvent(WebScoreRemoveConnectionEvent webEvent) {
@@ -164,5 +265,9 @@ public class WebScore {
         } catch (Exception e) {
             LOG.error("processPartRegistration: failed to process part registration", e);
         }
+    }
+
+    public boolean isDestination(String destination) {
+        return clients.containsKey(destination) || instrumentClients.containsKey(destination) || Consts.ALL_DESTINATIONS.equals(destination);
     }
 }

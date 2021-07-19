@@ -1,6 +1,8 @@
 package com.xenaksys.szcore.score.web;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.algo.IntRange;
+import com.xenaksys.szcore.algo.SequentalIntRange;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.event.osc.OscEventType;
@@ -8,11 +10,7 @@ import com.xenaksys.szcore.event.osc.PageDisplayEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
-import com.xenaksys.szcore.model.Clock;
-import com.xenaksys.szcore.model.Instrument;
-import com.xenaksys.szcore.model.Page;
-import com.xenaksys.szcore.model.Tempo;
-import com.xenaksys.szcore.model.Transport;
+import com.xenaksys.szcore.model.*;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.score.BasicScore;
@@ -204,8 +202,31 @@ public class WebScore {
             lastPageNo = lastPage.getPageNo();
         }
 
+        SequentalIntRange pageRange = new SequentalIntRange(firstPageNo, lastPageNo);
+        ArrayList<IntRange> pageRanges = new ArrayList<>();
+        pageRanges.add(pageRange);
+        String imgDir = scoreInfo.getScoreDir() + Consts.RSRC_DIR;
+        // ligetiTest6_Cello_page19.png
+        String scoreNameToken = scoreInfo.getTitle().replaceAll("\\s+", "_");
+        String imgPageNameToken = scoreNameToken
+                + Consts.UNDERSCORE
+                + instrumentName
+                + Consts.UNDERSCORE
+                + Consts.DEFAULT_PAGE_PREFIX
+                + Consts.WEB_SCORE_PAGE_NO_TOKEN
+                + Consts.PNG_FILE_EXTENSION;
+
+        String imgContPageName = instrumentName
+                + Consts.UNDERSCORE
+                + Consts.CONTINUOUS_PAGE_NAME
+                + Consts.PNG_FILE_EXTENSION;
+
         WebPartInfo partInfo = new WebPartInfo();
         partInfo.setName(instrumentName);
+        partInfo.setPageRanges(pageRanges);
+        partInfo.setImgDir(imgDir);
+        partInfo.setImgPageNameToken(imgPageNameToken);
+        partInfo.setImgContPageName(imgContPageName);
         scoreState.setPartInfo(partInfo);
         scoreProcessor.sendWebScoreState(clientInfo.getClientAddr(), WebScoreTargetType.HOST, scoreState);
     }

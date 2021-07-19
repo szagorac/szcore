@@ -2,7 +2,7 @@ package com.xenaksys.szcore.process;
 
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.dsl.Disruptor;
-import com.xenaksys.szcore.event.BagSzcoreEvent;
+import com.xenaksys.szcore.event.BagZscoreEvent;
 import com.xenaksys.szcore.model.Processor;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import org.slf4j.Logger;
@@ -12,11 +12,11 @@ abstract public class AbstractBagEventProcessor  implements Processor {
     static final Logger LOG = LoggerFactory.getLogger(AbstractBagEventProcessor.class);
 
 
-    private final Disruptor<BagSzcoreEvent> disruptor;
+    private final Disruptor<BagZscoreEvent> disruptor;
     private final ProcessorEventHandler eventHandler;
     private final BagEventDisruptorPublisher publisher;
 
-    public AbstractBagEventProcessor(Disruptor<BagSzcoreEvent> disruptor) {
+    public AbstractBagEventProcessor(Disruptor<BagZscoreEvent> disruptor) {
         this.disruptor = disruptor;
         this.eventHandler = new ProcessorEventHandler();
         this.publisher = new BagEventDisruptorPublisher(disruptor.getRingBuffer());
@@ -25,12 +25,12 @@ abstract public class AbstractBagEventProcessor  implements Processor {
 
     @Override
     public void process(SzcoreEvent event) {
-        if(event == null || !(event instanceof BagSzcoreEvent)){
+        if (event == null || !(event instanceof BagZscoreEvent)) {
             return;
         }
 
         try {
-            BagSzcoreEvent bev = (BagSzcoreEvent)event;
+            BagZscoreEvent bev = (BagZscoreEvent) event;
             publisher.publish(bev);
         } catch (Exception e) {
             LOG.error("Failed to publish event: " + event, e);
@@ -46,13 +46,13 @@ abstract public class AbstractBagEventProcessor  implements Processor {
         publisher.setActive(false);
     }
 
-    abstract protected void processInternal(BagSzcoreEvent event);
+    abstract protected void processInternal(BagZscoreEvent event);
 
 
-    class ProcessorEventHandler implements EventHandler<BagSzcoreEvent> {
+    class ProcessorEventHandler implements EventHandler<BagZscoreEvent> {
 
         @Override
-        public void onEvent(BagSzcoreEvent event, long sequence, boolean endOfBatch) throws Exception {
+        public void onEvent(BagZscoreEvent event, long sequence, boolean endOfBatch) throws Exception {
             processInternal(event);
         }
     }

@@ -298,10 +298,13 @@ public interface Consts {
     String WEB_EVENT_IS_POLL_NAME = "poll";
     String WEB_EVENT_ELEMENT_ID = "elementId";
     String WEB_EVENT_IS_SELECTED = "selected";
+    String WEB_EVENT_PART = "part";
+    String WEB_EVENT_SERVER_TIME = "serverTime";
 
     String WEB_RESPONSE_TYPE = "type";
     String WEB_RESPONSE_MESSAGE = "msg";
     String WEB_RESPONSE_STATE = "st";
+    String WEB_RESPONSE_DATA = "d";
     String WEB_RESPONSE_TIME = "t";
     String WEB_RESPONSE_SUBMITTED = "Submitted";
 
@@ -356,6 +359,7 @@ public interface Consts {
 
     String WEB_ACTION_PARAM_LEVEL = "level";
     String WEB_ACTION_PARAM_TIME_MS = "timeMs";
+    String WEB_ACTION_PARAM_SEND_TIME_MS = "sendTimeMs";
 
     int WEB_CONFIG_READY_PRESET = 0;
     int WEB_CONFIG_GO_PRESET = -1;
@@ -418,6 +422,17 @@ public interface Consts {
     String WEB_CONFIG_TYPE = "type";
     double WEB_CONFIG_DOUBLE_CHANGE_THRESHOLD = 10E-3;
 
+    String WEB_DATA_SCORE_INFO = "SCORE_INFO";
+    String WEB_DATA_SCORE_STATE = "SCORE_STATE";
+    String WEB_DATA_TARGET = "TARGET";
+    String WEB_DATA_TARGET_TYPE = "TARGET_TYPE";
+    String WEB_DATA_TARGET_ALL = "ALL";
+
+    String WEB_SCORE_ROOT_DIR = "/score/";
+    String WEB_SCORE_STAVE_TOP = "topStave";
+    String WEB_SCORE_STAVE_BOTTOM = "bottomStave";
+
+    String WEB_WS_CLOSE_REASON_NORMAL = "Closed by the server";
 
     String NAME_FULL_SCORE = "FullScore";
 

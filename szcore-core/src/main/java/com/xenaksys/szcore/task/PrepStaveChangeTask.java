@@ -1,6 +1,6 @@
 package com.xenaksys.szcore.task;
 
-import com.xenaksys.szcore.event.PrepStaveChangeEvent;
+import com.xenaksys.szcore.event.music.PrepStaveChangeEvent;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.id.BeatId;

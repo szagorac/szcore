@@ -1,6 +1,72 @@
 package com.xenaksys.szcore.event;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.event.gui.ParticipantEvent;
+import com.xenaksys.szcore.event.gui.ParticipantStatsEvent;
+import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
+import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
+import com.xenaksys.szcore.event.music.ModWindowEvent;
+import com.xenaksys.szcore.event.music.PrecountBeatSetupEvent;
+import com.xenaksys.szcore.event.music.PrepStaveChangeEvent;
+import com.xenaksys.szcore.event.music.StopEvent;
+import com.xenaksys.szcore.event.music.TimeSigChangeEvent;
+import com.xenaksys.szcore.event.music.TransitionEvent;
+import com.xenaksys.szcore.event.music.TransportPositionEvent;
+import com.xenaksys.szcore.event.osc.AddPartsEvent;
+import com.xenaksys.szcore.event.osc.BeatScriptEvent;
+import com.xenaksys.szcore.event.osc.DateTickEvent;
+import com.xenaksys.szcore.event.osc.ElementAlphaEvent;
+import com.xenaksys.szcore.event.osc.ElementColorEvent;
+import com.xenaksys.szcore.event.osc.ElementSelectedAudienceEvent;
+import com.xenaksys.szcore.event.osc.ElementYPositionEvent;
+import com.xenaksys.szcore.event.osc.HelloEvent;
+import com.xenaksys.szcore.event.osc.InstrumentResetSlotsEvent;
+import com.xenaksys.szcore.event.osc.InstrumentSlotsEvent;
+import com.xenaksys.szcore.event.osc.OscEvent;
+import com.xenaksys.szcore.event.osc.OscScriptEvent;
+import com.xenaksys.szcore.event.osc.OscStaveActivateEvent;
+import com.xenaksys.szcore.event.osc.OscStaveTempoEvent;
+import com.xenaksys.szcore.event.osc.OscStopEvent;
+import com.xenaksys.szcore.event.osc.PageDisplayEvent;
+import com.xenaksys.szcore.event.osc.PageMapDisplayEvent;
+import com.xenaksys.szcore.event.osc.PartEvent;
+import com.xenaksys.szcore.event.osc.PingEvent;
+import com.xenaksys.szcore.event.osc.PrecountBeatOffEvent;
+import com.xenaksys.szcore.event.osc.PrecountBeatOnEvent;
+import com.xenaksys.szcore.event.osc.ResetInstrumentEvent;
+import com.xenaksys.szcore.event.osc.ResetScoreEvent;
+import com.xenaksys.szcore.event.osc.ResetStavesEvent;
+import com.xenaksys.szcore.event.osc.SendServerIpBroadcastEvent;
+import com.xenaksys.szcore.event.osc.ServerHelloEvent;
+import com.xenaksys.szcore.event.osc.StaveActiveChangeEvent;
+import com.xenaksys.szcore.event.osc.StaveClockTickEvent;
+import com.xenaksys.szcore.event.osc.StaveDateTickEvent;
+import com.xenaksys.szcore.event.osc.StaveDyTickEvent;
+import com.xenaksys.szcore.event.osc.StaveStartMarkEvent;
+import com.xenaksys.szcore.event.osc.StaveYPositionEvent;
+import com.xenaksys.szcore.event.osc.TempoChangeEvent;
+import com.xenaksys.szcore.event.osc.TitleEvent;
+import com.xenaksys.szcore.event.osc.TransitionScriptEvent;
+import com.xenaksys.szcore.event.script.ScriptingEngineEvent;
+import com.xenaksys.szcore.event.script.ScriptingEngineResetEvent;
+import com.xenaksys.szcore.event.web.audience.UpdateWebAudienceConnectionsEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudiencePlayTilesEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudiencePrecountEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceRequestLogEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceResetEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceSelectTilesEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceStateUpdateEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceStopEvent;
+import com.xenaksys.szcore.event.web.audience.WebPollAudienceEvent;
+import com.xenaksys.szcore.event.web.audience.WebStartAudienceEvent;
+import com.xenaksys.szcore.event.web.in.UpdateWebScoreConnectionsEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
+import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
+import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
+import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import com.xenaksys.szcore.model.HistoBucketView;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Page;
@@ -11,7 +77,7 @@ import com.xenaksys.szcore.model.Transition;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
-import com.xenaksys.szcore.score.web.WebScoreScript;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
 import com.xenaksys.szcore.scripting.ScriptingEngineScript;
 import com.xenaksys.szcore.web.WebClientInfo;
 import com.xenaksys.szcore.web.WebConnection;
@@ -101,16 +167,16 @@ public class EventFactory {
         return new ParticipantEvent(inetAddress, hostAddress, portIn, portOut, portErr, ping, instrument, creationTime);
     }
 
-    public WebClientInfoUpdateEvent createWebClientInfoUpdateEvent(ArrayList<WebClientInfo> webClientInfos, List<HistoBucketView> histoBucketViews, int totalWebHits, long creationTime) {
-        return new WebClientInfoUpdateEvent(webClientInfos, histoBucketViews, totalWebHits, creationTime);
+    public WebAudienceClientInfoUpdateEvent createWebAudienceClientInfoUpdateEvent(ArrayList<WebClientInfo> webClientInfos, List<HistoBucketView> histoBucketViews, int totalWebHits, long creationTime) {
+        return new WebAudienceClientInfoUpdateEvent(webClientInfos, histoBucketViews, totalWebHits, creationTime);
+    }
+
+    public WebScoreClientInfoUpdateEvent createWebScoreClientInfoUpdateEvent(ArrayList<WebClientInfo> webClientInfos, boolean isFullUpdate, long creationTime) {
+        return new WebScoreClientInfoUpdateEvent(webClientInfos, isFullUpdate, creationTime);
     }
 
     public ParticipantStatsEvent createParticipantStatsEvent(InetAddress inetAddress, String hostAddress, int port, double pingLatencyMillis, double halfPingLatencyMillis, boolean isExpired, long lastPingLatency, long creationTime) {
         return new ParticipantStatsEvent(inetAddress, hostAddress, port, pingLatencyMillis, halfPingLatencyMillis, isExpired, lastPingLatency, creationTime);
-    }
-
-    public OscEvent createOscEvent(String address, List<Object> arguments, BeatId eventBaseBeat, long creationTime) {
-        return new OscEvent(address, arguments, eventBaseBeat, creationTime);
     }
 
     public OscEvent createOscEvent(String address, List<Object> args, String destination, long creationTime) {
@@ -161,12 +227,12 @@ public class EventFactory {
         return new ElementColorEvent(address, oscColorArgs, destination, creationTime);
     }
 
-    public OscEvent createPageDisplayEvent(String address, List<Object> args, BeatId eventBaseBeat, String destination, long creationTime) {
-        return new OscEvent(address, args, eventBaseBeat, destination, creationTime);
+    public PageDisplayEvent createPageDisplayEvent(PageId pageId, String filename, StaveId staveId, String address, List<Object> args, BeatId eventBaseBeat, String destination, long creationTime) {
+        return new PageDisplayEvent(pageId, filename, staveId, address, args, eventBaseBeat, destination, creationTime);
     }
 
-    public OscEvent createPageMapDisplayEvent(String address, List<Object> args, BeatId eventBaseBeat, String destination, long creationTime) {
-        return new OscEvent(address, args, eventBaseBeat, destination, creationTime);
+    public PageMapDisplayEvent createPageMapDisplayEvent(String address, List<Object> args, BeatId eventBaseBeat, String destination, long creationTime) {
+        return new PageMapDisplayEvent(address, args, eventBaseBeat, destination, creationTime);
     }
 
     public OscStaveActivateEvent createStaveActivateEvent(String destination, long creationTime) {
@@ -279,30 +345,30 @@ public class EventFactory {
         return resetScoreEvent;
     }
 
-    public ElementSelectedEvent createElementSelectedEvent(String elementId, boolean isSelected, String eventId, String sourceAddr, String requestPath,
-                                                           long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        return new ElementSelectedEvent(elementId, isSelected, sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public ElementSelectedAudienceEvent createElementSelectedEvent(String elementId, boolean isSelected, String eventId, String sourceAddr, String requestPath,
+                                                                   long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new ElementSelectedAudienceEvent(elementId, isSelected, sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
-    public UpdateWebStatusEvent createUpdateWebConnectionsEvent(Set<WebConnection> clientConnections, long creationTime) {
-        return new UpdateWebStatusEvent(clientConnections, creationTime);
+    public UpdateWebAudienceConnectionsEvent createUpdateWebAudienceConnectionsEvent(Set<WebConnection> clientConnections, long creationTime) {
+        return new UpdateWebAudienceConnectionsEvent(clientConnections, creationTime);
     }
 
-    public WebRequestLogEvent createWebRequestLogEvent(ZsWebRequest zsRequest, long creationTime) {
-        return new WebRequestLogEvent(zsRequest, creationTime);
+    public WebAudienceRequestLogEvent createWebAudienceRequestLogEvent(ZsWebRequest zsRequest, long creationTime) {
+        return new WebAudienceRequestLogEvent(zsRequest, creationTime);
     }
 
-    public WebPollEvent createWebPollEvent(String eventId, String sourceAddr, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        return new WebPollEvent(eventId, sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public WebPollAudienceEvent createWebAudiencePollEvent(String eventId, String sourceAddr, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new WebPollAudienceEvent(eventId, sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
-    public WebStartEvent createWebStartEvent(String eventId, String sourceAddr, String requestPath,
-                                             long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        return new WebStartEvent(sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public WebStartAudienceEvent createWebAudienceStartEvent(String eventId, String sourceAddr, String requestPath,
+                                                             long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new WebStartAudienceEvent(sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
-    public WebScoreEvent createWebScoreEvent(BeatId beatId, List<WebScoreScript> scripts, long creationTime) {
-        return new WebScoreEvent(beatId, scripts, creationTime);
+    public WebAudienceEvent createWebAudienceEvent(BeatId beatId, List<WebAudienceScoreScript> scripts, long creationTime) {
+        return new WebAudienceEvent(beatId, scripts, creationTime);
     }
 
     public ScriptingEngineEvent createScriptingEngineEvent(BeatId beatId, List<ScriptingEngineScript> scripts, long creationTime) {
@@ -313,36 +379,56 @@ public class EventFactory {
         return new ScriptingEngineResetEvent(beatId, scripts, creationTime);
     }
 
-    public WebScoreInstructionsEvent createWebScoreInstructionsEvent(String l1, String l2, String l3, boolean isVisible, long creationTime) {
-        return new WebScoreInstructionsEvent(l1, l2, l3, isVisible, creationTime);
+    public WebAudienceInstructionsEvent createWebAudienceInstructionsEvent(String l1, String l2, String l3, boolean isVisible, long creationTime) {
+        return new WebAudienceInstructionsEvent(l1, l2, l3, isVisible, creationTime);
     }
 
-    public WebScoreStateUpdateEvent createWebScoreStateUpdateEvent(WebScoreStateType propertyName, Object propertyValue, long creationTime) {
-        return new WebScoreStateUpdateEvent(propertyName, propertyValue, creationTime);
+    public WebAudienceStateUpdateEvent createWebAudienceStateUpdateEvent(WebScoreStateType propertyName, Object propertyValue, long creationTime) {
+        return new WebAudienceStateUpdateEvent(propertyName, propertyValue, creationTime);
     }
 
-    public WebScorePrecountEvent createWebScorePrecountEvent(int count, boolean isOn, int colourId, long creationTime) {
-        return new WebScorePrecountEvent(count, isOn, colourId, creationTime);
+    public WebAudiencePrecountEvent createWebAudiencePrecountEvent(int count, boolean isOn, int colourId, long creationTime) {
+        return new WebAudiencePrecountEvent(count, isOn, colourId, creationTime);
     }
 
-    public WebScoreResetEvent createWebScoreResetEvent(BeatId beatId, List<WebScoreScript> scripts, long creationTime) {
-        return new WebScoreResetEvent(beatId, scripts, creationTime);
+    public WebAudienceResetEvent createWebAudienceResetEvent(BeatId beatId, List<WebAudienceScoreScript> scripts, long creationTime) {
+        return new WebAudienceResetEvent(beatId, scripts, creationTime);
     }
 
-    public WebScoreStopEvent createWebScoreStopEvent(long creationTime) {
-        return new WebScoreStopEvent(null, null, creationTime);
+    public WebAudienceStopEvent createWebAudienceStopEvent(long creationTime) {
+        return new WebAudienceStopEvent(null, null, creationTime);
     }
 
-    public WebScorePlayTilesEvent createWebScorePlayTilesEvent(long creationTime) {
-        return new WebScorePlayTilesEvent(null, null, creationTime);
+    public WebAudiencePlayTilesEvent createWebAudiencePlayTilesEvent(long creationTime) {
+        return new WebAudiencePlayTilesEvent(null, null, creationTime);
     }
 
-    public WebScoreSelectTilesEvent createWebScoreSelectTilesEvent(List<String> tileIds, long creationTime) {
-        return new WebScoreSelectTilesEvent(null, null, tileIds, creationTime);
+    public WebAudienceSelectTilesEvent createWebAudienceSelectTilesEvent(List<String> tileIds, long creationTime) {
+        return new WebAudienceSelectTilesEvent(null, null, tileIds, creationTime);
     }
 
-    public OutgoingWebEvent createOutgoingWebEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, long creationTime) {
-        return new OutgoingWebEvent(beatId, eventId, eventType, creationTime);
+    public OutgoingWebEvent createOutgoingWebAudienceEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, long creationTime) {
+        return new OutgoingWebEvent(eventId, beatId, EventType.WEB_AUDIENCE_OUT, eventType, creationTime);
+    }
+
+    public OutgoingWebEvent createWebScoreOutEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, long creationTime) {
+        return new OutgoingWebEvent(eventId, beatId, EventType.WEB_SCORE_OUT, eventType, creationTime);
+    }
+
+    public UpdateWebScoreConnectionsEvent createUpdateWebScoreConnectionsEvent(Set<WebConnection> clientConnections, long creationTime) {
+        return new UpdateWebScoreConnectionsEvent(clientConnections, creationTime);
+    }
+
+    public WebScoreRemoveConnectionEvent createRemoveWebScoreConnectionsEvent(List<String> connectionIds, long creationTime) {
+        return new WebScoreRemoveConnectionEvent(connectionIds, creationTime);
+    }
+
+    public WebScoreConnectionEvent createWebScoreConnectionEvent(WebClientInfo webClientInfo, long creationTime) {
+        return new WebScoreConnectionEvent(webClientInfo, creationTime);
+    }
+
+    public WebScorePartRegEvent createWebScorePartRegEvent(String eventId, String sourceAddr, String part, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new WebScorePartRegEvent(eventId, sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
     public List<Object> createJavaScriptArgs() {

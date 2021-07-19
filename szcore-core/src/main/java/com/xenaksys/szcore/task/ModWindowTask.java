@@ -1,6 +1,6 @@
 package com.xenaksys.szcore.task;
 
-import com.xenaksys.szcore.event.ModWindowEvent;
+import com.xenaksys.szcore.event.music.ModWindowEvent;
 import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.Stave;

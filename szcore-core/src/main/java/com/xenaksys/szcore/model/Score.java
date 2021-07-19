@@ -101,4 +101,6 @@ public interface Score extends Identifiable {
     List<Script> getBeatScripts(BeatId beatId);
 
     void resetOnStop();
+
+    List<Page> getInstrumentPages();
 }

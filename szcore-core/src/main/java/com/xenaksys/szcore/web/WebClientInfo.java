@@ -6,19 +6,20 @@ import com.xenaksys.szcore.net.browser.UAgentInfo;
 import com.xenaksys.szcore.util.Histogram;
 import gnu.trove.stack.array.TLongArrayStack;
 
+import java.util.Objects;
+
 import static com.xenaksys.szcore.Consts.EMPTY;
 
 public class WebClientInfo {
     private final String clientAddr;
 
-    private WebConnection webConnection = new WebConnection(EMPTY, WebConnectionType.UNKNOWN);
+    private WebConnection webConnection = new WebConnection(EMPTY, WebConnectionType.UNKNOWN, false);
     private final Histogram clientHitHisto = new Histogram(10, 1000L);
     private UAgentInfo userAgentInfo;
     private BrowserType bt;
     private BrowserOS os;
     private boolean isMobile;
     private boolean isBanned;
-
 
     private TLongArrayStack latencies = new TLongArrayStack(100);
 
@@ -114,6 +115,22 @@ public class WebClientInfo {
         isBanned = banned;
     }
 
+    public String getInstrument() {
+        return webConnection.getInstrument();
+    }
+
+    public void setInstrument(String instrument) {
+        this.webConnection.setInstrument(instrument);
+    }
+
+    public boolean isScoreClient() {
+        return webConnection.isScoreClient();
+    }
+
+    public void setScoreClient(boolean isScoreClient) {
+        this.webConnection.setScoreClient(isScoreClient);
+    }
+
     public long getLatency() {
         long[] ls = latencies.toArray();
         long sum = 0L;
@@ -133,10 +150,34 @@ public class WebClientInfo {
     }
 
     public void addLatency(long latency) {
-        if(latencies.size() >= 100) {
+        if (latencies.size() >= 100) {
             latencies.pop();
         }
         this.latencies.push(latency);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WebClientInfo that = (WebClientInfo) o;
+        return clientAddr.equals(that.clientAddr);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(clientAddr);
+    }
+
+    @Override
+    public String toString() {
+        return "WebClientInfo{" +
+                "clientAddr='" + clientAddr + '\'' +
+                ", bt=" + bt +
+                ", os=" + os +
+                ", isMobile=" + isMobile +
+                ", isBanned=" + isBanned +
+                ", webConnection=" + webConnection +
+                '}';
+    }
 }

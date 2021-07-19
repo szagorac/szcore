@@ -1,6 +1,6 @@
 package com.xenaksys.szcore.task;
 
-import com.xenaksys.szcore.event.TransportPositionEvent;
+import com.xenaksys.szcore.event.music.TransportPositionEvent;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.Transport;
 

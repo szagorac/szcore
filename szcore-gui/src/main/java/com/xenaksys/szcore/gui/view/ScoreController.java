@@ -2,10 +2,10 @@ package com.xenaksys.szcore.gui.view;
 
 
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.event.AddPartsEvent;
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.SendServerIpBroadcastEvent;
-import com.xenaksys.szcore.event.WebScoreInstructionsEvent;
+import com.xenaksys.szcore.event.osc.AddPartsEvent;
+import com.xenaksys.szcore.event.osc.SendServerIpBroadcastEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Participant;
 import com.xenaksys.szcore.gui.model.WebscoreInstructions;
@@ -23,7 +23,7 @@ import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.id.BarId;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
-import com.xenaksys.szcore.score.web.WebScore;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.Util;
 import javafx.application.Platform;
@@ -73,7 +73,7 @@ public class ScoreController {
     private ScoreService scoreService;
 
     private Score score;
-    private WebScore webScore;
+    private WebAudienceScore webAudienceScore;
 
     @FXML
     private Label scoreNameLbl;
@@ -113,6 +113,8 @@ public class ScoreController {
     private TableColumn<Participant, String> expiredColumn;
     @FXML
     private TableColumn<Participant, Boolean> selectColumn;
+    @FXML
+    private TableColumn<Participant, Boolean> webClientColumn;
     @FXML
     private Label pageNoLbl;
     @FXML
@@ -520,10 +522,18 @@ public class ScoreController {
         instrumentColumn.setCellValueFactory(cellData -> cellData.getValue().getInstrumentProperty());
         selectColumn.setCellValueFactory(cellData -> cellData.getValue().getSelectProperty());
         expiredColumn.setCellValueFactory(cellData -> cellData.getValue().getLastPingMillisProperty());
-
         selectColumn.setCellFactory(CheckBoxTableCell.forTableColumn(selectColumn));
-        participantsTableView.setEditable(true);
         selectColumn.setEditable(true);
+        participantsTableView.setEditable(true);
+
+        webClientColumn.setCellValueFactory(cellData -> cellData.getValue().webClientProperty());
+        webClientColumn.setCellFactory(col -> new TableCell<Participant, Boolean>() {
+            @Override
+            protected void updateItem(Boolean item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item ? "Y" : "N");
+            }
+        });
 
         instrumentColumn.setCellFactory(column -> {
             return new TableCell<Participant, String>() {
@@ -678,7 +688,7 @@ public class ScoreController {
         String l3 = validateWebInstruction(webscoreInstructions.getLine3());
         boolean isVisible = webscoreInstructions.getVisible();
         EventFactory eventFactory = publisher.getEventFactory();
-        WebScoreInstructionsEvent instructionsEvent = eventFactory.createWebScoreInstructionsEvent(l1, l2, l3, isVisible, clock.getSystemTimeMillis());
+        WebAudienceInstructionsEvent instructionsEvent = eventFactory.createWebAudienceInstructionsEvent(l1, l2, l3, isVisible, clock.getSystemTimeMillis());
         publisher.receive(instructionsEvent);
     }
 
@@ -994,7 +1004,7 @@ public class ScoreController {
     }
 
     private void sendAddParts(Participant participant, String instrumentsCsv) {
-        if (participant == null || instrumentsCsv == null || instrumentsCsv.length() < 1) {
+        if (participant == null || instrumentsCsv == null || instrumentsCsv.length() < 1 || participant.isWebClient()) {
             return;
         }
         EventFactory eventFactory = publisher.getEventFactory();
@@ -1031,7 +1041,7 @@ public class ScoreController {
             String webName = name.substring(0, end) + Consts.WEB_SCORE_SUFFIX +  Consts.CSV_EXT;
             String webPath = dir + File.separator + webName;
             File webFile = new File(webPath);
-            this.webScore = scoreService.loadWebScore(webFile);
+            this.webAudienceScore = scoreService.loadWebScore(webFile);
             viewWebScore();
         } catch (Exception e) {
             LOG.error("Failed to open score", e);

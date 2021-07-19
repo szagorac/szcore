@@ -3,9 +3,9 @@ package com.xenaksys.szcore.process;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventContainer;
-import com.xenaksys.szcore.event.IncomingOscEvent;
-import com.xenaksys.szcore.event.OscEvent;
-import com.xenaksys.szcore.event.OutgoingWebEvent;
+import com.xenaksys.szcore.event.osc.IncomingOscEvent;
+import com.xenaksys.szcore.event.osc.OscEvent;
+import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

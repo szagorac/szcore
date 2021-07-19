@@ -1,17 +1,17 @@
 package com.xenaksys.szcore.task;
 
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.ModWindowEvent;
-import com.xenaksys.szcore.event.PrecountBeatSetupEvent;
-import com.xenaksys.szcore.event.PrepStaveChangeEvent;
-import com.xenaksys.szcore.event.ScriptingEngineEvent;
-import com.xenaksys.szcore.event.StaveActiveChangeEvent;
-import com.xenaksys.szcore.event.StopEvent;
-import com.xenaksys.szcore.event.TempoChangeEvent;
-import com.xenaksys.szcore.event.TimeSigChangeEvent;
-import com.xenaksys.szcore.event.TransitionEvent;
-import com.xenaksys.szcore.event.TransportPositionEvent;
-import com.xenaksys.szcore.event.WebScoreEvent;
+import com.xenaksys.szcore.event.music.ModWindowEvent;
+import com.xenaksys.szcore.event.music.PrecountBeatSetupEvent;
+import com.xenaksys.szcore.event.music.PrepStaveChangeEvent;
+import com.xenaksys.szcore.event.music.StopEvent;
+import com.xenaksys.szcore.event.music.TimeSigChangeEvent;
+import com.xenaksys.szcore.event.music.TransitionEvent;
+import com.xenaksys.szcore.event.music.TransportPositionEvent;
+import com.xenaksys.szcore.event.osc.StaveActiveChangeEvent;
+import com.xenaksys.szcore.event.osc.TempoChangeEvent;
+import com.xenaksys.szcore.event.script.ScriptingEngineEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.OscPublisher;
 import com.xenaksys.szcore.model.ScoreProcessor;
@@ -20,7 +20,7 @@ import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.Transport;
 import com.xenaksys.szcore.score.ScoreProcessorImpl;
-import com.xenaksys.szcore.score.web.WebScore;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
 import com.xenaksys.szcore.scripting.ScoreScriptingEngine;
 
 public class TaskFactory {
@@ -60,8 +60,8 @@ public class TaskFactory {
     }
 
     public PrecountBeatSetupTask createPrecountBeatSetupTask(PrecountBeatSetupEvent precountBeatSetupEvent, String destination, Transport transport, ScoreProcessor processor,
-                                                             OscPublisher oscPublisher, EventFactory eventFactory, TaskFactory taskFactory, WebScore webScore, Clock clock) {
-        return new PrecountBeatSetupTask(precountBeatSetupEvent, destination, transport, processor, oscPublisher, eventFactory, taskFactory, webScore, clock);
+                                                             OscPublisher oscPublisher, EventFactory eventFactory, TaskFactory taskFactory, WebAudienceScore webAudienceScore, Clock clock) {
+        return new PrecountBeatSetupTask(precountBeatSetupEvent, destination, transport, processor, oscPublisher, eventFactory, taskFactory, webAudienceScore, clock);
     }
 
     public TransitionSetupTask createTransitionSetupTask(TransitionEvent transitionEvent, String destination, ScoreProcessor processor,
@@ -69,8 +69,8 @@ public class TaskFactory {
         return new TransitionSetupTask(transitionEvent, destination, processor, oscPublisher, eventFactory, clock);
     }
 
-    public WebScoreEventTask createWebScoreEventTask(long playTime, WebScoreEvent event, WebScore webScore) {
-        return new WebScoreEventTask(playTime, event, webScore);
+    public WebAudienceEventTask createWebScoreEventTask(long playTime, WebAudienceEvent event, WebAudienceScore webAudienceScore) {
+        return new WebAudienceEventTask(playTime, event, webAudienceScore);
     }
 
     public ScriptingEngineEventTask createScriptingEngineEventTask(long playTime, ScriptingEngineEvent event, ScoreScriptingEngine scriptingEngine) {

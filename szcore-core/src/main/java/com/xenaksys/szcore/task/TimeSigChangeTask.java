@@ -1,6 +1,6 @@
 package com.xenaksys.szcore.task;
 
-import com.xenaksys.szcore.event.TimeSigChangeEvent;
+import com.xenaksys.szcore.event.music.TimeSigChangeEvent;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.TimeSignature;
 import com.xenaksys.szcore.model.Transport;

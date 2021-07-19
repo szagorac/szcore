@@ -8,7 +8,7 @@
 
 package com.xenaksys.szcore.net.osc.utility;
 
-import com.xenaksys.szcore.event.IncomingOscEvent;
+import com.xenaksys.szcore.event.osc.IncomingOscEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.net.osc.AddressSelector;
 import com.xenaksys.szcore.net.osc.OSCBundle;

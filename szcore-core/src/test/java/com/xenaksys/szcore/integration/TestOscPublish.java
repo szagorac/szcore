@@ -1,9 +1,9 @@
 package com.xenaksys.szcore.integration;
 
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.OscEvent;
-import com.xenaksys.szcore.event.PrecountBeatOffEvent;
-import com.xenaksys.szcore.event.PrecountBeatOnEvent;
+import com.xenaksys.szcore.event.osc.OscEvent;
+import com.xenaksys.szcore.event.osc.PrecountBeatOffEvent;
+import com.xenaksys.szcore.event.osc.PrecountBeatOnEvent;
 import com.xenaksys.szcore.model.BeatTimeStrategy;
 import com.xenaksys.szcore.model.MutableClock;
 import com.xenaksys.szcore.model.OscPublisher;

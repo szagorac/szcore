@@ -195,6 +195,8 @@
                      <columns>
                         <TableColumn fx:id="hostAddressColumn" maxWidth="200.0" minWidth="100.0" prefWidth="120.0" text="Host" />
                         <TableColumn fx:id="inPortColumn" maxWidth="150.0" minWidth="50.0" prefWidth="70.0" text="In port" />
+                        <TableColumn fx:id="webClientColumn" maxWidth="70.0" minWidth="30.0" prefWidth="50.0"
+                                     text="IsWeb"/>
                         <TableColumn fx:id="outPortColumn" maxWidth="150.0" minWidth="50.0" prefWidth="70.0" text="Out port" />
                         <TableColumn fx:id="errPortColumn" maxWidth="150.0" minWidth="50.0" prefWidth="70.0" text="Err port" />
                         <TableColumn fx:id="pingColumn" maxWidth="150.0" minWidth="50.0" prefWidth="70.0" text="Ping millis" />

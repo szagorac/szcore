@@ -1,12 +1,12 @@
 package com.xenaksys.szcore.web;
 
-import com.xenaksys.szcore.score.web.export.WebScoreStateDeltaExport;
-import com.xenaksys.szcore.score.web.export.WebScoreStateExport;
+import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
+import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
 
 public interface WebScoreStateListener {
 
-    void onWebScoreStateChange(WebScoreStateExport webScoreStateExport);
+    void onWebAudienceScoreStateChange(WebAudienceScoreStateExport webAudienceScoreStateExport);
 
-    void onWebScoreStateDeltaChange(WebScoreStateDeltaExport webScoreStateDeltaExport);
+    void onWebAudienceScoreStateDeltaChange(WebAudienceScoreStateDeltaExport webAudienceScoreStateDeltaExport);
 
 }

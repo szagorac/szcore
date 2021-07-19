@@ -11,8 +11,11 @@ public class WebConnection {
     private final String host;
     private final int port;
     private String userAgent;
+    private String instrument;
+    private boolean isScoreClient;
+    private boolean isOpen;
 
-    public WebConnection(String clientAddr, WebConnectionType connectionType) {
+    public WebConnection(String clientAddr, WebConnectionType connectionType, boolean isOpen) {
         this.clientAddr = clientAddr;
         this.connectionType = connectionType;
         String[] hostPort = NetUtil.getHostPort(clientAddr);
@@ -24,6 +27,7 @@ public class WebConnection {
         }
         this.host = h;
         this.port = p;
+        this.isOpen = isOpen;
     }
 
     public String getClientAddr() {
@@ -54,6 +58,26 @@ public class WebConnection {
         return userAgent;
     }
 
+    public String getInstrument() {
+        return instrument;
+    }
+
+    public void setInstrument(String instrument) {
+        this.instrument = instrument;
+    }
+
+    public boolean isScoreClient() {
+        return isScoreClient;
+    }
+
+    public void setScoreClient(boolean scoreClient) {
+        this.isScoreClient = scoreClient;
+    }
+
+    public boolean isOpen() {
+        return isOpen;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -72,9 +96,12 @@ public class WebConnection {
         return "WebConnection{" +
                 "clientAddr='" + clientAddr + '\'' +
                 ", connectionType=" + connectionType +
+                ", isOpen='" + isOpen + '\'' +
                 ", host='" + host + '\'' +
                 ", port=" + port +
                 ", userAgent=" + userAgent +
+                ", instrument=" + instrument +
+                ", isScoreClient=" + isScoreClient +
                 '}';
     }
 }

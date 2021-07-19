@@ -1,8 +1,8 @@
 package com.xenaksys.szcore.task;
 
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.TransitionEvent;
-import com.xenaksys.szcore.event.TransitionScriptEvent;
+import com.xenaksys.szcore.event.music.TransitionEvent;
+import com.xenaksys.szcore.event.osc.TransitionScriptEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.OscPublisher;
 import com.xenaksys.szcore.model.ScoreProcessor;

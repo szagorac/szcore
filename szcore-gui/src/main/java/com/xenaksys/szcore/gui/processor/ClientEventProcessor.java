@@ -1,23 +1,25 @@
 package com.xenaksys.szcore.gui.processor;
 
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.event.ClientEvent;
-import com.xenaksys.szcore.event.ClientEventType;
-import com.xenaksys.szcore.event.ErrorEvent;
 import com.xenaksys.szcore.event.EventType;
-import com.xenaksys.szcore.event.IncomingOscEvent;
-import com.xenaksys.szcore.event.InstrumentEvent;
-import com.xenaksys.szcore.event.MusicEvent;
-import com.xenaksys.szcore.event.MusicEventType;
-import com.xenaksys.szcore.event.OscEvent;
-import com.xenaksys.szcore.event.OscEventType;
-import com.xenaksys.szcore.event.ParticipantEvent;
-import com.xenaksys.szcore.event.ParticipantStatsEvent;
-import com.xenaksys.szcore.event.StopEvent;
-import com.xenaksys.szcore.event.TempoChangeEvent;
-import com.xenaksys.szcore.event.TimeSigChangeEvent;
-import com.xenaksys.szcore.event.WebClientInfoUpdateEvent;
-import com.xenaksys.szcore.event.WebScoreEvent;
+import com.xenaksys.szcore.event.gui.ClientEvent;
+import com.xenaksys.szcore.event.gui.ClientEventType;
+import com.xenaksys.szcore.event.gui.ErrorEvent;
+import com.xenaksys.szcore.event.gui.InstrumentEvent;
+import com.xenaksys.szcore.event.gui.ParticipantEvent;
+import com.xenaksys.szcore.event.gui.ParticipantStatsEvent;
+import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
+import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
+import com.xenaksys.szcore.event.music.MusicEvent;
+import com.xenaksys.szcore.event.music.MusicEventType;
+import com.xenaksys.szcore.event.music.StopEvent;
+import com.xenaksys.szcore.event.music.TimeSigChangeEvent;
+import com.xenaksys.szcore.event.osc.IncomingOscEvent;
+import com.xenaksys.szcore.event.osc.OscEvent;
+import com.xenaksys.szcore.event.osc.OscEventType;
+import com.xenaksys.szcore.event.osc.TempoChangeEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Participant;
 import com.xenaksys.szcore.model.Id;
@@ -27,6 +29,7 @@ import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.util.IpAddressValidator;
 import com.xenaksys.szcore.util.TimeUtil;
+import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,8 +69,8 @@ public class ClientEventProcessor implements Processor {
                 }
                 break;
             case CLIENT:
-                if((event instanceof ClientEvent)){
-                    processClientEvent((ClientEvent)event);
+                if ((event instanceof ClientEvent)) {
+                    processClientEvent((ClientEvent) event);
                 }
                 break;
             case MUSIC:
@@ -75,16 +78,19 @@ public class ClientEventProcessor implements Processor {
                     processMusicEvent((MusicEvent) event);
                 }
                 break;
-            case WEB_SCORE:
-                if ((event instanceof WebScoreEvent)) {
-                    processWebScoreEvent((WebScoreEvent) event);
+            case WEB_AUDIENCE:
+                if ((event instanceof WebAudienceEvent)) {
+                    processWebScoreEvent((WebAudienceEvent) event);
                 }
+                break;
+            case WEB_SCORE_IN:
+                processWebScoreInEvent((WebScoreInEvent) event);
                 break;
             case SCRIPTING_ENGINE:
                 //TODO
                 break;
             default:
-                LOG.error("process event: Unknown event type: " + type);
+                LOG.error("process SzcoreEvent: Unknown event type: " + type);
         }
     }
 
@@ -107,8 +113,11 @@ public class ClientEventProcessor implements Processor {
             case MUSIC:
                 processMusicEvent((MusicEvent) event, beatNo, tickNo);
                 break;
-            case WEB_SCORE:
-                processWebScoreEvent((WebScoreEvent) event, beatNo, tickNo);
+            case WEB_AUDIENCE:
+                processWebScoreEvent((WebAudienceEvent) event, beatNo, tickNo);
+                break;
+            case WEB_SCORE_IN:
+                processWebScoreInEvent((WebScoreInEvent) event);
                 break;
             case SCRIPTING_ENGINE:
                 //TODO
@@ -137,7 +146,7 @@ public class ClientEventProcessor implements Processor {
         }
     }
 
-    private void processWebScoreEvent(WebScoreEvent event, int beatNo, int tickNo) {
+    private void processWebScoreEvent(WebAudienceEvent event, int beatNo, int tickNo) {
 
     }
 
@@ -167,14 +176,18 @@ public class ClientEventProcessor implements Processor {
     public void processTransportTickEvent(Id transportId, int beatNo, int baseBeatNo, int tickNo) {
 
     }
+
     private void processMusicEvent(MusicEvent event) {
         LOG.debug("Received score MUSIC event: " + event);
     }
 
-    private void processWebScoreEvent(WebScoreEvent event) {
-        LOG.debug("Received WebScore MUSIC event: " + event);
+    private void processWebScoreEvent(WebAudienceEvent event) {
+        LOG.debug("Received WebAudienceScore MUSIC event: " + event);
     }
 
+    private void processWebScoreInEvent(WebScoreInEvent event) {
+        LOG.debug("Received WebScoreInEvent MUSIC event: " + event);
+    }
 
     private void processScoreOscEvent(OscEvent event) {
         LOG.debug("Received score OSC event: " + event);
@@ -182,7 +195,7 @@ public class ClientEventProcessor implements Processor {
 
     private void processClientEvent(ClientEvent event) {
         ClientEventType type = event.getClientEventType();
-        switch (type){
+        switch (type) {
             case PARTICIPANT:
                 processParticipantEvent((ParticipantEvent) event);
                 break;
@@ -195,19 +208,29 @@ public class ClientEventProcessor implements Processor {
             case ERROR:
                 processErrorEvent((ErrorEvent) event);
                 break;
-            case WEB_CLIENT_INFOS:
-                processWebClientInfoEvent((WebClientInfoUpdateEvent) event);
+            case WEB_AUDIENCE_CLIENT_INFOS:
+                processWebAudienceClientInfoEvent((WebAudienceClientInfoUpdateEvent) event);
+                break;
+            case WEB_SCORE_CLIENT_INFOS:
+                processWebScoreClientInfoEvent((WebScoreClientInfoUpdateEvent) event);
                 break;
             default:
                 LOG.error("processClientEvent: Unknown event type: " + type);
         }
     }
 
-    private void processWebClientInfoEvent(WebClientInfoUpdateEvent event) {
+    private void processWebAudienceClientInfoEvent(WebAudienceClientInfoUpdateEvent event) {
         if (event == null) {
             return;
         }
-        client.processWebClientInfos(event);
+        client.processWebAudienceClientInfos(event);
+    }
+
+    private void processWebScoreClientInfoEvent(WebScoreClientInfoUpdateEvent event) {
+        if (event == null) {
+            return;
+        }
+        client.processWebScoreClientInfos(event);
     }
 
     private void processErrorEvent(ErrorEvent event) {
@@ -268,12 +291,11 @@ public class ClientEventProcessor implements Processor {
         participant.setPortErr(event.getPortErr());
         participant.setPing(event.getPing());
         participant.setInstrument(event.getInstrument());
-
         client.addParticipant(participant);
     }
 
     private void processParticipantStatsEvent(ParticipantStatsEvent event) {
-        if (event == null){
+        if (event == null) {
             return;
         }
 
@@ -282,25 +304,28 @@ public class ClientEventProcessor implements Processor {
             LOG.error("Can not find participant for event: " + event);
             return;
         }
+        Platform.runLater(() -> {
+            participant.setPing(event.getOneWayPingLatencyMillis());
+            participant.setExpired(event.isExpired());
+            String pingPeriod = TimeUtil.formatPeriod(event.getLastPingMillis());
+            participant.setLastPingTime(pingPeriod);
+        });
 
-        participant.setPing(event.getOneWayPingLatencyMillis());
-        participant.setExpired(event.isExpired());
-        String pingPeriod = TimeUtil.formatPeriod(event.getLastPingMillis());
-        participant.setLastPingTime(pingPeriod);
     }
 
     private void processInstrumentEvent(InstrumentEvent event) {
 
         String hostAddress = event.getHostAddress();
         Participant participant = client.getParticipant(hostAddress, event.getPort());
-        if(participant == null){
+        if (participant == null) {
             LOG.error("Failed to find participant for event: " + event);
             return;
         }
 
         String instrument = event.getInstrument();
-        participant.setInstrument(instrument);
-
+        Platform.runLater(() -> {
+            participant.setInstrument(instrument);
+        });
     }
 
 }

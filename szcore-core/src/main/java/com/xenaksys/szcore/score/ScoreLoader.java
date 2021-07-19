@@ -18,7 +18,7 @@ import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.IntId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StrId;
-import com.xenaksys.szcore.score.web.WebScoreScript;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
 import com.xenaksys.szcore.scripting.ScriptingEngineScript;
 import com.xenaksys.szcore.util.FileUtil;
 import com.xenaksys.szcore.util.ParseUtil;
@@ -37,7 +37,7 @@ import static com.xenaksys.szcore.score.ResourceType.JAVASCRIPT;
 import static com.xenaksys.szcore.score.ResourceType.MAXMSP;
 import static com.xenaksys.szcore.score.ResourceType.SCRIPT_ENGINE;
 import static com.xenaksys.szcore.score.ResourceType.TRANSITION;
-import static com.xenaksys.szcore.score.ResourceType.WEB;
+import static com.xenaksys.szcore.score.ResourceType.WEB_AUDIENCE;
 
 
 public class ScoreLoader {
@@ -181,8 +181,8 @@ public class ScoreLoader {
             case TRANSITION:
                 processTransitionScoreElement(scoreElement, score, resource, scoreId);
                 break;
-            case WEB:
-                processWebScoreElement(scoreElement, score, resource, scoreId);
+            case WEB_AUDIENCE:
+                processWebAudienceElement(scoreElement, score, resource, scoreId);
                 break;
             case MAXMSP:
                 processMaxMspScoreElement(scoreElement, score, resource, scoreId);
@@ -207,7 +207,7 @@ public class ScoreLoader {
         } else if (resource.startsWith(RESOURCE_TRANSITION)) {
             return TRANSITION;
         } else if (resource.startsWith(RESOURCE_WEB)) {
-            return WEB;
+            return WEB_AUDIENCE;
         } else if (resource.startsWith(RESOURCE_MAXMSP)) {
             return MAXMSP;
         } else if (resource.startsWith(RESOURCE_SCRIPT_ENGINE)) {
@@ -437,7 +437,7 @@ public class ScoreLoader {
         score.addScript(scriptObj);
     }
 
-    private static void processWebScoreElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) throws Exception {
+    private static void processWebAudienceElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) throws Exception {
         String instrumentName = scoreElement.getInstrumentName();
         StrId instrumentId = new StrId(instrumentName);
 
@@ -529,7 +529,7 @@ public class ScoreLoader {
 
         script = ParseUtil.parseToken(script, COMMA_TOKEN, COMMA);
 
-        Script scriptObj = new WebScoreScript(id, beatId, script, isResetPoint, isResetOnly);
+        Script scriptObj = new WebAudienceScoreScript(id, beatId, script, isResetPoint, isResetOnly);
         LOG.info("Created script: {}", scriptObj);
         score.addScript(scriptObj);
     }

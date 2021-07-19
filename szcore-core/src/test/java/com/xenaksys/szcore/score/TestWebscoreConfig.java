@@ -4,12 +4,12 @@ import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.algo.MultiIntRange;
 import com.xenaksys.szcore.algo.SequentalIntRange;
 import com.xenaksys.szcore.model.ScriptPreset;
-import com.xenaksys.szcore.score.web.WebscorePageRangeAssignmentType;
-import com.xenaksys.szcore.score.web.config.WebGranulatorConfig;
-import com.xenaksys.szcore.score.web.config.WebSpeechSynthConfig;
-import com.xenaksys.szcore.score.web.config.WebscoreConfig;
-import com.xenaksys.szcore.score.web.config.WebscoreConfigLoader;
-import com.xenaksys.szcore.score.web.config.WebscorePageRangeConfig;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScorePageRangeAssignmentType;
+import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
+import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
+import com.xenaksys.szcore.score.web.audience.config.WebscoreConfig;
+import com.xenaksys.szcore.score.web.audience.config.WebscoreConfigLoader;
+import com.xenaksys.szcore.score.web.audience.config.WebscorePageRangeConfig;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,7 +73,7 @@ public class TestWebscoreConfig {
         assertEquals(8, webscorePageRangeConfigs.size());
 
         WebscorePageRangeConfig first = webscorePageRangeConfigs.get(0);
-        assertEquals(WebscorePageRangeAssignmentType.SEQ, first.getAssignmentType());
+        assertEquals(WebAudienceScorePageRangeAssignmentType.SEQ, first.getAssignmentType());
         assertEquals(new Integer(1), first.getTileRow());
         IntRange pageRange = new SequentalIntRange(1, 8);
         List<IntRange> rngs = new ArrayList<>();
@@ -83,7 +83,7 @@ public class TestWebscoreConfig {
         assertEquals(multiIntRange, first.getPageRange());
 
         WebscorePageRangeConfig last = webscorePageRangeConfigs.get(7);
-        assertEquals(WebscorePageRangeAssignmentType.RND, last.getAssignmentType());
+        assertEquals(WebAudienceScorePageRangeAssignmentType.RND, last.getAssignmentType());
         assertEquals(new Integer(8), last.getTileRow());
         pageRange = last.getPageRange();
         assertEquals(3 * 8, pageRange.getSize());

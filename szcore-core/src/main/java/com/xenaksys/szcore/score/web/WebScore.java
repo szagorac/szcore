@@ -10,7 +10,11 @@ import com.xenaksys.szcore.event.osc.PageDisplayEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.model.Clock;
+import com.xenaksys.szcore.model.Instrument;
+import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.Tempo;
+import com.xenaksys.szcore.model.Transport;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.score.BasicScore;
@@ -227,6 +231,7 @@ public class WebScore {
         partInfo.setImgDir(imgDir);
         partInfo.setImgPageNameToken(imgPageNameToken);
         partInfo.setImgContPageName(imgContPageName);
+        partInfo.setContPageNo(Consts.CONTINUOUS_PAGE_NO);
         scoreState.setPartInfo(partInfo);
         scoreProcessor.sendWebScoreState(clientInfo.getClientAddr(), WebScoreTargetType.HOST, scoreState);
     }

@@ -10,6 +10,7 @@ public class WebPartInfo {
     private String imgDir;
     private String imgPageNameToken;
     private String imgContPageName;
+    private int contPageNo;
 
     public String getName() {
         return name;
@@ -49,5 +50,13 @@ public class WebPartInfo {
 
     public void setImgContPageName(String imgContPageName) {
         this.imgContPageName = imgContPageName;
+    }
+
+    public int getContPageNo() {
+        return contPageNo;
+    }
+
+    public void setContPageNo(int contPageNo) {
+        this.contPageNo = contPageNo;
     }
 }

@@ -5,11 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.InterfaceAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -50,6 +46,8 @@ public class NetUtil {
             for (InterfaceAddress ia : addrs) {
                 InetAddress inetAddress = ia.getAddress();
                 if (inetAddress instanceof Inet4Address) {
+                    return inetAddress;
+                } else if (inetAddress instanceof Inet6Address){
                     return inetAddress;
                 }
             }

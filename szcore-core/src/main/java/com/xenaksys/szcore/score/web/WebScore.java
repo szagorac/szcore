@@ -8,13 +8,10 @@ import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.event.osc.OscEventType;
 import com.xenaksys.szcore.event.osc.PageDisplayEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
+import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
-import com.xenaksys.szcore.model.Clock;
-import com.xenaksys.szcore.model.Instrument;
-import com.xenaksys.szcore.model.Page;
-import com.xenaksys.szcore.model.Tempo;
-import com.xenaksys.szcore.model.Transport;
+import com.xenaksys.szcore.model.*;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.score.BasicScore;
@@ -293,7 +290,57 @@ public class WebScore {
         }
     }
 
+    public void processPartReady(WebScorePartReadyEvent event) {
+        try {
+            String clientId = event.getSourceAddr();
+            WebClientInfo clientInfo = clients.get(clientId);
+            if (clientInfo == null) {
+                LOG.error("processPartReady: Unknown client: {}", clientId);
+                return;
+            }
+            clientInfo.setReady(true);
+            String instrument = event.getPart();
+            if (instrument == null) {
+                return;
+            }
+            WebClientInfo instrumentClient = getInstrumentClient(instrument, clientId);
+            if(instrumentClient == null) {
+                LOG.error("processPartReady: Can not find instrument client");
+                addInstrumentClient(clientInfo);
+                instrumentClient = clientInfo;
+            }
+            instrumentClient.setReady(true);
+        } catch (Exception e) {
+            LOG.error("processPartRegistration: failed to process part registration", e);
+        }
+    }
+
+    public WebClientInfo getInstrumentClient(String instrument, String addr) {
+        if(instrument == null || addr == null) {
+            return null;
+        }
+        List<WebClientInfo> clients = instrumentClients.get(instrument);
+        for (WebClientInfo clientInfo : clients) {
+            if(addr.equals(clientInfo.getClientAddr())) {
+                return clientInfo;
+            }
+        }
+        return null;
+    }
+
     public boolean isDestination(String destination) {
         return clients.containsKey(destination) || instrumentClients.containsKey(destination) || Consts.ALL_DESTINATIONS.equals(destination);
+    }
+
+    public boolean isReady() {
+        for(String id : instrumentClients.keySet()) {
+            List<WebClientInfo> clientInfos = instrumentClients.get(id);
+            for(WebClientInfo clientInfo : clientInfos) {
+                if (!clientInfo.isReady()) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

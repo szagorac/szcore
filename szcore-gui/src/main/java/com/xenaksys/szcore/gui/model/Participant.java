@@ -1,16 +1,7 @@
 package com.xenaksys.szcore.gui.model;
 
 import com.xenaksys.szcore.Consts;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 
 import java.net.InetAddress;
 import java.util.Objects;
@@ -27,6 +18,7 @@ public class Participant {
     private BooleanProperty expired = new SimpleBooleanProperty(false);
     private StringProperty lastPingTime = new SimpleStringProperty(Consts.EMPTY);
     private BooleanProperty webClient = new SimpleBooleanProperty(false);
+    private BooleanProperty isReady = new SimpleBooleanProperty(false);
 
     public InetAddress getInetAddress() {
         return inetAddress.get();
@@ -154,6 +146,18 @@ public class Participant {
 
     public void setWebClient(boolean webClient) {
         this.webClient.set(webClient);
+    }
+
+    public boolean getIsReady() {
+        return isReady.get();
+    }
+
+    public BooleanProperty readyProperty() {
+        return isReady;
+    }
+
+    public void setIsReady(boolean isReady) {
+        this.isReady.set(isReady);
     }
 
     @Override

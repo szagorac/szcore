@@ -5,75 +5,15 @@ import com.xenaksys.szcore.event.gui.ParticipantEvent;
 import com.xenaksys.szcore.event.gui.ParticipantStatsEvent;
 import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
-import com.xenaksys.szcore.event.music.ModWindowEvent;
-import com.xenaksys.szcore.event.music.PrecountBeatSetupEvent;
-import com.xenaksys.szcore.event.music.PrepStaveChangeEvent;
-import com.xenaksys.szcore.event.music.StopEvent;
-import com.xenaksys.szcore.event.music.TimeSigChangeEvent;
-import com.xenaksys.szcore.event.music.TransitionEvent;
-import com.xenaksys.szcore.event.music.TransportPositionEvent;
-import com.xenaksys.szcore.event.osc.AddPartsEvent;
-import com.xenaksys.szcore.event.osc.BeatScriptEvent;
-import com.xenaksys.szcore.event.osc.DateTickEvent;
-import com.xenaksys.szcore.event.osc.ElementAlphaEvent;
-import com.xenaksys.szcore.event.osc.ElementColorEvent;
-import com.xenaksys.szcore.event.osc.ElementSelectedAudienceEvent;
-import com.xenaksys.szcore.event.osc.ElementYPositionEvent;
-import com.xenaksys.szcore.event.osc.HelloEvent;
-import com.xenaksys.szcore.event.osc.InstrumentResetSlotsEvent;
-import com.xenaksys.szcore.event.osc.InstrumentSlotsEvent;
-import com.xenaksys.szcore.event.osc.OscEvent;
-import com.xenaksys.szcore.event.osc.OscScriptEvent;
-import com.xenaksys.szcore.event.osc.OscStaveActivateEvent;
-import com.xenaksys.szcore.event.osc.OscStaveTempoEvent;
-import com.xenaksys.szcore.event.osc.OscStopEvent;
-import com.xenaksys.szcore.event.osc.PageDisplayEvent;
-import com.xenaksys.szcore.event.osc.PageMapDisplayEvent;
-import com.xenaksys.szcore.event.osc.PartEvent;
-import com.xenaksys.szcore.event.osc.PingEvent;
-import com.xenaksys.szcore.event.osc.PrecountBeatOffEvent;
-import com.xenaksys.szcore.event.osc.PrecountBeatOnEvent;
-import com.xenaksys.szcore.event.osc.ResetInstrumentEvent;
-import com.xenaksys.szcore.event.osc.ResetScoreEvent;
-import com.xenaksys.szcore.event.osc.ResetStavesEvent;
-import com.xenaksys.szcore.event.osc.SendServerIpBroadcastEvent;
-import com.xenaksys.szcore.event.osc.ServerHelloEvent;
-import com.xenaksys.szcore.event.osc.StaveActiveChangeEvent;
-import com.xenaksys.szcore.event.osc.StaveClockTickEvent;
-import com.xenaksys.szcore.event.osc.StaveDateTickEvent;
-import com.xenaksys.szcore.event.osc.StaveDyTickEvent;
-import com.xenaksys.szcore.event.osc.StaveStartMarkEvent;
-import com.xenaksys.szcore.event.osc.StaveYPositionEvent;
-import com.xenaksys.szcore.event.osc.TempoChangeEvent;
-import com.xenaksys.szcore.event.osc.TitleEvent;
-import com.xenaksys.szcore.event.osc.TransitionScriptEvent;
+import com.xenaksys.szcore.event.music.*;
+import com.xenaksys.szcore.event.osc.*;
 import com.xenaksys.szcore.event.script.ScriptingEngineEvent;
 import com.xenaksys.szcore.event.script.ScriptingEngineResetEvent;
-import com.xenaksys.szcore.event.web.audience.UpdateWebAudienceConnectionsEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudiencePlayTilesEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudiencePrecountEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceRequestLogEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceResetEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceSelectTilesEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceStateUpdateEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceStopEvent;
-import com.xenaksys.szcore.event.web.audience.WebPollAudienceEvent;
-import com.xenaksys.szcore.event.web.audience.WebStartAudienceEvent;
-import com.xenaksys.szcore.event.web.in.UpdateWebScoreConnectionsEvent;
-import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
-import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
-import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
+import com.xenaksys.szcore.event.web.audience.*;
+import com.xenaksys.szcore.event.web.in.*;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
-import com.xenaksys.szcore.model.HistoBucketView;
-import com.xenaksys.szcore.model.Id;
-import com.xenaksys.szcore.model.Page;
-import com.xenaksys.szcore.model.Stave;
-import com.xenaksys.szcore.model.Tempo;
-import com.xenaksys.szcore.model.TimeSignature;
-import com.xenaksys.szcore.model.Transition;
+import com.xenaksys.szcore.model.*;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
@@ -429,6 +369,10 @@ public class EventFactory {
 
     public WebScorePartRegEvent createWebScorePartRegEvent(String eventId, String sourceAddr, String part, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
         return new WebScorePartRegEvent(eventId, sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    }
+
+    public WebScorePartReadyEvent createWebScorePartReadyEvent(String eventId, String sourceAddr, String part, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new WebScorePartReadyEvent(eventId, sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
     public List<Object> createJavaScriptArgs() {

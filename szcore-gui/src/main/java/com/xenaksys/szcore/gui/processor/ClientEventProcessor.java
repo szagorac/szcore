@@ -2,14 +2,7 @@ package com.xenaksys.szcore.gui.processor;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventType;
-import com.xenaksys.szcore.event.gui.ClientEvent;
-import com.xenaksys.szcore.event.gui.ClientEventType;
-import com.xenaksys.szcore.event.gui.ErrorEvent;
-import com.xenaksys.szcore.event.gui.InstrumentEvent;
-import com.xenaksys.szcore.event.gui.ParticipantEvent;
-import com.xenaksys.szcore.event.gui.ParticipantStatsEvent;
-import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
-import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
+import com.xenaksys.szcore.event.gui.*;
 import com.xenaksys.szcore.event.music.MusicEvent;
 import com.xenaksys.szcore.event.music.MusicEventType;
 import com.xenaksys.szcore.event.music.StopEvent;
@@ -291,6 +284,7 @@ public class ClientEventProcessor implements Processor {
         participant.setPortErr(event.getPortErr());
         participant.setPing(event.getPing());
         participant.setInstrument(event.getInstrument());
+        participant.setIsReady(true); //assumes Inscore client - web clients added in WebscoreClientInfoUpdateEvent
         client.addParticipant(participant);
     }
 

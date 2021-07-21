@@ -13,8 +13,9 @@ public class ParticipantEvent extends ClientEvent {
     private final int portErr;
     private final int ping;
     private final String instrument;
+    private final boolean isReady;
 
-    public ParticipantEvent(InetAddress inetAddress, String hostAddress, int portIn, int portOut, int portErr, int ping, String instrument, long time) {
+    public ParticipantEvent(InetAddress inetAddress, String hostAddress, int portIn, int portOut, int portErr, int ping, String instrument, boolean isReady, long time) {
         super(time);
         this.inetAddress = inetAddress;
         this.hostAddress = hostAddress;
@@ -23,6 +24,7 @@ public class ParticipantEvent extends ClientEvent {
         this.portErr = portErr;
         this.ping = ping;
         this.instrument = instrument;
+        this.isReady = isReady;
     }
 
     public InetAddress getInetAddress() {
@@ -53,6 +55,10 @@ public class ParticipantEvent extends ClientEvent {
         return instrument;
     }
 
+    public boolean isReady() {
+        return isReady;
+    }
+
     @Override
     public ClientEventType getClientEventType() {
         return ClientEventType.PARTICIPANT;
@@ -69,6 +75,7 @@ public class ParticipantEvent extends ClientEvent {
                 ", portErr=" + portErr +
                 ", ping=" + ping +
                 ", instrument='" + instrument + '\'' +
+                ", isReady='" + isReady + '\'' +
                 '}';
     }
 

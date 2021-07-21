@@ -273,6 +273,10 @@ public interface Consts {
     String NAME_EVENT_OSC_ARGS = "arguments: ";
     String NAME_EVENT_OSC_IN = "Event type: OSC In, ";
     String NAME_NA = "N/A";
+    String NAME_YES = "Y";
+    String NAME_NO = "N";
+    String NAME_WEB = "Web";
+    String NAME_INSCORE = "InScore";
 
     String WEB_ROOT = "webRoot";
     int WEB_METADATA_CACHE_SIZE = 200;

@@ -47,6 +47,8 @@ public interface ZsWebServer {
 
     void banWebClient(WebClientInfo clientInfo);
 
+    void banWebClient(String host);
+
     boolean isSourceAddrBanned(String sourceAddr);
 
     boolean isHostBanned(String host);

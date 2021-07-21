@@ -9,7 +9,17 @@ import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Participant;
 import com.xenaksys.szcore.gui.model.WebscoreInstructions;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.model.Bar;
+import com.xenaksys.szcore.model.Beat;
+import com.xenaksys.szcore.model.Clock;
+import com.xenaksys.szcore.model.EventService;
+import com.xenaksys.szcore.model.Id;
+import com.xenaksys.szcore.model.Instrument;
+import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.Score;
+import com.xenaksys.szcore.model.ScoreService;
+import com.xenaksys.szcore.model.Tempo;
+import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.id.BarId;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
@@ -22,7 +32,19 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.Slider;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
@@ -32,7 +54,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.InetAddress;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import static com.xenaksys.szcore.Consts.EMPTY;
 
@@ -55,6 +83,10 @@ public class ScoreController {
     private Button sendPartsBtn;
     @FXML
     private Button sendSelectedPartsBtn;
+    @FXML
+    private Button disconnectSelectedParticipantsBtn;
+    @FXML
+    private Button banSelectedParticipantsBtn;
     @FXML
     private Button scorePlayBtn;
     @FXML
@@ -86,7 +118,7 @@ public class ScoreController {
     @FXML
     private TableColumn<Participant, Boolean> selectColumn;
     @FXML
-    private TableColumn<Participant, Boolean> webClientColumn;
+    private TableColumn<Participant, Boolean> isWebClientColumn;
     @FXML
     private TableColumn<Participant, Boolean> readyColumn;
     @FXML
@@ -486,7 +518,8 @@ public class ScoreController {
     @FXML
     private void initialize() {
 
-        participantsTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        participantsTableView.setSelectionModel(null);
+        participantsTableView.setEditable(true);
 
         hostAddressColumn.setCellValueFactory(cellData -> cellData.getValue().getHostAddressProperty());
         inPortColumn.setCellValueFactory(cellData -> cellData.getValue().getPortInProperty().asObject());
@@ -498,14 +531,13 @@ public class ScoreController {
         expiredColumn.setCellValueFactory(cellData -> cellData.getValue().getLastPingMillisProperty());
         selectColumn.setCellFactory(CheckBoxTableCell.forTableColumn(selectColumn));
         selectColumn.setEditable(true);
-        participantsTableView.setEditable(true);
 
-        webClientColumn.setCellValueFactory(cellData -> cellData.getValue().webClientProperty());
-        webClientColumn.setCellFactory(col -> new TableCell<Participant, Boolean>() {
+        isWebClientColumn.setCellValueFactory(cellData -> cellData.getValue().isWebClientProperty());
+        isWebClientColumn.setCellFactory(col -> new TableCell<Participant, Boolean>() {
             @Override
             protected void updateItem(Boolean item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty ? null : item ? "Y" : "N");
+                setText(empty ? null : item ? Consts.NAME_WEB : Consts.NAME_INSCORE);
             }
         });
 
@@ -515,6 +547,18 @@ public class ScoreController {
             protected void updateItem(Boolean item, boolean empty) {
                 super.updateItem(item, empty);
                 setText(empty ? null : item ? "Y" : "N");
+                if (item == null || empty) {
+                    setText(EMPTY);
+                    setStyle(EMPTY);
+                } else if (item) {
+                    setText(Consts.NAME_YES);
+                    setStyle(EMPTY);
+                    setTextFill(Color.CHOCOLATE);
+                } else {
+                    setText(Consts.NAME_NO);
+                    setTextFill(Color.BLACK);
+                    setStyle("-fx-background-color: red");
+                }
             }
         });
 
@@ -632,6 +676,30 @@ public class ScoreController {
 
         for (Participant participant : selectedParticipants) {
             sendAddParts(participant, instrumentsCsv);
+        }
+    }
+
+    @FXML
+    private void disconnectSelectedParticipants(ActionEvent event) {
+        ObservableList<Participant> selectedParticipants = getSelectedParticipants();
+        if (selectedParticipants == null) {
+            return;
+        }
+
+        for (Participant participant : selectedParticipants) {
+            disconnectParticipant(participant);
+        }
+    }
+
+    @FXML
+    private void banSelectedParticipants(ActionEvent event) {
+        ObservableList<Participant> selectedParticipants = getSelectedParticipants();
+        if (selectedParticipants == null) {
+            return;
+        }
+
+        for (Participant participant : selectedParticipants) {
+            banParticipant(participant);
         }
     }
 
@@ -987,13 +1055,37 @@ public class ScoreController {
     }
 
     private void sendAddParts(Participant participant, String instrumentsCsv) {
-        if (participant == null || instrumentsCsv == null || instrumentsCsv.length() < 1 || participant.isWebClient()) {
+        if (participant == null || instrumentsCsv == null || instrumentsCsv.length() < 1 || participant.getIsWebClient()) {
             return;
         }
         EventFactory eventFactory = publisher.getEventFactory();
         String destination = NetUtil.createClientId(participant.getHostAddress(), participant.getPortIn());
         AddPartsEvent addPartsEvent = eventFactory.createAddPartsEvent(instrumentsCsv, destination, clock.getSystemTimeMillis());
         publisher.publish(addPartsEvent);
+    }
+
+    private void disconnectParticipant(Participant participant) {
+        if (participant == null) {
+            return;
+        }
+        if (!participant.getIsWebClient()) {
+            return;
+        }
+        String clientId = NetUtil.createClientId(participant.getHostAddress(), participant.getPortIn());
+        List<String> connectionIds = Collections.singletonList(clientId);
+        scoreService.closeScoreConnections(connectionIds);
+    }
+
+    private void banParticipant(Participant participant) {
+        if (participant == null) {
+            return;
+        }
+        if (!participant.getIsWebClient()) {
+            return;
+        }
+        String host = participant.getHostAddress();
+        scoreService.banConnection(host);
+        disconnectParticipant(participant);
     }
 
     private void sendServerIpBroadcast(String serverIp) {

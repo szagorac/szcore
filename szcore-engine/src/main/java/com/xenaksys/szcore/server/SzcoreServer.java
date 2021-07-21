@@ -15,8 +15,21 @@ import com.xenaksys.szcore.event.osc.ServerHelloEvent;
 import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
+import com.xenaksys.szcore.model.BeatTimeStrategy;
+import com.xenaksys.szcore.model.ClientInfo;
+import com.xenaksys.szcore.model.Clock;
+import com.xenaksys.szcore.model.EventService;
+import com.xenaksys.szcore.model.Id;
+import com.xenaksys.szcore.model.OscPublisher;
+import com.xenaksys.szcore.model.Scheduler;
+import com.xenaksys.szcore.model.Score;
+import com.xenaksys.szcore.model.ScoreProcessor;
+import com.xenaksys.szcore.model.ScoreService;
+import com.xenaksys.szcore.model.SzcoreEvent;
+import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.Timer;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.model.WaitStrategy;
+import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.model.id.OscListenerId;
 import com.xenaksys.szcore.net.ParticipantStats;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
@@ -46,13 +59,23 @@ import com.xenaksys.szcore.time.clock.MutableNanoClock;
 import com.xenaksys.szcore.time.waitstrategy.BlockingWaitStrategy;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
-import com.xenaksys.szcore.web.*;
+import com.xenaksys.szcore.web.WebClientInfo;
+import com.xenaksys.szcore.web.WebConnection;
+import com.xenaksys.szcore.web.WebProcessor;
+import com.xenaksys.szcore.web.WebScoreStateListener;
+import com.xenaksys.szcore.web.ZsWebRequest;
+import com.xenaksys.szcore.web.ZsWebResponse;
 import org.apache.commons.net.util.SubnetUtils;
 
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -326,6 +349,14 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         return participants.keySet();
     }
 
+    public ClientInfo removeParticipant(String id) {
+        return participants.remove(id);
+    }
+
+    public ParticipantStats removeParticipantStats(String id) {
+        return participantStats.remove(id);
+    }
+
     public void sendHello(String clientId) {
         HelloEvent helloEvent = eventFactory.createHelloEvent(clientId, 0L);
         oscEventPublisher.process(helloEvent);
@@ -496,7 +527,22 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
     @Override
     public void banWebClient(WebClientInfo clientInfo) {
-        audienceWebServer.banWebClient(clientInfo);
+        if (audienceWebServer != null) {
+            audienceWebServer.banWebClient(clientInfo);
+        }
+        if (scoreWebServer != null) {
+            scoreWebServer.banWebClient(clientInfo);
+        }
+    }
+
+    @Override
+    public void banConnection(String clientId) {
+        if (audienceWebServer != null) {
+            audienceWebServer.banWebClient(clientId);
+        }
+        if (scoreWebServer != null) {
+            scoreWebServer.banWebClient(clientId);
+        }
     }
 
     @Override
@@ -511,6 +557,10 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     public void closeScoreConnections(List<String> connectionIds) {
         if (scoreWebServer == null) {
             return;
+        }
+        for (String connection : connectionIds) {
+            removeParticipant(connection);
+            removeParticipantStats(connection);
         }
         scoreWebServer.closeConnections(connectionIds);
     }
@@ -535,7 +585,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
             if (!participants.containsKey(clientId)) {
                 addParticipant(clientId, inetAddress, port);
                 ParticipantEvent participantEvent = eventFactory.createParticipantEvent(inetAddress, ipAddress, port, 0,
-                        0, 0, Consts.NAME_NA, clock.getSystemTimeMillis());
+                        0, 0, Consts.NAME_NA, clientInfo.isReady(), clock.getSystemTimeMillis());
                 eventProcessor.notifyListeners(participantEvent);
             }
 

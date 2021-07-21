@@ -119,6 +119,8 @@ public interface ScoreService {
 
     void banWebClient(WebClientInfo clientInfo);
 
+    void banConnection(String clientId);
+
     void onIncomingWebScoreEvent(WebScoreInEvent webEvent);
 
     void pushToScoreWeb(String target, WebScoreTargetType targetType, String data);

@@ -173,7 +173,7 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
         server.sendServerHelloEvent(clientId);
 
         ParticipantEvent participantEvent = eventFactory.createParticipantEvent(inetAddress, inetAddress.getHostAddress(), remoteInPort, remoteOutPort,
-                remoteErrPort, 0, Consts.NAME_NA, clock.getSystemTimeMillis());
+                remoteErrPort, 0, Consts.NAME_NA, false, clock.getSystemTimeMillis());
 
         notifyListeners(participantEvent);
     }
@@ -267,7 +267,7 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
         server.sendHello(clientId);
 
         ParticipantEvent participantEvent = eventFactory.createParticipantEvent(inetAddress, inetAddress.getHostAddress(), clientInPort, clientOutPort,
-                0, 0, Consts.NAME_NA, clock.getSystemTimeMillis());
+                0, 0, Consts.NAME_NA, false, clock.getSystemTimeMillis());
 
         notifyListeners(participantEvent);
     }
@@ -442,6 +442,9 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
     }
 
     public void expireParticipant(ParticipantStats stats, ClientInfo clientInfo, long lastPingMillis) {
+        if (stats == null || clientInfo == null) {
+            return;
+        }
         ParticipantStatsEvent statsEvent = eventFactory.createParticipantStatsEvent(clientInfo.getAddr(), clientInfo.getHost(),
                 clientInfo.getPort(), stats.getPingLatency(), stats.getOneWayPingLatency(), true, lastPingMillis, clock.getSystemTimeMillis());
         notifyListeners(statsEvent);

@@ -292,6 +292,7 @@ public class ClientEventProcessor implements Processor {
         participant.setPing(event.getPing());
         participant.setInstrument(event.getInstrument());
         participant.setIsReady(event.isReady());
+        participant.setBanned(event.isBanned());
         client.addParticipant(participant);
     }
 

@@ -106,10 +106,6 @@ public class ScoreController {
     @FXML
     private TableColumn<Participant, Integer> inPortColumn;
     @FXML
-    private TableColumn<Participant, Integer> outPortColumn;
-    @FXML
-    private TableColumn<Participant, Integer> errPortColumn;
-    @FXML
     private TableColumn<Participant, Double> pingColumn;
     @FXML
     private TableColumn<Participant, String> instrumentColumn;
@@ -121,6 +117,8 @@ public class ScoreController {
     private TableColumn<Participant, Boolean> isWebClientColumn;
     @FXML
     private TableColumn<Participant, Boolean> readyColumn;
+    @FXML
+    private TableColumn<Participant, Boolean> bannedColumn;
     @FXML
     private Label pageNoLbl;
     @FXML
@@ -252,11 +250,13 @@ public class ScoreController {
         participants.addListener((ListChangeListener<Participant>) p -> {
             while (p.next()) {
                 if (p.wasUpdated()) {
-                    if(participants.get(p.getFrom()).getSelect()) {
+                    if (participants.get(p.getFrom()).getSelect()) {
                         selectedParticipants.add(participants.get(p.getFrom()));
                     } else {
                         selectedParticipants.remove(participants.get(p.getFrom()));
                     }
+                } else if (p.wasRemoved()) {
+                    selectedParticipants.remove(participants.get(p.getFrom()));
                 }
             }
         });
@@ -523,8 +523,6 @@ public class ScoreController {
 
         hostAddressColumn.setCellValueFactory(cellData -> cellData.getValue().getHostAddressProperty());
         inPortColumn.setCellValueFactory(cellData -> cellData.getValue().getPortInProperty().asObject());
-        outPortColumn.setCellValueFactory(cellData -> cellData.getValue().getPortOutProperty().asObject());
-        errPortColumn.setCellValueFactory(cellData -> cellData.getValue().getPortErrProperty().asObject());
         pingColumn.setCellValueFactory(cellData -> cellData.getValue().getPingProperty().asObject());
         instrumentColumn.setCellValueFactory(cellData -> cellData.getValue().getInstrumentProperty());
         selectColumn.setCellValueFactory(cellData -> cellData.getValue().getSelectProperty());
@@ -559,6 +557,15 @@ public class ScoreController {
                     setTextFill(Color.BLACK);
                     setStyle("-fx-background-color: red");
                 }
+            }
+        });
+
+        bannedColumn.setCellValueFactory(cellData -> cellData.getValue().bannedProperty());
+        bannedColumn.setCellFactory(col -> new TableCell<Participant, Boolean>() {
+            @Override
+            protected void updateItem(Boolean item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item ? Consts.NAME_YES : Consts.NAME_NO);
             }
         });
 
@@ -1083,9 +1090,10 @@ public class ScoreController {
         if (!participant.getIsWebClient()) {
             return;
         }
-        String host = participant.getHostAddress();
-        scoreService.banConnection(host);
-        disconnectParticipant(participant);
+        participant.setBanned(true);
+        String clientId = NetUtil.createClientId(participant.getHostAddress(), participant.getPortIn());
+        scoreService.banConnection(clientId);
+//        disconnectParticipant(participant);
     }
 
     private void sendServerIpBroadcast(String serverIp) {

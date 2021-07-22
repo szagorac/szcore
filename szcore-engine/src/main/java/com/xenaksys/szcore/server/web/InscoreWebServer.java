@@ -5,6 +5,7 @@ import com.xenaksys.szcore.server.web.handler.ZsHttpHandler;
 import com.xenaksys.szcore.server.web.handler.ZsSseConnection;
 import com.xenaksys.szcore.server.web.handler.ZsStaticPathHandler;
 import com.xenaksys.szcore.server.web.handler.ZsWsConnectionCallback;
+import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.web.WebConnection;
 import com.xenaksys.szcore.web.WebConnectionType;
 import io.undertow.Handlers;
@@ -145,17 +146,20 @@ public class InscoreWebServer extends BaseZsWebServer {
         }
     }
 
-    public void onWsChannelConnected(WebSocketChannel channel, WebSocketHttpExchange exchange) {
+    public boolean onWsChannelConnected(WebSocketChannel channel, WebSocketHttpExchange exchange) {
         if (channel == null) {
-            return;
+            return false;
         }
         try {
             String userAgent = exchange.getRequestHeader(WEB_HTTP_HEADER_USER_AGENT);
             SocketAddress sourceAddr = channel.getPeerAddress();
-            onConnection(sourceAddr.toString(), WebConnectionType.WS, userAgent, channel.isOpen());
+            String clientId = NetUtil.getClientId(sourceAddr);
+            onConnection(clientId, WebConnectionType.WS, userAgent, channel.isOpen());
         } catch (Exception e) {
             LOG.error("onWsChannelConnected: faled to process new Websocket connection", e);
+            return false;
         }
+        return true;
     }
 
     public void updateServerStatus() {
@@ -176,7 +180,7 @@ public class InscoreWebServer extends BaseZsWebServer {
         Set<WebSocketChannel> channels = wsHandler.getPeerConnections();
         for (WebSocketChannel c : channels) {
             SocketAddress socketAddress = c.getPeerAddress();
-            String clientAddr = socketAddress.toString();
+            String clientAddr = NetUtil.getClientId(socketAddress);
             WebConnection webConnection = new WebConnection(clientAddr, WebConnectionType.WS, c.isOpen());
             webConnections.add(webConnection);
         }

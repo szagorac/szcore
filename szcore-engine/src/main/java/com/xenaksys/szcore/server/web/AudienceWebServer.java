@@ -7,6 +7,7 @@ import com.xenaksys.szcore.server.web.handler.ZsSseConnectionCallback;
 import com.xenaksys.szcore.server.web.handler.ZsSseHandler;
 import com.xenaksys.szcore.server.web.handler.ZsStaticPathHandler;
 import com.xenaksys.szcore.server.web.handler.ZsWsConnectionCallback;
+import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.web.WebConnection;
 import com.xenaksys.szcore.web.WebConnectionType;
 import io.undertow.Handlers;
@@ -171,17 +172,20 @@ public class AudienceWebServer extends BaseZsWebServer {
     }
 
     @Override
-    public void onWsChannelConnected(WebSocketChannel channel, WebSocketHttpExchange exchange) {
-        if(channel == null) {
-            return;
+    public boolean onWsChannelConnected(WebSocketChannel channel, WebSocketHttpExchange exchange) {
+        if (channel == null) {
+            return false;
         }
         try {
             String userAgent = exchange.getRequestHeader(WEB_HTTP_HEADER_USER_AGENT);
             SocketAddress sourceAddr = channel.getPeerAddress();
-            onConnection(sourceAddr.toString(), WebConnectionType.WS, userAgent, channel.isOpen());
+            String clientId = NetUtil.getClientId(sourceAddr);
+            onConnection(clientId, WebConnectionType.WS, userAgent, channel.isOpen());
         } catch (Exception e) {
             LOG.error("onWsChannelConnected: failed to process new Websocket connection", e);
+            return false;
         }
+        return true;
     }
 
     @Override
@@ -204,7 +208,7 @@ public class AudienceWebServer extends BaseZsWebServer {
         Set<WebSocketChannel>  channels =  wsHandler.getPeerConnections();
         for (WebSocketChannel c : channels) {
             SocketAddress socketAddress = c.getPeerAddress();
-            String clientAddr = socketAddress.toString();
+            String clientAddr = NetUtil.getClientId(socketAddress);
             WebConnection webConnection = new WebConnection(clientAddr, WebConnectionType.WS, c.isOpen());
             webConnections.add(webConnection);
         }

@@ -33,7 +33,7 @@ public interface ZsWebServer {
 
     void pushToAll(String data);
 
-    void onWsChannelConnected(WebSocketChannel channel, WebSocketHttpExchange exchange);
+    boolean onWsChannelConnected(WebSocketChannel channel, WebSocketHttpExchange exchange);
 
     void updateServerStatus();
 

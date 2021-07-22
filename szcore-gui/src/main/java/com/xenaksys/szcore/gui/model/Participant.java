@@ -28,6 +28,7 @@ public class Participant {
     private StringProperty lastPingTime = new SimpleStringProperty(Consts.EMPTY);
     private BooleanProperty isWebClient = new SimpleBooleanProperty(false);
     private BooleanProperty isReady = new SimpleBooleanProperty(false);
+    private BooleanProperty banned = new SimpleBooleanProperty(false);
 
     public InetAddress getInetAddress() {
         return inetAddress.get();
@@ -167,6 +168,18 @@ public class Participant {
 
     public void setIsReady(boolean isReady) {
         this.isReady.set(isReady);
+    }
+
+    public boolean isBanned() {
+        return banned.get();
+    }
+
+    public BooleanProperty bannedProperty() {
+        return banned;
+    }
+
+    public void setBanned(boolean banned) {
+        this.banned.set(banned);
     }
 
     @Override

@@ -246,6 +246,7 @@ public class SzcoreClient extends Application {
             toUpdate.setPortOut(participant.getPortOut());
             toUpdate.setSelect(participant.getSelect());
             toUpdate.setIsReady(participant.getIsReady());
+            toUpdate.setBanned(participant.isBanned());
         });
 
     }
@@ -334,6 +335,7 @@ public class SzcoreClient extends Application {
             participant.setInstrument(instrument);
             participant.setIsWebClient(true);
             participant.setIsReady(clientInfo.isReady());
+            participant.setBanned(clientInfo.isBanned());
             addParticipant(participant);
         }
 

@@ -173,7 +173,7 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
         server.sendServerHelloEvent(clientId);
 
         ParticipantEvent participantEvent = eventFactory.createParticipantEvent(inetAddress, inetAddress.getHostAddress(), remoteInPort, remoteOutPort,
-                remoteErrPort, 0, Consts.NAME_NA, false, clock.getSystemTimeMillis());
+                remoteErrPort, 0, Consts.NAME_NA, false, false, clock.getSystemTimeMillis());
 
         notifyListeners(participantEvent);
     }
@@ -267,7 +267,7 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
         server.sendHello(clientId);
 
         ParticipantEvent participantEvent = eventFactory.createParticipantEvent(inetAddress, inetAddress.getHostAddress(), clientInPort, clientOutPort,
-                0, 0, Consts.NAME_NA, false, clock.getSystemTimeMillis());
+                0, 0, Consts.NAME_NA, false, false, clock.getSystemTimeMillis());
 
         notifyListeners(participantEvent);
     }
@@ -430,7 +430,8 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
     }
 
     private void addParticipant(String id, InetAddress address, int port) {
-        server.addParticipant(id, address, port);
+        String host = address.getHostName();
+        server.addParticipant(id, address, host, port);
     }
 
     private void addOutPort(String id, InetAddress address, int port) {

@@ -64,6 +64,7 @@ public interface Consts {
     String CSV_EXT = ".csv";
     String MINUTES_SHORT = "m";
     String SECONDS_SHORT = "s";
+    String LOCALHOST = "localhost";
 
     char MINUS_CHAR = '-';
     char DOT_CHAR = '.';

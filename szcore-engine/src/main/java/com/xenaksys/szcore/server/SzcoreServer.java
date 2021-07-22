@@ -314,7 +314,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         return participants.containsKey(clientId);
     }
 
-    public void addParticipant(String id, InetAddress addr, int port) {
+    public void addParticipant(String id, InetAddress addr, String host, int port) {
         if (id == null || addr == null) {
             return;
         }
@@ -323,7 +323,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
             return;
         }
 
-        ClientInfo info = new ClientInfo(id, addr, port);
+        ClientInfo info = new ClientInfo(id, addr, host, port);
         participants.put(id, info);
     }
 
@@ -537,12 +537,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
     @Override
     public void banConnection(String clientId) {
-        if (audienceWebServer != null) {
-            audienceWebServer.banWebClient(clientId);
-        }
-        if (scoreWebServer != null) {
-            scoreWebServer.banWebClient(clientId);
-        }
+        webProcessor.banClient(clientId);
     }
 
     @Override
@@ -568,13 +563,13 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     @Override
     public void onWebScorePing(WebClientInfo clientInfo, long serverTime, long eventTime) {
         try {
-            String ipAddress = clientInfo.getHost();
+            String host = clientInfo.getHost();
             String clientId = clientInfo.getClientAddr();
-            InetAddress inetAddress = InetAddress.getByName(ipAddress);
+            InetAddress inetAddress = InetAddress.getByName(host);
             ParticipantStats stats = getParticipantStats(clientId);
             int port = clientInfo.getPort();
             if (stats == null) {
-                stats = new ParticipantStats(clientId, ipAddress);
+                stats = new ParticipantStats(clientId, host);
                 addParticipantStats(stats);
             }
 
@@ -583,9 +578,9 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
             oneWayLatency = Math.round(oneWayLatency * 100.0) / 100.0;
 
             if (!participants.containsKey(clientId)) {
-                addParticipant(clientId, inetAddress, port);
-                ParticipantEvent participantEvent = eventFactory.createParticipantEvent(inetAddress, ipAddress, port, 0,
-                        0, 0, Consts.NAME_NA, clientInfo.isReady(), clock.getSystemTimeMillis());
+                addParticipant(clientId, inetAddress, host, port);
+                ParticipantEvent participantEvent = eventFactory.createParticipantEvent(inetAddress, host, port, 0,
+                        0, 0, Consts.NAME_NA, clientInfo.isReady(), clientInfo.isBanned(), clock.getSystemTimeMillis());
                 eventProcessor.notifyListeners(participantEvent);
             }
 
@@ -593,7 +588,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
             stats.setOneWayPingLatency(oneWayLatency);
             stats.setLastPingResponseTime(eventTime);
 
-            ParticipantStatsEvent statsEvent = eventFactory.createParticipantStatsEvent(inetAddress, ipAddress, port, latency,
+            ParticipantStatsEvent statsEvent = eventFactory.createParticipantStatsEvent(inetAddress, host, port, latency,
                     oneWayLatency, false, 0L, clock.getSystemTimeMillis());
             eventProcessor.notifyListeners(statsEvent);
         } catch (UnknownHostException e) {

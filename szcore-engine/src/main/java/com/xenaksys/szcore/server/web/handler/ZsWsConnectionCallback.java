@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.xenaksys.szcore.server.SzcoreServer;
 import com.xenaksys.szcore.server.web.ZsWebServer;
+import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.web.ZsWebRequest;
 import com.xenaksys.szcore.web.ZsWebResponse;
 import io.undertow.websockets.WebSocketConnectionCallback;
@@ -38,27 +39,38 @@ public class ZsWsConnectionCallback implements WebSocketConnectionCallback {
 
     @Override
     public void onConnect(WebSocketHttpExchange exchange, WebSocketChannel channel) {
-        webServer.onWsChannelConnected(channel, exchange);
-        LOG.info("onConnect: connected channel: {}", channel.getSourceAddress());
-        channel.getReceiveSetter().set(new AbstractReceiveListener() {
-            @Override
-            protected void onFullTextMessage(WebSocketChannel channel, BufferedTextMessage message) {
-                try {
-                    if (channel == null || message == null) {
-                        return;
+        boolean isOk = webServer.onWsChannelConnected(channel, exchange);
+        if (isOk) {
+            LOG.info("onConnect: connected channel: {}", channel.getSourceAddress());
+            channel.getReceiveSetter().set(new AbstractReceiveListener() {
+                @Override
+                protected void onFullTextMessage(WebSocketChannel channel, BufferedTextMessage message) {
+                    try {
+                        if (channel == null || message == null) {
+                            return;
+                        }
+                        String sourceAddr = NetUtil.getClientId(channel.getPeerAddress());
+                        if (webServer.isSourceAddrBanned(sourceAddr)) {
+                            return;
+                        }
+                        long now = System.currentTimeMillis();
+                        processRequest(exchange, channel, message, now);
+                    } catch (Exception e) {
+                        LOG.error("Failed to process WebSocket request", e);
                     }
-                    String sourceAddr = channel.getPeerAddress().toString();
-                    if (webServer.isSourceAddrBanned(sourceAddr)) {
-                        return;
-                    }
-                    long now = System.currentTimeMillis();
-                    processRequest(exchange, channel, message, now);
-                } catch (Exception e) {
-                    LOG.error("Failed to process WebSocket request", e);
                 }
-            }
-        });
-        channel.resumeReceives();
+            });
+            channel.resumeReceives();
+        } else {
+            channel.getReceiveSetter().set(new AbstractReceiveListener() {
+                @Override
+                protected void onFullTextMessage(WebSocketChannel channel, BufferedTextMessage message) {
+                    //DO NOTHING
+                }
+            });
+            channel.resumeReceives();
+        }
+
     }
 
     private void processRequest(WebSocketHttpExchange exchange, WebSocketChannel channel, BufferedTextMessage message, long now) {
@@ -70,7 +82,7 @@ public class ZsWsConnectionCallback implements WebSocketConnectionCallback {
         Map<String, String> requestParams = new HashMap<>();
         populateParams(request, requestParams);
 
-        String sourceAddr = channel.getPeerAddress().toString();
+        String sourceAddr = NetUtil.getClientId(channel.getPeerAddress());
         String uri = exchange.getRequestURI();
 
         String userAgent = exchange.getRequestHeader(WEB_HTTP_HEADER_USER_AGENT);

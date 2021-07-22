@@ -9,17 +9,7 @@ import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Participant;
 import com.xenaksys.szcore.gui.model.WebscoreInstructions;
-import com.xenaksys.szcore.model.Bar;
-import com.xenaksys.szcore.model.Beat;
-import com.xenaksys.szcore.model.Clock;
-import com.xenaksys.szcore.model.EventService;
-import com.xenaksys.szcore.model.Id;
-import com.xenaksys.szcore.model.Instrument;
-import com.xenaksys.szcore.model.Page;
-import com.xenaksys.szcore.model.Score;
-import com.xenaksys.szcore.model.ScoreService;
-import com.xenaksys.szcore.model.Tempo;
-import com.xenaksys.szcore.model.TempoModifier;
+import com.xenaksys.szcore.model.*;
 import com.xenaksys.szcore.model.id.BarId;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
@@ -32,19 +22,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.Slider;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
@@ -54,13 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.xenaksys.szcore.Consts.EMPTY;
 
@@ -256,7 +228,9 @@ public class ScoreController {
                         selectedParticipants.remove(participants.get(p.getFrom()));
                     }
                 } else if (p.wasRemoved()) {
-                    selectedParticipants.remove(participants.get(p.getFrom()));
+                    for (Participant removed : p.getRemoved()) {
+                        selectedParticipants.remove(removed);
+                    }
                 }
             }
         });

@@ -437,6 +437,7 @@ public interface Consts {
     String WEB_SCORE_STAVE_TOP = "topStave";
     String WEB_SCORE_STAVE_BOTTOM = "bottomStave";
 
+    String WEB_SCORE_PAGE_PREFIX = "p";
     String WEB_SCORE_PAGE_NO_TOKEN = "@PgNo@";
 
     String WEB_WS_CLOSE_REASON_NORMAL = "Closed by the server";

@@ -14,11 +14,7 @@ import com.xenaksys.szcore.gui.view.LoggerController;
 import com.xenaksys.szcore.gui.view.RootLayoutController;
 import com.xenaksys.szcore.gui.view.ScoreController;
 import com.xenaksys.szcore.gui.view.SettingsController;
-import com.xenaksys.szcore.model.EventService;
-import com.xenaksys.szcore.model.Id;
-import com.xenaksys.szcore.model.ScoreService;
-import com.xenaksys.szcore.model.SzcoreEvent;
-import com.xenaksys.szcore.model.Tempo;
+import com.xenaksys.szcore.model.*;
 import com.xenaksys.szcore.model.id.OscListenerId;
 import com.xenaksys.szcore.server.SzcoreServer;
 import com.xenaksys.szcore.time.clock.SimpleClock;
@@ -341,7 +337,9 @@ public class SzcoreClient extends Application {
 
         if (isFullUpdate) {
             for (Participant participant : toRemove) {
-                participants.remove(participant);
+                if (participants.contains(participant)) {
+                    participants.remove(participant);
+                }
             }
         }
     }

@@ -11,7 +11,11 @@ import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.model.Clock;
+import com.xenaksys.szcore.model.Instrument;
+import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.Tempo;
+import com.xenaksys.szcore.model.Transport;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.score.BasicScore;
@@ -238,7 +242,7 @@ public class WebScore {
         WebPageInfo webPageInfo = new WebPageInfo();
         webPageInfo.setFilename(filename);
         webPageInfo.setStaveId(staveId);
-        webPageInfo.setId(pageId);
+        webPageInfo.setPageId(pageId);
         scoreState.setPageInfo(webPageInfo);
         sendToDestination(destination, scoreState);
     }

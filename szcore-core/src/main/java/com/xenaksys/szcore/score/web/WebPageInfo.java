@@ -3,15 +3,15 @@ package com.xenaksys.szcore.score.web;
 public class WebPageInfo {
     private String filename;
     private String staveId;
-    private String id;
+    private String pageId;
 
 
-    public String getId() {
-        return id;
+    public String getPageId() {
+        return pageId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setPageId(String pageId) {
+        this.pageId = pageId;
     }
 
     public String getFilename() {

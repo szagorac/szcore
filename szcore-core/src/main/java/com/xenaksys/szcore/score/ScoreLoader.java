@@ -304,6 +304,8 @@ public class ScoreLoader {
                 InscoreMapElement inscoreMapElement = InscoreMapElement.parseLine(line);
                 inscorePageMap.addElement(inscoreMapElement);
             }
+            inscorePageMap.createInscoreStr();
+            inscorePageMap.createWebStr();
         } catch (Exception e) {
             LOG.error("Failed to load map file {}", path, e);
         }

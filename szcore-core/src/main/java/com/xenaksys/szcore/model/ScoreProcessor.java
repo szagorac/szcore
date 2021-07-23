@@ -17,7 +17,7 @@ import com.xenaksys.szcore.web.WebScoreStateListener;
 import java.io.File;
 import java.util.List;
 
-public interface  ScoreProcessor extends Processor {
+public interface ScoreProcessor extends Processor {
 
     void loadAndPrepare(String path) throws Exception;
 

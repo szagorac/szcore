@@ -7,16 +7,86 @@ import com.xenaksys.szcore.algo.StrategyConfigLoader;
 import com.xenaksys.szcore.algo.ValueScaler;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.EventType;
-import com.xenaksys.szcore.event.music.*;
-import com.xenaksys.szcore.event.osc.*;
+import com.xenaksys.szcore.event.music.ModWindowEvent;
+import com.xenaksys.szcore.event.music.MusicEvent;
+import com.xenaksys.szcore.event.music.MusicEventType;
+import com.xenaksys.szcore.event.music.PrecountBeatSetupEvent;
+import com.xenaksys.szcore.event.music.PrepStaveChangeEvent;
+import com.xenaksys.szcore.event.music.StopEvent;
+import com.xenaksys.szcore.event.music.TimeSigChangeEvent;
+import com.xenaksys.szcore.event.music.TransitionEvent;
+import com.xenaksys.szcore.event.music.TransportEvent;
+import com.xenaksys.szcore.event.music.TransportPositionEvent;
+import com.xenaksys.szcore.event.osc.BeatScriptEvent;
+import com.xenaksys.szcore.event.osc.DateTickEvent;
+import com.xenaksys.szcore.event.osc.ElementAlphaEvent;
+import com.xenaksys.szcore.event.osc.ElementColorEvent;
+import com.xenaksys.szcore.event.osc.ElementSelectedAudienceEvent;
+import com.xenaksys.szcore.event.osc.ElementYPositionEvent;
+import com.xenaksys.szcore.event.osc.OscEvent;
+import com.xenaksys.szcore.event.osc.OscEventType;
+import com.xenaksys.szcore.event.osc.OscScriptEvent;
+import com.xenaksys.szcore.event.osc.OscStaveActivateEvent;
+import com.xenaksys.szcore.event.osc.OscStaveTempoEvent;
+import com.xenaksys.szcore.event.osc.OscStopEvent;
+import com.xenaksys.szcore.event.osc.PageMapDisplayEvent;
+import com.xenaksys.szcore.event.osc.StaveActiveChangeEvent;
+import com.xenaksys.szcore.event.osc.StaveClockTickEvent;
+import com.xenaksys.szcore.event.osc.StaveDateTickEvent;
+import com.xenaksys.szcore.event.osc.StaveDyTickEvent;
+import com.xenaksys.szcore.event.osc.StaveStartMarkEvent;
+import com.xenaksys.szcore.event.osc.StaveYPositionEvent;
+import com.xenaksys.szcore.event.osc.TempoChangeEvent;
 import com.xenaksys.szcore.event.script.ScriptingEngineEvent;
 import com.xenaksys.szcore.event.script.ScriptingEngineResetEvent;
-import com.xenaksys.szcore.event.web.audience.*;
-import com.xenaksys.szcore.event.web.in.*;
+import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
+import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEventType;
+import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceEventType;
+import com.xenaksys.szcore.event.web.audience.WebAudiencePlayTilesEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceResetEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceStopEvent;
+import com.xenaksys.szcore.event.web.audience.WebStartAudienceEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreInEventType;
+import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
+import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
-import com.xenaksys.szcore.model.*;
-import com.xenaksys.szcore.model.id.*;
+import com.xenaksys.szcore.model.Bar;
+import com.xenaksys.szcore.model.Beat;
+import com.xenaksys.szcore.model.Id;
+import com.xenaksys.szcore.model.Instrument;
+import com.xenaksys.szcore.model.MusicTask;
+import com.xenaksys.szcore.model.MutableClock;
+import com.xenaksys.szcore.model.OscPublisher;
+import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.Scheduler;
+import com.xenaksys.szcore.model.Score;
+import com.xenaksys.szcore.model.ScoreProcessor;
+import com.xenaksys.szcore.model.Script;
+import com.xenaksys.szcore.model.ScriptEventPreset;
+import com.xenaksys.szcore.model.ScriptPreset;
+import com.xenaksys.szcore.model.ScriptType;
+import com.xenaksys.szcore.model.Stave;
+import com.xenaksys.szcore.model.SzcoreEvent;
+import com.xenaksys.szcore.model.Tempo;
+import com.xenaksys.szcore.model.TempoImpl;
+import com.xenaksys.szcore.model.TempoModifier;
+import com.xenaksys.szcore.model.TimeSignature;
+import com.xenaksys.szcore.model.Transition;
+import com.xenaksys.szcore.model.Transport;
+import com.xenaksys.szcore.model.TransportListener;
+import com.xenaksys.szcore.model.WebPublisher;
+import com.xenaksys.szcore.model.id.BarId;
+import com.xenaksys.szcore.model.id.BeatId;
+import com.xenaksys.szcore.model.id.InstrumentId;
+import com.xenaksys.szcore.model.id.IntId;
+import com.xenaksys.szcore.model.id.PageId;
+import com.xenaksys.szcore.model.id.StaveId;
+import com.xenaksys.szcore.model.id.StrId;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.process.OscDestinationEventListener;
 import com.xenaksys.szcore.score.web.WebScore;
@@ -47,12 +117,27 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.InetAddress;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static com.xenaksys.szcore.Consts.*;
+import static com.xenaksys.szcore.Consts.CONTENT_LINE_Y_MAX;
+import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NAME;
+import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NO;
+import static com.xenaksys.szcore.Consts.DYNAMICS_LINE_Y_MAX;
+import static com.xenaksys.szcore.Consts.MAX_BPM;
+import static com.xenaksys.szcore.Consts.MIN_BPM;
+import static com.xenaksys.szcore.Consts.POSITION_LINE_Y_MAX;
+import static com.xenaksys.szcore.Consts.PRESSURE_LINE_Y_MAX;
+import static com.xenaksys.szcore.Consts.SPEED_LINE_Y_MAX;
+import static com.xenaksys.szcore.Consts.UNDERSCORE;
 
 public class ScoreProcessorImpl implements ScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(ScoreProcessorImpl.class);
@@ -477,7 +562,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void addTransportInitEvents(Tempo tempo, TimeSignature timeSignature, int startBaseBeatNo, int transportBeatNo, int tickNo, long positionMillis, Id transportId, List<SzcoreEvent> initEvents) {
         addTransportPositionEvent(transportId, startBaseBeatNo, transportBeatNo, tickNo, positionMillis, initEvents);
-        addTempoChangeInitEvent(tempo, null, transportId, false, initEvents);
+        addTempoChangeInitEvent(tempo, null, transportId, initEvents);
         addTimeSigChangeInitEvent(timeSignature, null, transportId, initEvents);
         addPrecountSetupEvent(szcore.isPrecount(), szcore.getPrecountBeatNo(), szcore.getPrecountMillis(),
                 szcore.getPrecountBeaterInterval(), transportId, initEvents);
@@ -692,6 +777,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                     newBeat.getBaseBeatUnitsNoAtStart(), continuousMapElement.getBeatStartDenom(), newBeat.getBaseBeatUnitsNoOnEnd(), continuousMapElement.getBeatEndDenom());
             newInscorePageMap.addElement(newInscoreMapElement);
         }
+        newInscorePageMap.createWebStr();
+        newInscorePageMap.createInscoreStr();
 
         Beat executeBeat = szcore.getOffsetBeat(firstBeatId, -1);
         Beat deactivateBeat = szcore.getOffsetBeat(firstBeatId, 1);
@@ -948,9 +1035,10 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         StaveId staveId = stave.getId();
         String pageName = page.getFileName();
+        PageId pageId = page.getPageId();
 
         LOG.debug("addNewPageEvents: instrument {} next page: {} stave: {} ", staveId.getInstrumentId(), pageName, staveId.getStaveNo());
-        OscEvent pageDisplayEvent = createDisplayPageEvent(page.getPageId(), pageName, stave, eventBaseBeat);
+        OscEvent pageDisplayEvent = createDisplayPageEvent(pageId, pageName, stave, eventBaseBeat);
         if (initEvents == null) {
             LOG.error("addNewPageEvents: NULL initEvents, should not happen. instrument {} next page: {} stave: {}", staveId.getInstrumentId(), pageName, staveId.getStaveNo());
             //szcore.addScoreBaseBeatEvent(transportId, pageDisplayEvent);
@@ -964,7 +1052,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         String address = stave.getOscAddress();
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
-        OscEvent pageMapDisplayEvent = createPageMapFileEvent(pageName, address, destination, eventBaseBeat);
+        InscorePageMap inscorePageMap = page.getInscorePageMap();
+        OscEvent pageMapDisplayEvent = createPageMapFileEvent(pageId, staveId, pageName, address, inscorePageMap.getMapElements(), destination, eventBaseBeat);
         if (initEvents == null) {
             LOG.error("addNewPageEvents: pageMapDisplayEvent NULL initEvents, should not happen. instrument {} next page: {} stave: {}", staveId.getInstrumentId(), pageName, staveId.getStaveNo());
             //szcore.addScoreBaseBeatEvent(transportId, pageMapDisplayEvent);
@@ -1038,18 +1127,23 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
 
         StaveId staveId = nextStave.getId();
-        OscEvent pageDisplayEvent = createDisplayPageEvent(nextPage.getPageId(), nextPageName, nextStave, changeBeatId);
+        PageId nextPageId = nextPage.getPageId();
+        OscEvent pageDisplayEvent = createDisplayPageEvent(nextPageId, nextPageName, nextStave, changeBeatId);
         out.add(pageDisplayEvent);
 
         BasicPage basicPage = (BasicPage) nextPage;
         String address = nextStave.getOscAddress();
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
+        InscorePageMap inscorePageMap = basicPage.getInscorePageMap();
         if (basicPage.isSendInscoreMap() && basicPage.getInscorePageMap() != null) {
-            String inscoreMap = basicPage.getInscorePageMap().toInscoreString();
-            OscEvent pageMapDisplayEvent = createPageMapEvent(nextPageName, address, destination, inscoreMap, changeBeatId);
+            String inscoreMap = inscorePageMap.getInscoreStr();
+            if(inscoreMap == null) {
+                inscoreMap = inscorePageMap.toInscoreString();
+            }
+            OscEvent pageMapDisplayEvent = createPageMapEvent(nextPageId, staveId, nextPageName, address, destination, inscoreMap, inscorePageMap.getMapElements(), changeBeatId);
             out.add(pageMapDisplayEvent);
         } else {
-            OscEvent pageMapDisplayEvent = createPageMapFileEvent(nextPage.getFileName(), address, destination, changeBeatId);
+            OscEvent pageMapDisplayEvent = createPageMapFileEvent(nextPageId, staveId,  nextPage.getFileName(), address, inscorePageMap.getMapElements(), destination, changeBeatId);
             out.add(pageMapDisplayEvent);
         }
         return out;
@@ -1479,14 +1573,12 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         process(pressureEvent);
     }
 
-    public void addTempoChangeInitEvent(Tempo tempo, BeatId beatId, Id transportId, boolean isSendOscEvents, List<SzcoreEvent> initEvents) {
+    public void addTempoChangeInitEvent(Tempo tempo, BeatId beatId, Id transportId, List<SzcoreEvent> initEvents) {
         long now = clock.getSystemTimeMillis();
         List<OscStaveTempoEvent> oscEvents = new ArrayList<>();
 
-        if (isSendOscEvents) {
-            OscStaveTempoEvent oscTemoEvent = eventFactory.createOscStaveTempoEvent(Consts.ALL_DESTINATIONS, 0, now);
-            oscEvents.add(oscTemoEvent);
-        }
+        OscStaveTempoEvent oscTempoEvent = eventFactory.createOscStaveTempoEvent(Consts.ALL_DESTINATIONS, tempo.getBpm(), now);
+        oscEvents.add(oscTempoEvent);
 
         TempoChangeEvent tempoChangeEvent = eventFactory.createTempoChangeEvent(tempo, beatId, transportId, oscEvents, clock.getSystemTimeMillis());
         int toRemove = -1;
@@ -1885,7 +1977,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         return eventFactory.createScriptingEngineResetEvent(beatId, scripts, clock.getSystemTimeMillis());
     }
 
-    private PageMapDisplayEvent createPageMapFileEvent(String pageName, String address, String destination, BeatId eventBeatId) {
+    private PageMapDisplayEvent createPageMapFileEvent(PageId pageId, StaveId staveId, String pageName, String address, List<InscoreMapElement> mapElements, String destination, BeatId eventBeatId) {
         if (pageName == null || address == null) {
             return null;
         }
@@ -1895,21 +1987,20 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         mapargs.add(Consts.OSC_INSCORE_MAPF);
         mapargs.add(mapFilename);
 
-        return eventFactory.createPageMapDisplayEvent(address, mapargs, eventBeatId, destination, clock.getSystemTimeMillis());
+        return eventFactory.createPageMapDisplayEvent(pageId, staveId, address, mapargs, mapElements, eventBeatId, destination, clock.getSystemTimeMillis());
 
     }
 
-    private PageMapDisplayEvent createPageMapEvent(String pageName, String address, String destination, String map, BeatId eventBeatId) {
+    private PageMapDisplayEvent createPageMapEvent(PageId pageId, StaveId staveId, String pageName, String address, String destination, String inscoreMap, List<InscoreMapElement> mapElements, BeatId eventBeatId) {
         if (pageName == null || address == null) {
             return null;
         }
 
         ArrayList<Object> mapargs = new ArrayList<>();
         mapargs.add(Consts.OSC_INSCORE_MAP);
-        mapargs.add(map);
+        mapargs.add(inscoreMap);
 
-        return eventFactory.createPageMapDisplayEvent(address, mapargs, eventBeatId, destination, clock.getSystemTimeMillis());
-
+        return eventFactory.createPageMapDisplayEvent(pageId, staveId, address, mapargs, mapElements, eventBeatId, destination, clock.getSystemTimeMillis());
     }
 
     private OscEvent createInstrumentSlotsEvent(String destination, String instrumentsCsv, BeatId beatId) {
@@ -2494,7 +2585,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 Transport transport = transportFactory.getTransport(tempoChangeEvent.getTransportId());
                 TempoModifier tempoModifier = transportTempoModifiers.get(transport.getId());
                 boolean isSchedulerRunning = scheduler.isActive();
-                task = taskFactory.createTempoChangeTask(tempoChangeEvent, 0, transport, oscPublisher, tempoModifier, isSchedulerRunning);
+                task = taskFactory.createTempoChangeTask(tempoChangeEvent, 0, transport, oscPublisher, this, tempoModifier, isSchedulerRunning);
                 break;
             case TIMESIG_CHANGE:
                 TimeSigChangeEvent timeSigChangeEvent = (TimeSigChangeEvent) event;

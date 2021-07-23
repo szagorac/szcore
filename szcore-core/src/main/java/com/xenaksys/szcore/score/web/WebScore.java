@@ -6,15 +6,22 @@ import com.xenaksys.szcore.algo.SequentalIntRange;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.event.osc.OscEventType;
+import com.xenaksys.szcore.event.osc.OscStaveTempoEvent;
 import com.xenaksys.szcore.event.osc.PageDisplayEvent;
+import com.xenaksys.szcore.event.osc.PageMapDisplayEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.model.Clock;
+import com.xenaksys.szcore.model.Instrument;
+import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.Tempo;
+import com.xenaksys.szcore.model.Transport;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.score.BasicScore;
+import com.xenaksys.szcore.score.InscoreMapElement;
 import com.xenaksys.szcore.score.ScoreProcessorImpl;
 import com.xenaksys.szcore.web.WebClientInfo;
 import org.slf4j.Logger;
@@ -91,7 +98,13 @@ public class WebScore {
             switch (oscEventType) {
                 case PAGE_DISPLAY:
                     processPageDisplayEvent((PageDisplayEvent) event);
+                    break;
                 case PAGE_MAP_DISPLAY:
+                    processPageMapEvent((PageMapDisplayEvent) event);
+                    break;
+                case STAVE_TEMPO:
+                    processTempoEvent((OscStaveTempoEvent) event);
+                    break;
                 case ELEMENT_COLOR:
                     LOG.info("Received ELEMENT_COLOR event: {}", event);
                     break;
@@ -116,13 +129,40 @@ public class WebScore {
         }
     }
 
+    private void processTempoEvent(OscStaveTempoEvent event) throws Exception {
+        String destination = event.getDestination();
+        int bpm = event.getTempo();
+        sendTempo(destination, bpm);
+    }
+
+    private void processPageMapEvent(PageMapDisplayEvent event) throws Exception {
+        String destination = event.getDestination();
+        List<InscoreMapElement> mapElements = event.getMapElements();
+        if(mapElements == null) {
+            LOG.error("processPageMapEvent: invalid web timespace map");
+            return;
+        }
+        String webPageId = getWebPageId(event.getPageId());
+        String webStaveId = getWebStaveId(event.getStaveId());
+        sendTimeSpaceMapInfo(destination, webPageId, webStaveId, mapElements);
+    }
+
     private void processPageDisplayEvent(PageDisplayEvent event) throws Exception {
         String destination = event.getDestination();
         String fileName = event.getFilename();
         StaveId staveId = event.getStaveId();
+
+        String webPageId = getWebPageId(event.getPageId());
+        String webStaveId = getWebStaveId(staveId);
+        sendPageInfo(destination, webPageId, fileName, webStaveId);
+    }
+
+    public String getWebPageId(PageId pageId) {
+        return Consts.WEB_SCORE_PAGE_PREFIX + pageId.getPageNo();
+    }
+
+    public String getWebStaveId(StaveId staveId) {
         int staveNo = staveId.getStaveNo();
-        PageId pageId = event.getPageId();
-        String webPageId = Consts.WEB_SCORE_PAGE_PREFIX + pageId.getPageNo();
         String webStaveId = null;
         switch (staveNo) {
             case 1:
@@ -134,7 +174,7 @@ public class WebScore {
             default:
                 LOG.error("processPageDisplayEvent: Unexpected stave number: " + staveNo);
         }
-        sendPageInfo(destination, webPageId, fileName, webStaveId);
+        return webStaveId;
     }
 
     public void processConnectionEvent(WebScoreConnectionEvent event) {
@@ -240,6 +280,23 @@ public class WebScore {
         webPageInfo.setStaveId(staveId);
         webPageInfo.setPageId(pageId);
         scoreState.setPageInfo(webPageInfo);
+        sendToDestination(destination, scoreState);
+    }
+
+
+    private void sendTimeSpaceMapInfo(String destination, String webPageId, String webStaveId, List<InscoreMapElement> mapElements) throws Exception {
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
+        WebTimeSpaceMapInfo mapInfo = new WebTimeSpaceMapInfo();
+        mapInfo.setPageId(webPageId);
+        mapInfo.setStaveId(webStaveId);
+        mapInfo.setMap(mapElements);
+        scoreState.setTimeSpaceMapInfo(mapInfo);
+        sendToDestination(destination, scoreState);
+    }
+
+    private void sendTempo(String destination, int bpm) throws Exception  {
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
+        scoreState.setBpm(bpm);
         sendToDestination(destination, scoreState);
     }
 

@@ -78,6 +78,7 @@ import com.xenaksys.szcore.model.Transition;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
+import com.xenaksys.szcore.score.InscoreMapElement;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
 import com.xenaksys.szcore.scripting.ScriptingEngineScript;
 import com.xenaksys.szcore.web.WebClientInfo;
@@ -232,8 +233,8 @@ public class EventFactory {
         return new PageDisplayEvent(pageId, filename, staveId, address, args, eventBaseBeat, destination, creationTime);
     }
 
-    public PageMapDisplayEvent createPageMapDisplayEvent(String address, List<Object> args, BeatId eventBaseBeat, String destination, long creationTime) {
-        return new PageMapDisplayEvent(address, args, eventBaseBeat, destination, creationTime);
+    public PageMapDisplayEvent createPageMapDisplayEvent(PageId pageId, StaveId staveId, String address, List<Object> args, List<InscoreMapElement> mapElements, BeatId eventBaseBeat, String destination, long creationTime) {
+        return new PageMapDisplayEvent(pageId, staveId, address, args, mapElements, eventBaseBeat, destination, creationTime);
     }
 
     public OscStaveActivateEvent createStaveActivateEvent(String destination, long creationTime) {

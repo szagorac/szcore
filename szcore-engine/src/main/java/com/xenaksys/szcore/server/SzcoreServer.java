@@ -525,7 +525,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         if (webProcessor == null) {
             return;
         }
-        LOG.info("updateScoreServerConnections: have {} connections", connections.size());
+        LOG.debug("updateScoreServerConnections: have {} connections", connections.size());
         webProcessor.onUpdateWebScoreConnections(connections);
     }
 

@@ -249,8 +249,8 @@ public class EventFactory {
         return new OscStopEvent(createJavaScriptArgs(), destination, creationTime);
     }
 
-    public PrecountBeatSetupEvent createPrecountBeatSetupEvent(boolean isPrecount, int precountBeatNo, long precountTimeMillis, long initBeaterInterval, Id transportId, long creationTime) {
-        return new PrecountBeatSetupEvent(isPrecount, precountBeatNo, precountTimeMillis, initBeaterInterval, transportId, creationTime);
+    public PrecountBeatSetupEvent createPrecountBeatSetupEvent(int precountBeatNo, long precountTimeMillis, long initBeaterInterval, Id transportId, long creationTime) {
+        return new PrecountBeatSetupEvent(true, precountBeatNo, precountTimeMillis, initBeaterInterval, transportId, creationTime);
     }
 
     public PrecountBeatOnEvent createPrecountBeatOnEvent(String destination, long creationTime) {

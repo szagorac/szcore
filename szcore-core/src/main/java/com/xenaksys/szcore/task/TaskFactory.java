@@ -69,7 +69,7 @@ public class TaskFactory {
         return new TransitionSetupTask(transitionEvent, destination, processor, oscPublisher, eventFactory, clock);
     }
 
-    public WebAudienceEventTask createWebScoreEventTask(long playTime, WebAudienceEvent event, WebAudienceScore webAudienceScore) {
+    public WebAudienceEventTask createWebAudienceEventTask(long playTime, WebAudienceEvent event, WebAudienceScore webAudienceScore) {
         return new WebAudienceEventTask(playTime, event, webAudienceScore);
     }
 

@@ -74,7 +74,7 @@ import static com.xenaksys.szcore.Consts.WEB_RESPONSE_TYPE;
 import static com.xenaksys.szcore.event.EventType.WEB_AUDIENCE_IN;
 import static com.xenaksys.szcore.event.EventType.WEB_SCORE_IN;
 
-public class WebProcessor implements Processor, WebScoreStateListener {
+public class WebProcessor implements Processor, WebAudienceStateListener {
     static final Logger LOG = LoggerFactory.getLogger(WebProcessor.class);
 
     private static final Gson GSON = new Gson();
@@ -746,9 +746,19 @@ public class WebProcessor implements Processor, WebScoreStateListener {
         if (data instanceof WebScoreTargetType) {
             targetType = (WebScoreTargetType) data;
         }
-
         String content = createWebScoreContainerString(out);
-        scoreService.pushToScoreWeb(target, targetType, content);
+
+        if(WebScoreTargetType.INSTRUMENT == targetType) {
+            List<WebClientInfo> instrumentClients = scoreService.getWebScoreInstrumentClients(target);
+            if(instrumentClients != null && !instrumentClients.isEmpty()) {
+                for(WebClientInfo clientInfo : instrumentClients) {
+                    String addr = clientInfo.getClientAddr();
+                    scoreService.pushToScoreWeb(addr, WebScoreTargetType.HOST, content);
+                }
+            }
+        } else {
+            scoreService.pushToScoreWeb(target, targetType, content);
+        }
     }
 
     private void onOutAudienceEvent(OutgoingWebEvent webEvent) {

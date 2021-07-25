@@ -117,7 +117,7 @@ public class PrecountBeatSetupTask extends EventMusicTask {
         OscEventTask task = new OscEventTask(playTime, event, oscPublisher);
         //LOG.info("Create Beater ON Task playTime: " + playTime + " beaterNo: " + beaterNo + " colourId: " + colourId);
         processor.scheduleTask(task);
-        addWebscorePrecountTask(playTime, true, beaterNo, colourId);
+        addWebAudiencePrecountTask(playTime, true, beaterNo, colourId);
     }
 
     private void addBeaterOffTask(long playTime, int beaterNo) {
@@ -129,12 +129,12 @@ public class PrecountBeatSetupTask extends EventMusicTask {
         OscEventTask task = new OscEventTask(playTime, event, oscPublisher);
         //LOG.info("Create Beater OFF Task playTime: " + playTime + " beaterNo: " + beaterNo);
         processor.scheduleTask(task);
-        addWebscorePrecountTask(playTime, false, beaterNo, 0);
+        addWebAudiencePrecountTask(playTime, false, beaterNo, 0);
     }
 
-    private void addWebscorePrecountTask(long playTime, boolean isOn, int beaterNo, int colourId) {
+    private void addWebAudiencePrecountTask(long playTime, boolean isOn, int beaterNo, int colourId) {
         WebAudienceEvent event = eventFactory.createWebAudiencePrecountEvent(beaterNo, isOn, colourId, clock.getSystemTimeMillis());
-        WebAudienceEventTask task = taskFactory.createWebScoreEventTask(playTime, event, webAudienceScore);
+        WebAudienceEventTask task = taskFactory.createWebAudienceEventTask(playTime, event, webAudienceScore);
         processor.scheduleTask(task);
     }
 }

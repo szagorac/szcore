@@ -6,9 +6,9 @@ import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.score.web.WebScoreTargetType;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
+import com.xenaksys.szcore.web.WebAudienceStateListener;
 import com.xenaksys.szcore.web.WebClientInfo;
 import com.xenaksys.szcore.web.WebConnection;
-import com.xenaksys.szcore.web.WebScoreStateListener;
 import com.xenaksys.szcore.web.ZsWebRequest;
 import com.xenaksys.szcore.web.ZsWebResponse;
 
@@ -35,7 +35,7 @@ public interface ScoreService {
 
     void subscribe(SzcoreEngineEventListener eventListener);
 
-    void subscribe(WebScoreStateListener eventListener);
+    void subscribe(WebAudienceStateListener eventListener);
 
     void setTempoModifier(Id transportId, TempoModifier tempoModifier);
 
@@ -130,5 +130,7 @@ public interface ScoreService {
     void onWebScorePing(WebClientInfo clientInfo, long serverTime, long eventTime);
 
     void onInterceptedOscOutEvent(OscEvent event);
+
+    List<WebClientInfo> getWebScoreInstrumentClients(String instrument);
 
 }

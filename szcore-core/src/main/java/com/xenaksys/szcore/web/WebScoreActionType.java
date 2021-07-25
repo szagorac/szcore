@@ -1,5 +1,5 @@
 package com.xenaksys.szcore.web;
 
 public enum WebScoreActionType {
-    PING
+    PING, START, STOP, SEMAPHORE_ON, SEMAPHORE_OFF
 }

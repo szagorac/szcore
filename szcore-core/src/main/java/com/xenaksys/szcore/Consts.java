@@ -365,6 +365,7 @@ public interface Consts {
     String WEB_ACTION_PARAM_LEVEL = "level";
     String WEB_ACTION_PARAM_TIME_MS = "timeMs";
     String WEB_ACTION_PARAM_SEND_TIME_MS = "sendTimeMs";
+    String WEB_ACTION_PARAM_STAVE_ID = "staveId";
 
     int WEB_CONFIG_READY_PRESET = 0;
     int WEB_CONFIG_GO_PRESET = -1;
@@ -432,6 +433,9 @@ public interface Consts {
     String WEB_DATA_TARGET = "TARGET";
     String WEB_DATA_TARGET_TYPE = "TARGET_TYPE";
     String WEB_DATA_TARGET_ALL = "ALL";
+
+    String WEB_PARAM_LIGHT_NO = "lightNo";
+    String WEB_PARAM_COLOUR_ID = "colourId";
 
     String WEB_SCORE_ROOT_DIR = "/score/";
     String WEB_SCORE_STAVE_TOP = "topStave";

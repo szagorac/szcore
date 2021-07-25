@@ -1434,7 +1434,7 @@ public class WebAudienceScore {
     public void updateServerStateDelta() {
         try {
             if (stateDeltaTracker.hasChanges()) {
-                scoreProcessor.onWebScoreStateDeltaChange(stateDeltaTracker.getDeltaExport());
+                scoreProcessor.onWebAudienceStateDeltaChange(stateDeltaTracker.getDeltaExport());
             }
         } catch (Exception e) {
             LOG.error("Failed to process updateServerState", e);

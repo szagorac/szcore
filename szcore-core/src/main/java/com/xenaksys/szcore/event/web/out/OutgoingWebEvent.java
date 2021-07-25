@@ -67,8 +67,6 @@ public class OutgoingWebEvent implements SzcoreEvent {
         return creationTime;
     }
 
-    ;
-
     public void setBeatId(BeatId beatId) {
         this.beatId = beatId;
     }

@@ -4,6 +4,7 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.algo.SequentalIntRange;
 import com.xenaksys.szcore.event.EventFactory;
+import com.xenaksys.szcore.event.osc.DateTickEvent;
 import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.event.osc.OscEventType;
 import com.xenaksys.szcore.event.osc.OscStaveActivateEvent;
@@ -123,6 +124,9 @@ public class WebScore {
                 case STAVE_ACTIVATE:
                     processActivateStave((OscStaveActivateEvent) event);
                     break;
+                case DATE_TICK:
+                    processDateTick((DateTickEvent) event);
+                    break;
                 case ELEMENT_COLOR:
                     break;
                 case ELEMENT_ALPHA:
@@ -134,7 +138,6 @@ public class WebScore {
                 case SET_TITLE:
                 case SET_PART:
                 case RESET_STAVES:
-                case DATE_TICK:
                 case STAVE_START_MARK:
                 case INSTRUMENT_RESET_SLOTS:
                 case ELEMENT_Y_POSITION:
@@ -144,6 +147,14 @@ public class WebScore {
         } catch (Exception e) {
             LOG.error("publishToWebScoreHack: failed to publish web score event", e);
         }
+    }
+
+    private void processDateTick(DateTickEvent event) {
+        String destination = event.getDestination();
+        StaveId staveId = event.getStaveId();
+        String webStaveId = getWebStaveId(staveId);
+        int beatNo = event.getBeatNo();
+        sendBeat(destination, webStaveId, beatNo);
     }
 
     private void processActivateStave(OscStaveActivateEvent event) {
@@ -373,6 +384,15 @@ public class WebScore {
         params.put(Consts.WEB_PARAM_IS_ACTIVE, isActive);
         params.put(Consts.WEB_PARAM_IS_PLAY, isPlayStave);
         WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.ACTIVATE, targets, params);
+        scoreState.addAction(action);
+        sendToDestination(destination, scoreState);
+    }
+
+    private void sendBeat(String destination, String webStaveId, int beatNo) {
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
+        List<String> targets = Collections.singletonList(webStaveId);
+        Map<String, Object> params = Collections.singletonMap(Consts.WEB_PARAM_BEAT_NO, beatNo);
+        WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.BEAT, targets, params);
         scoreState.addAction(action);
         sendToDestination(destination, scoreState);
     }

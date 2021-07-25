@@ -20,6 +20,7 @@ import com.xenaksys.szcore.event.osc.OscEventType;
 import com.xenaksys.szcore.event.osc.TempoChangeEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
+import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Participant;
 import com.xenaksys.szcore.model.Id;
@@ -85,6 +86,9 @@ public class ClientEventProcessor implements Processor {
                 break;
             case WEB_SCORE_IN:
                 processWebScoreInEvent((WebScoreInEvent) event);
+                break;
+            case WEB_SCORE_OUT:
+                processWebScoreOutEvent((OutgoingWebEvent) event);
                 break;
             case SCRIPTING_ENGINE:
                 //TODO
@@ -187,6 +191,10 @@ public class ClientEventProcessor implements Processor {
 
     private void processWebScoreInEvent(WebScoreInEvent event) {
         LOG.debug("Received WebScoreInEvent MUSIC event: " + event);
+    }
+
+    private void processWebScoreOutEvent(OutgoingWebEvent event) {
+        LOG.debug("Received OutgoingWebEvent: " + event);
     }
 
     private void processScoreOscEvent(OscEvent event) {

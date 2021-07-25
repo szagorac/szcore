@@ -1122,7 +1122,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     public void addClockBaseBeatEvent(Id transportId, Stave stave) {
         StaveId id = (StaveId) stave.getId();
         String destination = szcore.getOscDestination(id.getInstrumentId());
-        DateTickEvent dateTickEvent = eventFactory.createDateTickEvent(destination, id.getStaveNo(), 0, clock.getSystemTimeMillis());
+        DateTickEvent dateTickEvent = eventFactory.createDateTickEvent(destination, id, 0, clock.getSystemTimeMillis());
         szcore.addClockBaseBeatTickEvent(transportId, dateTickEvent);
     }
 
@@ -1130,7 +1130,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         StaveId id = (StaveId) stave.getId();
         String destination = szcore.getOscDestination(id.getInstrumentId());
 
-        DateTickEvent dateTickEvent = eventFactory.createDateTickEvent(destination, id.getStaveNo(), beatNo, clock.getSystemTimeMillis());
+        DateTickEvent dateTickEvent = eventFactory.createDateTickEvent(destination, id, beatNo, clock.getSystemTimeMillis());
         initEvents.add(dateTickEvent);
     }
 
@@ -2674,6 +2674,11 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     private void processDateTickEvent(DateTickEvent event, int beatNo) {
+        StaveId staveId = event.getStaveId();
+        Stave stave = szcore.getStave(staveId);
+        if(!stave.isActive()) {
+            return;
+        }
         int beatToSend = beatNo;
         if (beatNo == 0) {
             beatToSend = event.getBeatNo();

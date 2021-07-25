@@ -202,7 +202,7 @@ public class EventFactory {
         return new StaveStartMarkEvent(address, new ArrayList<>(oscDateArgs), destination, staveId, beatNo, creationTime);
     }
 
-    public DateTickEvent createDateTickEvent(String destination, int staveId, int beatNo, long creationTime) {
+    public DateTickEvent createDateTickEvent(String destination, StaveId staveId, int beatNo, long creationTime) {
         return new DateTickEvent(createJavaScriptArgs(), destination, staveId, beatNo, creationTime);
     }
 

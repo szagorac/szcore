@@ -545,8 +545,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     private void addPageInitEvents(Transport transport, Instrument instrument, BasicStave currentStave, BasicStave nextStave,
                                    Page page, List<SzcoreEvent> initEvents) {
-        addActiveStaveChangeEvent(currentStave.getId(), true, null, transport.getId(), instrument, initEvents);
-        addActiveStaveChangeEvent(nextStave.getId(), false, null, transport.getId(), instrument, initEvents);
+        addActiveStaveChangeEvent(currentStave.getId(), true, false, null, transport.getId(), instrument, initEvents);
+        addActiveStaveChangeEvent(nextStave.getId(), false, false, null, transport.getId(), instrument, initEvents);
         addNewPageEvents(page, currentStave, transport.getId(), initEvents);
         Page nextPage = szcore.getNextPage((PageId) page.getId());
         if (nextPage != null) {
@@ -620,8 +620,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         Instrument instrument = szcore.getInstrument(instrumentId);
 
         //TODO both staves active between activateBeatId and deactivateBeatId - getCurrentStave() might return wrong value
-        addOneOffActiveStaveChangeEvent(nextStave.getId(), true, activateBeatId, transportId, instrument);
-        addOneOffActiveStaveChangeEvent(currentStave.getId(), false, deactivateBeatId, transportId, instrument);
+        addOneOffActiveStaveChangeEvent(nextStave.getId(), true, true, activateBeatId, transportId, instrument);
+        addOneOffActiveStaveChangeEvent(currentStave.getId(), false, false, deactivateBeatId, transportId, instrument);
 
         //change next stave page after x beats of the current page
         PageId pageId = (PageId) pageChangeBeatId.getPageId();
@@ -1689,9 +1689,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         szcore.addScoreBaseBeatEvent(transportId, event);
     }
 
-    public void addActiveStaveChangeEvent(StaveId staveId, boolean isActive, BeatId changeOnBaseBeat, Id transportId, Instrument instrument, List<SzcoreEvent> initEvents) {
+    public void addActiveStaveChangeEvent(StaveId staveId, boolean isActive, boolean isPlayStave, BeatId changeOnBaseBeat, Id transportId, Instrument instrument, List<SzcoreEvent> initEvents) {
 
-        StaveActiveChangeEvent activeStaveChangeEvent = createActiveStaveChangeEvent(staveId, isActive, changeOnBaseBeat, instrument);
+        StaveActiveChangeEvent activeStaveChangeEvent = createActiveStaveChangeEvent(staveId, isActive, isPlayStave, changeOnBaseBeat, instrument);
 
         if (initEvents == null) {
             szcore.addScoreBaseBeatEvent(transportId, activeStaveChangeEvent);
@@ -1701,9 +1701,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     }
 
-    private StaveActiveChangeEvent createActiveStaveChangeEvent(StaveId staveId, boolean isActive, BeatId changeOnBaseBeat, Instrument instrument) {
+    private StaveActiveChangeEvent createActiveStaveChangeEvent(StaveId staveId, boolean isActive, boolean isPlayStave, BeatId changeOnBaseBeat, Instrument instrument) {
         String destination = szcore.getOscDestination(instrument.getId());
-        StaveActiveChangeEvent activeStaveChangeEvent = eventFactory.createActiveStaveChangeEvent(staveId, isActive, changeOnBaseBeat, destination, clock.getSystemTimeMillis());
+        StaveActiveChangeEvent activeStaveChangeEvent = eventFactory.createActiveStaveChangeEvent(staveId, isActive, isPlayStave, changeOnBaseBeat, destination, clock.getSystemTimeMillis());
         OscStaveActivateEvent oscStaveActivateEvent = activeStaveChangeEvent.getOscStaveActivateEvent();
         List<Object> args = oscStaveActivateEvent.getArguments();
         Stave stave = szcore.getStave(staveId);
@@ -1724,8 +1724,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         return activeStaveChangeEvent;
     }
 
-    public void addOneOffActiveStaveChangeEvent(StaveId staveId, boolean isActive, BeatId changeOnBaseBeat, Id transportId, Instrument instrument) {
-        StaveActiveChangeEvent activeStaveChangeEvent = createActiveStaveChangeEvent(staveId, isActive, changeOnBaseBeat, instrument);
+    public void addOneOffActiveStaveChangeEvent(StaveId staveId, boolean isActive, boolean isPlayStave, BeatId changeOnBaseBeat, Id transportId, Instrument instrument) {
+        StaveActiveChangeEvent activeStaveChangeEvent = createActiveStaveChangeEvent(staveId, isActive, isPlayStave, changeOnBaseBeat, instrument);
         szcore.addOneOffBaseBeatEvent(transportId, activeStaveChangeEvent);
     }
 

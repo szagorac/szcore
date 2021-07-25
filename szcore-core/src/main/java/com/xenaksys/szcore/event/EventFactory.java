@@ -150,10 +150,11 @@ public class EventFactory {
 
     public StaveActiveChangeEvent createActiveStaveChangeEvent(StaveId staveId,
                                                                boolean isActive,
+                                                               boolean isPlayStave,
                                                                BeatId changeOnBaseBeat,
                                                                String destination,
                                                                long creationTime) {
-        return new StaveActiveChangeEvent(staveId, isActive, changeOnBaseBeat, createStaveActivateEvent(destination, creationTime), creationTime);
+        return new StaveActiveChangeEvent(staveId, isActive, isPlayStave, changeOnBaseBeat, createStaveActivateEvent(staveId, destination, isActive, isPlayStave, creationTime), creationTime);
     }
 
     public PrepStaveChangeEvent createPrepStaveChangeEvent(BeatId executeOnBaseBeat,
@@ -237,8 +238,8 @@ public class EventFactory {
         return new PageMapDisplayEvent(pageId, staveId, address, args, mapElements, eventBaseBeat, destination, creationTime);
     }
 
-    public OscStaveActivateEvent createStaveActivateEvent(String destination, long creationTime) {
-        return new OscStaveActivateEvent(createJavaScriptArgs(), destination, creationTime);
+    public OscStaveActivateEvent createStaveActivateEvent(StaveId staveId, String destination, boolean isActive, boolean isPlayStave, long creationTime) {
+        return new OscStaveActivateEvent(staveId, createJavaScriptArgs(), destination, isActive, isPlayStave, creationTime);
     }
 
     public OscStaveTempoEvent createOscStaveTempoEvent(String destination, int tempo, long creationTime) {

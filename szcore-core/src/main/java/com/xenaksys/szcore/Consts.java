@@ -436,6 +436,8 @@ public interface Consts {
 
     String WEB_PARAM_LIGHT_NO = "lightNo";
     String WEB_PARAM_COLOUR_ID = "colourId";
+    String WEB_PARAM_IS_ACTIVE = "isActive";
+    String WEB_PARAM_IS_PLAY = "isPlay";
 
     String WEB_SCORE_ROOT_DIR = "/score/";
     String WEB_SCORE_STAVE_TOP = "topStave";

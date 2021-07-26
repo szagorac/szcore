@@ -439,6 +439,7 @@ public interface Consts {
     String WEB_PARAM_IS_ACTIVE = "isActive";
     String WEB_PARAM_IS_PLAY = "isPlay";
     String WEB_PARAM_BEAT_NO = "beatNo";
+    String WEB_PARAM_CSV_INSTRUMENTS = "csvInstruments";
 
     String WEB_SCORE_ROOT_DIR = "/score/";
     String WEB_SCORE_STAVE_TOP = "topStave";

@@ -680,14 +680,10 @@ public class BasicScore implements Score {
             return null;
         }
         String destination = Consts.DEFAULT_OSC_PORT_NAME;
-
-        for (Instrument instrument : instruments.values()) {
-            if (instrument.getId().equals(instrumentId)) {
-                destination = instrument.getName();
-                break;
-            }
+        Instrument instrument = getInstrument(instrumentId);
+        if(instrument != null) {
+            destination = instrument.getName();
         }
-
         return destination;
     }
 

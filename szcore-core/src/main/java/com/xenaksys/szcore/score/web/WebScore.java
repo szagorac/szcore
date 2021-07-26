@@ -5,6 +5,8 @@ import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.algo.SequentalIntRange;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.osc.DateTickEvent;
+import com.xenaksys.szcore.event.osc.InstrumentResetSlotsEvent;
+import com.xenaksys.szcore.event.osc.InstrumentSlotsEvent;
 import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.event.osc.OscEventType;
 import com.xenaksys.szcore.event.osc.OscStaveActivateEvent;
@@ -131,8 +133,11 @@ public class WebScore {
                 case STAVE_START_MARK:
                     processStaveStartMark((StaveStartMarkEvent) event);
                     break;
+                case INSTRUMENT_SLOTS:
+                    processInstrumentSlots((InstrumentSlotsEvent) event);
+                    break;
                 case INSTRUMENT_RESET_SLOTS:
-
+                    processInstrumentResetSlots((InstrumentResetSlotsEvent) event);
                     break;
                 case ELEMENT_COLOR:
                     break;
@@ -153,6 +158,17 @@ public class WebScore {
         } catch (Exception e) {
             LOG.error("publishToWebScoreHack: failed to publish web score event", e);
         }
+    }
+
+    private void processInstrumentSlots(InstrumentSlotsEvent event) {
+        String destination = event.getDestination();
+        String instrumentsCsv = event.getInstrumentsCsv();
+        sendInstrumentSlots(destination, instrumentsCsv);
+    }
+
+    private void processInstrumentResetSlots(InstrumentResetSlotsEvent event) {
+        String destination = event.getDestination();
+        sendResetInstrumentSlots(destination);
     }
 
     private void processStaveStartMark(StaveStartMarkEvent event) {
@@ -425,8 +441,28 @@ public class WebScore {
         sendToDestination(destination, scoreState);
     }
 
+    private void sendInstrumentSlots(String destination, String instrumentsCsv) {
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
+        Map<String, Object> params = Collections.singletonMap(Consts.WEB_PARAM_CSV_INSTRUMENTS, instrumentsCsv);
+        WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.INSTRUMENT_SLOTS, null, params);
+        scoreState.addAction(action);
+        sendToDestination(destination, scoreState);
+    }
+
+    private void sendResetInstrumentSlots(String destination) {
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
+        WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.RESET_INSTRUMENT_SLOTS, null, null);
+        scoreState.addAction(action);
+        sendToDestination(destination, scoreState);
+    }
+
     private void sendToDestination(String destination, WebScoreState scoreState) {
         if (Consts.ALL_DESTINATIONS.equals(destination)) {
+            scoreProcessor.sendWebScoreState(Consts.ALL_DESTINATIONS, WebScoreTargetType.ALL, scoreState);
+            return;
+        }
+        if (Consts.DEFAULT_OSC_PORT_NAME.equals(destination)) {
+            LOG.warn("sendToDestination: Unexpected destination: {}, sending to all", destination);
             scoreProcessor.sendWebScoreState(Consts.ALL_DESTINATIONS, WebScoreTargetType.ALL, scoreState);
             return;
         }

@@ -313,7 +313,7 @@ public class EventFactory {
     }
 
     public InstrumentSlotsEvent createInstrumentSlotsEvent(String instrumentsCsv, String destination, long creationTime, BeatId beatId) {
-        InstrumentSlotsEvent event = new InstrumentSlotsEvent(createJavaScriptArgs(), beatId, destination, creationTime);
+        InstrumentSlotsEvent event = new InstrumentSlotsEvent(createJavaScriptArgs(), instrumentsCsv, beatId, destination, creationTime);
         event.addCommandArg(instrumentsCsv);
         return event;
     }

@@ -2796,8 +2796,6 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             y -= dy;
         }
 
-//        LOG.debug("Calculated y: " + y + " beatNo: " + beatNo + " tickNo: " + tickNo);
-
         ArrayList<Object> args = (ArrayList<Object>) event.getArguments();
         if (args.size() == 2) {
             args.remove(1);

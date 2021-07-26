@@ -746,8 +746,12 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
         if (data instanceof WebScoreTargetType) {
             targetType = (WebScoreTargetType) data;
         }
+        if (Consts.DEFAULT_OSC_PORT_NAME.equals(target)) {
+            LOG.warn("sendToScoreWeb: unexpected target: {}, sending to all", target);
+            target = Consts.WEB_DATA_TARGET_ALL;
+            targetType = WebScoreTargetType.ALL;
+        }
         String content = createWebScoreContainerString(out);
-
         if(WebScoreTargetType.INSTRUMENT == targetType) {
             List<WebClientInfo> instrumentClients = scoreService.getWebScoreInstrumentClients(target);
             if(instrumentClients != null && !instrumentClients.isEmpty()) {

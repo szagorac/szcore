@@ -686,7 +686,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             BarId newBarId = new BarId(lastBarNo, instrumentId, newPageId, scoreId);
             lastBarNo++;
             BasicBar newBar = new BasicBar(newBarId, bar.getBarName(), bar.getTempo(), bar.getTimeSignature());
-            if (!szcore.containsBar(newBar)) {
+            if (szcore.doesNotcontainBar(newBar)) {
                 szcore.addBar(newBar);
             }
 
@@ -867,15 +867,20 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             return;
         }
         ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
-        String pageFileName = strategy.getRandomPageFileName(instId);
-        if (pageFileName == null) {
+        Page rndPage = strategy.getRandomPageFileName(instId);
+        String pageFileName;
+        PageId rndPageId;
+        if (rndPage == null) {
             pageFileName = page.getFileName();
+            rndPageId = null;
             LOG.debug("sendRndPageFileUpdate: Invalid random page file name, using: {} for page: {}", pageFileName, page.getPageNo());
         } else {
+            pageFileName = rndPage.getFileName();
+            rndPageId = rndPage.getPageId();
             LOG.debug("sendRndPageFileUpdate: Using random page file name: {} for instrument: {}", pageFileName, instId);
         }
         LOG.debug("sendRndPageFileUpdate: page file name: {} for instrument: {}: stave: {}", pageFileName, instId, stave.getStaveId().getStaveNo());
-        List<OscEvent> out = createPageChangeEvents(page, pageFileName, (BasicStave) stave);
+        List<OscEvent> out = createPageChangeEvents(page, pageFileName, rndPageId, (BasicStave) stave);
         publishOscEvents(out);
     }
 
@@ -988,7 +993,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             return;
         }
         LOG.debug("sendPageFileUpdate: page: {} for instrument: {}: stave: {}", page.getPageNo(), stave.getStaveId().getInstrumentId(), stave.getStaveId().getStaveNo());
-        List<OscEvent> out = createPageChangeEvents(page, page.getFileName(), (BasicStave) stave);
+        List<OscEvent> out = createPageChangeEvents(page, page.getFileName(), null, (BasicStave) stave);
         publishOscEvents(out);
     }
 
@@ -1008,7 +1013,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         PageId pageId = page.getPageId();
 
         LOG.debug("addNewPageEvents: instrument {} next page: {} stave: {} ", staveId.getInstrumentId(), pageName, staveId.getStaveNo());
-        OscEvent pageDisplayEvent = createDisplayPageEvent(pageId, pageName, stave);
+        OscEvent pageDisplayEvent = createDisplayPageEvent(pageId, pageName, null, stave);
         if (initEvents == null) {
             LOG.error("addNewPageEvents: NULL initEvents, should not happen. instrument {} next page: {} stave: {}", staveId.getInstrumentId(), pageName, staveId.getStaveNo());
             //szcore.addScoreBaseBeatEvent(transportId, pageDisplayEvent);
@@ -1090,7 +1095,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         szcore.addOneOffBaseBeatEvent(transportId, closeWindowEvent);
     }
 
-    private List<OscEvent> createPageChangeEvents(Page nextPage, String nextPageName, BasicStave nextStave) {
+    private List<OscEvent> createPageChangeEvents(Page nextPage, String nextPageName, PageId rndPageId, BasicStave nextStave) {
         List<OscEvent> out = new ArrayList<>(5);
         if (nextPage == null || nextStave == null) {
             return out;
@@ -1098,7 +1103,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         StaveId staveId = nextStave.getId();
         PageId nextPageId = nextPage.getPageId();
-        OscEvent pageDisplayEvent = createDisplayPageEvent(nextPageId, nextPageName, nextStave);
+        OscEvent pageDisplayEvent = createDisplayPageEvent(nextPageId, nextPageName, rndPageId, nextStave);
         out.add(pageDisplayEvent);
 
         BasicPage basicPage = (BasicPage) nextPage;
@@ -1816,7 +1821,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         return eventFactory.createModWindowEvent(beatId, nextPage, currentPageId, stave, isOpen, clock.getSystemTimeMillis());
     }
 
-    private OscEvent createDisplayPageEvent(PageId pageId, String pageName, BasicStave stave) {
+    private OscEvent createDisplayPageEvent(PageId pageId, String pageName, PageId rndPageId, BasicStave stave) {
         if (pageName == null || stave == null) {
             return null;
         }
@@ -1832,7 +1837,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
         LOG.info("createDisplayPageEvent: pageName: {} destination: {} staveId: {} stave address: {}", pageName, destination, staveId.getStaveNo(), address);
 
-        return eventFactory.createPageDisplayEvent(pageId, filename, staveId, address, args, null, destination, clock.getSystemTimeMillis());
+        return eventFactory.createPageDisplayEvent(pageId, rndPageId, filename, staveId, address, args, null, destination, clock.getSystemTimeMillis());
 
     }
 
@@ -2138,15 +2143,20 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                         List<Integer> pageIds = webAudienceScore.prepareNextTilesToPlay(pageQuantity);
                         strategy.setPageSelection(pageIds);
                     }
-                    String pageFileName = strategy.getRandomPageFileName(instrumentId);
-                    if (pageFileName == null) {
+                    Page rndPage = strategy.getRandomPageFileName(instrumentId);
+                    String pageFileName;
+                    PageId rndPageId;
+                    if (rndPage == null) {
                         pageFileName = page.getFileName();
+                        rndPageId = null;
                         LOG.debug("createRequiredEventsForNewPosition: Invalid random page file name, using: {}", pageFileName);
                     } else {
+                        pageFileName = rndPage.getFileName();
+                        rndPageId = rndPage.getPageId();
                         LOG.info("createRequiredEventsForNewPosition: Using random page file name: {} for instrument: {} page: {}", pageFileName, instrumentId, page.getPageNo());
                     }
                     LOG.debug("createRequiredEventsForNewPosition: page: {} for instrument: {}: stave: {}", pageFileName, currentStave.getStaveId().getInstrumentId(), currentStave.getStaveId().getStaveNo());
-                    List<OscEvent> pageChangeEvents = createPageChangeEvents(page, pageFileName, currentStave);
+                    List<OscEvent> pageChangeEvents = createPageChangeEvents(page, pageFileName, rndPageId, currentStave);
                     initEvents.addAll(pageChangeEvents);
                 }
                 BeatId firstBeat = page.getFirstBeat().getBeatId();
@@ -2246,7 +2256,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     @Override
-    public void setDynamicsValue(long value, List<Id> instrumentIds) throws Exception {
+    public void setDynamicsValue(long value, List<Id> instrumentIds) {
         LOG.debug("setDynamicsValue: {} ", value);
         onDynamicsValueChange(value, instrumentIds);
     }
@@ -2300,7 +2310,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     @Override
-    public void setPositionValue(long value, List<Id> instrumentIds) throws Exception {
+    public void setPositionValue(long value, List<Id> instrumentIds) {
         LOG.debug("setPositionValue: {} ", value);
         onPositionValueChange(value, instrumentIds);
     }

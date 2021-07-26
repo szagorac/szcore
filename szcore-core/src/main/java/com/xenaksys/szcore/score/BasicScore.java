@@ -496,8 +496,8 @@ public class BasicScore implements Score {
         iStaves.add(stave);
     }
 
-    public boolean containsBar(Bar bar) {
-        return bars.containsKey(bar.getId());
+    public boolean doesNotcontainBar(Bar bar) {
+        return !bars.containsKey(bar.getId());
     }
 
     @Override
@@ -913,10 +913,6 @@ public class BasicScore implements Score {
         }
 
         return beats.get(offsetBeatId);
-    }
-
-    public String getRandomPageFileName(InstrumentId instrumentId) {
-        return randomisationStrategy.getRandomPageFileName(instrumentId);
     }
 
     public ScoreRandomisationStrategy getRandomisationStrategy() {

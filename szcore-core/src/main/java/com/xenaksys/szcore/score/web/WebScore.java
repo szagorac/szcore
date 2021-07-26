@@ -217,10 +217,14 @@ public class WebScore {
         String destination = event.getDestination();
         String fileName = event.getFilename();
         StaveId staveId = event.getStaveId();
-
         String webPageId = getWebPageId(event.getPageId());
         String webStaveId = getWebStaveId(staveId);
-        sendPageInfo(destination, webPageId, fileName, webStaveId);
+        PageId rndPageId = event.getRndPageId();
+        String webRndPageId = null;
+        if(rndPageId != null) {
+            webRndPageId = getWebPageId(rndPageId);
+        }
+        sendPageInfo(destination, webPageId, webRndPageId, fileName, webStaveId);
     }
 
     public String getWebPageId(PageId pageId) {
@@ -339,12 +343,13 @@ public class WebScore {
         scoreProcessor.sendWebScoreState(clientInfo.getClientAddr(), WebScoreTargetType.HOST, scoreState);
     }
 
-    public void sendPageInfo(String destination, String pageId, String filename, String staveId) {
+    public void sendPageInfo(String destination, String pageId, String webRndPageId, String filename, String staveId) {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         WebPageInfo webPageInfo = new WebPageInfo();
         webPageInfo.setFilename(filename);
         webPageInfo.setStaveId(staveId);
         webPageInfo.setPageId(pageId);
+        webPageInfo.setRndPageId(webRndPageId);
         scoreState.setPageInfo(webPageInfo);
         sendToDestination(destination, scoreState);
     }

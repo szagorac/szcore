@@ -230,8 +230,8 @@ public class EventFactory {
         return new ElementColorEvent(address, oscColorArgs, destination, creationTime);
     }
 
-    public PageDisplayEvent createPageDisplayEvent(PageId pageId, String filename, StaveId staveId, String address, List<Object> args, BeatId eventBaseBeat, String destination, long creationTime) {
-        return new PageDisplayEvent(pageId, filename, staveId, address, args, eventBaseBeat, destination, creationTime);
+    public PageDisplayEvent createPageDisplayEvent(PageId pageId, PageId rndPageId, String filename, StaveId staveId, String address, List<Object> args, BeatId eventBaseBeat, String destination, long creationTime) {
+        return new PageDisplayEvent(pageId, rndPageId, filename, staveId, address, args, eventBaseBeat, destination, creationTime);
     }
 
     public PageMapDisplayEvent createPageMapDisplayEvent(PageId pageId, StaveId staveId, String address, List<Object> args, List<InscoreMapElement> mapElements, BeatId eventBaseBeat, String destination, long creationTime) {

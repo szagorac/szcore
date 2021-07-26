@@ -4,7 +4,7 @@ public class WebPageInfo {
     private String filename;
     private String staveId;
     private String pageId;
-
+    private String rndPageId;
 
     public String getPageId() {
         return pageId;
@@ -28,5 +28,13 @@ public class WebPageInfo {
 
     public void setStaveId(String staveId) {
         this.staveId = staveId;
+    }
+
+    public String getRndPageId() {
+        return rndPageId;
+    }
+
+    public void setRndPageId(String rndPageId) {
+        this.rndPageId = rndPageId;
     }
 }

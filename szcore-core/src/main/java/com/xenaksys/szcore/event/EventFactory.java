@@ -66,6 +66,7 @@ import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreSelectInstrumentSlotEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import com.xenaksys.szcore.model.HistoBucketView;
@@ -438,6 +439,9 @@ public class EventFactory {
         return new WebScorePartReadyEvent(eventId, sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
+    public WebScoreSelectInstrumentSlotEvent createWebScoreSelectInstrumentSlotEvent(String eventId, String sourceAddr, String part, int slotNo, String slotInstrument, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new WebScoreSelectInstrumentSlotEvent(eventId, sourceAddr, part, slotNo, slotInstrument, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    }
     public List<Object> createJavaScriptArgs() {
         List<Object> jsArgs = new ArrayList<>();
         jsArgs.add(Consts.RUN);

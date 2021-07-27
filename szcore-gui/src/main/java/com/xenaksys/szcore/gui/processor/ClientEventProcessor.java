@@ -123,6 +123,9 @@ public class ClientEventProcessor implements Processor {
             case WEB_SCORE_IN:
                 processWebScoreInEvent((WebScoreInEvent) event);
                 break;
+            case WEB_SCORE_OUT:
+                processWebScoreOutEvent((OutgoingWebEvent) event);
+                break;
             case SCRIPTING_ENGINE:
                 //TODO
                 break;

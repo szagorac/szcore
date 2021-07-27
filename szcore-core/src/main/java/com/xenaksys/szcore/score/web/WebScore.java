@@ -21,6 +21,7 @@ import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreSelectInstrumentSlotEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.Page;
@@ -530,6 +531,17 @@ public class WebScore {
             instrumentClient.setReady(true);
         } catch (Exception e) {
             LOG.error("processPartRegistration: failed to process part registration", e);
+        }
+    }
+
+    public void processSelectInstrumentSlot(WebScoreSelectInstrumentSlotEvent webEvent) {
+        try {
+            int slotNo = webEvent.getSlotNo();
+            String slotInstrument = webEvent.getSlotInstrument();
+            String sourceInst = webEvent.getPart();
+            scoreProcessor.processSelectInstrumentSlot(slotNo, slotInstrument, sourceInst);
+        } catch (Exception e) {
+            LOG.error("processSelectInstrumentSlot: failed to process select intrument slot", e);
         }
     }
 

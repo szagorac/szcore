@@ -52,6 +52,7 @@ import com.xenaksys.szcore.event.web.in.WebScoreInEventType;
 import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreSelectInstrumentSlotEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import com.xenaksys.szcore.model.Bar;
@@ -2381,6 +2382,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             case PART_READY:
                 webScore.processPartReady((WebScorePartReadyEvent) webEvent);
                 break;
+            case SELECT_ISLOT:
+                webScore.processSelectInstrumentSlot((WebScoreSelectInstrumentSlotEvent) webEvent);
+                break;
             default:
                 LOG.info("onIncomingWebScoreEvent: unknown IncomingWebAudienceEventType: {}", type);
         }
@@ -2453,6 +2457,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 break;
             case WEB_SCORE_OUT:
                 processWebScoreOutEvent((OutgoingWebEvent)event);
+                break;
             default:
                 LOG.error("Unknown event type " + type);
         }

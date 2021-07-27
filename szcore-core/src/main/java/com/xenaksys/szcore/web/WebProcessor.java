@@ -21,6 +21,7 @@ import com.xenaksys.szcore.event.web.in.WebScoreInEventType;
 import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreSelectInstrumentSlotEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import com.xenaksys.szcore.model.Clock;
@@ -65,6 +66,8 @@ import static com.xenaksys.szcore.Consts.WEB_EVENT_NAME;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_PART;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_SENT_TIME_NAME;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_SERVER_TIME;
+import static com.xenaksys.szcore.Consts.WEB_EVENT_SLOT_INSTRUMENT;
+import static com.xenaksys.szcore.Consts.WEB_EVENT_SLOT_NO;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_TIME_NAME;
 import static com.xenaksys.szcore.Consts.WEB_RESPONSE_MESSAGE;
 import static com.xenaksys.szcore.Consts.WEB_RESPONSE_STATE;
@@ -133,6 +136,7 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
             switch (eventType) {
                 case CONNECTIONS_REMOVE:
                 case CONNECTION:
+                case SELECT_ISLOT:
                     scoreService.onIncomingWebScoreEvent(webEvent);
                     break;
                 case CONNECTIONS_UPDATE:
@@ -533,6 +537,15 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
             case PING:
                 String serverTimeStr = zsRequest.getParam(WEB_EVENT_SERVER_TIME);
                 onClientPing(serverTimeStr, sourceAddr, creationTime);
+                return createOkWebString(WEB_RESPONSE_SUBMITTED);
+            case SELECT_ISLOT:
+                part = zsRequest.getParam(WEB_EVENT_PART);
+                String slotNoStr = zsRequest.getParam(WEB_EVENT_SLOT_NO);
+                String slotInstrument = zsRequest.getParam(WEB_EVENT_SLOT_INSTRUMENT);
+                int slotNo = Integer.parseInt(slotNoStr);
+                WebScoreSelectInstrumentSlotEvent slotEvent = eventFactory.createWebScoreSelectInstrumentSlotEvent(eventId,
+                        sourceAddr, part, slotNo, slotInstrument, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+                eventService.receive(slotEvent);
                 return createOkWebString(WEB_RESPONSE_SUBMITTED);
             default:
                 return createErrorWebString("Invalid event type: " + type);

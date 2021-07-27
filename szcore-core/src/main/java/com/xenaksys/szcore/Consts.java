@@ -305,6 +305,8 @@ public interface Consts {
     String WEB_EVENT_IS_SELECTED = "selected";
     String WEB_EVENT_PART = "part";
     String WEB_EVENT_SERVER_TIME = "serverTime";
+    String WEB_EVENT_SLOT_NO = "slotNo";
+    String WEB_EVENT_SLOT_INSTRUMENT = "slotInstrument";
 
     String WEB_RESPONSE_TYPE = "type";
     String WEB_RESPONSE_MESSAGE = "msg";

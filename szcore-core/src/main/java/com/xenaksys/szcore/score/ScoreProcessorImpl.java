@@ -105,6 +105,7 @@ import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.ParseUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
+import com.xenaksys.szcore.util.WebUtil;
 import com.xenaksys.szcore.web.WebAudienceStateListener;
 import com.xenaksys.szcore.web.WebClientInfo;
 import com.xenaksys.szcore.web.WebScoreAction;
@@ -588,7 +589,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         Instrument instrument = szcore.getInstrument(staveId.getInstrumentId());
         String destination = instrument.getName();
 
-        String webStaveId = webScore.getWebStaveId(staveId);
+        String webStaveId = WebUtil.getWebStaveId(staveId);
         OutgoingWebEvent webScoreResetPlayStave = createWebScoreStartEvent(startBeatId, webStaveId, destination);
         if (webScoreResetPlayStave == null) {
             return;
@@ -1177,7 +1178,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         szcore.addClockTickEvent(transportId, staveDyTickEvent);
     }
 
-    public void sendDynamicsYPositionEvent(Id instrumentId, Stave stave, double yDelta) {
+    public void sendDynamicsYPositionEvent(Id instrumentId, Stave stave, double yDelta, long unscaledValue) {
         StaveId staveId = (StaveId) stave.getId();
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
 
@@ -1209,14 +1210,14 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         LOG.debug("addDynamicsYPositionEvent sending y position: {} to: {} addr: '{}' yDelta: {} ", y, address, instrumentId, yDelta);
 
-        ElementYPositionEvent dynYEvent = eventFactory.createElementYPositionEvent(address, destination, staveId, clock.getSystemTimeMillis());
+        ElementYPositionEvent dynYEvent = eventFactory.createElementYPositionEvent(address, destination, staveId, unscaledValue, OverlayType.DYNAMICS, clock.getSystemTimeMillis());
         dynYEvent.setYPosition(y);
         stave.setDynamicsValue(y);
 
         process(dynYEvent);
     }
 
-    public void sendSpeedYPositionEvent(Id instrumentId, Stave stave, double yDelta) {
+    public void sendSpeedYPositionEvent(Id instrumentId, Stave stave, double yDelta, long unscaledValue) {
         StaveId staveId = (StaveId) stave.getId();
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
 
@@ -1248,21 +1249,22 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         LOG.debug("sendSpeedYPositionEvent sending y position: {} to: {} addr: '{}' yDelta: {} ", y, address, instrumentId, yDelta);
 
-        ElementYPositionEvent speedEvent = eventFactory.createElementYPositionEvent(address, destination, staveId, clock.getSystemTimeMillis());
+        ElementYPositionEvent speedEvent = eventFactory.createElementYPositionEvent(address, destination, staveId,
+                unscaledValue, OverlayType.SPEED, clock.getSystemTimeMillis());
         speedEvent.setYPosition(y);
         stave.setSpeedValue(y);
 
         process(speedEvent);
     }
 
-    public void sendPositionLineYEvent(Id instrumentId, Stave stave, double yDelta) {
+    public void sendPositionLineYEvent(Id instrumentId, Stave stave, double yDelta, long unscaledValue) {
         StaveId staveId = (StaveId) stave.getId();
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
 
         //position line y position
         String address = stave.getOscAddressScorePositionLine();
 
-        int staveNo = ((StaveId) stave.getId()).getStaveNo();
+        int staveNo = staveId.getStaveNo();
         double y;
         switch (staveNo) {
             case 1:
@@ -1287,14 +1289,15 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         LOG.debug("sendPositionLineYEvent sending y position: {} to: {} addr: '{}' yDelta: {} ", y, address, instrumentId, yDelta);
 
-        ElementYPositionEvent positionEvent = eventFactory.createElementYPositionEvent(address, destination, staveId, clock.getSystemTimeMillis());
+        ElementYPositionEvent positionEvent = eventFactory.createElementYPositionEvent(address, destination, staveId,
+                unscaledValue, OverlayType.POSITION, clock.getSystemTimeMillis());
         positionEvent.setYPosition(y);
         stave.setPositionValue(y);
 
         process(positionEvent);
     }
 
-    public void sendContentLineYEvent(Id instrumentId, Stave stave, double yDelta) {
+    public void sendContentLineYEvent(Id instrumentId, Stave stave, double yDelta, long unscaledValue) {
         StaveId staveId = (StaveId) stave.getId();
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
 
@@ -1325,7 +1328,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
         LOG.debug("sendContentLineYEvent sending y position: {} to: {} addr: '{}' yDelta: {} ", y, address, instrumentId, yDelta);
 
-        ElementYPositionEvent contentEvent = eventFactory.createElementYPositionEvent(address, destination, staveId, clock.getSystemTimeMillis());
+        ElementYPositionEvent contentEvent = eventFactory.createElementYPositionEvent(address, destination, staveId,
+                unscaledValue, OverlayType.PITCH, clock.getSystemTimeMillis());
         contentEvent.setYPosition(y);
         stave.setContentValue(y);
 
@@ -1341,8 +1345,10 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             alpha = 255;
         }
 
-        sendElementAlphaEvent(instrumentId, stave.getOscAddressScoreDynamicsBox(), destination, alpha);
-        sendElementPenAlphaEvent(instrumentId, stave.getOscAddressScoreDynamicsMidLine(), destination, alpha);
+        sendElementAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.DYNAMICS, OverlayElementType.DYNAMICS_BOX,
+                stave.getOscAddressScoreDynamicsBox(), destination, alpha);
+        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.DYNAMICS, OverlayElementType.DYNAMICS_MID_LINE,
+                stave.getOscAddressScoreDynamicsMidLine(), destination, alpha);
     }
 
     public void sendDynamicsLineAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled) {
@@ -1354,18 +1360,23 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             alpha = 255;
         }
 
-        sendElementPenAlphaEvent(instrumentId, stave.getOscAddressScoreDynamicsLine(), destination, alpha);
+        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.DYNAMICS, OverlayElementType.DYNAMICS_LINE,
+                stave.getOscAddressScoreDynamicsLine(), destination, alpha);
     }
 
-    public void sendElementPenAlphaEvent(Id instrumentId, String address, String destination, int alpha) {
-        ElementAlphaEvent dynYEvent = eventFactory.createElementPenAlphaEvent(address, destination, clock.getSystemTimeMillis());
+    public void sendElementPenAlphaEvent(Id instrumentId, StaveId staveId, boolean isEnabled, OverlayType overlayType,
+                                         OverlayElementType overlayElementType, String address, String destination, int alpha) {
+        ElementAlphaEvent dynYEvent = eventFactory.createElementPenAlphaEvent(staveId, isEnabled, overlayType,
+                overlayElementType, address, destination, clock.getSystemTimeMillis());
         dynYEvent.setAlpha(alpha);
         LOG.debug("sendElementPenAlphaEvent sending alpha: {} to: {} addr: '{}'", alpha, instrumentId, address);
         process(dynYEvent);
     }
 
-    public void sendElementAlphaEvent(Id instrumentId, String address, String destination, int alpha) {
-        ElementAlphaEvent aEvent = eventFactory.createElementAlphaEvent(address, destination, clock.getSystemTimeMillis());
+    public void sendElementAlphaEvent(Id instrumentId, StaveId staveId, boolean isEnabled, OverlayType overlayType,
+                                      OverlayElementType overlayElementType, String address, String destination, int alpha) {
+        ElementAlphaEvent aEvent = eventFactory.createElementAlphaEvent(staveId, isEnabled, overlayType, overlayElementType,
+                address, destination, clock.getSystemTimeMillis());
         aEvent.setAlpha(alpha);
         LOG.debug("sendElementAlphaEvent sending alpha: {} to: {} addr: '{}'", alpha, instrumentId, address);
         process(aEvent);
@@ -1380,8 +1391,10 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             alpha = 255;
         }
 
-        sendElementAlphaEvent(instrumentId, stave.getOscAddressScorePressureBox(), destination, alpha);
-        sendElementPenAlphaEvent(instrumentId, stave.getOscAddressScorePressureMidLine(), destination, alpha);
+        sendElementAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.PRESSURE, OverlayElementType.PRESSURE_BOX,
+                stave.getOscAddressScorePressureBox(), destination, alpha);
+        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.PRESSURE, OverlayElementType.PRESSURE_MID_LINE,
+                stave.getOscAddressScorePressureMidLine(), destination, alpha);
     }
 
     public void sendPressureLineAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled) {
@@ -1393,7 +1406,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             alpha = 255;
         }
 
-        sendElementPenAlphaEvent(instrumentId, stave.getOscAddressScorePressureLine(), destination, alpha);
+        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.PRESSURE, OverlayElementType.PRESSURE_LINE,
+                stave.getOscAddressScorePressureLine(), destination, alpha);
     }
 
     public void sendSpeedBoxAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled) {
@@ -1405,8 +1419,10 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             alpha = 255;
         }
 
-        sendElementAlphaEvent(instrumentId, stave.getOscAddressScoreSpeedBox(), destination, alpha);
-        sendElementPenAlphaEvent(instrumentId, stave.getOscAddressScoreSpeedMidLine(), destination, alpha);
+        sendElementAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.SPEED, OverlayElementType.SPEED_BOX,
+                stave.getOscAddressScoreSpeedBox(), destination, alpha);
+        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.SPEED, OverlayElementType.SPEED_MID_LINE,
+                stave.getOscAddressScoreSpeedMidLine(), destination, alpha);
     }
 
     public void sendSpeedLineAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled) {
@@ -1417,7 +1433,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         if (isEnabled) {
             alpha = 255;
         }
-        sendElementPenAlphaEvent(instrumentId, stave.getOscAddressScoreSpeedLine(), destination, alpha);
+        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.SPEED, OverlayElementType.SPEED_LINE,
+                stave.getOscAddressScoreSpeedLine(), destination, alpha);
     }
 
     public void sendPositionBoxAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled) {
@@ -1428,9 +1445,12 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         if (isEnabled) {
             alpha = 255;
         }
-        sendElementAlphaEvent(instrumentId, stave.getOscAddressScorePositionBox(), destination, alpha);
-        sendElementPenAlphaEvent(instrumentId, stave.getOscAddressScorePositionOrdLine(), destination, alpha);
-        sendElementPenAlphaEvent(instrumentId, stave.getOscAddressScorePositionBridgeLine(), destination, alpha);
+        sendElementAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.POSITION, OverlayElementType.POSITION_BOX,
+                stave.getOscAddressScorePositionBox(), destination, alpha);
+        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.POSITION, OverlayElementType.POSITION_ORD_LINE,
+                stave.getOscAddressScorePositionOrdLine(), destination, alpha);
+        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.POSITION, OverlayElementType.POSITION_BRIDGE_LINE,
+                stave.getOscAddressScorePositionBridgeLine(), destination, alpha);
     }
 
     public void sendPositionLineAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled) {
@@ -1441,7 +1461,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         if (isEnabled) {
             alpha = 255;
         }
-        sendElementPenAlphaEvent(instrumentId, stave.getOscAddressScorePositionLine(), destination, alpha);
+        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.POSITION, OverlayElementType.POSITION_LINE,
+                stave.getOscAddressScorePositionLine(), destination, alpha);
     }
 
     public void sendContentBoxAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled) {
@@ -1452,7 +1473,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         if (isEnabled) {
             alpha = 255;
         }
-        sendElementAlphaEvent(instrumentId, stave.getOscAddressScoreContentBox(), destination, alpha);
+        sendElementAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.PITCH, OverlayElementType.PITCH_BOX,
+                stave.getOscAddressScoreContentBox(), destination, alpha);
     }
 
     public void sendContentLineAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled) {
@@ -1463,7 +1485,8 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         if (isEnabled) {
             alpha = 255;
         }
-        sendElementPenAlphaEvent(instrumentId, stave.getOscAddressScoreContentLine(), destination, alpha);
+        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.PITCH, OverlayElementType.PITCH_LINE,
+                stave.getOscAddressScoreContentLine(), destination, alpha);
     }
 
     public void sendPressureColorEvent(Id instrumentId, Stave stave, int r, int g, int b) {
@@ -1499,7 +1522,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         process(colorEvent);
     }
 
-    public void sendPressureChangeEvent(Id instrumentId, Stave stave, double yDelta) {
+    public void sendPressureChangeEvent(Id instrumentId, Stave stave, double yDelta, long unscaledValue) {
         StaveId staveId = (StaveId) stave.getId();
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
 
@@ -1529,7 +1552,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String address = stave.getOscAddressScorePressureLine();
         LOG.debug("sendPressureChangeEvent sending y position: {} to: {} addr: '{}' yDelta: {} ", y, address, instrumentId, yDelta);
 
-        ElementYPositionEvent pressureEvent = eventFactory.createElementYPositionEvent(address, destination, staveId, clock.getSystemTimeMillis());
+        ElementYPositionEvent pressureEvent = eventFactory.createElementYPositionEvent(address, destination, staveId, unscaledValue, OverlayType.PRESSURE, clock.getSystemTimeMillis());
         pressureEvent.setYPosition(y);
         stave.setPressureValue(y);
 
@@ -3132,7 +3155,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
             for (Stave stave : staves) {
                 sendDynamicsColorEvent(instrumentId, stave, r, g, b);
-                sendDynamicsYPositionEvent(instrumentId, stave, scaled);
+                sendDynamicsYPositionEvent(instrumentId, stave, scaled, value);
             }
         }
     }
@@ -3185,7 +3208,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
                 }
 
                 double scaled = pressureLineValueScaler.scaleValue(value);
-                sendPressureChangeEvent(instrumentId, stave, scaled);
+                sendPressureChangeEvent(instrumentId, stave, scaled, value);
             }
         }
     }
@@ -3248,7 +3271,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
             for (Stave stave : staves) {
                 sendSpeedColorEvent(instrumentId, stave, r, g, b);
-                sendSpeedYPositionEvent(instrumentId, stave, scaled);
+                sendSpeedYPositionEvent(instrumentId, stave, scaled, value);
             }
         }
     }
@@ -3299,7 +3322,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             }
             Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
             for (Stave stave : staves) {
-                sendPositionLineYEvent(instrumentId, stave, scaled);
+                sendPositionLineYEvent(instrumentId, stave, scaled, value);
             }
         }
     }
@@ -3350,7 +3373,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             }
             Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
             for (Stave stave : staves) {
-                sendContentLineYEvent(instrumentId, stave, scaled);
+                sendContentLineYEvent(instrumentId, stave, scaled, value);
             }
         }
     }

@@ -5,6 +5,9 @@ import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.algo.SequentalIntRange;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.osc.DateTickEvent;
+import com.xenaksys.szcore.event.osc.ElementAlphaEvent;
+import com.xenaksys.szcore.event.osc.ElementColorEvent;
+import com.xenaksys.szcore.event.osc.ElementYPositionEvent;
 import com.xenaksys.szcore.event.osc.InstrumentResetSlotsEvent;
 import com.xenaksys.szcore.event.osc.InstrumentSlotsEvent;
 import com.xenaksys.szcore.event.osc.OscEvent;
@@ -16,6 +19,7 @@ import com.xenaksys.szcore.event.osc.PageDisplayEvent;
 import com.xenaksys.szcore.event.osc.PageMapDisplayEvent;
 import com.xenaksys.szcore.event.osc.PrecountBeatOffEvent;
 import com.xenaksys.szcore.event.osc.PrecountBeatOnEvent;
+import com.xenaksys.szcore.event.osc.ResetStavesEvent;
 import com.xenaksys.szcore.event.osc.StaveStartMarkEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
@@ -31,7 +35,10 @@ import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.score.InscoreMapElement;
+import com.xenaksys.szcore.score.OverlayElementType;
+import com.xenaksys.szcore.score.OverlayType;
 import com.xenaksys.szcore.score.ScoreProcessorImpl;
+import com.xenaksys.szcore.util.WebUtil;
 import com.xenaksys.szcore.web.WebClientInfo;
 import com.xenaksys.szcore.web.WebScoreAction;
 import com.xenaksys.szcore.web.WebScoreActionType;
@@ -55,6 +62,7 @@ public class WebScore {
     private final Clock clock;
     private final Map<String, List<WebClientInfo>> instrumentClients = new ConcurrentHashMap<>();
     private final Map<String, WebClientInfo> clients = new ConcurrentHashMap<>();
+    private final Map<StaveId, OverlayProcessor> overlayProcessors = new ConcurrentHashMap<>();
 
     private WebScoreInfo scoreInfo;
 
@@ -140,25 +148,69 @@ public class WebScore {
                 case INSTRUMENT_RESET_SLOTS:
                     processInstrumentResetSlots((InstrumentResetSlotsEvent) event);
                     break;
-                case ELEMENT_COLOR:
+                case RESET_STAVES:
+                    processResetStaves((ResetStavesEvent) event);
+                    break;
+                case ELEMENT_Y_POSITION:
+                    processElementYPosition((ElementYPositionEvent) event);
                     break;
                 case ELEMENT_ALPHA:
+                    processElementAlpha((ElementAlphaEvent) event);
+                    break;
+                case ELEMENT_COLOR:
+                    processElementColour((ElementColorEvent) event);
                     break;
                 case STAVE_TICK_DY:
-                    break;
                 case HELLO:
                 case SERVER_HELLO:
                 case SET_TITLE:
                 case SET_PART:
-                case RESET_STAVES:
-
-                case ELEMENT_Y_POSITION:
+                    break;
                 default:
                     LOG.error("processInterceptedOscEvent: Unhandled event: {}", oscEventType);
             }
         } catch (Exception e) {
             LOG.error("publishToWebScoreHack: failed to publish web score event", e);
         }
+    }
+
+    private void processElementColour(ElementColorEvent event) {
+
+
+    }
+
+    private void processElementAlpha(ElementAlphaEvent event) {
+        String destination = event.getDestination();
+        OverlayType overlayType = event.getOverlayType();
+        OverlayElementType overlayElementType = event.getOverlayElementType();
+        StaveId staveId = event.getStaveId();
+        boolean isEnabled = event.isEnabled();
+        int alpha = event.getAlpha();
+        Double opacity = WebUtil.convertToOpacity(alpha);
+        String webStaveId = WebUtil.getWebStaveId(staveId);
+        sendOverlayElementInfo(destination, overlayType, overlayElementType, isEnabled, webStaveId, opacity);
+    }
+    private void processElementYPosition(ElementYPositionEvent event) {
+        String destination = event.getDestination();
+        OverlayType overlayType = event.getOverlayType();
+        StaveId staveId = event.getStaveId();
+        long unscaledValue = event.getUnscaledValue();
+        processElementYPosition(destination, staveId, overlayType,unscaledValue);
+    }
+
+    private void processElementYPosition(String destination, StaveId staveId, OverlayType overlayType, long unscaledValue) {
+        OverlayProcessor overlayProcessor = overlayProcessors.computeIfAbsent(staveId, s -> new OverlayProcessor());
+        Double y = overlayProcessor.calculateValue(staveId, overlayType, unscaledValue);
+        if(y == null) {
+            return;
+        }
+        String webStaveId = WebUtil.getWebStaveId(staveId);
+        sendOverlayLinePosition(destination, overlayType, webStaveId, y);
+    }
+
+    private void processResetStaves(ResetStavesEvent event) {
+        String destination = event.getDestination();
+        sendResetStaves(destination);
     }
 
     private void processInstrumentSlots(InstrumentSlotsEvent event) {
@@ -175,7 +227,7 @@ public class WebScore {
     private void processStaveStartMark(StaveStartMarkEvent event) {
         String destination = event.getDestination();
         StaveId staveId = event.getStaveId();
-        String webStaveId = getWebStaveId(staveId);
+        String webStaveId = WebUtil.getWebStaveId(staveId);
         int beatNo = event.getBeatNo();
         sendStaveStartMark(destination, webStaveId, beatNo);
     }
@@ -183,7 +235,7 @@ public class WebScore {
     private void processDateTick(DateTickEvent event) {
         String destination = event.getDestination();
         StaveId staveId = event.getStaveId();
-        String webStaveId = getWebStaveId(staveId);
+        String webStaveId = WebUtil.getWebStaveId(staveId);
         int beatNo = event.getBeatNo();
         sendBeat(destination, webStaveId, beatNo);
     }
@@ -191,7 +243,7 @@ public class WebScore {
     private void processActivateStave(OscStaveActivateEvent event) {
         String destination = event.getDestination();
         StaveId staveId = event.getStaveId();
-        String webStaveId = getWebStaveId(staveId);
+        String webStaveId = WebUtil.getWebStaveId(staveId);
         boolean isActive = event.isActive();
         boolean isPlayStave = event.isPlayStave();
         sendActivateStave(destination, webStaveId, isActive, isPlayStave);
@@ -226,7 +278,7 @@ public class WebScore {
             return;
         }
         String webPageId = getWebPageId(event.getPageId());
-        String webStaveId = getWebStaveId(event.getStaveId());
+        String webStaveId = WebUtil.getWebStaveId(event.getStaveId());
         sendTimeSpaceMapInfo(destination, webPageId, webStaveId, mapElements);
     }
 
@@ -235,7 +287,7 @@ public class WebScore {
         String fileName = event.getFilename();
         StaveId staveId = event.getStaveId();
         String webPageId = getWebPageId(event.getPageId());
-        String webStaveId = getWebStaveId(staveId);
+        String webStaveId = WebUtil.getWebStaveId(staveId);
         PageId rndPageId = event.getRndPageId();
         String webRndPageId = null;
         if(rndPageId != null) {
@@ -248,21 +300,6 @@ public class WebScore {
         return Consts.WEB_SCORE_PAGE_PREFIX + pageId.getPageNo();
     }
 
-    public String getWebStaveId(StaveId staveId) {
-        int staveNo = staveId.getStaveNo();
-        String webStaveId = null;
-        switch (staveNo) {
-            case 1:
-                webStaveId = Consts.WEB_SCORE_STAVE_TOP;
-                break;
-            case 2:
-                webStaveId = Consts.WEB_SCORE_STAVE_BOTTOM;
-                break;
-            default:
-                LOG.error("processPageDisplayEvent: Unexpected stave number: " + staveNo);
-        }
-        return webStaveId;
-    }
 
     public void processConnectionEvent(WebScoreConnectionEvent event) {
         if (event == null) {
@@ -453,6 +490,37 @@ public class WebScore {
     private void sendResetInstrumentSlots(String destination) {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.RESET_INSTRUMENT_SLOTS, null, null);
+        scoreState.addAction(action);
+        sendToDestination(destination, scoreState);
+    }
+
+    private void sendResetStaves(String destination) {
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
+        WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.RESET_STAVES, null, null);
+        scoreState.addAction(action);
+        sendToDestination(destination, scoreState);
+    }
+
+    private void sendOverlayLinePosition(String destination, OverlayType overlayType, String webStaveId, Double lineY) {
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
+        List<String> targets = Collections.singletonList(webStaveId);
+        Map<String, Object> params = new HashMap<>(2);
+        params.put(Consts.WEB_PARAM_OVERLAY_TYPE, overlayType.name());
+        params.put(Consts.WEB_PARAM_OVERLAY_LINE_Y, lineY);
+        WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.OVERLAY_LINE, targets, params);
+        scoreState.addAction(action);
+        sendToDestination(destination, scoreState);
+    }
+
+    private void sendOverlayElementInfo(String destination, OverlayType overlayType, OverlayElementType overlayElementType, boolean isEnabled, String webStaveId, Double opacity) {
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
+        List<String> targets = Collections.singletonList(webStaveId);
+        Map<String, Object> params = new HashMap<>(4);
+        params.put(Consts.WEB_PARAM_OVERLAY_TYPE, overlayType.name());
+        params.put(Consts.WEB_PARAM_OVERLAY_ELEMENT, overlayElementType.name());
+        params.put(Consts.WEB_PARAM_IS_ENABLED, isEnabled);
+        params.put(Consts.WEB_PARAM_OPACITY, opacity);
+        WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.OVERLAY_ELEMENT, targets, params);
         scoreState.addAction(action);
         sendToDestination(destination, scoreState);
     }

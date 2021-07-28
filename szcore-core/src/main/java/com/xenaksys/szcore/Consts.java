@@ -442,6 +442,11 @@ public interface Consts {
     String WEB_PARAM_IS_PLAY = "isPlay";
     String WEB_PARAM_BEAT_NO = "beatNo";
     String WEB_PARAM_CSV_INSTRUMENTS = "csvInstruments";
+    String WEB_PARAM_OVERLAY_TYPE = "overlayType";
+    String WEB_PARAM_OVERLAY_ELEMENT = "overlayElement";
+    String WEB_PARAM_OVERLAY_LINE_Y = "overlayLineY";
+    String WEB_PARAM_IS_ENABLED = "isEnabled";
+    String WEB_PARAM_OPACITY = "opacity";
 
     String WEB_SCORE_ROOT_DIR = "/score/";
     String WEB_SCORE_STAVE_TOP = "topStave";
@@ -451,6 +456,27 @@ public interface Consts {
     String WEB_SCORE_PAGE_NO_TOKEN = "@PgNo@";
 
     String WEB_WS_CLOSE_REASON_NORMAL = "Closed by the server";
+
+    double WEB_DYNAMICS_LINE_Y_MAX = 0.074;
+    double WEB_DYNAMICS_LINE_Y_MIN = 0.0;
+    double WEB_DYNAMICS_LINE1_Y_MIN_POSITION = -0.04;
+    double WEB_DYNAMICS_LINE2_Y_MIN_POSITION = 0.75;
+
+    double WEB_PRESSURE_LINE_Y_MAX = 0.055;
+    double WEB_PRESSURE_LINE1_Y_MIN_POSITION = -0.3725;
+    double WEB_PRESSURE_LINE2_Y_MIN_POSITION = 0.4185;
+
+    double WEB_SPEED_LINE_Y_MAX = 0.045;
+    double WEB_SPEED_LINE1_Y_MIN_POSITION = -0.435;
+    double WEB_SPEED_LINE2_Y_MIN_POSITION = 0.355;
+
+    double WEB_OVRL_POS_Y_LENGTH = 38.0;
+    double WEB_OVRL_POS_TOP_Y_MIN = 115.0;
+    double WEB_OVRL_POS_BOT_Y_MIN = 336.0;
+
+    double WEB_PITCH_LINE_Y_MAX = 0.244;
+    double WEB_PITCH_LINE1_Y_MIN_POSITION = -0.125;
+    double WEB_PITCH_LINE2_Y_MIN_POSITION = 0.665;
 
     String NAME_FULL_SCORE = "FullScore";
 

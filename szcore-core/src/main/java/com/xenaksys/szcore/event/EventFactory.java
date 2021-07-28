@@ -80,6 +80,8 @@ import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.score.InscoreMapElement;
+import com.xenaksys.szcore.score.OverlayElementType;
+import com.xenaksys.szcore.score.OverlayType;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
 import com.xenaksys.szcore.scripting.ScriptingEngineScript;
 import com.xenaksys.szcore.web.WebClientInfo;
@@ -215,16 +217,16 @@ public class EventFactory {
         return new StaveYPositionEvent(address, oscYPositionArgs, destination, staveId, creationTime);
     }
 
-    public ElementYPositionEvent createElementYPositionEvent(String address, String destination, StaveId staveId, long creationTime) {
-        return new ElementYPositionEvent(address, oscYPositionArgs, destination, staveId, creationTime);
+    public ElementYPositionEvent createElementYPositionEvent(String address, String destination, StaveId staveId, long unscaledValue, OverlayType overlayType, long creationTime) {
+        return new ElementYPositionEvent(address, oscYPositionArgs, unscaledValue, overlayType, destination, staveId, creationTime);
     }
 
-    public ElementAlphaEvent createElementAlphaEvent(String address, String destination, long creationTime) {
-        return new ElementAlphaEvent(address, oscAlphaArgs, destination, creationTime);
+    public ElementAlphaEvent createElementAlphaEvent(StaveId staveId, boolean isEnabled, OverlayType overlayType, OverlayElementType overlayElementType, String address, String destination, long creationTime) {
+        return new ElementAlphaEvent(staveId, isEnabled, overlayType, overlayElementType, address, oscAlphaArgs, destination, creationTime);
     }
 
-    public ElementAlphaEvent createElementPenAlphaEvent(String address, String destination, long creationTime) {
-        return new ElementAlphaEvent(address, oscPenAlphaArgs, destination, creationTime);
+    public ElementAlphaEvent createElementPenAlphaEvent(StaveId staveId, boolean isEnabled, OverlayType overlayType, OverlayElementType overlayElementType, String address, String destination, long creationTime) {
+        return new ElementAlphaEvent(staveId, isEnabled, overlayType, overlayElementType, address, oscPenAlphaArgs, destination, creationTime);
     }
 
     public ElementColorEvent createElementColorEvent(String address, String destination, long creationTime) {

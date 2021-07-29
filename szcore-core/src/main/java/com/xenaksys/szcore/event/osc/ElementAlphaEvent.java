@@ -16,7 +16,7 @@ public class ElementAlphaEvent extends OscEvent {
 
     public ElementAlphaEvent(StaveId staveId, boolean isEnabled, OverlayType overlayType, OverlayElementType overlayElementType, String address, List<Object> arguments, String destination, long time) {
         super(address, arguments, null, destination, time);
-        this.staveId= staveId;
+        this.staveId = staveId;
         this.isEnabled = isEnabled;
         this.overlayType = overlayType;
         this.overlayElementType = overlayElementType;

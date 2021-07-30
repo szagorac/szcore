@@ -175,8 +175,15 @@ public class WebScore {
     }
 
     private void processElementColour(ElementColorEvent event) {
-
-
+        String destination = event.getDestination();
+        OverlayType overlayType = event.getOverlayType();
+        StaveId staveId = event.getStaveId();
+        int r = event.getR();
+        int g = event.getG();
+        int b = event.getB();
+        String colHex = WebUtil.rgbToHex(r,g,b);
+        String webStaveId = WebUtil.getWebStaveId(staveId);
+        sendOverlayColour(destination, overlayType, webStaveId, colHex);
     }
 
     private void processElementAlpha(ElementAlphaEvent event) {
@@ -521,6 +528,17 @@ public class WebScore {
         params.put(Consts.WEB_PARAM_IS_ENABLED, isEnabled);
         params.put(Consts.WEB_PARAM_OPACITY, opacity);
         WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.OVERLAY_ELEMENT, targets, params);
+        scoreState.addAction(action);
+        sendToDestination(destination, scoreState);
+    }
+
+    private void sendOverlayColour(String destination, OverlayType overlayType, String webStaveId, String colHex) {
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
+        List<String> targets = Collections.singletonList(webStaveId);
+        Map<String, Object> params = new HashMap<>(4);
+        params.put(Consts.WEB_PARAM_OVERLAY_TYPE, overlayType.name());
+        params.put(Consts.WEB_PARAM_COLOUR, colHex);
+        WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.OVERLAY_COLOUR, targets, params);
         scoreState.addAction(action);
         sendToDestination(destination, scoreState);
     }

@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 
 public class WebUtil {
     static final Logger LOG = LoggerFactory.getLogger(WebUtil.class);
+    public static String RGB_TO_HEX_FORMAT = "#%02x%02x%02x";
+
     private static final ValueScaler alphaScaler = new ValueScaler(0.0, 255.0, 0.0, 1.0);
 
     public static String getWebStaveId(StaveId staveId) {
@@ -30,4 +32,7 @@ public class WebUtil {
         return alphaScaler.scaleValue(1.0 * alpha);
     }
 
+    public static String rgbToHex(int r, int g, int b) {
+        return String.format(RGB_TO_HEX_FORMAT, r, g, b);
+    }
 }

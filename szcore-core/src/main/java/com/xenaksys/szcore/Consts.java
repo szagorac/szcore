@@ -446,6 +446,7 @@ public interface Consts {
     String WEB_PARAM_OVERLAY_ELEMENT = "overlayElement";
     String WEB_PARAM_OVERLAY_LINE_Y = "overlayLineY";
     String WEB_PARAM_IS_ENABLED = "isEnabled";
+    String WEB_PARAM_COLOUR = "colour";
     String WEB_PARAM_OPACITY = "opacity";
 
     String WEB_SCORE_ROOT_DIR = "/score/";

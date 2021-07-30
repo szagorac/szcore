@@ -1494,7 +1494,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
 
         String address = stave.getOscAddressScorePressureBox();
-        ElementColorEvent colorEvent = eventFactory.createElementColorEvent(address, destination, clock.getSystemTimeMillis());
+        ElementColorEvent colorEvent = eventFactory.createElementColorEvent(staveId, OverlayType.PRESSURE, address, destination, clock.getSystemTimeMillis());
         colorEvent.setColor(r, g, b);
         LOG.debug("sendPressureColorEvent sending r: {}  g: {}  b: {} to: {} addr: '{}'", r, g, b, instrumentId, address);
         process(colorEvent);
@@ -1505,7 +1505,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
 
         String address = stave.getOscAddressScoreDynamicsBox();
-        ElementColorEvent colorEvent = eventFactory.createElementColorEvent(address, destination, clock.getSystemTimeMillis());
+        ElementColorEvent colorEvent = eventFactory.createElementColorEvent(staveId, OverlayType.DYNAMICS, address, destination, clock.getSystemTimeMillis());
         colorEvent.setColor(r, g, b);
         LOG.debug("sendDynamicsColorEvent sending r: {}  g: {}  b: {} to: {} addr: '{}'", r, g, b, instrumentId, address);
         process(colorEvent);
@@ -1516,7 +1516,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
 
         String address = stave.getOscAddressScoreSpeedBox();
-        ElementColorEvent colorEvent = eventFactory.createElementColorEvent(address, destination, clock.getSystemTimeMillis());
+        ElementColorEvent colorEvent = eventFactory.createElementColorEvent(staveId, OverlayType.SPEED, address, destination, clock.getSystemTimeMillis());
         colorEvent.setColor(r, g, b);
         LOG.debug("sendSpeedColorEvent sending r: {}  g: {}  b: {} to: {} addr: '{}'", r, g, b, instrumentId, address);
         process(colorEvent);

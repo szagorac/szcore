@@ -229,8 +229,8 @@ public class EventFactory {
         return new ElementAlphaEvent(staveId, isEnabled, overlayType, overlayElementType, address, oscPenAlphaArgs, destination, creationTime);
     }
 
-    public ElementColorEvent createElementColorEvent(String address, String destination, long creationTime) {
-        return new ElementColorEvent(address, oscColorArgs, destination, creationTime);
+    public ElementColorEvent createElementColorEvent(StaveId staveId, OverlayType overlayType, String address, String destination, long creationTime) {
+        return new ElementColorEvent(staveId, overlayType, address, oscColorArgs, destination, creationTime);
     }
 
     public PageDisplayEvent createPageDisplayEvent(PageId pageId, PageId rndPageId, String filename, StaveId staveId, String address, List<Object> args, BeatId eventBaseBeat, String destination, long creationTime) {

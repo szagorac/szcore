@@ -2,7 +2,7 @@ package com.xenaksys.szcore.process;
 
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.dsl.Disruptor;
-import com.xenaksys.szcore.event.OscEvent;
+import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.model.OscPublisher;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
@@ -30,7 +30,7 @@ abstract public class AbstractOscPublisherDisruptorProcessor implements OscPubli
 
     @Override
     public void process(SzcoreEvent event) {
-        if(event == null || !(event instanceof OscEvent)){
+        if (!(event instanceof OscEvent)) {
             return;
         }
 

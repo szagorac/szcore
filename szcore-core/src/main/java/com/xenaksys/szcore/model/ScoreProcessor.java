@@ -1,19 +1,24 @@
 package com.xenaksys.szcore.model;
 
-import com.xenaksys.szcore.event.IncomingWebEvent;
-import com.xenaksys.szcore.event.OutgoingWebEvent;
+import com.xenaksys.szcore.event.osc.OscEvent;
+import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
+import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
-import com.xenaksys.szcore.score.web.WebScore;
-import com.xenaksys.szcore.score.web.export.WebScoreStateDeltaExport;
-import com.xenaksys.szcore.score.web.export.WebScoreStateExport;
-import com.xenaksys.szcore.web.WebScoreStateListener;
+import com.xenaksys.szcore.score.web.WebScoreState;
+import com.xenaksys.szcore.score.web.WebScoreTargetType;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
+import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
+import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
+import com.xenaksys.szcore.web.WebAudienceStateListener;
+import com.xenaksys.szcore.web.WebClientInfo;
 
 import java.io.File;
 import java.util.List;
 
-public interface  ScoreProcessor extends Processor {
+public interface ScoreProcessor extends Processor {
 
     void loadAndPrepare(String path) throws Exception;
 
@@ -33,7 +38,7 @@ public interface  ScoreProcessor extends Processor {
 
     void subscribe(SzcoreEngineEventListener eventListener);
 
-    void subscribe(WebScoreStateListener eventListener);
+    void subscribe(WebAudienceStateListener eventListener);
 
     void setTempoModifier(Id transportId, TempoModifier tempoModifier);
 
@@ -73,15 +78,15 @@ public interface  ScoreProcessor extends Processor {
 
     void onUseContentLine(Boolean value, List<Id> instrumentIds) throws Exception;
 
-    void onIncomingWebEvent(IncomingWebEvent webEvent) throws Exception;
+    void onIncomingWebAudienceEvent(IncomingWebAudienceEvent webEvent) throws Exception;
 
-    void onWebScoreStateChange(WebScoreStateExport webScoreStateExport) throws Exception;
+    void onWebAudienceStateChange(WebAudienceScoreStateExport webAudienceScoreStateExport) throws Exception;
 
-    void onWebScoreStateDeltaChange(WebScoreStateDeltaExport webScoreStateDeltaExport) throws Exception;
+    void onWebAudienceStateDeltaChange(WebAudienceScoreStateDeltaExport webAudienceScoreStateDeltaExport) throws Exception;
 
     void onOutgoingWebEvent(OutgoingWebEvent webEvent) throws Exception;
 
-    WebScore loadWebScore(File file) throws Exception;
+    WebAudienceScore loadWebScore(File file) throws Exception;
 
     void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst);
 
@@ -98,4 +103,14 @@ public interface  ScoreProcessor extends Processor {
     void scheduleEvent(SzcoreEvent event, long timeDeltaMs);
 
     public void scheduleTask(MusicTask task);
+
+    void onIncomingWebScoreEvent(WebScoreInEvent webEvent) throws Exception;
+
+    void sendWebScoreState(String clientAddr, WebScoreTargetType host, WebScoreState scoreState) throws Exception;
+
+    WebScoreState getOrCreateWebScoreState();
+
+    void onInterceptedOscOutEvent(OscEvent event);
+
+    List<WebClientInfo> getWebScoreInstrumentClients(String instrument);
 }

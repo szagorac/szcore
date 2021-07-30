@@ -10,11 +10,11 @@ public class ClientInfo {
     private String instrument;
 
 
-    public ClientInfo(String id, InetAddress addr, int port) {
+    public ClientInfo(String id, InetAddress addr, String host, int port) {
         this.id = id;
         this.addr = addr;
         this.port = port;
-        this.host = addr.getHostAddress();
+        this.host = host;
     }
 
     public String getId() {

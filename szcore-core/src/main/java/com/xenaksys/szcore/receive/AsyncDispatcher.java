@@ -1,6 +1,6 @@
 package com.xenaksys.szcore.receive;
 
-import com.xenaksys.szcore.event.IncomingOscEvent;
+import com.xenaksys.szcore.event.osc.IncomingOscEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.net.osc.OSCMessage;
 import com.xenaksys.szcore.net.osc.utility.SzOSCPacketDispatcher;

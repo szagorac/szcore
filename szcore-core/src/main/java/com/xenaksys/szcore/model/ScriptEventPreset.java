@@ -1,6 +1,6 @@
 package com.xenaksys.szcore.model;
 
-import com.xenaksys.szcore.event.OscEvent;
+import com.xenaksys.szcore.event.osc.OscEvent;
 
 import java.util.ArrayList;
 import java.util.List;

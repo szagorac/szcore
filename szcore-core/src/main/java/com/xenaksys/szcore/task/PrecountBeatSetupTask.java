@@ -2,16 +2,16 @@ package com.xenaksys.szcore.task;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.PrecountBeatOffEvent;
-import com.xenaksys.szcore.event.PrecountBeatOnEvent;
-import com.xenaksys.szcore.event.PrecountBeatSetupEvent;
-import com.xenaksys.szcore.event.WebScoreEvent;
+import com.xenaksys.szcore.event.music.PrecountBeatSetupEvent;
+import com.xenaksys.szcore.event.osc.PrecountBeatOffEvent;
+import com.xenaksys.szcore.event.osc.PrecountBeatOnEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.OscPublisher;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.Transport;
-import com.xenaksys.szcore.score.web.WebScore;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
 
 public class PrecountBeatSetupTask extends EventMusicTask {
     private final Transport transport;
@@ -21,10 +21,10 @@ public class PrecountBeatSetupTask extends EventMusicTask {
     private final String destination;
     private final Clock clock;
     private final TaskFactory taskFactory;
-    private final WebScore webScore;
+    private final WebAudienceScore webAudienceScore;
 
     public PrecountBeatSetupTask(PrecountBeatSetupEvent precountBeatSetupEvent, String destination, Transport transport, ScoreProcessor processor,
-                                 OscPublisher oscPublisher, EventFactory eventFactory, TaskFactory taskFactory, WebScore webScore, Clock clock) {
+                                 OscPublisher oscPublisher, EventFactory eventFactory, TaskFactory taskFactory, WebAudienceScore webAudienceScore, Clock clock) {
         super(0, precountBeatSetupEvent);
         this.transport = transport;
         this.processor = processor;
@@ -33,7 +33,7 @@ public class PrecountBeatSetupTask extends EventMusicTask {
         this.destination = destination;
         this.clock = clock;
         this.taskFactory = taskFactory;
-        this.webScore = webScore;
+        this.webAudienceScore = webAudienceScore;
     }
 
     @Override
@@ -117,7 +117,7 @@ public class PrecountBeatSetupTask extends EventMusicTask {
         OscEventTask task = new OscEventTask(playTime, event, oscPublisher);
         //LOG.info("Create Beater ON Task playTime: " + playTime + " beaterNo: " + beaterNo + " colourId: " + colourId);
         processor.scheduleTask(task);
-        addWebscorePrecountTask(playTime, true, beaterNo, colourId);
+        addWebAudiencePrecountTask(playTime, true, beaterNo, colourId);
     }
 
     private void addBeaterOffTask(long playTime, int beaterNo) {
@@ -129,12 +129,12 @@ public class PrecountBeatSetupTask extends EventMusicTask {
         OscEventTask task = new OscEventTask(playTime, event, oscPublisher);
         //LOG.info("Create Beater OFF Task playTime: " + playTime + " beaterNo: " + beaterNo);
         processor.scheduleTask(task);
-        addWebscorePrecountTask(playTime, false, beaterNo, 0);
+        addWebAudiencePrecountTask(playTime, false, beaterNo, 0);
     }
 
-    private void addWebscorePrecountTask(long playTime, boolean isOn, int beaterNo, int colourId) {
-        WebScoreEvent event = eventFactory.createWebScorePrecountEvent(beaterNo, isOn, colourId, clock.getSystemTimeMillis());
-        WebScoreEventTask task = taskFactory.createWebScoreEventTask(playTime, event, webScore);
+    private void addWebAudiencePrecountTask(long playTime, boolean isOn, int beaterNo, int colourId) {
+        WebAudienceEvent event = eventFactory.createWebAudiencePrecountEvent(beaterNo, isOn, colourId, clock.getSystemTimeMillis());
+        WebAudienceEventTask task = taskFactory.createWebAudienceEventTask(playTime, event, webAudienceScore);
         processor.scheduleTask(task);
     }
 }

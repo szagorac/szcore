@@ -15,14 +15,16 @@ public class ZsWebRequest {
     private final String sourceAddr;
     private final String userAgent;
     private final boolean isStatic;
+    private final boolean isScoreRequest;
 
 
-    public ZsWebRequest(String requestPath, String sourceAddr, String userAgent, boolean isStatic, long timeMs) {
+    public ZsWebRequest(String requestPath, String sourceAddr, String userAgent, boolean isStatic, boolean isScoreRequest, long timeMs) {
         this.requestPath = requestPath;
         this.sourceAddr = sourceAddr;
         this.userAgent = userAgent;
         this.timeMs = timeMs;
         this.isStatic = isStatic;
+        this.isScoreRequest = isScoreRequest;
     }
 
     public void addStringParam(String name, String value) {
@@ -83,5 +85,9 @@ public class ZsWebRequest {
 
     public boolean isStatic() {
         return isStatic;
+    }
+
+    public boolean isScoreRequest() {
+        return isScoreRequest;
     }
 }

@@ -1,6 +1,6 @@
 package com.xenaksys.szcore.task;
 
-import com.xenaksys.szcore.event.OscEvent;
+import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.model.OscPublisher;
 import com.xenaksys.szcore.model.SzcoreEvent;
 

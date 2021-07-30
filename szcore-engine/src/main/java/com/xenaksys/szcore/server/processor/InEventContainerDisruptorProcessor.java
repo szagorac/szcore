@@ -5,13 +5,14 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventContainer;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.EventType;
-import com.xenaksys.szcore.event.IncomingOscEvent;
-import com.xenaksys.szcore.event.IncomingWebEvent;
-import com.xenaksys.szcore.event.InstrumentEvent;
-import com.xenaksys.szcore.event.OscEvent;
-import com.xenaksys.szcore.event.ParticipantEvent;
-import com.xenaksys.szcore.event.ParticipantStatsEvent;
-import com.xenaksys.szcore.event.WebScoreEvent;
+import com.xenaksys.szcore.event.gui.InstrumentEvent;
+import com.xenaksys.szcore.event.gui.ParticipantEvent;
+import com.xenaksys.szcore.event.gui.ParticipantStatsEvent;
+import com.xenaksys.szcore.event.osc.IncomingOscEvent;
+import com.xenaksys.szcore.event.osc.OscEvent;
+import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
 import com.xenaksys.szcore.model.ClientInfo;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.SzcoreEvent;
@@ -65,12 +66,16 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
                 case OSC:
                     processOscEvent((OscEvent) event);
                     break;
-                case WEB_IN:
-                    processWebEvent((IncomingWebEvent) event);
+                case WEB_AUDIENCE_IN:
+                    processWebEvent((IncomingWebAudienceEvent) event);
                     break;
-                case WEB_SCORE:
-                    processWebScoreEvent((WebScoreEvent) event);
+                case WEB_AUDIENCE:
+                    processWebAudienceEvent((WebAudienceEvent) event);
                     break;
+                case WEB_SCORE_IN:
+                    processWebScoreInEvent((WebScoreInEvent) event);
+                    break;
+
             }
 
         } catch (Exception e) {
@@ -78,12 +83,16 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
         }
     }
 
-    private void processWebEvent(IncomingWebEvent event) {
+    private void processWebScoreInEvent(WebScoreInEvent event) {
+        server.getWebProcessor().process(event);
+    }
+
+    private void processWebEvent(IncomingWebAudienceEvent event) {
 //        LOG.info("processWebEvent: {}", event);
         server.getWebProcessor().process(event);
     }
 
-    private void processWebScoreEvent(WebScoreEvent event) {
+    private void processWebAudienceEvent(WebAudienceEvent event) {
 //        LOG.info("processWebEvent: {}", event);
         server.getScoreProcessor().process(event);
     }
@@ -164,7 +173,7 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
         server.sendServerHelloEvent(clientId);
 
         ParticipantEvent participantEvent = eventFactory.createParticipantEvent(inetAddress, inetAddress.getHostAddress(), remoteInPort, remoteOutPort,
-                remoteErrPort, 0, Consts.NAME_NA, clock.getSystemTimeMillis());
+                remoteErrPort, 0, Consts.NAME_NA, false, false, clock.getSystemTimeMillis());
 
         notifyListeners(participantEvent);
     }
@@ -258,7 +267,7 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
         server.sendHello(clientId);
 
         ParticipantEvent participantEvent = eventFactory.createParticipantEvent(inetAddress, inetAddress.getHostAddress(), clientInPort, clientOutPort,
-                0, 0, Consts.NAME_NA, clock.getSystemTimeMillis());
+                0, 0, Consts.NAME_NA, false, false, clock.getSystemTimeMillis());
 
         notifyListeners(participantEvent);
     }
@@ -421,7 +430,8 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
     }
 
     private void addParticipant(String id, InetAddress address, int port) {
-        server.addParticipant(id, address, port);
+        String host = address.getHostName();
+        server.addParticipant(id, address, host, port);
     }
 
     private void addOutPort(String id, InetAddress address, int port) {
@@ -433,6 +443,9 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
     }
 
     public void expireParticipant(ParticipantStats stats, ClientInfo clientInfo, long lastPingMillis) {
+        if (stats == null || clientInfo == null) {
+            return;
+        }
         ParticipantStatsEvent statsEvent = eventFactory.createParticipantStatsEvent(clientInfo.getAddr(), clientInfo.getHost(),
                 clientInfo.getPort(), stats.getPingLatency(), stats.getOneWayPingLatency(), true, lastPingMillis, clock.getSystemTimeMillis());
         notifyListeners(statsEvent);

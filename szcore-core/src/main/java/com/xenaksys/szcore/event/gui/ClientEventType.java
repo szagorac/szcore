@@ -1,0 +1,5 @@
+package com.xenaksys.szcore.event.gui;
+
+public enum ClientEventType {
+    PARTICIPANT, PARTICIPANT_STATS, PARTICIPANT_EXPIRY, INSTRUMENT, ERROR, WEB_AUDIENCE_CLIENT_INFOS, WEB_SCORE_CLIENT_INFOS
+}

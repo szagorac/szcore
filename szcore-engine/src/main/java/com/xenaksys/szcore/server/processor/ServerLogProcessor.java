@@ -1,6 +1,6 @@
 package com.xenaksys.szcore.server.processor;
 
-import com.xenaksys.szcore.event.OscEvent;
+import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.model.Processor;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.SzcoreLogger;

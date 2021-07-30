@@ -1,7 +1,7 @@
 package com.xenaksys.szcore.receive;
 
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.event.IncomingOscEvent;
+import com.xenaksys.szcore.event.osc.IncomingOscEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Processor;
 import com.xenaksys.szcore.model.SzcoreEvent;

@@ -3,7 +3,8 @@ package com.xenaksys.szcore.gui;
 
 import com.aquafx_project.AquaFx;
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.event.WebClientInfoUpdateEvent;
+import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
+import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
 import com.xenaksys.szcore.gui.event.ClientIncomingEventReceiver;
 import com.xenaksys.szcore.gui.event.ClientScoreEngineEventReceiver;
 import com.xenaksys.szcore.gui.model.Participant;
@@ -13,15 +14,13 @@ import com.xenaksys.szcore.gui.view.LoggerController;
 import com.xenaksys.szcore.gui.view.RootLayoutController;
 import com.xenaksys.szcore.gui.view.ScoreController;
 import com.xenaksys.szcore.gui.view.SettingsController;
-import com.xenaksys.szcore.model.EventService;
-import com.xenaksys.szcore.model.Id;
-import com.xenaksys.szcore.model.ScoreService;
-import com.xenaksys.szcore.model.SzcoreEvent;
-import com.xenaksys.szcore.model.Tempo;
+import com.xenaksys.szcore.model.*;
 import com.xenaksys.szcore.model.id.OscListenerId;
 import com.xenaksys.szcore.server.SzcoreServer;
 import com.xenaksys.szcore.time.clock.SimpleClock;
+import com.xenaksys.szcore.web.WebClientInfo;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -37,6 +36,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Properties;
 
 public class SzcoreClient extends Application {
@@ -212,18 +214,19 @@ public class SzcoreClient extends Application {
         return participants;
     }
 
-    public void addParticipant(Participant participant){
-        if(participant == null){
+    public void addParticipant(Participant participant) {
+        if (participant == null) {
             return;
         }
+        Platform.runLater(() -> {
+            if (participants.contains(participant)) {
+                updateParticipant(participant);
+                return;
+            }
 
-        if (participants.contains(participant)) {
-            updateParticipant(participant);
-            return;
-        }
-
-        LOG.info("Adding Participant: " + participant);
-        participants.add(participant);
+            LOG.info("Adding Participant: " + participant);
+            participants.add(participant);
+        });
     }
 
     public void updateParticipant(Participant participant) {
@@ -231,12 +234,17 @@ public class SzcoreClient extends Application {
         if (toUpdate == null) {
             return;
         }
-        LOG.info("Updating Participant: " + participant);
-        toUpdate.setInstrument(participant.getInstrument());
-        toUpdate.setPing(participant.getPing());
-        toUpdate.setPortErr(participant.getPortErr());
-        toUpdate.setPortOut(participant.getPortOut());
-        toUpdate.setSelect(participant.getSelect());
+        Platform.runLater(() -> {
+            LOG.info("Updating Participant: " + toUpdate);
+            toUpdate.setInstrument(participant.getInstrument());
+            toUpdate.setPing(participant.getPing());
+            toUpdate.setPortErr(participant.getPortErr());
+            toUpdate.setPortOut(participant.getPortOut());
+            toUpdate.setSelect(participant.getSelect());
+            toUpdate.setIsReady(participant.getIsReady());
+            toUpdate.setBanned(participant.isBanned());
+        });
+
     }
 
     public Participant getParticipant(String hostAddress, int port) {
@@ -278,7 +286,61 @@ public class SzcoreClient extends Application {
         scoreController.onTempoEvent(transportId, tempo);
     }
 
-    public void processWebClientInfos(WebClientInfoUpdateEvent event) {
+    public void processWebAudienceClientInfos(WebAudienceClientInfoUpdateEvent event) {
         settingsController.processWebClientInfos(event);
+    }
+
+    public void processWebScoreClientInfos(WebScoreClientInfoUpdateEvent event) {
+        ArrayList<WebClientInfo> webClientInfos = event.getWebClientInfos();
+        boolean isFullUpdate = event.isFullUpdate();
+        ArrayList<Participant> toRemove = new ArrayList<>();
+
+        if (isFullUpdate) {
+            for (Participant participant : participants) {
+                String host = participant.getHostAddress();
+                int port = participant.getPortIn();
+                boolean isPresent = false;
+                for (WebClientInfo clientInfo : webClientInfos) {
+                    String chost = clientInfo.getHost();
+                    int cport = clientInfo.getPort();
+                    if (host.equals(chost) && port == cport) {
+                        isPresent = true;
+                        continue;
+                    }
+                }
+                if (!isPresent && participant.getIsWebClient()) {
+                    toRemove.add(participant);
+                }
+            }
+        }
+
+        for (WebClientInfo clientInfo : webClientInfos) {
+            Participant participant = new Participant();
+            InetAddress addr = null;
+            try {
+                addr = InetAddress.getByName(clientInfo.getHost());
+            } catch (UnknownHostException e) {
+            }
+            participant.setInetAddress(addr);
+            participant.setHostAddress(clientInfo.getHost());
+            participant.setPortIn(clientInfo.getPort());
+            String instrument = Consts.NAME_NA;
+            if (clientInfo.getInstrument() != null) {
+                instrument = clientInfo.getInstrument();
+            }
+            participant.setInstrument(instrument);
+            participant.setIsWebClient(true);
+            participant.setIsReady(clientInfo.isReady());
+            participant.setBanned(clientInfo.isBanned());
+            addParticipant(participant);
+        }
+
+        if (isFullUpdate) {
+            for (Participant participant : toRemove) {
+                if (participants.contains(participant)) {
+                    participants.remove(participant);
+                }
+            }
+        }
     }
 }

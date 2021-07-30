@@ -5,7 +5,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.xenaksys.szcore.server.SzcoreServer;
-import com.xenaksys.szcore.server.web.WebServer;
+import com.xenaksys.szcore.server.web.ZsWebServer;
+import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.web.ZsWebRequest;
 import com.xenaksys.szcore.web.ZsWebResponse;
 import io.undertow.websockets.WebSocketConnectionCallback;
@@ -28,37 +29,48 @@ public class ZsWsConnectionCallback implements WebSocketConnectionCallback {
 
     static final JsonParser JSON_PARSER = new JsonParser();
     private String lastReceivedMessage;
-    private WebServer webServer;
+    private ZsWebServer webServer;
     private SzcoreServer szcoreServer;
 
-    public ZsWsConnectionCallback(WebServer webServer, SzcoreServer szcoreServer) {
+    public ZsWsConnectionCallback(ZsWebServer webServer, SzcoreServer szcoreServer) {
         this.webServer = webServer;
         this.szcoreServer = szcoreServer;
     }
 
     @Override
     public void onConnect(WebSocketHttpExchange exchange, WebSocketChannel channel) {
-        webServer.onWsChannelConnected(channel, exchange);
-        LOG.info("onConnect: connected channel: {}", channel.getSourceAddress());
-        channel.getReceiveSetter().set(new AbstractReceiveListener() {
-            @Override
-            protected void onFullTextMessage(WebSocketChannel channel, BufferedTextMessage message) {
-                try {
-                    if (channel == null || message == null) {
-                        return;
+        boolean isOk = webServer.onWsChannelConnected(channel, exchange);
+        if (isOk) {
+            LOG.info("onConnect: connected channel: {}", channel.getSourceAddress());
+            channel.getReceiveSetter().set(new AbstractReceiveListener() {
+                @Override
+                protected void onFullTextMessage(WebSocketChannel channel, BufferedTextMessage message) {
+                    try {
+                        if (channel == null || message == null) {
+                            return;
+                        }
+                        String sourceAddr = NetUtil.getClientId(channel.getPeerAddress());
+                        if (webServer.isSourceAddrBanned(sourceAddr)) {
+                            return;
+                        }
+                        long now = System.currentTimeMillis();
+                        processRequest(exchange, channel, message, now);
+                    } catch (Exception e) {
+                        LOG.error("Failed to process WebSocket request", e);
                     }
-                    String sourceAddr = channel.getPeerAddress().toString();
-                    if (webServer.isSourceAddrBanned(sourceAddr)) {
-                        return;
-                    }
-                    long now = System.currentTimeMillis();
-                    processRequest(exchange, channel, message, now);
-                } catch (Exception e) {
-                    LOG.error("Failed to process WebSocket request", e);
                 }
-            }
-        });
-        channel.resumeReceives();
+            });
+            channel.resumeReceives();
+        } else {
+            channel.getReceiveSetter().set(new AbstractReceiveListener() {
+                @Override
+                protected void onFullTextMessage(WebSocketChannel channel, BufferedTextMessage message) {
+                    //DO NOTHING
+                }
+            });
+            channel.resumeReceives();
+        }
+
     }
 
     private void processRequest(WebSocketHttpExchange exchange, WebSocketChannel channel, BufferedTextMessage message, long now) {
@@ -70,11 +82,11 @@ public class ZsWsConnectionCallback implements WebSocketConnectionCallback {
         Map<String, String> requestParams = new HashMap<>();
         populateParams(request, requestParams);
 
-        String sourceAddr = channel.getPeerAddress().toString();
+        String sourceAddr = NetUtil.getClientId(channel.getPeerAddress());
         String uri = exchange.getRequestURI();
 
         String userAgent = exchange.getRequestHeader(WEB_HTTP_HEADER_USER_AGENT);
-        ZsWebRequest zsRequest = new ZsWebRequest(uri, sourceAddr, userAgent, false, now);
+        ZsWebRequest zsRequest = new ZsWebRequest(uri, sourceAddr, userAgent, false, webServer.isScoreServer(), now);
         zsRequest.addAllParams(requestParams);
 
         ZsWebResponse out = szcoreServer.onWebRequest(zsRequest);

@@ -3,7 +3,7 @@ package com.xenaksys.szcore.player.process;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.IncomingOscEvent;
+import com.xenaksys.szcore.event.osc.IncomingOscEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.player.SzcorePlayer;

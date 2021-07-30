@@ -1,8 +1,9 @@
 package com.xenaksys.szcore.task;
 
-import com.xenaksys.szcore.event.OscStaveTempoEvent;
-import com.xenaksys.szcore.event.TempoChangeEvent;
+import com.xenaksys.szcore.event.osc.OscStaveTempoEvent;
+import com.xenaksys.szcore.event.osc.TempoChangeEvent;
 import com.xenaksys.szcore.model.OscPublisher;
+import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.TempoImpl;
@@ -16,14 +17,16 @@ public class TempoChangeTask extends EventMusicTask {
     private final OscPublisher oscPublisher;
     private final TempoModifier currentModifier;
     private final boolean isSchedulerRunning;
+    private final ScoreProcessor scoreProcessor;
 
-    public TempoChangeTask(long playTime, TempoChangeEvent event, Transport transport, OscPublisher oscPublisher, TempoModifier currentModifier, boolean isSchedulerRunning) {
+    public TempoChangeTask(long playTime, TempoChangeEvent event, Transport transport, OscPublisher oscPublisher, TempoModifier currentModifier, ScoreProcessor scoreProcessor, boolean isSchedulerRunning) {
         super(playTime, event);
         //LOG.debug("Creating TempoChangeTask: ");
         this.transport = transport;
         this.oscPublisher = oscPublisher;
         this.currentModifier = currentModifier;
         this.isSchedulerRunning = isSchedulerRunning;
+        this.scoreProcessor = scoreProcessor;
 //LOG.info("Setting currentModifier: " + currentModifier);
     }
 
@@ -53,6 +56,8 @@ public class TempoChangeTask extends EventMusicTask {
 
         if(isSchedulerRunning){
             sendOscTempoEvents(oscEvents, tempo);
+        } else {
+            sendWebTempoEvents(oscEvents, tempo);
         }
 
         transport.setTempo(tempo);
@@ -64,6 +69,15 @@ public class TempoChangeTask extends EventMusicTask {
                 //LOG.debug("Sending OscStaveTempoEvent: " + oscEvent);
                 oscEvent.setTempo(tempo.getBpm());
                 oscPublisher.process(oscEvent);
+            }
+        }
+    }
+
+    private void sendWebTempoEvents(List<OscStaveTempoEvent> oscEvents, Tempo tempo) {
+        if(oscEvents != null && scoreProcessor != null){
+            for(OscStaveTempoEvent oscEvent : oscEvents){
+                oscEvent.setTempo(tempo.getBpm());
+                scoreProcessor.onInterceptedOscOutEvent(oscEvent);
             }
         }
     }

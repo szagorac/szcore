@@ -1,6 +1,6 @@
 package com.xenaksys.szcore.receive;
 
-import com.xenaksys.szcore.event.OscEvent;
+import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.id.OscListenerId;
 import org.slf4j.Logger;

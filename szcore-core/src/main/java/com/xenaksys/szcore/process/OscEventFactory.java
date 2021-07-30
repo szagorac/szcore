@@ -1,7 +1,7 @@
 package com.xenaksys.szcore.process;
 
 import com.lmax.disruptor.EventFactory;
-import com.xenaksys.szcore.event.OscEvent;
+import com.xenaksys.szcore.event.osc.OscEvent;
 
 public class OscEventFactory implements EventFactory<OscEvent> {
 

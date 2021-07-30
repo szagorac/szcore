@@ -2,7 +2,7 @@ package com.xenaksys.szcore.process;
 
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.dsl.Disruptor;
-import com.xenaksys.szcore.event.IncomingOscEvent;
+import com.xenaksys.szcore.event.osc.IncomingOscEvent;
 import com.xenaksys.szcore.model.OscReceiver;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import org.slf4j.Logger;

@@ -1,6 +1,6 @@
 package com.xenaksys.szcore.task;
 
-import com.xenaksys.szcore.event.ScriptingEngineEvent;
+import com.xenaksys.szcore.event.script.ScriptingEngineEvent;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.scripting.ScoreScriptingEngine;
 

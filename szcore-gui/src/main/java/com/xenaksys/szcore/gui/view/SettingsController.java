@@ -2,7 +2,7 @@ package com.xenaksys.szcore.gui.view;
 
 
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.event.WebClientInfoUpdateEvent;
+import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.AudienceClient;
 import com.xenaksys.szcore.gui.model.IpAddress;
@@ -302,13 +302,13 @@ public class SettingsController {
 
     @FXML
     private void setAudienceWebServerOn(ActionEvent event) {
-        scoreService.startWebServer();
+        scoreService.startAudienceWebServer();
         detectAudienceWebServerStatus(null);
     }
 
     @FXML
     private void setAudienceWebServerOff(ActionEvent event) {
-        scoreService.stopWebServer();
+        scoreService.stopAudienceWebServer();
         detectAudienceWebServerStatus(null);
     }
 
@@ -423,7 +423,7 @@ public class SettingsController {
         };
     }
 
-    public void processWebClientInfos(WebClientInfoUpdateEvent event) {
+    public void processWebClientInfos(WebAudienceClientInfoUpdateEvent event) {
         if (event == null) {
             return;
         }

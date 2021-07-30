@@ -39,7 +39,6 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -57,6 +56,7 @@ import java.io.File;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -84,6 +84,10 @@ public class ScoreController {
     @FXML
     private Button sendSelectedPartsBtn;
     @FXML
+    private Button disconnectSelectedParticipantsBtn;
+    @FXML
+    private Button banSelectedParticipantsBtn;
+    @FXML
     private Button scorePlayBtn;
     @FXML
     private Button scoreStopBtn;
@@ -102,10 +106,6 @@ public class ScoreController {
     @FXML
     private TableColumn<Participant, Integer> inPortColumn;
     @FXML
-    private TableColumn<Participant, Integer> outPortColumn;
-    @FXML
-    private TableColumn<Participant, Integer> errPortColumn;
-    @FXML
     private TableColumn<Participant, Double> pingColumn;
     @FXML
     private TableColumn<Participant, String> instrumentColumn;
@@ -114,7 +114,11 @@ public class ScoreController {
     @FXML
     private TableColumn<Participant, Boolean> selectColumn;
     @FXML
-    private TableColumn<Participant, Boolean> webClientColumn;
+    private TableColumn<Participant, Boolean> isWebClientColumn;
+    @FXML
+    private TableColumn<Participant, Boolean> readyColumn;
+    @FXML
+    private TableColumn<Participant, Boolean> bannedColumn;
     @FXML
     private Label pageNoLbl;
     @FXML
@@ -246,10 +250,14 @@ public class ScoreController {
         participants.addListener((ListChangeListener<Participant>) p -> {
             while (p.next()) {
                 if (p.wasUpdated()) {
-                    if(participants.get(p.getFrom()).getSelect()) {
+                    if (participants.get(p.getFrom()).getSelect()) {
                         selectedParticipants.add(participants.get(p.getFrom()));
                     } else {
                         selectedParticipants.remove(participants.get(p.getFrom()));
+                    }
+                } else if (p.wasRemoved()) {
+                    for (Participant removed : p.getRemoved()) {
+                        selectedParticipants.remove(removed);
                     }
                 }
             }
@@ -415,11 +423,11 @@ public class ScoreController {
             @Override
             public String toString(Double n) {
                 if (n < 10.0) return "tp";
-                if (n < 35.0) return "bb";
-                if (n < 41.0) return "ob";
-                if (n < 46.0) return "msp";
-                if (n < 61.0) return "sp";
-                if (n < 76.0) return "ord";
+                if (n < 32.0) return "bb";
+                if (n < 38.0) return "ob";
+                if (n < 42.0) return "msp";
+                if (n < 70.0) return "sp";
+                if (n < 80.0) return "ord";
                 if (n < 90.0) return "st";
                 return "mst";
             }
@@ -512,26 +520,54 @@ public class ScoreController {
     @FXML
     private void initialize() {
 
-        participantsTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        participantsTableView.setSelectionModel(null);
+        participantsTableView.setEditable(true);
 
         hostAddressColumn.setCellValueFactory(cellData -> cellData.getValue().getHostAddressProperty());
         inPortColumn.setCellValueFactory(cellData -> cellData.getValue().getPortInProperty().asObject());
-        outPortColumn.setCellValueFactory(cellData -> cellData.getValue().getPortOutProperty().asObject());
-        errPortColumn.setCellValueFactory(cellData -> cellData.getValue().getPortErrProperty().asObject());
         pingColumn.setCellValueFactory(cellData -> cellData.getValue().getPingProperty().asObject());
         instrumentColumn.setCellValueFactory(cellData -> cellData.getValue().getInstrumentProperty());
         selectColumn.setCellValueFactory(cellData -> cellData.getValue().getSelectProperty());
         expiredColumn.setCellValueFactory(cellData -> cellData.getValue().getLastPingMillisProperty());
         selectColumn.setCellFactory(CheckBoxTableCell.forTableColumn(selectColumn));
         selectColumn.setEditable(true);
-        participantsTableView.setEditable(true);
 
-        webClientColumn.setCellValueFactory(cellData -> cellData.getValue().webClientProperty());
-        webClientColumn.setCellFactory(col -> new TableCell<Participant, Boolean>() {
+        isWebClientColumn.setCellValueFactory(cellData -> cellData.getValue().isWebClientProperty());
+        isWebClientColumn.setCellFactory(col -> new TableCell<Participant, Boolean>() {
+            @Override
+            protected void updateItem(Boolean item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item ? Consts.NAME_WEB : Consts.NAME_INSCORE);
+            }
+        });
+
+        readyColumn.setCellValueFactory(cellData -> cellData.getValue().readyProperty());
+        readyColumn.setCellFactory(col -> new TableCell<Participant, Boolean>() {
             @Override
             protected void updateItem(Boolean item, boolean empty) {
                 super.updateItem(item, empty);
                 setText(empty ? null : item ? "Y" : "N");
+                if (item == null || empty) {
+                    setText(EMPTY);
+                    setStyle(EMPTY);
+                } else if (item) {
+                    setText(Consts.NAME_YES);
+                    setStyle(EMPTY);
+                    setTextFill(Color.CHOCOLATE);
+                } else {
+                    setText(Consts.NAME_NO);
+                    setTextFill(Color.BLACK);
+                    setStyle("-fx-background-color: red");
+                }
+            }
+        });
+
+        bannedColumn.setCellValueFactory(cellData -> cellData.getValue().bannedProperty());
+        bannedColumn.setCellFactory(col -> new TableCell<Participant, Boolean>() {
+            @Override
+            protected void updateItem(Boolean item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item ? Consts.NAME_YES : Consts.NAME_NO);
             }
         });
 
@@ -649,6 +685,30 @@ public class ScoreController {
 
         for (Participant participant : selectedParticipants) {
             sendAddParts(participant, instrumentsCsv);
+        }
+    }
+
+    @FXML
+    private void disconnectSelectedParticipants(ActionEvent event) {
+        ObservableList<Participant> selectedParticipants = getSelectedParticipants();
+        if (selectedParticipants == null) {
+            return;
+        }
+
+        for (Participant participant : selectedParticipants) {
+            disconnectParticipant(participant);
+        }
+    }
+
+    @FXML
+    private void banSelectedParticipants(ActionEvent event) {
+        ObservableList<Participant> selectedParticipants = getSelectedParticipants();
+        if (selectedParticipants == null) {
+            return;
+        }
+
+        for (Participant participant : selectedParticipants) {
+            banParticipant(participant);
         }
     }
 
@@ -1004,13 +1064,38 @@ public class ScoreController {
     }
 
     private void sendAddParts(Participant participant, String instrumentsCsv) {
-        if (participant == null || instrumentsCsv == null || instrumentsCsv.length() < 1 || participant.isWebClient()) {
+        if (participant == null || instrumentsCsv == null || instrumentsCsv.length() < 1 || participant.getIsWebClient()) {
             return;
         }
         EventFactory eventFactory = publisher.getEventFactory();
         String destination = NetUtil.createClientId(participant.getHostAddress(), participant.getPortIn());
         AddPartsEvent addPartsEvent = eventFactory.createAddPartsEvent(instrumentsCsv, destination, clock.getSystemTimeMillis());
         publisher.publish(addPartsEvent);
+    }
+
+    private void disconnectParticipant(Participant participant) {
+        if (participant == null) {
+            return;
+        }
+        if (!participant.getIsWebClient()) {
+            return;
+        }
+        String clientId = NetUtil.createClientId(participant.getHostAddress(), participant.getPortIn());
+        List<String> connectionIds = Collections.singletonList(clientId);
+        scoreService.closeScoreConnections(connectionIds);
+    }
+
+    private void banParticipant(Participant participant) {
+        if (participant == null) {
+            return;
+        }
+        if (!participant.getIsWebClient()) {
+            return;
+        }
+        participant.setBanned(true);
+        String clientId = NetUtil.createClientId(participant.getHostAddress(), participant.getPortIn());
+        scoreService.banConnection(clientId);
+//        disconnectParticipant(participant);
     }
 
     private void sendServerIpBroadcast(String serverIp) {

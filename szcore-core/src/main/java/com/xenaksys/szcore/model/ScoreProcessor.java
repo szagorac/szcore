@@ -12,12 +12,13 @@ import com.xenaksys.szcore.score.web.WebScoreTargetType;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
-import com.xenaksys.szcore.web.WebScoreStateListener;
+import com.xenaksys.szcore.web.WebAudienceStateListener;
+import com.xenaksys.szcore.web.WebClientInfo;
 
 import java.io.File;
 import java.util.List;
 
-public interface  ScoreProcessor extends Processor {
+public interface ScoreProcessor extends Processor {
 
     void loadAndPrepare(String path) throws Exception;
 
@@ -37,7 +38,7 @@ public interface  ScoreProcessor extends Processor {
 
     void subscribe(SzcoreEngineEventListener eventListener);
 
-    void subscribe(WebScoreStateListener eventListener);
+    void subscribe(WebAudienceStateListener eventListener);
 
     void setTempoModifier(Id transportId, TempoModifier tempoModifier);
 
@@ -81,7 +82,7 @@ public interface  ScoreProcessor extends Processor {
 
     void onWebAudienceStateChange(WebAudienceScoreStateExport webAudienceScoreStateExport) throws Exception;
 
-    void onWebScoreStateDeltaChange(WebAudienceScoreStateDeltaExport webAudienceScoreStateDeltaExport) throws Exception;
+    void onWebAudienceStateDeltaChange(WebAudienceScoreStateDeltaExport webAudienceScoreStateDeltaExport) throws Exception;
 
     void onOutgoingWebEvent(OutgoingWebEvent webEvent) throws Exception;
 
@@ -110,4 +111,6 @@ public interface  ScoreProcessor extends Processor {
     WebScoreState getOrCreateWebScoreState();
 
     void onInterceptedOscOutEvent(OscEvent event);
+
+    List<WebClientInfo> getWebScoreInstrumentClients(String instrument);
 }

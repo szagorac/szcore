@@ -11,23 +11,17 @@ import com.xenaksys.szcore.event.gui.ParticipantStatsEvent;
 import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.music.MusicEvent;
-import com.xenaksys.szcore.event.music.MusicEventType;
-import com.xenaksys.szcore.event.music.StopEvent;
-import com.xenaksys.szcore.event.music.TimeSigChangeEvent;
 import com.xenaksys.szcore.event.osc.IncomingOscEvent;
 import com.xenaksys.szcore.event.osc.OscEvent;
-import com.xenaksys.szcore.event.osc.OscEventType;
-import com.xenaksys.szcore.event.osc.TempoChangeEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
+import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Participant;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Processor;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.Tempo;
-import com.xenaksys.szcore.model.id.BeatId;
-import com.xenaksys.szcore.util.IpAddressValidator;
 import com.xenaksys.szcore.util.TimeUtil;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
@@ -39,13 +33,9 @@ public class ClientEventProcessor implements Processor {
 
     private final SzcoreClient client;
 
-    private final IpAddressValidator ipValidator = new IpAddressValidator();
-
     public ClientEventProcessor(SzcoreClient client) {
         this.client = client;
      }
-
-    private volatile int currentBeatNo;
 
     @Override
     public void process(SzcoreEvent event) {
@@ -86,6 +76,9 @@ public class ClientEventProcessor implements Processor {
             case WEB_SCORE_IN:
                 processWebScoreInEvent((WebScoreInEvent) event);
                 break;
+            case WEB_SCORE_OUT:
+                processWebScoreOutEvent((OutgoingWebEvent) event);
+                break;
             case SCRIPTING_ENGINE:
                 //TODO
                 break;
@@ -108,55 +101,20 @@ public class ClientEventProcessor implements Processor {
 
         switch (type) {
             case OSC:
-                processScoreOscEvent((OscEvent) event, beatNo, tickNo);
-                break;
             case MUSIC:
-                processMusicEvent((MusicEvent) event, beatNo, tickNo);
-                break;
             case WEB_AUDIENCE:
-                processWebScoreEvent((WebAudienceEvent) event, beatNo, tickNo);
                 break;
             case WEB_SCORE_IN:
                 processWebScoreInEvent((WebScoreInEvent) event);
+                break;
+            case WEB_SCORE_OUT:
+                processWebScoreOutEvent((OutgoingWebEvent) event);
                 break;
             case SCRIPTING_ENGINE:
                 //TODO
                 break;
             default:
                 LOG.error("process beat event: Unknown event type: " + type);
-        }
-    }
-
-    private void processMusicEvent(MusicEvent event, int beatNo, int tickNo) {
-        MusicEventType type = event.getMusicEventType();
-        switch (type) {
-            case TEMPO_CHANGE:
-                TempoChangeEvent tempoChangeEvent = (TempoChangeEvent) event;
-                break;
-            case TIMESIG_CHANGE:
-                TimeSigChangeEvent timeSigChangeEvent = (TimeSigChangeEvent) event;
-                break;
-            case STOP:
-                StopEvent stopEvent = (StopEvent)event;
-                BeatId beatId = event.getEventBaseBeat();
-                break;
-            default:
-                //
-
-        }
-    }
-
-    private void processWebScoreEvent(WebAudienceEvent event, int beatNo, int tickNo) {
-
-    }
-
-    private void processScoreOscEvent(OscEvent event, int beatNo, int tickNo) {
-        OscEventType type = event.getOscEventType();
-        switch (type) {
-            case DATE_TICK:
-                break;
-            default:
-               //
         }
     }
 
@@ -187,6 +145,10 @@ public class ClientEventProcessor implements Processor {
 
     private void processWebScoreInEvent(WebScoreInEvent event) {
         LOG.debug("Received WebScoreInEvent MUSIC event: " + event);
+    }
+
+    private void processWebScoreOutEvent(OutgoingWebEvent event) {
+        LOG.debug("Received OutgoingWebEvent: " + event);
     }
 
     private void processScoreOscEvent(OscEvent event) {
@@ -271,7 +233,7 @@ public class ClientEventProcessor implements Processor {
     }
 
     private void processSzcoreMessage(IncomingOscEvent event) {
-//        LOG.debug("Received SZCORE message: " + event.getAddress() + " args: " + event.getArguments());
+        LOG.debug("Received SZCORE message: " + event.getAddress() + " args: " + event.getArguments());
     }
 
     private void processError(IncomingOscEvent event) {
@@ -291,6 +253,8 @@ public class ClientEventProcessor implements Processor {
         participant.setPortErr(event.getPortErr());
         participant.setPing(event.getPing());
         participant.setInstrument(event.getInstrument());
+        participant.setIsReady(event.isReady());
+        participant.setBanned(event.isBanned());
         client.addParticipant(participant);
     }
 
@@ -325,6 +289,7 @@ public class ClientEventProcessor implements Processor {
         String instrument = event.getInstrument();
         Platform.runLater(() -> {
             participant.setInstrument(instrument);
+            participant.setIsReady(true);
         });
     }
 

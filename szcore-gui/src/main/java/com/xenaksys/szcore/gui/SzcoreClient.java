@@ -14,11 +14,7 @@ import com.xenaksys.szcore.gui.view.LoggerController;
 import com.xenaksys.szcore.gui.view.RootLayoutController;
 import com.xenaksys.szcore.gui.view.ScoreController;
 import com.xenaksys.szcore.gui.view.SettingsController;
-import com.xenaksys.szcore.model.EventService;
-import com.xenaksys.szcore.model.Id;
-import com.xenaksys.szcore.model.ScoreService;
-import com.xenaksys.szcore.model.SzcoreEvent;
-import com.xenaksys.szcore.model.Tempo;
+import com.xenaksys.szcore.model.*;
 import com.xenaksys.szcore.model.id.OscListenerId;
 import com.xenaksys.szcore.server.SzcoreServer;
 import com.xenaksys.szcore.time.clock.SimpleClock;
@@ -245,6 +241,8 @@ public class SzcoreClient extends Application {
             toUpdate.setPortErr(participant.getPortErr());
             toUpdate.setPortOut(participant.getPortOut());
             toUpdate.setSelect(participant.getSelect());
+            toUpdate.setIsReady(participant.getIsReady());
+            toUpdate.setBanned(participant.isBanned());
         });
 
     }
@@ -310,7 +308,7 @@ public class SzcoreClient extends Application {
                         continue;
                     }
                 }
-                if (!isPresent && participant.isWebClient()) {
+                if (!isPresent && participant.getIsWebClient()) {
                     toRemove.add(participant);
                 }
             }
@@ -331,13 +329,17 @@ public class SzcoreClient extends Application {
                 instrument = clientInfo.getInstrument();
             }
             participant.setInstrument(instrument);
-            participant.setWebClient(true);
+            participant.setIsWebClient(true);
+            participant.setIsReady(clientInfo.isReady());
+            participant.setBanned(clientInfo.isBanned());
             addParticipant(participant);
         }
 
         if (isFullUpdate) {
             for (Participant participant : toRemove) {
-                participants.remove(participant);
+                if (participants.contains(participant)) {
+                    participants.remove(participant);
+                }
             }
         }
     }

@@ -57,9 +57,7 @@ public class ScoreRandomisationStrategy {
     }
 
     private void reset() {
-        for (InstrumentId instrumentId : instrumentPage.keySet()) {
-            instrumentPage.put(instrumentId, 0);
-        }
+        instrumentPage.replaceAll((i, v) -> 0);
         optOutInstruments.clear();
     }
 
@@ -86,7 +84,7 @@ public class ScoreRandomisationStrategy {
         return optPageNo.get();
     }
 
-    public String getRandomPageFileName(InstrumentId instrumentId) {
+    public Page getRandomPageFileName(InstrumentId instrumentId) {
         if (!instruments.contains(instrumentId)) {
             return null;
         }
@@ -97,12 +95,7 @@ public class ScoreRandomisationStrategy {
             return null;
         }
 
-        Page page = getPage(pageNo, instrumentId);
-        if (page != null) {
-            return page.getFileName();
-        }
-
-        return null;
+        return getPage(pageNo, instrumentId);
     }
 
     public boolean isInActiveRange(InstrumentId instId, Page page) {
@@ -138,10 +131,8 @@ public class ScoreRandomisationStrategy {
         List<InstrumentId> rndInst = new ArrayList<>(instrumentPage.keySet());
         Collections.shuffle(rndInst, rnd);
         int instStart = 0;
-        int instEnd = 0;
-        int rndPageNo = assignmentStrategy.size();
-        for (int i = 0; i < rndPageNo; i++) {
-            Integer instNo = assignmentStrategy.get(i);
+        int instEnd;
+        for (Integer instNo : assignmentStrategy) {
             int pageNo = range.getRndValueFromRange();
             instEnd = instStart + instNo;
             for (int j = instStart; j < instEnd; j++) {

@@ -10,7 +10,6 @@ import com.xenaksys.szcore.server.web.handler.ZsSseHandler;
 import com.xenaksys.szcore.server.web.handler.ZsStaticPathHandler;
 import com.xenaksys.szcore.server.web.handler.ZsWsConnectionCallback;
 import com.xenaksys.szcore.util.NetUtil;
-import com.xenaksys.szcore.web.WebClientInfo;
 import com.xenaksys.szcore.web.WebConnection;
 import com.xenaksys.szcore.web.WebConnectionType;
 import io.undertow.Handlers;
@@ -42,11 +41,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.xenaksys.szcore.Consts.INDEX_HTML;
 import static com.xenaksys.szcore.Consts.WEB_BUFFER_SLICE_SIZE;
@@ -72,10 +69,7 @@ public class ScoreWebServer extends BaseZsWebServer {
     private ScheduledExecutorService clientInfoScheduler = Executors.newSingleThreadScheduledExecutor();
     private volatile boolean isClientInfoSchedulerRunning = false;
 
-    private final List<String> bannedHosts = new CopyOnWriteArrayList<>();
     private final Map<String, WebSocketChannel> clients = new ConcurrentHashMap<>();
-
-    private final AtomicBoolean closed = new AtomicBoolean();
 
     public ScoreWebServer(String staticDataPath, int port, int transferMinSize, long clientPollingIntervalSec, boolean isUseCaching, SzcoreServer szcoreServer) {
         super(staticDataPath, port, transferMinSize, clientPollingIntervalSec, isUseCaching, szcoreServer);
@@ -176,19 +170,26 @@ public class ScoreWebServer extends BaseZsWebServer {
         }
     }
 
-    public void onWsChannelConnected(WebSocketChannel channel, WebSocketHttpExchange exchange) {
+    public boolean onWsChannelConnected(WebSocketChannel channel, WebSocketHttpExchange exchange) {
         if (channel == null) {
-            return;
+            return false;
         }
         try {
             String userAgent = exchange.getRequestHeader(WEB_HTTP_HEADER_USER_AGENT);
             SocketAddress sourceAddr = channel.getPeerAddress();
-            String sourceId = sourceAddr.toString();
+            String sourceId = NetUtil.getClientId(sourceAddr);
+            String host = NetUtil.getHost(sourceAddr);
+            if (isHostBanned(host)) {
+//                closeWsConnection(channel, null);
+                return false;
+            }
             clients.put(sourceId, channel);
             onConnection(sourceId, WebConnectionType.WS, userAgent, channel.isOpen());
         } catch (Exception e) {
             LOG.error("onWsChannelConnected: failed to process new Websocket connection", e);
+            return false;
         }
+        return true;
     }
 
     public void updateServerStatus() {
@@ -204,7 +205,8 @@ public class ScoreWebServer extends BaseZsWebServer {
         Set<WebSocketChannel> channels = wsHandler.getPeerConnections();
         for (WebSocketChannel c : channels) {
             SocketAddress socketAddress = c.getPeerAddress();
-            String clientAddr = socketAddress.toString();
+            String clientAddr = NetUtil.getClientId(socketAddress);
+//            String clientAddr = socketAddress.toString();
             WebConnection webConnection = new WebConnection(clientAddr, WebConnectionType.WS, c.isOpen());
             webConnection.setScoreClient(true);
             webConnections.add(webConnection);
@@ -219,9 +221,10 @@ public class ScoreWebServer extends BaseZsWebServer {
         try {
             ZsSseConnection zsConn = (ZsSseConnection) connection;
             SocketAddress sourceAddr = zsConn.getExchange().getSourceAddress();
+            String clientAddr = NetUtil.getClientId(sourceAddr);
             HeaderMap headerMap = zsConn.getExchange().getRequestHeaders();
             String userAgent = headerMap.getFirst(HttpString.tryFromString(WEB_HTTP_HEADER_USER_AGENT));
-            onConnection(sourceAddr.toString(), WebConnectionType.SSE, userAgent, zsConn.isOpen());
+            onConnection(clientAddr, WebConnectionType.SSE, userAgent, zsConn.isOpen());
         } catch (Exception e) {
             LOG.error("onSseChannelConnected: faled to process new SSE connection", e);
         }
@@ -262,34 +265,6 @@ public class ScoreWebServer extends BaseZsWebServer {
         }
 
         return resource(new PathResourceManager(path, getTransferMinSize())).setWelcomeFiles(INDEX_HTML);
-    }
-
-    public void banWebClient(WebClientInfo clientInfo) {
-        if (clientInfo == null) {
-            return;
-        }
-        String host = clientInfo.getHost();
-        if (bannedHosts.contains(host)) {
-            return;
-        }
-        LOG.info("banWebClient: host: {}", host);
-        bannedHosts.add(host);
-    }
-
-    public boolean isSourceAddrBanned(String sourceAddr) {
-        if (sourceAddr == null) {
-            return false;
-        }
-        String[] hostPort = NetUtil.getHostPort(sourceAddr);
-        if (hostPort == null || hostPort.length != 2) {
-            return isHostBanned(sourceAddr);
-        }
-
-        return isHostBanned(hostPort[0]);
-    }
-
-    public boolean isHostBanned(String host) {
-        return bannedHosts.contains(host);
     }
 
     public void pushData(String target, WebScoreTargetType targetType, String data) {

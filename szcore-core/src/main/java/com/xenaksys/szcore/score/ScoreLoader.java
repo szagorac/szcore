@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import static com.xenaksys.szcore.Consts.EMPTY;
 import static com.xenaksys.szcore.score.ResourceType.FILE;
 import static com.xenaksys.szcore.score.ResourceType.JAVASCRIPT;
 import static com.xenaksys.szcore.score.ResourceType.MAXMSP;
@@ -120,7 +119,7 @@ public class ScoreLoader {
 
         boolean isHeaderCorrect = Arrays.equals(expextedHeaders, headers);
         if (!isHeaderCorrect) {
-            LOG.error("Unexpeted headers: " + headers);
+            LOG.error("Unexpeted headers: " + Arrays.toString(headers));
             return null;
         }
 
@@ -219,10 +218,7 @@ public class ScoreLoader {
     private static void processFileScoreElement(ScoreElement scoreElement, BasicScore score, String fileName, Id scoreId) throws Exception {
         //instrument
         String instrumentName = scoreElement.getInstrumentName();
-        boolean isAudioVideo = false;
-        if (instrumentName.startsWith(AV)) {
-            isAudioVideo = true;
-        }
+        boolean isAudioVideo = instrumentName.startsWith(AV);
         InstrumentId instrumentId = new InstrumentId(instrumentName);
         Instrument instrument = new BasicInstrument(instrumentId, instrumentName, isAudioVideo);
         Collection<Instrument> instruments = score.getInstruments();
@@ -263,7 +259,7 @@ public class ScoreLoader {
         }
         TimeSignature timeSignature = new TimeSignatureImpl(numberOfBeats, timeSigNoteDuration);
         BasicBar bar = new BasicBar(barId, barName, tempo, timeSignature);
-        if (!score.containsBar(bar)) {
+        if (score.doesNotcontainBar(bar)) {
             score.addBar(bar);
         }
 
@@ -304,6 +300,8 @@ public class ScoreLoader {
                 InscoreMapElement inscoreMapElement = InscoreMapElement.parseLine(line);
                 inscorePageMap.addElement(inscoreMapElement);
             }
+            inscorePageMap.createInscoreStr();
+            inscorePageMap.createWebStr();
         } catch (Exception e) {
             LOG.error("Failed to load map file {}", path, e);
         }
@@ -311,14 +309,11 @@ public class ScoreLoader {
         return inscorePageMap;
     }
 
-    private static void processMaxMspScoreElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) throws Exception {
+    private static void processMaxMspScoreElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) {
         String instrumentName = scoreElement.getInstrumentName();
         InstrumentId instrumentId = new InstrumentId(instrumentName);
 
-        boolean isAudioVideo = false;
-        if (instrumentName.startsWith(AV)) {
-            isAudioVideo = true;
-        }
+        boolean isAudioVideo = instrumentName.startsWith(AV);
         Instrument instrument = new BasicInstrument(instrumentId, instrumentName, isAudioVideo);
         Collection<Instrument> oscPlayers = score.getOscPlayers();
         if (!oscPlayers.contains(instrument)) {
@@ -414,7 +409,7 @@ public class ScoreLoader {
             script = script.replace(CURLY_QUOTE, SINGLE_QUOTE);
         }
 
-        String cmd = EMPTY;
+        String cmd;
         //args 0 = cmd, 1 = target, other args ...
         String[] sargs = script.split(COMMA);
         if (sargs.length > 0) {
@@ -437,7 +432,7 @@ public class ScoreLoader {
         score.addScript(scriptObj);
     }
 
-    private static void processWebAudienceElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) throws Exception {
+    private static void processWebAudienceElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) {
         String instrumentName = scoreElement.getInstrumentName();
         StrId instrumentId = new StrId(instrumentName);
 
@@ -534,7 +529,7 @@ public class ScoreLoader {
         score.addScript(scriptObj);
     }
 
-    private static void processScriptEngineScoreElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) throws Exception {
+    private static void processScriptEngineScoreElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) {
         String instrumentName = scoreElement.getInstrumentName();
         StrId instrumentId = new StrId(instrumentName);
 
@@ -628,7 +623,7 @@ public class ScoreLoader {
         score.addScript(scriptObj);
     }
 
-    private static void processJavascriptScoreElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) throws Exception {
+    private static void processJavascriptScoreElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) {
 
         String instrumentName = scoreElement.getInstrumentName();
         StrId instrumentId = new StrId(instrumentName);
@@ -668,7 +663,7 @@ public class ScoreLoader {
         score.addScript(scriptObj);
     }
 
-    private static void processTransitionScoreElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) throws Exception {
+    private static void processTransitionScoreElement(ScoreElement scoreElement, BasicScore score, String resource, Id scoreId) {
 
         String instrumentName = scoreElement.getInstrumentName();
         StrId instrumentId = new StrId(instrumentName);

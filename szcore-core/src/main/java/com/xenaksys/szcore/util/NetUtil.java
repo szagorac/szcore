@@ -3,12 +3,16 @@ package com.xenaksys.szcore.util;
 import com.xenaksys.szcore.Consts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnio.LocalSocketAddress;
 
 import java.io.IOException;
 import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
+import java.net.SocketAddress;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -18,17 +22,52 @@ import java.util.stream.Collectors;
 
 import static com.xenaksys.szcore.Consts.COLON;
 import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.Consts.SLASH;
 
 public class NetUtil {
     static final Logger LOG = LoggerFactory.getLogger(NetUtil.class);
 
+
+    public static String getClientId(SocketAddress socketAddress) {
+        if (socketAddress instanceof InetSocketAddress) {
+            InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
+            String host = inetSocketAddress.getHostName();
+            int port = inetSocketAddress.getPort();
+            return NetUtil.createClientId(host, port);
+        } else if (socketAddress instanceof LocalSocketAddress) {
+            LocalSocketAddress localSocketAddress = (LocalSocketAddress) socketAddress;
+            return getClientId(localSocketAddress.toString());
+        } else {
+            return getClientId(socketAddress.toString());
+        }
+    }
+
+    public static String getHost(SocketAddress socketAddress) {
+        if (socketAddress instanceof InetSocketAddress) {
+            InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
+            return inetSocketAddress.getHostName();
+        }
+        String[] hostPort = NetUtil.getHostPort(socketAddress.toString());
+        if (hostPort == null || hostPort.length != 2) {
+            return null;
+        }
+        return hostPort[0];
+    }
+
+    public static String getClientId(String socketAddress) {
+        String[] hostPort = NetUtil.getHostPort(socketAddress);
+        if (hostPort == null || hostPort.length != 2) {
+            return socketAddress;
+        }
+        return NetUtil.createClientId(hostPort[0], hostPort[1]);
+    }
 
     public static String createClientId(InetAddress addr, int port) {
         String a = EMPTY;
         if (addr != null) {
             a = addr.getHostAddress();
         }
-        return a + COLON + port;
+        return createClientId(a, port);
     }
 
     public static String createClientId(String addr, int port) {
@@ -36,11 +75,20 @@ public class NetUtil {
         if (addr != null) {
             a = addr;
         }
-        return a + COLON + port;
+        return SLASH + a + COLON + port;
+    }
+
+    public static String createClientId(String addr, String port) {
+        String a = EMPTY;
+        if (addr != null) {
+            a = addr;
+        }
+        return SLASH + a + COLON + port;
     }
 
     public static InetAddress getHostAddress() throws SocketException {
         Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+        InetAddress out6 = null;
         while (interfaces.hasMoreElements()) {
             NetworkInterface networkInterface = interfaces.nextElement();
             if (networkInterface.isLoopback() || !networkInterface.isUp()) {
@@ -51,10 +99,13 @@ public class NetUtil {
                 InetAddress inetAddress = ia.getAddress();
                 if (inetAddress instanceof Inet4Address) {
                     return inetAddress;
+                } else if (inetAddress instanceof Inet6Address) {
+                    out6 = inetAddress;
                 }
             }
         }
-        return null;
+        LOG.warn("getHostAddress: could not find Inet4Address, returning: {}", out6 == null ? null : out6.getHostAddress());
+        return out6;
     }
 
     public static List<InetAddress> listAllBroadcastAddresses() throws SocketException {

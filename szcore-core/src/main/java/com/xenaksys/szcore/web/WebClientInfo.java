@@ -20,6 +20,7 @@ public class WebClientInfo {
     private BrowserOS os;
     private boolean isMobile;
     private boolean isBanned;
+    private boolean isReady;
 
     private TLongArrayStack latencies = new TLongArrayStack(100);
 
@@ -129,6 +130,14 @@ public class WebClientInfo {
 
     public void setScoreClient(boolean isScoreClient) {
         this.webConnection.setScoreClient(isScoreClient);
+    }
+
+    public boolean isReady() {
+        return isReady;
+    }
+
+    public void setReady(boolean ready) {
+        isReady = ready;
     }
 
     public long getLatency() {

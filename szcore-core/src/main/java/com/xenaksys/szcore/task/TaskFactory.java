@@ -27,8 +27,8 @@ public class TaskFactory {
 
 
     //TODO create pool of Tasks to avoid garbage creation
-    public TempoChangeTask createTempoChangeTask(TempoChangeEvent event, long playTime, Transport transport, OscPublisher oscPublisher, TempoModifier currentModifier, boolean isSchedulerRunning) {
-        return new TempoChangeTask(playTime, event, transport, oscPublisher, currentModifier, isSchedulerRunning);
+    public TempoChangeTask createTempoChangeTask(TempoChangeEvent event, long playTime, Transport transport, OscPublisher oscPublisher, ScoreProcessor scoreProcessor, TempoModifier currentModifier, boolean isSchedulerRunning) {
+        return new TempoChangeTask(playTime, event, transport, oscPublisher, currentModifier, scoreProcessor, isSchedulerRunning);
     }
 
     public TimeSigChangeTask createTimeSigChangeTask(TimeSigChangeEvent event, long playTime, Transport transport) {
@@ -69,7 +69,7 @@ public class TaskFactory {
         return new TransitionSetupTask(transitionEvent, destination, processor, oscPublisher, eventFactory, clock);
     }
 
-    public WebAudienceEventTask createWebScoreEventTask(long playTime, WebAudienceEvent event, WebAudienceScore webAudienceScore) {
+    public WebAudienceEventTask createWebAudienceEventTask(long playTime, WebAudienceEvent event, WebAudienceScore webAudienceScore) {
         return new WebAudienceEventTask(playTime, event, webAudienceScore);
     }
 

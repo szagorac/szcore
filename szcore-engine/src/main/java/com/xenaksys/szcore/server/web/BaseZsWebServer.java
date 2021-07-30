@@ -1,6 +1,8 @@
 package com.xenaksys.szcore.server.web;
 
 import com.xenaksys.szcore.server.SzcoreServer;
+import com.xenaksys.szcore.util.NetUtil;
+import com.xenaksys.szcore.web.WebClientInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +21,7 @@ public abstract class BaseZsWebServer implements ZsWebServer {
 
     private volatile boolean isAudienceServerRunning = false;
 
-    private final List<String> bannedHosts = new CopyOnWriteArrayList<>();
+    protected final List<String> bannedHosts = new CopyOnWriteArrayList<>();
 
     public BaseZsWebServer(String staticDataPath, int port, int transferMinSize, long clientPollingIntervalSec, boolean isUseCaching, SzcoreServer szcoreServer) {
         this.staticDataPath = staticDataPath;
@@ -73,4 +75,43 @@ public abstract class BaseZsWebServer implements ZsWebServer {
 
     @Override
     public abstract boolean isScoreServer();
+
+    @Override
+    public boolean isHostBanned(String host) {
+        return bannedHosts.contains(host);
+    }
+
+    @Override
+    public boolean isSourceAddrBanned(String sourceAddr) {
+        if (sourceAddr == null) {
+            return false;
+        }
+        String[] hostPort = NetUtil.getHostPort(sourceAddr);
+        if (hostPort == null || hostPort.length != 2) {
+            return isHostBanned(sourceAddr);
+        }
+
+        return isHostBanned(hostPort[0]);
+    }
+
+    @Override
+    public void banWebClient(WebClientInfo clientInfo) {
+        if (clientInfo == null) {
+            return;
+        }
+        String host = clientInfo.getHost();
+        banWebClient(host);
+    }
+
+    @Override
+    public void banWebClient(String host) {
+        if (host == null) {
+            return;
+        }
+        if (bannedHosts.contains(host)) {
+            return;
+        }
+        LOG.info("banWebClient: host: {}", host);
+        bannedHosts.add(host);
+    }
 }

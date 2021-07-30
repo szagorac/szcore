@@ -6,7 +6,6 @@ import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.net.osc.OSCMessage;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.process.AbstractOscPublisherDisruptorProcessor;
-import com.xenaksys.szcore.util.NetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +44,6 @@ public class OscDisruptorPublishProcessor extends AbstractOscPublisherDisruptorP
         }
 
         int portNo = port.getPort();
-        String clientId = NetUtil.createClientId(hostAddr, portNo);
 
         toRemove.clear();
         for (String outKey : oscPublishPorts.keySet()) {

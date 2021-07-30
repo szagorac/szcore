@@ -33,7 +33,7 @@ public interface ZsWebServer {
 
     void pushToAll(String data);
 
-    void onWsChannelConnected(WebSocketChannel channel, WebSocketHttpExchange exchange);
+    boolean onWsChannelConnected(WebSocketChannel channel, WebSocketHttpExchange exchange);
 
     void updateServerStatus();
 
@@ -46,6 +46,8 @@ public interface ZsWebServer {
     void onConnection(String sourceId, WebConnectionType type, String userAgent, boolean isOpen);
 
     void banWebClient(WebClientInfo clientInfo);
+
+    void banWebClient(String host);
 
     boolean isSourceAddrBanned(String sourceAddr);
 

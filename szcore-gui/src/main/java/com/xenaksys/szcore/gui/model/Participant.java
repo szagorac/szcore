@@ -26,7 +26,9 @@ public class Participant {
     private BooleanProperty select = new SimpleBooleanProperty(false);
     private BooleanProperty expired = new SimpleBooleanProperty(false);
     private StringProperty lastPingTime = new SimpleStringProperty(Consts.EMPTY);
-    private BooleanProperty webClient = new SimpleBooleanProperty(false);
+    private BooleanProperty isWebClient = new SimpleBooleanProperty(false);
+    private BooleanProperty isReady = new SimpleBooleanProperty(false);
+    private BooleanProperty banned = new SimpleBooleanProperty(false);
 
     public InetAddress getInetAddress() {
         return inetAddress.get();
@@ -144,16 +146,40 @@ public class Participant {
         this.lastPingTime.set(lastPing);
     }
 
-    public boolean isWebClient() {
-        return webClient.get();
+    public boolean getIsWebClient() {
+        return isWebClient.get();
     }
 
-    public BooleanProperty webClientProperty() {
-        return webClient;
+    public BooleanProperty isWebClientProperty() {
+        return isWebClient;
     }
 
-    public void setWebClient(boolean webClient) {
-        this.webClient.set(webClient);
+    public void setIsWebClient(boolean isWebClient) {
+        this.isWebClient.set(isWebClient);
+    }
+
+    public boolean getIsReady() {
+        return isReady.get();
+    }
+
+    public BooleanProperty readyProperty() {
+        return isReady;
+    }
+
+    public void setIsReady(boolean isReady) {
+        this.isReady.set(isReady);
+    }
+
+    public boolean isBanned() {
+        return banned.get();
+    }
+
+    public BooleanProperty bannedProperty() {
+        return banned;
+    }
+
+    public void setBanned(boolean banned) {
+        this.banned.set(banned);
     }
 
     @Override

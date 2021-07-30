@@ -63,8 +63,10 @@ import com.xenaksys.szcore.event.web.audience.WebPollAudienceEvent;
 import com.xenaksys.szcore.event.web.audience.WebStartAudienceEvent;
 import com.xenaksys.szcore.event.web.in.UpdateWebScoreConnectionsEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
+import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreSelectInstrumentSlotEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import com.xenaksys.szcore.model.HistoBucketView;
@@ -77,6 +79,9 @@ import com.xenaksys.szcore.model.Transition;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
+import com.xenaksys.szcore.score.InscoreMapElement;
+import com.xenaksys.szcore.score.OverlayElementType;
+import com.xenaksys.szcore.score.OverlayType;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
 import com.xenaksys.szcore.scripting.ScriptingEngineScript;
 import com.xenaksys.szcore.web.WebClientInfo;
@@ -148,10 +153,11 @@ public class EventFactory {
 
     public StaveActiveChangeEvent createActiveStaveChangeEvent(StaveId staveId,
                                                                boolean isActive,
+                                                               boolean isPlayStave,
                                                                BeatId changeOnBaseBeat,
                                                                String destination,
                                                                long creationTime) {
-        return new StaveActiveChangeEvent(staveId, isActive, changeOnBaseBeat, createStaveActivateEvent(destination, creationTime), creationTime);
+        return new StaveActiveChangeEvent(staveId, isActive, isPlayStave, changeOnBaseBeat, createStaveActivateEvent(staveId, destination, isActive, isPlayStave, creationTime), creationTime);
     }
 
     public PrepStaveChangeEvent createPrepStaveChangeEvent(BeatId executeOnBaseBeat,
@@ -163,8 +169,8 @@ public class EventFactory {
         return new PrepStaveChangeEvent(executeOnBaseBeat, activateOnBaseBeat, deactivateOnBaseBeat, pageChangeOnBaseBeat, nextPageId, creationTime);
     }
 
-    public ParticipantEvent createParticipantEvent(InetAddress inetAddress, String hostAddress, int portIn, int portOut, int portErr, int ping, String instrument, long creationTime) {
-        return new ParticipantEvent(inetAddress, hostAddress, portIn, portOut, portErr, ping, instrument, creationTime);
+    public ParticipantEvent createParticipantEvent(InetAddress inetAddress, String hostAddress, int portIn, int portOut, int portErr, int ping, String instrument, boolean isReady, boolean isBanned, long creationTime) {
+        return new ParticipantEvent(inetAddress, hostAddress, portIn, portOut, portErr, ping, instrument, isReady, isBanned, creationTime);
     }
 
     public WebAudienceClientInfoUpdateEvent createWebAudienceClientInfoUpdateEvent(ArrayList<WebClientInfo> webClientInfos, List<HistoBucketView> histoBucketViews, int totalWebHits, long creationTime) {
@@ -199,7 +205,7 @@ public class EventFactory {
         return new StaveStartMarkEvent(address, new ArrayList<>(oscDateArgs), destination, staveId, beatNo, creationTime);
     }
 
-    public DateTickEvent createDateTickEvent(String destination, int staveId, int beatNo, long creationTime) {
+    public DateTickEvent createDateTickEvent(String destination, StaveId staveId, int beatNo, long creationTime) {
         return new DateTickEvent(createJavaScriptArgs(), destination, staveId, beatNo, creationTime);
     }
 
@@ -211,32 +217,32 @@ public class EventFactory {
         return new StaveYPositionEvent(address, oscYPositionArgs, destination, staveId, creationTime);
     }
 
-    public ElementYPositionEvent createElementYPositionEvent(String address, String destination, StaveId staveId, long creationTime) {
-        return new ElementYPositionEvent(address, oscYPositionArgs, destination, staveId, creationTime);
+    public ElementYPositionEvent createElementYPositionEvent(String address, String destination, StaveId staveId, long unscaledValue, OverlayType overlayType, long creationTime) {
+        return new ElementYPositionEvent(address, oscYPositionArgs, unscaledValue, overlayType, destination, staveId, creationTime);
     }
 
-    public ElementAlphaEvent createElementAlphaEvent(String address, String destination, long creationTime) {
-        return new ElementAlphaEvent(address, oscAlphaArgs, destination, creationTime);
+    public ElementAlphaEvent createElementAlphaEvent(StaveId staveId, boolean isEnabled, OverlayType overlayType, OverlayElementType overlayElementType, String address, String destination, long creationTime) {
+        return new ElementAlphaEvent(staveId, isEnabled, overlayType, overlayElementType, address, oscAlphaArgs, destination, creationTime);
     }
 
-    public ElementAlphaEvent createElementPenAlphaEvent(String address, String destination, long creationTime) {
-        return new ElementAlphaEvent(address, oscPenAlphaArgs, destination, creationTime);
+    public ElementAlphaEvent createElementPenAlphaEvent(StaveId staveId, boolean isEnabled, OverlayType overlayType, OverlayElementType overlayElementType, String address, String destination, long creationTime) {
+        return new ElementAlphaEvent(staveId, isEnabled, overlayType, overlayElementType, address, oscPenAlphaArgs, destination, creationTime);
     }
 
-    public ElementColorEvent createElementColorEvent(String address, String destination, long creationTime) {
-        return new ElementColorEvent(address, oscColorArgs, destination, creationTime);
+    public ElementColorEvent createElementColorEvent(StaveId staveId, OverlayType overlayType, String address, String destination, long creationTime) {
+        return new ElementColorEvent(staveId, overlayType, address, oscColorArgs, destination, creationTime);
     }
 
-    public PageDisplayEvent createPageDisplayEvent(PageId pageId, String filename, StaveId staveId, String address, List<Object> args, BeatId eventBaseBeat, String destination, long creationTime) {
-        return new PageDisplayEvent(pageId, filename, staveId, address, args, eventBaseBeat, destination, creationTime);
+    public PageDisplayEvent createPageDisplayEvent(PageId pageId, PageId rndPageId, String filename, StaveId staveId, String address, List<Object> args, BeatId eventBaseBeat, String destination, long creationTime) {
+        return new PageDisplayEvent(pageId, rndPageId, filename, staveId, address, args, eventBaseBeat, destination, creationTime);
     }
 
-    public PageMapDisplayEvent createPageMapDisplayEvent(String address, List<Object> args, BeatId eventBaseBeat, String destination, long creationTime) {
-        return new PageMapDisplayEvent(address, args, eventBaseBeat, destination, creationTime);
+    public PageMapDisplayEvent createPageMapDisplayEvent(PageId pageId, StaveId staveId, String address, List<Object> args, List<InscoreMapElement> mapElements, BeatId eventBaseBeat, String destination, long creationTime) {
+        return new PageMapDisplayEvent(pageId, staveId, address, args, mapElements, eventBaseBeat, destination, creationTime);
     }
 
-    public OscStaveActivateEvent createStaveActivateEvent(String destination, long creationTime) {
-        return new OscStaveActivateEvent(createJavaScriptArgs(), destination, creationTime);
+    public OscStaveActivateEvent createStaveActivateEvent(StaveId staveId, String destination, boolean isActive, boolean isPlayStave, long creationTime) {
+        return new OscStaveActivateEvent(staveId, createJavaScriptArgs(), destination, isActive, isPlayStave, creationTime);
     }
 
     public OscStaveTempoEvent createOscStaveTempoEvent(String destination, int tempo, long creationTime) {
@@ -247,8 +253,8 @@ public class EventFactory {
         return new OscStopEvent(createJavaScriptArgs(), destination, creationTime);
     }
 
-    public PrecountBeatSetupEvent createPrecountBeatSetupEvent(boolean isPrecount, int precountBeatNo, long precountTimeMillis, long initBeaterInterval, Id transportId, long creationTime) {
-        return new PrecountBeatSetupEvent(isPrecount, precountBeatNo, precountTimeMillis, initBeaterInterval, transportId, creationTime);
+    public PrecountBeatSetupEvent createPrecountBeatSetupEvent(int precountBeatNo, long precountTimeMillis, long initBeaterInterval, Id transportId, long creationTime) {
+        return new PrecountBeatSetupEvent(true, precountBeatNo, precountTimeMillis, initBeaterInterval, transportId, creationTime);
     }
 
     public PrecountBeatOnEvent createPrecountBeatOnEvent(String destination, long creationTime) {
@@ -310,7 +316,7 @@ public class EventFactory {
     }
 
     public InstrumentSlotsEvent createInstrumentSlotsEvent(String instrumentsCsv, String destination, long creationTime, BeatId beatId) {
-        InstrumentSlotsEvent event = new InstrumentSlotsEvent(createJavaScriptArgs(), beatId, destination, creationTime);
+        InstrumentSlotsEvent event = new InstrumentSlotsEvent(createJavaScriptArgs(), instrumentsCsv, beatId, destination, creationTime);
         event.addCommandArg(instrumentsCsv);
         return event;
     }
@@ -431,6 +437,13 @@ public class EventFactory {
         return new WebScorePartRegEvent(eventId, sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
+    public WebScorePartReadyEvent createWebScorePartReadyEvent(String eventId, String sourceAddr, String part, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new WebScorePartReadyEvent(eventId, sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    }
+
+    public WebScoreSelectInstrumentSlotEvent createWebScoreSelectInstrumentSlotEvent(String eventId, String sourceAddr, String part, int slotNo, String slotInstrument, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new WebScoreSelectInstrumentSlotEvent(eventId, sourceAddr, part, slotNo, slotInstrument, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    }
     public List<Object> createJavaScriptArgs() {
         List<Object> jsArgs = new ArrayList<>();
         jsArgs.add(Consts.RUN);

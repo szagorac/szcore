@@ -9,9 +9,11 @@ public class WebScoreState {
     private WebScoreInfo scoreInfo;
     private WebPageInfo pageInfo;
     private WebPartInfo partInfo;
+    private WebTimeSpaceMapInfo mapInfo;
     private List<WebScoreAction> actions;
     private String part;
     private int beatNo;
+    private int bpm;
     private long eventServerTime;
 
     public WebScoreInfo getScoreInfo() {
@@ -71,5 +73,21 @@ public class WebScoreState {
 
     public List<WebScoreAction> getActions() {
         return actions;
+    }
+
+    public void setTimeSpaceMapInfo(WebTimeSpaceMapInfo mapInfo) {
+        this.mapInfo = mapInfo;
+    }
+
+    public WebTimeSpaceMapInfo getMapInfo() {
+        return mapInfo;
+    }
+
+    public int getBpm() {
+        return bpm;
+    }
+
+    public void setBpm(int bpm) {
+        this.bpm = bpm;
     }
 }

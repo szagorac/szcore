@@ -41,10 +41,10 @@ import com.xenaksys.szcore.publish.OscPortFactory;
 import com.xenaksys.szcore.publish.WebPublisherDisruptorProcessor;
 import com.xenaksys.szcore.receive.OscReceiveProcessor;
 import com.xenaksys.szcore.receive.SzcoreIncomingEventListener;
-import com.xenaksys.szcore.score.ScoreProcessorImpl;
+import com.xenaksys.szcore.score.OverlayType;
+import com.xenaksys.szcore.score.ScoreProcessorWrapper;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.score.web.WebScoreTargetType;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
 import com.xenaksys.szcore.server.processor.InEventContainerDisruptorProcessor;
 import com.xenaksys.szcore.server.processor.ServerLogProcessor;
 import com.xenaksys.szcore.server.receive.ServerEventReceiver;
@@ -227,12 +227,10 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         outOscDisruptor = DisruptorFactory.createOscOutDisruptor();
         oscEventPublisher = new OscDisruptorPublishProcessorWebWrapper(outOscDisruptor, webProcessor);
 
-        scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, oscEventPublisher, webEventPublisher, scheduler, eventFactory, taskFactory);
+        scoreProcessor = new ScoreProcessorWrapper(transportFactory, clock, oscEventPublisher, webEventPublisher, scheduler, eventFactory, taskFactory);
         subscribe(webProcessor);
 
         String webRoot = props.getProperty(WEB_ROOT);
-//        audienceWebServer = new InscoreWebServer(webRoot, 8000, 1024, 10, true, this);
-//        audienceWebServer.start();
 
         scoreWebServer = new ScoreWebServer(webRoot, 8080, 1024, 10, true, this);
         scoreWebServer.start();
@@ -669,16 +667,6 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
-    public void loadScoreAndPrepare(String filePath) {
-        try {
-            scoreProcessor.loadAndPrepare(filePath);
-        } catch (Exception e) {
-            LOG.error("Failed to load and prepare score: " + filePath, e);
-            eventProcessor.notifyListeners(new ErrorEvent("Failed to load score: " + filePath, "SzcoreServer", e, clock.getSystemTimeMillis()));
-        }
-    }
-
-    @Override
     public Score loadScore(File file) {
         try {
             Score score = scoreProcessor.loadScore(file);
@@ -687,17 +675,6 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         } catch (Exception e) {
             LOG.error("Failed to load score: " + file, e);
             eventProcessor.notifyListeners(new ErrorEvent("Failed to load score: " + file, "SzcoreServer", e, clock.getSystemTimeMillis()));
-        }
-        return null;
-    }
-
-    @Override
-    public WebAudienceScore loadWebScore(File file) {
-        try {
-            return scoreProcessor.loadWebScore(file);
-        } catch (Exception e) {
-            LOG.error("Failed to load score: " + file, e);
-            eventProcessor.notifyListeners(new ErrorEvent("Failed to load WebAudienceScore: " + file, "SzcoreServer", e, clock.getSystemTimeMillis()));
         }
         return null;
     }
@@ -795,9 +772,9 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
-    public void setDynamicsValue(long value, List<Id> instrumentIds) {
+    public void setOverlayValue(OverlayType type, long value, List<Id> instrumentIds) {
         try {
-            scoreProcessor.setDynamicsValue(value, instrumentIds);
+            scoreProcessor.setOverlayValue(type, value, instrumentIds);
         } catch (Exception e) {
             LOG.error("Failed to set Dynamics Value: {}", value, e);
             eventProcessor.notifyListeners(new ErrorEvent("Failed to set Dynamics Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
@@ -805,9 +782,9 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
-    public void onUseDynamicsOverlay(Boolean value, List<Id> instrumentIds) {
+    public void onUseOverlay(OverlayType type, Boolean value, List<Id> instrumentIds) {
         try {
-            scoreProcessor.onUseDynamicsOverlay(value, instrumentIds);
+            scoreProcessor.onUseOverlay(type, value, instrumentIds);
         } catch (Exception e) {
             LOG.error("Failed to set Dynamics Value: {}", value, e);
             eventProcessor.notifyListeners(new ErrorEvent("Failed to set Dynamics Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
@@ -815,132 +792,12 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
-    public void onUseDynamicsLine(Boolean value, List<Id> instrumentIds) {
+    public void onUseOverlayLine(OverlayType type, Boolean value, List<Id> instrumentIds) {
         try {
-            scoreProcessor.onUseDynamicsLine(value, instrumentIds);
+            scoreProcessor.onUseOverlayLine(type, value, instrumentIds);
         } catch (Exception e) {
             LOG.error("Failed to set Dynamics Line Value: {}", value, e);
             eventProcessor.notifyListeners(new ErrorEvent("Failed to set Dynamics Line Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
-        }
-    }
-
-    @Override
-    public void setPressureValue(long value, List<Id> instrumentIds) {
-        try {
-            scoreProcessor.setPressureValue(value, instrumentIds);
-        } catch (Exception e) {
-            LOG.error("Failed to set Pressure Value: {}", value, e);
-            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Pressure Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
-        }
-    }
-
-    @Override
-    public void onUsePressureOverlay(Boolean value, List<Id> instrumentIds) {
-        try {
-            scoreProcessor.onUsePressureOverlay(value, instrumentIds);
-        } catch (Exception e) {
-            LOG.error("Failed to set Pressure Value: {}", value, e);
-            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Pressure Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
-        }
-    }
-
-    @Override
-    public void onUsePressureLine(Boolean value, List<Id> instrumentIds) {
-        try {
-            scoreProcessor.onUsePressureLine(value, instrumentIds);
-        } catch (Exception e) {
-            LOG.error("Failed to set Pressure Line Value: {}", value, e);
-            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Pressure Line Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
-        }
-    }
-
-    @Override
-    public void setSpeedValue(long value, List<Id> instrumentIds) {
-        try {
-            scoreProcessor.setSpeedValue(value, instrumentIds);
-        } catch (Exception e) {
-            LOG.error("Failed to set Speed Value: {}", value, e);
-            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Speed Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
-        }
-    }
-
-    @Override
-    public void onUseSpeedOverlay(Boolean value, List<Id> instrumentIds) {
-        try {
-            scoreProcessor.onUseSpeedOverlay(value, instrumentIds);
-        } catch (Exception e) {
-            LOG.error("Failed to set Speed Value: {}", value, e);
-            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Speed Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
-        }
-    }
-
-    @Override
-    public void onUseSpeedLine(Boolean value, List<Id> instrumentIds) {
-        try {
-            scoreProcessor.onUseSpeedLine(value, instrumentIds);
-        } catch (Exception e) {
-            LOG.error("Failed to set Speed Line Value: {}", value, e);
-            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Speed Line Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
-        }
-    }
-
-    @Override
-    public void setPositionValue(long value, List<Id> instrumentIds) {
-        try {
-            scoreProcessor.setPositionValue(value, instrumentIds);
-        } catch (Exception e) {
-            LOG.error("Failed to set Position Value: {}", value, e);
-            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Position Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
-        }
-    }
-
-    @Override
-    public void onUsePositionOverlay(Boolean value, List<Id> instrumentIds) {
-        try {
-            scoreProcessor.onUsePositionOverlay(value, instrumentIds);
-        } catch (Exception e) {
-            LOG.error("Failed to set Position Value: {}", value, e);
-            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Position Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
-        }
-    }
-
-    @Override
-    public void onUsePositionLine(Boolean value, List<Id> instrumentIds) {
-        try {
-            scoreProcessor.onUsePositionLine(value, instrumentIds);
-        } catch (Exception e) {
-            LOG.error("Failed to set Position Line Value: {}", value, e);
-            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Position Line Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
-        }
-    }
-
-    @Override
-    public void setContentValue(long value, List<Id> instrumentIds) {
-        try {
-            scoreProcessor.setContentValue(value, instrumentIds);
-        } catch (Exception e) {
-            LOG.error("Failed to set Content Value: {}", value, e);
-            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Content Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
-        }
-    }
-
-    @Override
-    public void onUseContentOverlay(Boolean value, List<Id> instrumentIds) {
-        try {
-            scoreProcessor.onUseContentOverlay(value, instrumentIds);
-        } catch (Exception e) {
-            LOG.error("Failed to set Content Value: {}", value, e);
-            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Content Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
-        }
-    }
-
-    @Override
-    public void onUseContentLine(Boolean value, List<Id> instrumentIds) {
-        try {
-            scoreProcessor.onUseContentLine(value, instrumentIds);
-        } catch (Exception e) {
-            LOG.error("Failed to set Content Line Value: {}", value, e);
-            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Content Line Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
         }
     }
 

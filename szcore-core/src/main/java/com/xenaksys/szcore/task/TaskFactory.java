@@ -19,7 +19,6 @@ import com.xenaksys.szcore.model.Stave;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.Transport;
-import com.xenaksys.szcore.score.ScoreProcessorImpl;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
 import com.xenaksys.szcore.scripting.ScoreScriptingEngine;
 
@@ -55,7 +54,7 @@ public class TaskFactory {
         return new ScheduledEventTask(playTime, event, scoreProcessor);
     }
 
-    public PrepStaveChangeTask createPrepStaveChangeTask(PrepStaveChangeEvent event, long playTime, ScoreProcessorImpl scoreProcessor) {
+    public PrepStaveChangeTask createPrepStaveChangeTask(PrepStaveChangeEvent event, long playTime, ScoreProcessor scoreProcessor) {
         return new PrepStaveChangeTask(playTime, event, scoreProcessor);
     }
 

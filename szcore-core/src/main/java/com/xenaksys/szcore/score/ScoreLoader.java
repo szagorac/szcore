@@ -90,7 +90,7 @@ public class ScoreLoader {
             "unitBeatNo"            //23
     };
 
-    static Score load(String path) throws Exception {
+    public static Score load(String path) throws Exception {
         if (path != null) {
             File file = FileUtil.getFileFromClassPath(path);
             return load(file);
@@ -98,7 +98,7 @@ public class ScoreLoader {
         return null;
     }
 
-    static Score load(File file) throws Exception {
+    public static Score load(File file) throws Exception {
         if (file == null) {
             return null;
         }
@@ -109,7 +109,7 @@ public class ScoreLoader {
         return loadLines(lines);
     }
 
-    static Score loadLines(List<String> lines) throws Exception {
+    public static Score loadLines(List<String> lines) throws Exception {
         if (lines == null || lines.isEmpty()) {
             return null;
         }

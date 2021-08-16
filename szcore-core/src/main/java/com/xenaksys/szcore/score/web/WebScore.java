@@ -29,6 +29,7 @@ import com.xenaksys.szcore.event.web.in.WebScoreSelectInstrumentSlotEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.Transport;
 import com.xenaksys.szcore.model.id.PageId;
@@ -37,7 +38,6 @@ import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.score.InscoreMapElement;
 import com.xenaksys.szcore.score.OverlayElementType;
 import com.xenaksys.szcore.score.OverlayType;
-import com.xenaksys.szcore.score.ScoreProcessorImpl;
 import com.xenaksys.szcore.util.WebUtil;
 import com.xenaksys.szcore.web.WebClientInfo;
 import com.xenaksys.szcore.web.WebScoreAction;
@@ -56,7 +56,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WebScore {
     static final Logger LOG = LoggerFactory.getLogger(WebScore.class);
 
-    private final ScoreProcessorImpl scoreProcessor;
+    private final ScoreProcessor scoreProcessor;
     private final EventFactory eventFactory;
     private final BasicScore score;
     private final Clock clock;
@@ -66,7 +66,7 @@ public class WebScore {
 
     private WebScoreInfo scoreInfo;
 
-    public WebScore(ScoreProcessorImpl scoreProcessor, EventFactory eventFactory, Clock clock) {
+    public WebScore(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock) {
         this.scoreProcessor = scoreProcessor;
         this.eventFactory = eventFactory;
         this.clock = clock;
@@ -174,7 +174,7 @@ public class WebScore {
         }
     }
 
-    private void processElementColour(ElementColorEvent event) {
+    private void processElementColour(ElementColorEvent event) throws Exception {
         String destination = event.getDestination();
         OverlayType overlayType = event.getOverlayType();
         StaveId staveId = event.getStaveId();
@@ -186,7 +186,7 @@ public class WebScore {
         sendOverlayColour(destination, overlayType, webStaveId, colHex);
     }
 
-    private void processElementAlpha(ElementAlphaEvent event) {
+    private void processElementAlpha(ElementAlphaEvent event) throws Exception {
         String destination = event.getDestination();
         OverlayType overlayType = event.getOverlayType();
         OverlayElementType overlayElementType = event.getOverlayElementType();
@@ -197,7 +197,7 @@ public class WebScore {
         String webStaveId = WebUtil.getWebStaveId(staveId);
         sendOverlayElementInfo(destination, overlayType, overlayElementType, isEnabled, webStaveId, opacity);
     }
-    private void processElementYPosition(ElementYPositionEvent event) {
+    private void processElementYPosition(ElementYPositionEvent event) throws Exception {
         String destination = event.getDestination();
         OverlayType overlayType = event.getOverlayType();
         StaveId staveId = event.getStaveId();
@@ -205,7 +205,7 @@ public class WebScore {
         processElementYPosition(destination, staveId, overlayType,unscaledValue);
     }
 
-    private void processElementYPosition(String destination, StaveId staveId, OverlayType overlayType, long unscaledValue) {
+    private void processElementYPosition(String destination, StaveId staveId, OverlayType overlayType, long unscaledValue) throws Exception {
         OverlayProcessor overlayProcessor = overlayProcessors.computeIfAbsent(staveId, s -> new OverlayProcessor());
         Double y = overlayProcessor.calculateValue(staveId, overlayType, unscaledValue);
         if(y == null) {
@@ -215,23 +215,23 @@ public class WebScore {
         sendOverlayLinePosition(destination, overlayType, webStaveId, y);
     }
 
-    private void processResetStaves(ResetStavesEvent event) {
+    private void processResetStaves(ResetStavesEvent event) throws Exception {
         String destination = event.getDestination();
         sendResetStaves(destination);
     }
 
-    private void processInstrumentSlots(InstrumentSlotsEvent event) {
+    private void processInstrumentSlots(InstrumentSlotsEvent event) throws Exception {
         String destination = event.getDestination();
         String instrumentsCsv = event.getInstrumentsCsv();
         sendInstrumentSlots(destination, instrumentsCsv);
     }
 
-    private void processInstrumentResetSlots(InstrumentResetSlotsEvent event) {
+    private void processInstrumentResetSlots(InstrumentResetSlotsEvent event) throws Exception {
         String destination = event.getDestination();
         sendResetInstrumentSlots(destination);
     }
 
-    private void processStaveStartMark(StaveStartMarkEvent event) {
+    private void processStaveStartMark(StaveStartMarkEvent event) throws Exception {
         String destination = event.getDestination();
         StaveId staveId = event.getStaveId();
         String webStaveId = WebUtil.getWebStaveId(staveId);
@@ -239,7 +239,7 @@ public class WebScore {
         sendStaveStartMark(destination, webStaveId, beatNo);
     }
 
-    private void processDateTick(DateTickEvent event) {
+    private void processDateTick(DateTickEvent event) throws Exception {
         String destination = event.getDestination();
         StaveId staveId = event.getStaveId();
         String webStaveId = WebUtil.getWebStaveId(staveId);
@@ -247,7 +247,7 @@ public class WebScore {
         sendBeat(destination, webStaveId, beatNo);
     }
 
-    private void processActivateStave(OscStaveActivateEvent event) {
+    private void processActivateStave(OscStaveActivateEvent event) throws Exception {
         String destination = event.getDestination();
         StaveId staveId = event.getStaveId();
         String webStaveId = WebUtil.getWebStaveId(staveId);
@@ -256,28 +256,28 @@ public class WebScore {
         sendActivateStave(destination, webStaveId, isActive, isPlayStave);
     }
 
-    private void processStopEvent(OscStopEvent event) {
+    private void processStopEvent(OscStopEvent event) throws Exception {
         sendStop();
     }
 
-    private void processPrecountBeatOff(PrecountBeatOffEvent event) {
+    private void processPrecountBeatOff(PrecountBeatOffEvent event) throws Exception {
         int beaterNo = event.getBeaterNo();
         sendPrecountBeatOff(beaterNo);
     }
 
-    private void processPrecountBeatOn(PrecountBeatOnEvent event) {
+    private void processPrecountBeatOn(PrecountBeatOnEvent event) throws Exception {
         int beaterNo = event.getBeaterNo();
         int colourId = event.getColourId();
         sendPrecountBeatOn(beaterNo, colourId);
     }
 
-    private void processTempoEvent(OscStaveTempoEvent event) {
+    private void processTempoEvent(OscStaveTempoEvent event) throws Exception {
         String destination = event.getDestination();
         int bpm = event.getTempo();
         sendTempo(destination, bpm);
     }
 
-    private void processPageMapEvent(PageMapDisplayEvent event) {
+    private void processPageMapEvent(PageMapDisplayEvent event) throws Exception {
         String destination = event.getDestination();
         List<InscoreMapElement> mapElements = event.getMapElements();
         if(mapElements == null) {
@@ -289,7 +289,7 @@ public class WebScore {
         sendTimeSpaceMapInfo(destination, webPageId, webStaveId, mapElements);
     }
 
-    private void processPageDisplayEvent(PageDisplayEvent event) {
+    private void processPageDisplayEvent(PageDisplayEvent event) throws Exception {
         String destination = event.getDestination();
         String fileName = event.getFilename();
         StaveId staveId = event.getStaveId();
@@ -324,7 +324,7 @@ public class WebScore {
         }
     }
 
-    private void addOrUpdateClientInfo(WebClientInfo clientInfo)  {
+    private void addOrUpdateClientInfo(WebClientInfo clientInfo) throws Exception {
         if (clientInfo == null) {
             return;
         }
@@ -332,7 +332,7 @@ public class WebScore {
         addInstrumentClient(clientInfo);
     }
 
-    private void addInstrumentClient(WebClientInfo clientInfo) {
+    private void addInstrumentClient(WebClientInfo clientInfo) throws Exception {
         String instrument = clientInfo.getInstrument();
         if (instrument == null) {
             return;
@@ -347,19 +347,19 @@ public class WebScore {
         }
     }
 
-    public void sendScoreInfo() {
+    public void sendScoreInfo() throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         scoreState.setScoreInfo(scoreInfo);
         scoreProcessor.sendWebScoreState(WebScoreTargetType.ALL.name(), WebScoreTargetType.ALL, scoreState);
     }
 
-    public void sendScoreInfo(WebClientInfo clientInfo) {
+    public void sendScoreInfo(WebClientInfo clientInfo) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         scoreState.setScoreInfo(scoreInfo);
         scoreProcessor.sendWebScoreState(clientInfo.getClientAddr(), WebScoreTargetType.HOST, scoreState);
     }
 
-    public void sendPartInfo(WebClientInfo clientInfo) {
+    public void sendPartInfo(WebClientInfo clientInfo) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         String instrumentName = clientInfo.getInstrument();
         Instrument instrument = score.getInstrument(instrumentName);
@@ -404,7 +404,7 @@ public class WebScore {
         scoreProcessor.sendWebScoreState(clientInfo.getClientAddr(), WebScoreTargetType.HOST, scoreState);
     }
 
-    public void sendPageInfo(String destination, String pageId, String webRndPageId, String filename, String staveId) {
+    public void sendPageInfo(String destination, String pageId, String webRndPageId, String filename, String staveId) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         WebPageInfo webPageInfo = new WebPageInfo();
         webPageInfo.setFilename(filename);
@@ -416,7 +416,7 @@ public class WebScore {
     }
 
 
-    private void sendTimeSpaceMapInfo(String destination, String webPageId, String webStaveId, List<InscoreMapElement> mapElements) {
+    private void sendTimeSpaceMapInfo(String destination, String webPageId, String webStaveId, List<InscoreMapElement> mapElements) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         WebTimeSpaceMapInfo mapInfo = new WebTimeSpaceMapInfo();
         mapInfo.setPageId(webPageId);
@@ -426,13 +426,13 @@ public class WebScore {
         sendToDestination(destination, scoreState);
     }
 
-    private void sendTempo(String destination, int bpm)  {
+    private void sendTempo(String destination, int bpm) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         scoreState.setBpm(bpm);
         sendToDestination(destination, scoreState);
     }
 
-    private void sendPrecountBeatOn(int beaterNo, int colourId) {
+    private void sendPrecountBeatOn(int beaterNo, int colourId) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         Map<String, Object> params = new HashMap<>(2);
         params.put(Consts.WEB_PARAM_LIGHT_NO, beaterNo);
@@ -442,7 +442,7 @@ public class WebScore {
         sendToDestination(Consts.ALL_DESTINATIONS, scoreState);
     }
 
-    private void sendPrecountBeatOff(int beaterNo) {
+    private void sendPrecountBeatOff(int beaterNo) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         Map<String, Object> params = new HashMap<>(2);
         params.put(Consts.WEB_PARAM_LIGHT_NO, beaterNo);
@@ -451,13 +451,13 @@ public class WebScore {
         sendToDestination(Consts.ALL_DESTINATIONS, scoreState);
     }
 
-    private void sendStop() {
+    private void sendStop() throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.STOP, null, null);
         scoreState.addAction(action);
         sendToDestination(Consts.ALL_DESTINATIONS, scoreState);
     }
-    private void sendActivateStave(String destination, String webStaveId, boolean isActive, boolean isPlayStave) {
+    private void sendActivateStave(String destination, String webStaveId, boolean isActive, boolean isPlayStave) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         List<String> targets = Collections.singletonList(webStaveId);
         Map<String, Object> params = new HashMap<>(2);
@@ -468,7 +468,7 @@ public class WebScore {
         sendToDestination(destination, scoreState);
     }
 
-    private void sendBeat(String destination, String webStaveId, int beatNo) {
+    private void sendBeat(String destination, String webStaveId, int beatNo) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         List<String> targets = Collections.singletonList(webStaveId);
         Map<String, Object> params = Collections.singletonMap(Consts.WEB_PARAM_BEAT_NO, beatNo);
@@ -477,7 +477,7 @@ public class WebScore {
         sendToDestination(destination, scoreState);
     }
 
-    private void sendStaveStartMark(String destination, String webStaveId, int beatNo) {
+    private void sendStaveStartMark(String destination, String webStaveId, int beatNo) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         List<String> targets = Collections.singletonList(webStaveId);
         Map<String, Object> params = Collections.singletonMap(Consts.WEB_PARAM_BEAT_NO, beatNo);
@@ -486,7 +486,7 @@ public class WebScore {
         sendToDestination(destination, scoreState);
     }
 
-    private void sendInstrumentSlots(String destination, String instrumentsCsv) {
+    private void sendInstrumentSlots(String destination, String instrumentsCsv) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         Map<String, Object> params = Collections.singletonMap(Consts.WEB_PARAM_CSV_INSTRUMENTS, instrumentsCsv);
         WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.INSTRUMENT_SLOTS, null, params);
@@ -494,21 +494,21 @@ public class WebScore {
         sendToDestination(destination, scoreState);
     }
 
-    private void sendResetInstrumentSlots(String destination) {
+    private void sendResetInstrumentSlots(String destination) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.RESET_INSTRUMENT_SLOTS, null, null);
         scoreState.addAction(action);
         sendToDestination(destination, scoreState);
     }
 
-    private void sendResetStaves(String destination) {
+    private void sendResetStaves(String destination) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.RESET_STAVES, null, null);
         scoreState.addAction(action);
         sendToDestination(destination, scoreState);
     }
 
-    private void sendOverlayLinePosition(String destination, OverlayType overlayType, String webStaveId, Double lineY) {
+    private void sendOverlayLinePosition(String destination, OverlayType overlayType, String webStaveId, Double lineY) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         List<String> targets = Collections.singletonList(webStaveId);
         Map<String, Object> params = new HashMap<>(2);
@@ -519,7 +519,7 @@ public class WebScore {
         sendToDestination(destination, scoreState);
     }
 
-    private void sendOverlayElementInfo(String destination, OverlayType overlayType, OverlayElementType overlayElementType, boolean isEnabled, String webStaveId, Double opacity) {
+    private void sendOverlayElementInfo(String destination, OverlayType overlayType, OverlayElementType overlayElementType, boolean isEnabled, String webStaveId, Double opacity) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         List<String> targets = Collections.singletonList(webStaveId);
         Map<String, Object> params = new HashMap<>(4);
@@ -532,7 +532,7 @@ public class WebScore {
         sendToDestination(destination, scoreState);
     }
 
-    private void sendOverlayColour(String destination, OverlayType overlayType, String webStaveId, String colHex) {
+    private void sendOverlayColour(String destination, OverlayType overlayType, String webStaveId, String colHex) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         List<String> targets = Collections.singletonList(webStaveId);
         Map<String, Object> params = new HashMap<>(4);
@@ -543,7 +543,7 @@ public class WebScore {
         sendToDestination(destination, scoreState);
     }
 
-    private void sendToDestination(String destination, WebScoreState scoreState) {
+    private void sendToDestination(String destination, WebScoreState scoreState) throws Exception {
         if (Consts.ALL_DESTINATIONS.equals(destination)) {
             scoreProcessor.sendWebScoreState(Consts.ALL_DESTINATIONS, WebScoreTargetType.ALL, scoreState);
             return;

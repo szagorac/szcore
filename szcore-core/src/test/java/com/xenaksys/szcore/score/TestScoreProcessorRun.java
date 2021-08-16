@@ -59,7 +59,7 @@ public class TestScoreProcessorRun {
         EventFactory eventFactory = new EventFactory();
         TaskFactory taskFactory = new TaskFactory();
 
-        scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory);
+        scoreProcessor = new ScoreProcessorWrapper(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory);
     }
 
     @Test

@@ -5,16 +5,16 @@ import com.xenaksys.szcore.event.osc.TempoChangeEvent;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.id.BeatId;
-import com.xenaksys.szcore.score.ScoreProcessorImpl;
+import com.xenaksys.szcore.score.ScoreProcessorWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TempoModifierTask extends EventMusicTask {
     static final Logger LOG = LoggerFactory.getLogger(TempoModifierTask.class);
 
-    private ScoreProcessorImpl scoreProcessor;
+    private ScoreProcessorWrapper scoreProcessor;
 
-    public TempoModifierTask(long playTime, TempoChangeEvent event, ScoreProcessorImpl scoreProcessor) {
+    public TempoModifierTask(long playTime, TempoChangeEvent event, ScoreProcessorWrapper scoreProcessor) {
         super(playTime, event);
         this.scoreProcessor = scoreProcessor;
     }

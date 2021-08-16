@@ -13,6 +13,8 @@ public interface Consts {
     long THOUSAND = 1000L;
     long HUNDRED = 100L;
 
+    String SCORE_HANDLER_PACKAGE = "com.xenaksys.szcore.score.handler.";
+
     String ERROR_TASK_QUEUE = " Failed to process task Queue";
     String ERROR_SCHEDULED_TASKS = " Failed to process scheduled tasks";
     String ERROR_TANSPORTS = " Failed to process transports";
@@ -23,6 +25,7 @@ public interface Consts {
     String PLUS = "+";
     String PLUS_REGEX = "\\+";
     String DOT_REGEX = "\\.";
+    String ALL_WSPACE_REGEX = "\\s+";
     String EMPTY = "";
     String COLON = ":";
     String SEMI_COLON = ";";
@@ -65,6 +68,7 @@ public interface Consts {
     String MINUTES_SHORT = "m";
     String SECONDS_SHORT = "s";
     String LOCALHOST = "localhost";
+    String SCORE_PROCESSOR_CLS_SUFFIX = "ScoreProcessor";
 
     char MINUS_CHAR = '-';
     char DOT_CHAR = '.';

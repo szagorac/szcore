@@ -23,6 +23,7 @@ import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.id.BarId;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
+import com.xenaksys.szcore.score.OverlayType;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.Util;
@@ -1117,22 +1118,6 @@ public class ScoreController {
         }
     }
 
-
-    private void openWebScore(File file) {
-        try {
-            String dir = file.getParent();
-            String name = file.getName();
-            int end = name.indexOf(Consts.DOT);
-            String webName = name.substring(0, end) + Consts.WEB_SCORE_SUFFIX +  Consts.CSV_EXT;
-            String webPath = dir + File.separator + webName;
-            File webFile = new File(webPath);
-            this.webAudienceScore = scoreService.loadWebScore(webFile);
-            viewWebScore();
-        } catch (Exception e) {
-            LOG.error("Failed to open score", e);
-        }
-    }
-
     private void reset() {
         if (!scoreService.reset()) {
             LOG.warn("Sever failed to reset");
@@ -1151,10 +1136,6 @@ public class ScoreController {
         for (Participant participant : participants) {
             participant.setInstrument(Consts.NAME_NA);
         }
-
-    }
-
-    public void viewWebScore() {
 
     }
 
@@ -1656,63 +1637,63 @@ public class ScoreController {
     }
 
     private void sendUseDynamicsOverlay(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUseDynamicsOverlay(newVal, instrumentIds);
+        scoreService.onUseOverlay(OverlayType.DYNAMICS, newVal, instrumentIds);
     }
 
     private void sendUseDynamicsLine(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUseDynamicsLine(newVal, instrumentIds);
+        scoreService.onUseOverlayLine(OverlayType.DYNAMICS, newVal, instrumentIds);
     }
 
     private void sendDynamicsValueChange(long newVal, List<Id> instrumentIds) {
-        scoreService.setDynamicsValue(newVal, instrumentIds);
+        scoreService.setOverlayValue(OverlayType.DYNAMICS, newVal, instrumentIds);
     }
 
     private void sendUsePressureOverlay(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUsePressureOverlay(newVal, instrumentIds);
+        scoreService.onUseOverlay(OverlayType.PRESSURE, newVal, instrumentIds);
     }
 
     private void sendUsePressureLine(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUsePressureLine(newVal, instrumentIds);
+        scoreService.onUseOverlayLine(OverlayType.PRESSURE, newVal, instrumentIds);
     }
 
     private void sendPressureValueChange(long newVal, List<Id> instrumentIds) {
-        scoreService.setPressureValue(newVal, instrumentIds);
+        scoreService.setOverlayValue(OverlayType.PRESSURE, newVal, instrumentIds);
     }
 
     private void sendUseSpeedOverlay(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUseSpeedOverlay(newVal, instrumentIds);
+        scoreService.onUseOverlay(OverlayType.SPEED, newVal, instrumentIds);
     }
 
     private void sendUseSpeedLine(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUseSpeedLine(newVal, instrumentIds);
+        scoreService.onUseOverlayLine(OverlayType.SPEED, newVal, instrumentIds);
     }
 
     private void sendSpeedValueChange(long newVal, List<Id> instrumentIds) {
-        scoreService.setSpeedValue(newVal, instrumentIds);
+        scoreService.setOverlayValue(OverlayType.SPEED, newVal, instrumentIds);
     }
 
     private void sendUsePositionOverlay(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUsePositionOverlay(newVal, instrumentIds);
+        scoreService.onUseOverlay(OverlayType.POSITION, newVal, instrumentIds);
     }
 
     private void sendUsePositionLine(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUsePositionLine(newVal, instrumentIds);
+        scoreService.onUseOverlayLine(OverlayType.POSITION, newVal, instrumentIds);
     }
 
     private void sendPositionValueChange(long newVal, List<Id> instrumentIds) {
-        scoreService.setPositionValue(newVal, instrumentIds);
+        scoreService.setOverlayValue(OverlayType.POSITION, newVal, instrumentIds);
     }
 
     private void sendUseContentOverlay(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUseContentOverlay(newVal, instrumentIds);
+        scoreService.onUseOverlay(OverlayType.PITCH, newVal, instrumentIds);
     }
 
     private void sendUseContentLine(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUseContentLine(newVal, instrumentIds);
+        scoreService.onUseOverlayLine(OverlayType.PITCH, newVal, instrumentIds);
     }
 
     private void sendContentValueChange(long newVal, List<Id> instrumentIds) {
-        scoreService.setContentValue(newVal, instrumentIds);
+        scoreService.setOverlayValue(OverlayType.PITCH, newVal, instrumentIds);
     }
 
     private List<Id> getSelectedInstruments() {

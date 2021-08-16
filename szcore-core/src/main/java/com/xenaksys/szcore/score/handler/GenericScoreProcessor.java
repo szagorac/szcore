@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.score;
+package com.xenaksys.szcore.score.handler;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
@@ -87,11 +87,27 @@ import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.model.id.StrId;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.process.OscDestinationEventListener;
+import com.xenaksys.szcore.score.BasicBar;
+import com.xenaksys.szcore.score.BasicBeat;
+import com.xenaksys.szcore.score.BasicPage;
+import com.xenaksys.szcore.score.BasicScore;
+import com.xenaksys.szcore.score.BasicStave;
+import com.xenaksys.szcore.score.BasicTransition;
+import com.xenaksys.szcore.score.BeatFollowerPositionStrategy;
+import com.xenaksys.szcore.score.InscoreMapElement;
+import com.xenaksys.szcore.score.InscorePageMap;
+import com.xenaksys.szcore.score.InstrumentBeatTracker;
+import com.xenaksys.szcore.score.MaxMspScoreConfig;
+import com.xenaksys.szcore.score.OscScript;
+import com.xenaksys.szcore.score.OverlayElementType;
+import com.xenaksys.szcore.score.OverlayType;
+import com.xenaksys.szcore.score.ScoreLoader;
+import com.xenaksys.szcore.score.StaveFactory;
+import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.score.web.WebScore;
 import com.xenaksys.szcore.score.web.WebScoreState;
 import com.xenaksys.szcore.score.web.WebScoreTargetType;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScoreLoader;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
@@ -116,7 +132,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.InetAddress;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -139,8 +154,8 @@ import static com.xenaksys.szcore.Consts.PRESSURE_LINE_Y_MAX;
 import static com.xenaksys.szcore.Consts.SPEED_LINE_Y_MAX;
 import static com.xenaksys.szcore.Consts.UNDERSCORE;
 
-public class ScoreProcessorImpl implements ScoreProcessor {
-    static final Logger LOG = LoggerFactory.getLogger(ScoreProcessorImpl.class);
+public class GenericScoreProcessor implements ScoreProcessor {
+    static final Logger LOG = LoggerFactory.getLogger(GenericScoreProcessor.class);
 
     private final TransportFactory transportFactory;
     private final MutableClock clock;
@@ -184,13 +199,14 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     private volatile boolean isUpdateWindowOpen = false;
     private volatile int currentBeatNo = 0;
 
-    public ScoreProcessorImpl(TransportFactory transportFactory,
-                              MutableClock clock,
-                              OscPublisher oscPublisher,
-                              WebPublisher webPublisher,
-                              Scheduler scheduler,
-                              EventFactory eventFactory,
-                              TaskFactory taskFactory) {
+    public GenericScoreProcessor(TransportFactory transportFactory,
+                                 MutableClock clock,
+                                 OscPublisher oscPublisher,
+                                 WebPublisher webPublisher,
+                                 Scheduler scheduler,
+                                 EventFactory eventFactory,
+                                 TaskFactory taskFactory,
+                                 BasicScore szcore) {
         this.transportFactory = transportFactory;
         this.clock = clock;
         this.oscPublisher = oscPublisher;
@@ -198,27 +214,13 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         this.scheduler = scheduler;
         this.eventFactory = eventFactory;
         this.taskFactory = taskFactory;
+        this.szcore = szcore;
         this.oscDestinationEventListener = new OscDestinationEventListener(this, eventFactory, clock);
     }
 
     @Override
     public void loadAndPrepare(String filePath) throws Exception {
-        isScoreLoaded = false;
-
-        File scoreFile = new File(filePath);
-        if (!scoreFile.exists()) {
-            ClassLoader classLoader = getClass().getClassLoader();
-            URL fileURL = classLoader.getResource(filePath);
-            if(fileURL != null) {
-                File file = new File(fileURL.getFile());
-                if (file.exists()) {
-                    scoreFile = file;
-                }
-            }
-        }
-
-        Score score = loadScore(scoreFile);
-        prepare(score);
+       LOG.error("loadAndPrepare: unexpected call");
     }
 
     @Override
@@ -229,8 +231,10 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         }
         LOG.info("LOADING SCORE: " + file.getCanonicalPath());
         reset();
-        Score score = ScoreLoader.load(file);
-        szcore = (BasicScore) score;
+        if(szcore == null) {
+            Score score = ScoreLoader.load(file);
+            szcore = (BasicScore) score;
+        }
 
         ScoreRandomisationStrategyConfig randomisationStrategyConfig = StrategyConfigLoader.loadStrategyConfig(file.getParent(), szcore);
         szcore.setRandomisationStrategyConfig(randomisationStrategyConfig);
@@ -246,18 +250,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
         scriptingEngine = new ScoreScriptingEngine(this, eventFactory, clock);
         scriptingEngine.init(file.getParent());
 
-        return score;
-    }
-
-    @Override
-    public WebAudienceScore loadWebScore(File file) throws Exception {
-        if (scheduler.isActive()) {
-            LOG.warn("Scheduler is active, can not perform load web score");
-            throw new Exception("Scheduler is active, can not perform load web score");
-        }
-        LOG.info("LOADING WEB SCORE: " + file.getCanonicalPath());
-        WebAudienceScoreLoader.load(file);
-        return null;
+        return szcore;
     }
 
     @Override
@@ -2280,93 +2273,84 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     }
 
     @Override
-    public void setDynamicsValue(long value, List<Id> instrumentIds) {
-        LOG.debug("setDynamicsValue: {} ", value);
-        onDynamicsValueChange(value, instrumentIds);
+    public void setOverlayValue(OverlayType type, long value, List<Id> instrumentIds) {
+        if(type == null) {
+            LOG.error("setOverlayValue: invalid type");
+            return;
+        }
+        switch (type) {
+            case DYNAMICS:
+                onDynamicsValueChange(value, instrumentIds);
+                break;
+            case SPEED:
+                onSpeedValueChange(value, instrumentIds);
+                break;
+            case POSITION:
+                onPositionValueChange(value, instrumentIds);
+                break;
+            case PRESSURE:
+                onPressureValueChange(value, instrumentIds);
+                break;
+            case PITCH:
+                onContentValueChange(value, instrumentIds);
+                break;
+            default:
+                LOG.error("setOverlayValue: invalid overlay type {}", type);
+        }
     }
 
     @Override
-    public void onUseDynamicsOverlay(Boolean value, List<Id> instrumentIds) {
-        LOG.debug("onUseDynamicsOverlay: {} ", value);
-        setDynamicsOverlay(value, instrumentIds);
+    public void onUseOverlayLine(OverlayType type, Boolean value, List<Id> instrumentIds) {
+        if(type == null) {
+            LOG.error("onUseOverlayLine: invalid type");
+            return;
+        }
+        switch (type) {
+            case DYNAMICS:
+                setDynamicsLine(value, instrumentIds);
+                break;
+            case SPEED:
+                setSpeedLine(value, instrumentIds);
+                break;
+            case POSITION:
+                setPositionLine(value, instrumentIds);
+                break;
+            case PRESSURE:
+                setPressureLine(value, instrumentIds);
+                break;
+            case PITCH:
+                setContentLine(value, instrumentIds);
+                break;
+            default:
+                LOG.error("onUseOverlayLine: invalid overlay type {}", type);
+        }
     }
 
     @Override
-    public void onUseDynamicsLine(Boolean value, List<Id> instrumentIds) {
-        LOG.debug("onUseDynamicsLine: {} ", value);
-        setDynamicsLine(value, instrumentIds);
-    }
-
-    @Override
-    public void setPressureValue(long value, List<Id> instrumentIds) {
-        LOG.debug("setPressureValue: {} ", value);
-        onPressureValueChange(value, instrumentIds);
-    }
-
-    @Override
-    public void onUsePressureOverlay(Boolean value, List<Id> instrumentIds) {
-        LOG.debug("onUsePressureOverlay: {} ", value);
-        setPressureOverlay(value, instrumentIds);
-    }
-
-    @Override
-    public void onUsePressureLine(Boolean value, List<Id> instrumentIds) {
-        LOG.debug("onUsePressureLine: {} ", value);
-        setPressureLine(value, instrumentIds);
-    }
-
-    @Override
-    public void setSpeedValue(long value, List<Id> instrumentIds) {
-        LOG.debug("setSpeedValue: {} ", value);
-        onSpeedValueChange(value, instrumentIds);
-    }
-
-    @Override
-    public void onUseSpeedOverlay(Boolean value, List<Id> instrumentIds) {
-        LOG.debug("onUseSpeedOverlay: {} ", value);
-        setSpeedOverlay(value, instrumentIds);
-    }
-
-    @Override
-    public void onUseSpeedLine(Boolean value, List<Id> instrumentIds) {
-        LOG.debug("onUseSpeedLine: {} ", value);
-        setSpeedLine(value, instrumentIds);
-    }
-
-    @Override
-    public void setPositionValue(long value, List<Id> instrumentIds) {
-        LOG.debug("setPositionValue: {} ", value);
-        onPositionValueChange(value, instrumentIds);
-    }
-
-    @Override
-    public void onUsePositionOverlay(Boolean value, List<Id> instrumentIds) {
-        LOG.debug("onUsePositionOverlay: {} ", value);
-        setPositionOverlay(value, instrumentIds);
-    }
-
-    @Override
-    public void onUsePositionLine(Boolean value, List<Id> instrumentIds) throws Exception {
-        LOG.debug("onUsePositionLine: {} ", value);
-        setPositionLine(value, instrumentIds);
-    }
-
-    @Override
-    public void setContentValue(long value, List<Id> instrumentIds) {
-        LOG.debug("setContentValue: {} ", value);
-        onContentValueChange(value, instrumentIds);
-    }
-
-    @Override
-    public void onUseContentOverlay(Boolean value, List<Id> instrumentIds) {
-        LOG.debug("onUseContentOverlay: {} ", value);
-        setContentOverlay(value, instrumentIds);
-    }
-
-    @Override
-    public void onUseContentLine(Boolean value, List<Id> instrumentIds) {
-        LOG.debug("onUseContentLine: {} ", value);
-        setContentLine(value, instrumentIds);
+    public void onUseOverlay(OverlayType type, Boolean value, List<Id> instrumentIds) {
+        if(type == null) {
+            LOG.error("onUseOverlay: invalid type");
+            return;
+        }
+        switch (type) {
+            case DYNAMICS:
+                setDynamicsOverlay(value, instrumentIds);
+                break;
+            case SPEED:
+                setSpeedOverlay(value, instrumentIds);
+                break;
+            case POSITION:
+                setPositionOverlay(value, instrumentIds);
+                break;
+            case PRESSURE:
+                setPressureOverlay(value, instrumentIds);
+                break;
+            case PITCH:
+                setContentOverlay(value, instrumentIds);
+                break;
+            default:
+                LOG.error("onUseOverlay: invalid overlay type {}", type);
+        }
     }
 
     @Override

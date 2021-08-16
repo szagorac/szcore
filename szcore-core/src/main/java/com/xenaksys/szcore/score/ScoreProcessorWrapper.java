@@ -21,7 +21,6 @@ import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.PageId;
-import com.xenaksys.szcore.process.OscDestinationEventListener;
 import com.xenaksys.szcore.score.handler.GenericScoreProcessor;
 import com.xenaksys.szcore.score.web.WebScoreState;
 import com.xenaksys.szcore.score.web.WebScoreTargetType;
@@ -53,7 +52,6 @@ public class ScoreProcessorWrapper implements ScoreProcessor {
     private final Scheduler scheduler;
     private final EventFactory eventFactory;
     private final TaskFactory taskFactory;
-    private final OscDestinationEventListener oscDestinationEventListener;
 
     private ScoreProcessor scoreHandler;
 
@@ -71,7 +69,6 @@ public class ScoreProcessorWrapper implements ScoreProcessor {
         this.scheduler = scheduler;
         this.eventFactory = eventFactory;
         this.taskFactory = taskFactory;
-        this.oscDestinationEventListener = new OscDestinationEventListener(this, eventFactory, clock);
     }
 
     @Override
@@ -110,7 +107,6 @@ public class ScoreProcessorWrapper implements ScoreProcessor {
         }
         String scoreName = score.getName();
         try {
-
             String className = Consts.SCORE_HANDLER_PACKAGE + ParseUtil.removeAllWhitespaces(scoreName) + Consts.SCORE_PROCESSOR_CLS_SUFFIX;
             Class<?> clazz = Class.forName(className);
             Constructor<?> constructor = clazz.getConstructor(TransportFactory.class, MutableClock.class, OscPublisher.class,

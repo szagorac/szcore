@@ -144,7 +144,7 @@ var ZSCORE = function (Window) {
     var BT_HEADER_CALLER = "BTMH_CALLER";
 
     var START_PXL = 64;
-    var WHOLE_PXL = 160;
+    var WHOLE_PXL = 220;
     var MINIM_PXL = WHOLE_PXL / 2;
     var CROTCHET_PXL = WHOLE_PXL / 4;
     var QUAVER_PXL = WHOLE_PXL / 8;

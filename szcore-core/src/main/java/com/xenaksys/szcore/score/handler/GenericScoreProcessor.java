@@ -102,6 +102,7 @@ import com.xenaksys.szcore.score.OscScript;
 import com.xenaksys.szcore.score.OverlayElementType;
 import com.xenaksys.szcore.score.OverlayType;
 import com.xenaksys.szcore.score.ScoreLoader;
+import com.xenaksys.szcore.score.ScoreProcessorWrapper;
 import com.xenaksys.szcore.score.StaveFactory;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.score.web.WebScore;
@@ -140,7 +141,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static com.xenaksys.szcore.Consts.CONTENT_LINE_Y_MAX;
@@ -165,6 +165,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
     private final EventFactory eventFactory;
     private final TaskFactory taskFactory;
     private final OscDestinationEventListener oscDestinationEventListener;
+    private final ScoreProcessorWrapper parentProcessor;
 
     private BasicScore szcore = null;
     private boolean isScoreLoaded = false;
@@ -176,8 +177,6 @@ public class GenericScoreProcessor implements ScoreProcessor {
     private volatile int startBaseBeat = 0;
     private final Map<Id, InstrumentBeatTracker> instrumentBeatTrackers = new HashMap<>();
     private final BeatFollowerPositionStrategy beatFollowerPositionStrategy = new BeatFollowerPositionStrategy();
-    private final List<SzcoreEngineEventListener> scoreEventListeners = new CopyOnWriteArrayList<>();
-    protected List<WebAudienceStateListener> webAudienceStateListeners = new CopyOnWriteArrayList<>();
     private final Map<Id, TempoModifier> transportTempoModifiers = new ConcurrentHashMap<>();
 
     private final ValueScaler dynamicsValueScaler = new ValueScaler(0.0, 100.0, 0.0, DYNAMICS_LINE_Y_MAX);
@@ -199,6 +198,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
     private volatile boolean isUpdateWindowOpen = false;
     private volatile int currentBeatNo = 0;
 
+
     public GenericScoreProcessor(TransportFactory transportFactory,
                                  MutableClock clock,
                                  OscPublisher oscPublisher,
@@ -206,7 +206,8 @@ public class GenericScoreProcessor implements ScoreProcessor {
                                  Scheduler scheduler,
                                  EventFactory eventFactory,
                                  TaskFactory taskFactory,
-                                 BasicScore szcore) {
+                                 BasicScore szcore,
+                                 ScoreProcessorWrapper parent) {
         this.transportFactory = transportFactory;
         this.clock = clock;
         this.oscPublisher = oscPublisher;
@@ -215,6 +216,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
         this.eventFactory = eventFactory;
         this.taskFactory = taskFactory;
         this.szcore = szcore;
+        this.parentProcessor = parent;
         this.oscDestinationEventListener = new OscDestinationEventListener(this, eventFactory, clock);
     }
 
@@ -2224,12 +2226,12 @@ public class GenericScoreProcessor implements ScoreProcessor {
 
     @Override
     public void subscribe(SzcoreEngineEventListener eventListener) {
-        scoreEventListeners.add(eventListener);
+        LOG.warn("Unexpected call: subscribe SzcoreEngineEventListener");
     }
 
     @Override
     public void subscribe(WebAudienceStateListener eventListener) {
-        webAudienceStateListeners.add(eventListener);
+        LOG.warn("Unexpected call: subscribe WebAudienceStateListener");
     }
 
     @Override
@@ -2473,44 +2475,27 @@ public class GenericScoreProcessor implements ScoreProcessor {
     }
 
     private void notifyListeners(SzcoreEvent event, int beatNo, int tickNo) {
-        for (SzcoreEngineEventListener listener : scoreEventListeners) {
-            listener.onEvent(event, beatNo, tickNo);
-        }
+        parentProcessor.notifyListeners(event, beatNo, tickNo);
     }
 
     private void notifyListeners(WebAudienceScoreStateExport webAudienceScoreStateExport) {
-        for (WebAudienceStateListener listener : webAudienceStateListeners) {
-            listener.onWebAudienceScoreStateChange(webAudienceScoreStateExport);
-        }
+        parentProcessor.notifyListeners(webAudienceScoreStateExport);
     }
 
     private void notifyListeners(WebAudienceScoreStateDeltaExport deltaExport) {
-        for (WebAudienceStateListener listener : webAudienceStateListeners) {
-            listener.onWebAudienceScoreStateDeltaChange(deltaExport);
-        }
+        parentProcessor.notifyListeners(deltaExport);
     }
 
     private void notifyListenersOnBeat(Id transportId, int beatNo, int baseBeatNo) {
-        LOG.debug("Sending beat event beatNo: " + beatNo + " baseBeatNo: " + baseBeatNo);
-
-        for (SzcoreEngineEventListener listener : scoreEventListeners) {
-            listener.onTransportBeatEvent(transportId, beatNo, baseBeatNo);
-        }
+        parentProcessor.notifyListenersOnBeat(transportId, beatNo, baseBeatNo);
     }
 
     private void notifyListenersOnTempoChange(Id transportId, Tempo tempo) {
-        LOG.debug("Sending tempo change tempo: " + tempo);
-        for (SzcoreEngineEventListener listener : scoreEventListeners) {
-            listener.onTransportTempoChange(transportId, tempo);
-        }
+        parentProcessor.notifyListenersOnTempoChange(transportId, tempo);
     }
 
     private void notifyListenersOnTransportPositionChange(Id transportId, int beatNo) {
-        LOG.debug("Sending transport position change beatNo: " + beatNo);
-
-        for (SzcoreEngineEventListener listener : scoreEventListeners) {
-            listener.onTransportPositionChange(transportId, beatNo);
-        }
+        parentProcessor.notifyListenersOnTransportPositionChange(transportId, beatNo);
     }
 
     private void processScriptingEngineEvent(ScriptingEngineEvent event) {

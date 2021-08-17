@@ -16,6 +16,7 @@ import com.xenaksys.szcore.model.Score;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.Stave;
 import com.xenaksys.szcore.model.SzcoreEvent;
+import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.model.id.BeatId;
@@ -41,6 +42,7 @@ import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ScoreProcessorWrapper implements ScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(ScoreProcessorWrapper.class);
@@ -54,6 +56,9 @@ public class ScoreProcessorWrapper implements ScoreProcessor {
     private final TaskFactory taskFactory;
 
     private ScoreProcessor scoreHandler;
+    private final List<SzcoreEngineEventListener> scoreEventListeners = new CopyOnWriteArrayList<>();
+    protected final List<WebAudienceStateListener> webAudienceStateListeners = new CopyOnWriteArrayList<>();
+
 
     public ScoreProcessorWrapper(TransportFactory transportFactory,
                                  MutableClock clock,
@@ -115,7 +120,7 @@ public class ScoreProcessorWrapper implements ScoreProcessor {
             return (ScoreProcessor) instance;
         } catch (Exception e) {
             LOG.warn("initScoreHandler: Failed to initialise score handler for score {}, using GenericScoreProcessor", scoreName);
-            return new GenericScoreProcessor(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, score);
+            return new GenericScoreProcessor(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, score, this);
         }
     }
 
@@ -150,17 +155,61 @@ public class ScoreProcessorWrapper implements ScoreProcessor {
 
     @Override
     public void reset() throws Exception {
+        if(scoreHandler == null) {
+            return;
+        }
         scoreHandler.reset();
     }
 
     @Override
     public void subscribe(SzcoreEngineEventListener eventListener) {
-        scoreHandler.subscribe(eventListener);
+        scoreEventListeners.add(eventListener);
     }
 
     @Override
     public void subscribe(WebAudienceStateListener eventListener) {
-        scoreHandler.subscribe(eventListener);
+        webAudienceStateListeners.add(eventListener);
+    }
+
+    public void notifyListeners(SzcoreEvent event, int beatNo, int tickNo) {
+        for (SzcoreEngineEventListener listener : scoreEventListeners) {
+            listener.onEvent(event, beatNo, tickNo);
+        }
+    }
+
+    public void notifyListeners(WebAudienceScoreStateExport webAudienceScoreStateExport) {
+        for (WebAudienceStateListener listener : webAudienceStateListeners) {
+            listener.onWebAudienceScoreStateChange(webAudienceScoreStateExport);
+        }
+    }
+
+    public void notifyListeners(WebAudienceScoreStateDeltaExport deltaExport) {
+        for (WebAudienceStateListener listener : webAudienceStateListeners) {
+            listener.onWebAudienceScoreStateDeltaChange(deltaExport);
+        }
+    }
+
+    public void notifyListenersOnBeat(Id transportId, int beatNo, int baseBeatNo) {
+        LOG.debug("Sending beat event beatNo: " + beatNo + " baseBeatNo: " + baseBeatNo);
+
+        for (SzcoreEngineEventListener listener : scoreEventListeners) {
+            listener.onTransportBeatEvent(transportId, beatNo, baseBeatNo);
+        }
+    }
+
+    public void notifyListenersOnTempoChange(Id transportId, Tempo tempo) {
+        LOG.debug("Sending tempo change tempo: " + tempo);
+        for (SzcoreEngineEventListener listener : scoreEventListeners) {
+            listener.onTransportTempoChange(transportId, tempo);
+        }
+    }
+
+    public void notifyListenersOnTransportPositionChange(Id transportId, int beatNo) {
+        LOG.debug("Sending transport position change beatNo: " + beatNo);
+
+        for (SzcoreEngineEventListener listener : scoreEventListeners) {
+            listener.onTransportPositionChange(transportId, beatNo);
+        }
     }
 
     @Override
@@ -302,6 +351,9 @@ public class ScoreProcessorWrapper implements ScoreProcessor {
 
     @Override
     public void onInterceptedOscOutEvent(OscEvent event) {
+        if(scoreHandler == null) {
+            return;
+        }
         scoreHandler.onInterceptedOscOutEvent(event);
     }
 

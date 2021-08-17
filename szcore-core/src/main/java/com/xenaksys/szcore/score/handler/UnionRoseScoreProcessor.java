@@ -6,6 +6,7 @@ import com.xenaksys.szcore.model.OscPublisher;
 import com.xenaksys.szcore.model.Scheduler;
 import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.score.BasicScore;
+import com.xenaksys.szcore.score.ScoreProcessorWrapper;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
 
@@ -18,7 +19,9 @@ public class UnionRoseScoreProcessor extends GenericScoreProcessor {
                                    Scheduler scheduler,
                                    EventFactory eventFactory,
                                    TaskFactory taskFactory,
-                                   BasicScore szcore) {
-        super(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, szcore);
+                                   BasicScore szcore,
+                                   ScoreProcessorWrapper parent
+                                   ) {
+        super(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, szcore, parent);
     }
 }

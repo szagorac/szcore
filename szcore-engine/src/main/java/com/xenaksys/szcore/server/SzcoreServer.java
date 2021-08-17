@@ -228,7 +228,6 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         oscEventPublisher = new OscDisruptorPublishProcessorWebWrapper(outOscDisruptor, webProcessor);
 
         scoreProcessor = new ScoreProcessorWrapper(transportFactory, clock, oscEventPublisher, webEventPublisher, scheduler, eventFactory, taskFactory);
-        subscribe(webProcessor);
 
         String webRoot = props.getProperty(WEB_ROOT);
 
@@ -671,6 +670,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         try {
             Score score = scoreProcessor.loadScore(file);
             scoreProcessor.prepare(score);
+            subscribe(webProcessor);
             return score;
         } catch (Exception e) {
             LOG.error("Failed to load score: " + file, e);

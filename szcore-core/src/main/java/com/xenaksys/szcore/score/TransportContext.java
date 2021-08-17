@@ -6,38 +6,35 @@ import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.id.BeatId;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class TransportContext {
-    static final Logger LOG = LoggerFactory.getLogger(TransportContext.class);
 
     private final Id transportId;
-    private List<SzcoreEvent> initEvents = new ArrayList<>();
-    private List<SzcoreEvent> clockTickEvents = new ArrayList<>();
-    private LinkedBlockingQueue<SzcoreEvent> oneOffClockTickEvents = new LinkedBlockingQueue<>();
-    private List<SzcoreEvent> clockBaseBeatEvents = new ArrayList<>();
-    private TIntObjectMap<List<SzcoreEvent>> scoreBaseBeatEvents = new TIntObjectHashMap<>();
-    private TIntObjectMap<List<SzcoreEvent>> oneOffBaseBeatEvents = new TIntObjectHashMap<>();
-    private TIntObjectMap<List<BeatId>> beatNoToId = new TIntObjectHashMap<>();
+    private final List<SzcoreEvent> initEvents = new ArrayList<>();
+    private final List<SzcoreEvent> clockTickEvents = new ArrayList<>();
+    private final LinkedBlockingQueue<SzcoreEvent> oneOffClockTickEvents = new LinkedBlockingQueue<>();
+    private final List<SzcoreEvent> clockBaseBeatEvents = new ArrayList<>();
+    private final TIntObjectMap<List<SzcoreEvent>> scoreBaseBeatEvents = new TIntObjectHashMap<>();
+    private final TIntObjectMap<List<SzcoreEvent>> oneOffBaseBeatEvents = new TIntObjectHashMap<>();
+    private final TIntObjectMap<List<BeatId>> beatNoToId = new TIntObjectHashMap<>();
 
     public TransportContext(Id transportId) {
         this.transportId = transportId;
     }
 
-    public void addInitEvent(SzcoreEvent initEvent) {
-        initEvents.add(initEvent);
+    public Id getTransportId() {
+        return transportId;
     }
 
     public void addClockTickEvent(SzcoreEvent clockTickEvent) {
         clockTickEvents.add(clockTickEvent);
     }
 
-    public void addOneOffClockTickEvent(SzcoreEvent oneOffEvent) throws Exception {
+    public void addOneOffClockTickEvent(SzcoreEvent oneOffEvent) {
         oneOffClockTickEvents.add(oneOffEvent);
     }
 
@@ -56,18 +53,8 @@ public class TransportContext {
         if (beatEvents == null) {
             beatEvents = new ArrayList<>();
             scoreBaseBeatEvents.put(baseBeatNo, beatEvents);
-        }else {
-//            LOG.info("##### SCORE EVENTS ###### baseBeatNo: " + baseBeatNo);
-//            LOG.info("Already haave beat events when Adding One Off beat event " + scoreBaseBeatEvent);
-//            for(SzcoreEvent event : beatEvents){
-//                LOG.info("Existing Score events: " + event);
-//            }
-//            LOG.info("######");
-
         }
-
         beatEvents.add(scoreBaseBeatEvent);
-
     }
 
     public void addOneOffBaseBeatEvent(SzcoreEvent scoreBaseBeatEvent) {
@@ -81,18 +68,8 @@ public class TransportContext {
         if (beatEvents == null) {
             beatEvents = new ArrayList<>();
             oneOffBaseBeatEvents.put(baseBeatNo, beatEvents);
-        } else {
-//            LOG.info("########### ONE OFF ############ baseBeatNo: " + baseBeatNo);
-//            LOG.info("Already haave beat events when Adding One Off beat event " + scoreBaseBeatEvent);
-//            for(SzcoreEvent event : beatEvents){
-//                LOG.info("Existing One Off events: " + event);
-//            }
-//            LOG.info("#######################");
-
         }
-
         beatEvents.add(scoreBaseBeatEvent);
-
     }
 
     public void addBeatId(BeatId beatId) {

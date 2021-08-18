@@ -14,9 +14,13 @@ public class WebScoreRemoveConnectionEvent extends WebScoreInEvent {
         return WebScoreInEventType.CONNECTIONS_REMOVE;
     }
 
+    public List<String> getConnectionIds() {
+        return connectionIds;
+    }
+
     @Override
     public String toString() {
-        return "WebScoreConnectionEvent{" +
+        return "WebScoreRemoveConnectionEvent{" +
                 "connectionIds=" + connectionIds +
                 '}';
     }

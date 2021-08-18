@@ -570,6 +570,19 @@ public class WebScore {
 
     public void processRemoveConnectionEvent(WebScoreRemoveConnectionEvent webEvent) {
         LOG.info("processRemoveConnectionEvent");
+        if(webEvent == null || webEvent.getConnectionIds() == null || webEvent.getConnectionIds().isEmpty()) {
+            return;
+        }
+        List<String> toRemove = webEvent.getConnectionIds();
+        for(String connId : toRemove) {
+            WebClientInfo removed = clients.remove(connId);
+            if(removed != null) {
+                for(String instrument : instrumentClients.keySet()) {
+                    List<WebClientInfo> instClients = instrumentClients.get(instrument);
+                    instClients.remove(removed);
+                }
+            }
+        }
     }
 
     public void processPartRegistration(WebScorePartRegEvent event) {

@@ -538,7 +538,7 @@ public class ScoreController {
             @Override
             protected void updateItem(Boolean item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty ? null : item ? Consts.NAME_WEB : Consts.NAME_INSCORE);
+                setText(empty ? null : item ? Consts.NAME_WEB : Consts.NAME_OSC);
             }
         });
 

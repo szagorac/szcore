@@ -126,12 +126,6 @@ public class AudienceWebServer extends BaseZsWebServer {
 
             if (Files.exists(path) && Files.exists(indexPath)) {
                 staticDataHandler = createStaticDataHandler(path);
-
-//                DirectBufferCache bufferCache = new DirectBufferCache(1024, 10,1024 * 1024 * 200);
-//                staticDataHandler = new CacheHandler(bufferCache, staticPathHandler);
-
-//                staticDataHandler = resource(new PathResourceManager(path, transferMinSize))
-//                        .setWelcomeFiles(INDEX_HTML);
             }
         }
 
@@ -193,12 +187,6 @@ public class AudienceWebServer extends BaseZsWebServer {
         Set<WebConnection> connections = new HashSet<>();
         connections.addAll(getWsConnections());
         connections.addAll(getSseConnections());
-
-//        if (connections.isEmpty()) {
-//            return;
-//        }
-//        long now = System.currentTimeMillis();
-
         getSzcoreServer().updateAudienceWebServerConnections(connections);
     }
 

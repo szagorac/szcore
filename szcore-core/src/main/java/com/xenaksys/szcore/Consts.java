@@ -281,9 +281,12 @@ public interface Consts {
     String NAME_YES = "Y";
     String NAME_NO = "N";
     String NAME_WEB = "Web";
+    String NAME_OSC = "OSC";
     String NAME_INSCORE = "InScore";
 
     String WEB_ROOT = "webRoot";
+    String WEB_ROOT_SCORE = "webScoreRoot";
+    String WEB_ROOT_AUDIENCE = "webAudienceRoot";
     int WEB_METADATA_CACHE_SIZE = 200;
     long WEB_MAX_FILE_SIZE = 1024 * 1024 * 5;
     int WEB_BUFFER_SLICE_SIZE = 1000;

@@ -83,7 +83,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.xenaksys.szcore.Consts.PING_EXPIRY_MILLIS;
-import static com.xenaksys.szcore.Consts.WEB_ROOT;
+import static com.xenaksys.szcore.Consts.WEB_ROOT_AUDIENCE;
+import static com.xenaksys.szcore.Consts.WEB_ROOT_SCORE;
 
 public class SzcoreServer extends Server implements EventService, ScoreService {
     private static final String PROP_APP_NAME = "appName";
@@ -198,8 +199,6 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         Properties props = getProperties();
         oscEventReceiver = new OscReceiveProcessor(new OscListenerId(Consts.DEFAULT_ALL_PORTS, getServerAddress().getHostAddress(), "OscReceiveProcessor"), clock);
 
-//        inDisruptor = DisruptorFactory.createInDisruptor();
-//        eventProcessor = new InServerEventDisruptorProcessor(this, clock, eventFactory, inDisruptor);
         inDisruptor = DisruptorFactory.createContainerInDisruptor();
         eventProcessor = new InEventContainerDisruptorProcessor(this, clock, eventFactory, inDisruptor);
 
@@ -230,12 +229,14 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, oscEventPublisher, webEventPublisher, scheduler, eventFactory, taskFactory);
         subscribe(webProcessor);
 
-        String webRoot = props.getProperty(WEB_ROOT);
-//        audienceWebServer = new InscoreWebServer(webRoot, 8000, 1024, 10, true, this);
-//        audienceWebServer.start();
+        String webRootScore = props.getProperty(WEB_ROOT_SCORE);
+        String webRootAudience = props.getProperty(WEB_ROOT_AUDIENCE);
 
-        scoreWebServer = new ScoreWebServer(webRoot, 8080, 1024, 10, true, this);
+        scoreWebServer = new ScoreWebServer(webRootScore, 8080, 1024, 10, true, this);
         scoreWebServer.start();
+
+        audienceWebServer = new AudienceWebServer(webRootAudience, 80, 1024, 10, true, this);
+        audienceWebServer.start();
     }
 
     protected void onStart() throws Exception {

@@ -41,7 +41,9 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ScoreProcessorWrapper implements ScoreProcessor {
@@ -54,6 +56,7 @@ public class ScoreProcessorWrapper implements ScoreProcessor {
     private final Scheduler scheduler;
     private final EventFactory eventFactory;
     private final TaskFactory taskFactory;
+    private final Properties props;
 
     private ScoreProcessor scoreHandler;
     private final List<SzcoreEngineEventListener> scoreEventListeners = new CopyOnWriteArrayList<>();
@@ -66,7 +69,8 @@ public class ScoreProcessorWrapper implements ScoreProcessor {
                                  WebPublisher webPublisher,
                                  Scheduler scheduler,
                                  EventFactory eventFactory,
-                                 TaskFactory taskFactory) {
+                                 TaskFactory taskFactory,
+                                 Properties props) {
         this.transportFactory = transportFactory;
         this.clock = clock;
         this.oscPublisher = oscPublisher;
@@ -74,6 +78,7 @@ public class ScoreProcessorWrapper implements ScoreProcessor {
         this.scheduler = scheduler;
         this.eventFactory = eventFactory;
         this.taskFactory = taskFactory;
+        this.props = props;
     }
 
     @Override
@@ -112,11 +117,18 @@ public class ScoreProcessorWrapper implements ScoreProcessor {
         }
         String scoreName = score.getName();
         try {
-            String className = Consts.SCORE_HANDLER_PACKAGE + ParseUtil.removeAllWhitespaces(scoreName) + Consts.SCORE_PROCESSOR_CLS_SUFFIX;
+            String scoreConfigName = ParseUtil.removeAllWhitespaces(scoreName).toLowerCase(Locale.ROOT);
+            String configName = Consts.SCORE_HANDLER_CONFIG_PREFIX + scoreConfigName;
+            String className = props.getProperty(configName);
+            if(className == null) {
+                className = Consts.SCORE_HANDLER_PACKAGE + ParseUtil.removeAllWhitespaces(scoreName) + Consts.SCORE_PROCESSOR_CLS_SUFFIX;
+            } else {
+                className = Consts.SCORE_HANDLER_PACKAGE + className;
+            }
             Class<?> clazz = Class.forName(className);
             Constructor<?> constructor = clazz.getConstructor(TransportFactory.class, MutableClock.class, OscPublisher.class,
-                    WebPublisher.class, Scheduler.class, EventFactory.class, TaskFactory.class, BasicScore.class);
-            Object instance = constructor.newInstance(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, score);
+                    WebPublisher.class, Scheduler.class, EventFactory.class, TaskFactory.class, BasicScore.class, ScoreProcessorWrapper.class);
+            Object instance = constructor.newInstance(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, score, this);
             return (ScoreProcessor) instance;
         } catch (Exception e) {
             LOG.warn("initScoreHandler: Failed to initialise score handler for score {}, using GenericScoreProcessor", scoreName);

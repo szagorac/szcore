@@ -34,6 +34,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 
@@ -62,8 +63,9 @@ public class TestOscPublish {
 
         EventFactory eventFactory = new EventFactory();
         TaskFactory taskFactory = new TaskFactory();
+        Properties props  = new Properties();
 
-        scoreProcessor = new ScoreProcessorWrapper(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory);
+        scoreProcessor = new ScoreProcessorWrapper(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, props);
     }
 
     @Test

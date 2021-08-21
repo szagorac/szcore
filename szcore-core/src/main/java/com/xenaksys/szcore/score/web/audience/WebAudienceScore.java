@@ -51,8 +51,6 @@ import org.slf4j.LoggerFactory;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -123,20 +121,13 @@ import static com.xenaksys.szcore.Consts.WEB_CONFIG_UTTERANCE_TIMEOUT_SEC;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_VALUE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_VOLUME;
 import static com.xenaksys.szcore.Consts.WEB_GRANULATOR;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_ACTIONS;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_CENTRE_SHAPE;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRANULATOR;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_ELEMENT_STATE;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_INNER_CIRCLE;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_INSTRUCTIONS;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_OUTER_CIRCLE;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_STAGE_ALPHA;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_STATE_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_TILE;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_TILES;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_TILE_TEXT;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_ZOOM_LEVEL;
 import static com.xenaksys.szcore.Consts.WEB_OVERLAYS;
 import static com.xenaksys.szcore.Consts.WEB_SCORE_ID;
 import static com.xenaksys.szcore.Consts.WEB_SELECTED_TILES;
@@ -192,7 +183,7 @@ public class WebAudienceScore {
     }
 
     private WebAudienceServerState initState() {
-        pcs.addPropertyChangeListener(new WebAudienceChangeListener());
+        pcs.addPropertyChangeListener(new WebAudienceChangeListener(stateDeltaTracker));
 
         Tile[][] tiles = new Tile[8][8];
         List<WebAudienceAction> currentActions = new ArrayList<>();
@@ -203,7 +194,7 @@ public class WebAudienceScore {
         WebSpeechSynthState speechSynthState = createDefaultSpeechSynthState();
 
         return new WebAudienceServerState(tiles, currentActions, elementStates, WEB_ZOOM_DEFAULT, instructions, granulatorConfig,
-                speechSynthConfig, speechSynthState, 1);
+                speechSynthConfig, speechSynthState, 1, pcs);
     }
 
     private MutablePageId createTempPage() {
@@ -256,9 +247,9 @@ public class WebAudienceScore {
             }
         }
 
-        state.addElementState(WEB_OBJ_CENTRE_SHAPE, new WebAudienceElementState(WEB_OBJ_CENTRE_SHAPE));
-        state.addElementState(WEB_OBJ_INNER_CIRCLE, new WebAudienceElementState(WEB_OBJ_INNER_CIRCLE));
-        state.addElementState(WEB_OBJ_OUTER_CIRCLE, new WebAudienceElementState(WEB_OBJ_OUTER_CIRCLE));
+        state.addElementState(WEB_OBJ_CENTRE_SHAPE, new WebAudienceElementState(WEB_OBJ_CENTRE_SHAPE, pcs));
+        state.addElementState(WEB_OBJ_INNER_CIRCLE, new WebAudienceElementState(WEB_OBJ_INNER_CIRCLE, pcs));
+        state.addElementState(WEB_OBJ_OUTER_CIRCLE, new WebAudienceElementState(WEB_OBJ_OUTER_CIRCLE, pcs));
 
 
         state.setInstructions("Welcome to", 1);
@@ -1524,7 +1515,7 @@ public class WebAudienceScore {
         boolean isUpdate = false;
         for (Tile tile : activeTiles) {
             WebAudienceElementState tileState = tile.getState();
-            if (!tileState.isPlayed && tileState.getClickCount() > 0) {
+            if (!tileState.isPlayed() && tileState.getClickCount() > 0) {
                 pcs.firePropertyChange(WEB_OBJ_TILE, tile.getId(), tile);
                 if (!isUpdate) {
                     isUpdate = true;
@@ -1675,7 +1666,7 @@ public class WebAudienceScore {
             this.id = id;
             this.row = row;
             this.column = column;
-            this.state = new WebAudienceElementState(id);
+            this.state = new WebAudienceElementState(id, pcs);
             this.tileText = new TileText(EMPTY, false, this);
         }
 
@@ -1684,7 +1675,7 @@ public class WebAudienceScore {
         }
 
         public void setState(WebAudienceElementState newState) {
-            WebAudienceElementState old = new WebAudienceElementState(this.state.id);
+            WebAudienceElementState old = new WebAudienceElementState(this.state.getId(), pcs);
             this.state.copyTo(old);
             newState.copyTo(this.state);
             if (!this.state.equals(old)) {
@@ -1820,434 +1811,4 @@ public class WebAudienceScore {
         }
     }
 
-    public class WebAudienceElementState {
-        private final String id;
-        private boolean isActive;
-        private boolean isPlaying;
-        private boolean isPlayingNext;
-        private boolean isPlayed;
-        private boolean isVisible;
-        private boolean isSelected;
-        private int clickCount;
-
-        public WebAudienceElementState(String id) {
-            this.id = id;
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public int getClickCount() {
-            return clickCount;
-        }
-
-        public void setClickCount(int clickCount) {
-            int old = this.clickCount;
-            this.clickCount = clickCount;
-            if (old != this.clickCount) {
-                pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
-            }
-        }
-
-        public void incrementClickCount() {
-            this.clickCount++;
-            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
-        }
-
-        public void decrementClickCount() {
-            this.clickCount--;
-            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
-        }
-
-        public boolean isActive() {
-            return isActive;
-        }
-
-        public void setActive(boolean active) {
-            boolean old = this.isActive;
-            this.isActive = active;
-            if (old != this.isActive) {
-                pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
-            }
-        }
-
-        public boolean isVisible() {
-            return isVisible;
-        }
-
-        public void setVisible(boolean visible) {
-            boolean old = this.isVisible;
-            this.isVisible = visible;
-            if (old != this.isVisible) {
-                pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
-            }
-        }
-
-        public boolean isPlaying() {
-            return isPlaying;
-        }
-
-        public void setPlaying(boolean playing) {
-            boolean old = this.isPlaying;
-            this.isPlaying = playing;
-            if (old != this.isPlaying) {
-                pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
-            }
-        }
-
-        public boolean isSelected() {
-            return isSelected;
-        }
-
-        public void setSelected(boolean selected) {
-            boolean old = this.isSelected;
-            this.isSelected = selected;
-            if (old != this.isSelected) {
-                pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
-            }
-        }
-
-        public boolean isPlayingNext() {
-            return isPlayingNext;
-        }
-
-        public void setPlayingNext(boolean playingNext) {
-            boolean old = this.isPlayingNext;
-            this.isPlayingNext = playingNext;
-            if (old != this.isPlayingNext) {
-                pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
-            }
-        }
-
-        public boolean isPlayed() {
-            return isPlayed;
-        }
-
-        public void setPlayed(boolean played) {
-            boolean old = this.isPlayed;
-            this.isPlayed = played;
-            if (old != this.isPlayed) {
-                pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, id, this);
-            }
-        }
-
-        public void copyTo(WebAudienceElementState other) {
-            other.setClickCount(getClickCount());
-            other.setActive(isActive());
-            other.setVisible(isVisible());
-            other.setPlaying(isPlaying());
-            other.setPlayingNext(isPlayingNext());
-            other.setPlayed(isPlayed());
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            WebAudienceElementState that = (WebAudienceElementState) o;
-            return isActive == that.isActive && isPlaying == that.isPlaying && isPlayingNext == that.isPlayingNext && isPlayed == that.isPlayed && isVisible == that.isVisible && isSelected == that.isSelected && clickCount == that.clickCount && id.equals(that.id);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(id, isActive, isPlaying, isPlayingNext, isPlayed, isVisible, isSelected, clickCount);
-        }
-
-        @Override
-        public String toString() {
-            return "WebAudienceElementState{" +
-                    "id='" + id + '\'' +
-                    ", isActive=" + isActive +
-                    ", isPlaying=" + isPlaying +
-                    ", isPlayingNext=" + isPlayingNext +
-                    ", isPlayed=" + isPlayed +
-                    ", isVisible=" + isVisible +
-                    ", clickCount=" + clickCount +
-                    '}';
-        }
-    }
-
-    public class WebTextState {
-        private final String id;
-        private boolean isVisible = false;
-        private String colour = WEB_TEXT_BACKGROUND_COLOUR;
-        private String[] lines;
-
-        public WebTextState(String id, int lineNo) {
-            this.id = id;
-            this.lines = new String[lineNo];
-            initLines();
-        }
-
-        private void initLines() {
-            Arrays.fill(lines, EMPTY);
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public boolean isVisible() {
-            return isVisible;
-        }
-
-        public void setVisible(boolean visible) {
-            this.isVisible = visible;
-        }
-
-        public int getLineNo() {
-            return lines.length;
-        }
-
-        public String[] getLines() {
-            return lines;
-        }
-
-        public String getLine(int lineNo) {
-            if (lineNo < 0 || lineNo > lines.length) {
-                return null;
-            }
-            return lines[lineNo - 1];
-        }
-
-        public void setLine(String line, int lineNo) {
-            if (lineNo < 0 || lineNo > lines.length) {
-                LOG.error("WebTextState setLine: Invalid line No: {}", lineNo);
-                return;
-            }
-            this.lines[lineNo - 1] = line;
-        }
-
-        public String getColour() {
-            return colour;
-        }
-
-        public void setColour(String colour) {
-            this.colour = colour;
-        }
-
-        public void copyTo(WebTextState other) {
-            other.setVisible(isVisible());
-            other.setColour(getColour());
-            for (int i = 0; i < lines.length; i++) {
-                other.setLine(this.lines[i], i + 1);
-            }
-        }
-
-        @Override
-        public String toString() {
-            return "WebTextState{" +
-                    "id='" + id + '\'' +
-                    ", isVisible = " + isVisible +
-                    ", colour = " + colour +
-                    ", lines = " + Arrays.toString(lines) +
-                    '}';
-        }
-    }
-
-    public class WebAudienceServerState {
-        private volatile WebAudienceScore.Tile[][] tiles;
-        private final List<WebAudienceAction> actions;
-        private volatile String zoomLevel;
-        private final Map<String, WebAudienceElementState> elementStates;
-        private final WebTextState instructions;
-        private volatile WebGranulatorConfig granulatorConfig;
-        private volatile WebSpeechSynthConfig speechSynthConfig;
-        private volatile WebSpeechSynthState speechSynthState;
-        private volatile double stageAlpha;
-
-        public WebAudienceServerState(WebAudienceScore.Tile[][] tiles, List<WebAudienceAction> currentActions, Map<String, WebAudienceElementState> elementStates,
-                                      String zoomLevel, WebTextState instructions, WebGranulatorConfig granulatorConfig,
-                                      WebSpeechSynthConfig speechSynthConfig, WebSpeechSynthState speechSynthState, double stageAlpha) {
-            this.tiles = tiles;
-            this.actions = currentActions;
-            this.elementStates = elementStates;
-            this.zoomLevel = zoomLevel;
-            this.instructions = instructions;
-            this.granulatorConfig = granulatorConfig;
-            this.speechSynthConfig = speechSynthConfig;
-            this.speechSynthState = speechSynthState;
-            this.stageAlpha = stageAlpha;
-        }
-
-        public void resetDelta() {
-            clearActions();
-        }
-
-        public WebAudienceScore.Tile[][] getTiles() {
-            return tiles;
-        }
-
-        public WebAudienceScore.Tile getTile(int row, int col) {
-            int i = row - 1;
-            int j = col - 1;
-            if (i < 0 || i >= tiles.length) {
-                return null;
-            }
-            if (j < 0 || j >= tiles[0].length) {
-                return null;
-            }
-            return tiles[i][j];
-        }
-
-        public WebAudienceScore.Tile getTile(String id) {
-            return null;
-        }
-
-        public void setTiles(WebAudienceScore.Tile[][] tiles) {
-            this.tiles = tiles;
-            pcs.firePropertyChange(WEB_OBJ_TILES, WEB_OBJ_TILES, tiles);
-        }
-
-        public void setTile(WebAudienceScore.Tile tile, int i, int j) {
-            this.tiles[i][j] = tile;
-            pcs.firePropertyChange(WEB_OBJ_TILE, tile.getId(), tile);
-        }
-
-        public List<WebAudienceAction> getActions() {
-            return actions;
-        }
-
-        public void clearActions() {
-            actions.clear();
-            pcs.firePropertyChange(WEB_OBJ_ACTIONS, WEB_OBJ_ACTIONS, null);
-        }
-
-        public void addAction(WebAudienceAction action) {
-            if (action == null) {
-                return;
-            }
-            LOG.debug("WebAudienceServerState addAction: {}", action);
-            actions.add(action);
-            pcs.firePropertyChange(WEB_OBJ_ACTIONS, action.getId(), action);
-        }
-
-        public Map<String, WebAudienceElementState> getElementStates() {
-            return elementStates;
-        }
-
-        public void clearElementStates() {
-            elementStates.clear();
-            pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, WEB_OBJ_ELEMENT_STATE, null);
-        }
-
-        public WebAudienceElementState getElementState(String key) {
-            return elementStates.get(key);
-        }
-
-        public void addElementState(String key, WebAudienceElementState elementState) {
-            WebAudienceElementState old = elementStates.get(key);
-            elementStates.put(key, elementState);
-            if (!elementState.equals(old)) {
-                pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, key, elementState);
-            }
-        }
-
-        public WebAudienceElementState getCentreShape() {
-            return elementStates.get(WEB_OBJ_CENTRE_SHAPE);
-        }
-
-        public WebAudienceElementState getInnerCircle() {
-            return elementStates.get(WEB_OBJ_INNER_CIRCLE);
-        }
-
-        public WebAudienceElementState getOuterCircle() {
-            return elementStates.get(WEB_OBJ_OUTER_CIRCLE);
-        }
-
-        public String getZoomLevel() {
-            return zoomLevel;
-        }
-
-        public void setZoomLevel(String zoomLevel) {
-            String old = this.zoomLevel;
-            this.zoomLevel = zoomLevel;
-            if (!this.zoomLevel.equals(old)) {
-                pcs.firePropertyChange(WEB_OBJ_ZOOM_LEVEL, WEB_OBJ_ZOOM_LEVEL, zoomLevel);
-            }
-        }
-
-        public WebTextState getInstructions() {
-            return instructions;
-        }
-
-        public void setInstructions(String value, int lineNo) {
-            if (value == null) {
-                value = EMPTY;
-            }
-            String old = instructions.getLine(lineNo);
-            instructions.setLine(value, lineNo);
-            if (!value.equals(old)) {
-                pcs.firePropertyChange(WEB_OBJ_INSTRUCTIONS, instructions.getId(), instructions);
-            }
-        }
-
-        public void setInstructionsVisible(boolean isVisible) {
-            boolean old = this.instructions.isVisible();
-            instructions.setVisible(isVisible);
-            if (old != isVisible) {
-                pcs.firePropertyChange(WEB_OBJ_INSTRUCTIONS, instructions.getId(), instructions);
-            }
-        }
-
-        public void setInstructionsColour(String colour) {
-            String old = instructions.getColour();
-            instructions.setColour(colour);
-            if (!colour.equals(old)) {
-                pcs.firePropertyChange(WEB_OBJ_INSTRUCTIONS, instructions.getId(), instructions);
-            }
-        }
-
-        public WebGranulatorConfig getGranulatorConfig() {
-            return granulatorConfig;
-        }
-
-        public WebSpeechSynthConfig getSpeechSynthConfig() {
-            return speechSynthConfig;
-        }
-
-        public WebSpeechSynthState getSpeechSynthState() {
-            return speechSynthState;
-        }
-
-        public void setGranulatorConfig(WebGranulatorConfig granulatorConfig) {
-            this.granulatorConfig = granulatorConfig;
-            pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_OBJ_CONFIG_GRANULATOR, granulatorConfig);
-        }
-
-        public void setSpeechSynthConfig(WebSpeechSynthConfig speechSynthConfig) {
-            this.speechSynthConfig = speechSynthConfig;
-            pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_OBJ_CONFIG_SPEECH_SYNTH, speechSynthConfig);
-        }
-
-        public void setSpeechSynthState(WebSpeechSynthState speechSynthState) {
-            this.speechSynthState = speechSynthState;
-            pcs.firePropertyChange(WEB_OBJ_STATE_SPEECH_SYNTH, WEB_OBJ_STATE_SPEECH_SYNTH, speechSynthState);
-        }
-
-        public double getStageAlpha() {
-            return stageAlpha;
-        }
-
-        public void setStageAlpha(double stageAlpha) {
-            this.stageAlpha = stageAlpha;
-            pcs.firePropertyChange(WEB_OBJ_STAGE_ALPHA, WEB_OBJ_STAGE_ALPHA, stageAlpha);
-        }
-    }
-
-    public class WebAudienceChangeListener implements PropertyChangeListener {
-        public void propertyChange(PropertyChangeEvent changeEvent) {
-            if (changeEvent == null) {
-                return;
-            }
-            Object idObj = changeEvent.getOldValue();
-            if (!(idObj instanceof String)) {
-                LOG.error("propertyChange: invalid object id type, expected String");
-                return;
-            }
-            String objId = (String) idObj;
-            stateDeltaTracker.processUpdate(changeEvent.getPropertyName(), objId, changeEvent.getNewValue());
-        }
-    }
 }

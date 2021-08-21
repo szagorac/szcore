@@ -1,6 +1,6 @@
 package com.xenaksys.szcore.score.web.audience.export;
 
-import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
+import com.xenaksys.szcore.score.web.audience.WebTextState;
 
 import static com.xenaksys.szcore.Consts.EMPTY;
 
@@ -36,7 +36,7 @@ public class WebAudienceInstructionsExport {
         return line3;
     }
 
-    public void populate(WebAudienceScore.WebTextState from) {
+    public void populate(WebTextState from) {
         if (from == null) {
             return;
         }

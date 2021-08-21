@@ -315,13 +315,13 @@ public class GenericScoreProcessor implements ScoreProcessor {
         webScore.init();
     }
 
-    private void prepareContinuousPages(Id instrumentId, Page lastPage) {
+    protected void prepareContinuousPages(Id instrumentId, Page lastPage) {
         for (int i = 0; i < szcore.noContinuousPages; i++) {
             lastPage = prepareContinuousPage(instrumentId, (PageId) lastPage.getId());
         }
     }
 
-    private BeatId prepareInstrument(Instrument instrument, Transport transport) {
+    protected BeatId prepareInstrument(Instrument instrument, Transport transport) {
         Id transportId = transport.getId();
         boolean isAudioVideoInstrument = instrument.isAv();
         boolean isScoreInstrument = !isAudioVideoInstrument;
@@ -425,21 +425,27 @@ public class GenericScoreProcessor implements ScoreProcessor {
         return lastBeat;
     }
 
-    private void addScriptingEngineBeatScripts(BeatId beatId, Id transportId) {
+    protected void addScriptingEngineBeatScripts(BeatId beatId, Id transportId) {
+        if(scriptingEngine == null) {
+            return;
+        }
         List<ScriptingEngineScript> scripts = scriptingEngine.getBeatScripts(beatId);
         if (scripts != null && !scripts.isEmpty()) {
             addScriptingEngineEvent(beatId, scripts, transportId);
         }
     }
 
-    private void addWebScoreBeatScripts(BeatId beatId, Id transportId) {
+    protected void addWebScoreBeatScripts(BeatId beatId, Id transportId) {
+        if(webAudienceScore == null) {
+            return;
+        }
         List<WebAudienceScoreScript> scripts = webAudienceScore.getBeatScripts(beatId);
         if (scripts != null && !scripts.isEmpty()) {
             addWebScoreEvent(beatId, scripts, transportId);
         }
     }
 
-    private void addScript(BeatId beatId, Script script, Id transportId) {
+    protected void addScript(BeatId beatId, Script script, Id transportId) {
         ScriptType type = script.getType();
         switch (type) {
             case JAVASCRIPT:
@@ -773,7 +779,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
         return newPage;
     }
 
-    private void createInstrumentStaves(Instrument instrument) {
+    protected void createInstrumentStaves(Instrument instrument) {
         // TODO populate dynamically from engine
         szcore.addInstrumentOscPort(instrument.getId(), getInstrumentOscPort());
         BasicStave stave1 = (BasicStave) StaveFactory.createStave(1, instrument);
@@ -3385,6 +3391,42 @@ public class GenericScoreProcessor implements ScoreProcessor {
 
     public int getCurrentBeatNo() {
         return currentBeatNo;
+    }
+
+    public Scheduler getScheduler() {
+        return scheduler;
+    }
+
+    public void setSzcore(BasicScore szcore) {
+        this.szcore = szcore;
+    }
+
+    public TransportFactory getTransportFactory() {
+        return transportFactory;
+    }
+
+    public TaskFactory getTaskFactory() {
+        return taskFactory;
+    }
+
+    public ScoreProcessorWrapper getParentProcessor() {
+        return parentProcessor;
+    }
+
+    public Map<Id, InstrumentBeatTracker> getInstrumentBeatTrackers() {
+        return instrumentBeatTrackers;
+    }
+
+    public Map<Id, TempoModifier> getTransportTempoModifiers() {
+        return transportTempoModifiers;
+    }
+
+    public ScoreScriptingEngine getScriptingEngine() {
+        return scriptingEngine;
+    }
+
+    public void setScoreLoaded(boolean scoreLoaded) {
+        isScoreLoaded = scoreLoaded;
     }
 
     class ScoreTransportListener implements TransportListener {

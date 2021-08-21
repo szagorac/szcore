@@ -42,9 +42,9 @@ public class WebAudienceStateDeltaTracker {
     static final Logger LOG = LoggerFactory.getLogger(WebAudienceStateDeltaTracker.class);
 
     private final HashMap<String, Object> delta = new HashMap<>();
-    private final WebAudienceScore.WebAudienceServerState state;
+    private final WebAudienceServerState state;
 
-    public WebAudienceStateDeltaTracker(WebAudienceScore.WebAudienceServerState state) {
+    public WebAudienceStateDeltaTracker(WebAudienceServerState state) {
         this.state = state;
     }
 
@@ -228,14 +228,14 @@ public class WebAudienceStateDeltaTracker {
         }
         switch (id) {
             case WEB_OBJ_INSTRUCTIONS:
-                addInstructions((WebAudienceScore.WebTextState) newValue);
+                addInstructions((WebTextState) newValue);
                 break;
             default:
                 LOG.error("processWebText: Invalid id: {}", id);
         }
     }
 
-    public void addInstructions(WebAudienceScore.WebTextState instructions) {
+    public void addInstructions(WebTextState instructions) {
         if (instructions == null) {
             return;
         }
@@ -281,7 +281,7 @@ public class WebAudienceStateDeltaTracker {
     }
 
     public void addElementState(String id, Object newValue) {
-        WebAudienceScore.WebAudienceElementState elementState = state.getElementState(id);
+        WebAudienceElementState elementState = state.getElementState(id);
         if (elementState == null) {
             return;
         }
@@ -291,10 +291,10 @@ public class WebAudienceStateDeltaTracker {
     }
 
     public void addElementState(Object newValue) {
-        if (!(newValue instanceof WebAudienceScore.WebAudienceElementState)) {
+        if (!(newValue instanceof WebAudienceElementState)) {
             return;
         }
-        WebAudienceScore.WebAudienceElementState elementState = (WebAudienceScore.WebAudienceElementState) newValue;
+        WebAudienceElementState elementState = (WebAudienceElementState) newValue;
         String id = elementState.getId();
 
         boolean isTileId = ScoreUtil.isTileId(id);
@@ -340,14 +340,14 @@ public class WebAudienceStateDeltaTracker {
     public void addTile(String id, Object newValue) {
         if (newValue instanceof WebAudienceScore.Tile) {
             addTile(id, (WebAudienceScore.Tile) newValue);
-        } else if (newValue instanceof WebAudienceScore.WebAudienceElementState) {
-            addTile(id, (WebAudienceScore.WebAudienceElementState) newValue);
+        } else if (newValue instanceof WebAudienceElementState) {
+            addTile(id, newValue);
         } else if (newValue instanceof WebAudienceScore.TileText) {
             addTileText(id, (WebAudienceScore.TileText) newValue);
         }
     }
 
-    public void addTile(String id, WebAudienceScore.WebAudienceElementState tileElementState) {
+    public void addTile(String id, WebAudienceElementState tileElementState) {
         addTile(id);
     }
 

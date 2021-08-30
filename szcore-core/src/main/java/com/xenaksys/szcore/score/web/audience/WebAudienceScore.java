@@ -149,7 +149,8 @@ public class WebAudienceScore {
     private final Score score;
     private final Clock clock;
     private final WebAudienceServerState state;
-    private final WebAudienceStateDeltaTracker stateDeltaTracker;
+
+    private WebAudienceStateDeltaTracker stateDeltaTracker;
 
     private PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
@@ -179,12 +180,9 @@ public class WebAudienceScore {
         this.score = scoreProcessor.getScore();
         this.tempPageId = createTempPage();
         this.state = initState();
-        this.stateDeltaTracker = new WebAudienceStateDeltaTracker(state);
     }
 
     private WebAudienceServerState initState() {
-        pcs.addPropertyChangeListener(new WebAudienceChangeListener(stateDeltaTracker));
-
         Tile[][] tiles = new Tile[8][8];
         List<WebAudienceAction> currentActions = new ArrayList<>();
         Map<String, WebAudienceElementState> elementStates = new HashMap<>();
@@ -193,10 +191,16 @@ public class WebAudienceScore {
         WebSpeechSynthConfig speechSynthConfig = createDefaultSpeechSynthConfig();
         WebSpeechSynthState speechSynthState = createDefaultSpeechSynthState();
 
-        return new WebAudienceServerState(tiles, currentActions, elementStates, WEB_ZOOM_DEFAULT, instructions, granulatorConfig,
+        WebAudienceServerState webAudienceServerState =  new WebAudienceServerState(tiles, currentActions, elementStates, WEB_ZOOM_DEFAULT, instructions, granulatorConfig,
                 speechSynthConfig, speechSynthState, 1, pcs);
-    }
 
+        createWebAudienceStateDeltaTracker(webAudienceServerState);
+        pcs.addPropertyChangeListener(new WebAudienceChangeListener(stateDeltaTracker));
+        return webAudienceServerState;
+    }
+    private void createWebAudienceStateDeltaTracker(WebAudienceServerState webAudienceServerState) {
+        this.stateDeltaTracker = new WebAudienceStateDeltaTracker(webAudienceServerState);
+    }
     private MutablePageId createTempPage() {
         int pageNo = 0;
         if (score == null) {

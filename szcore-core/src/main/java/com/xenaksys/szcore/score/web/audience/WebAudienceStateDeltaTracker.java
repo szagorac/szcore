@@ -341,13 +341,13 @@ public class WebAudienceStateDeltaTracker {
         if (newValue instanceof WebAudienceScore.Tile) {
             addTile(id, (WebAudienceScore.Tile) newValue);
         } else if (newValue instanceof WebAudienceElementState) {
-            addTile(id, newValue);
+            addTileElementState(id,(WebAudienceElementState)newValue);
         } else if (newValue instanceof WebAudienceScore.TileText) {
             addTileText(id, (WebAudienceScore.TileText) newValue);
         }
     }
 
-    public void addTile(String id, WebAudienceElementState tileElementState) {
+    public void addTileElementState(String id, WebAudienceElementState tileElementState) {
         addTile(id);
     }
 

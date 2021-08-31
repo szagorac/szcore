@@ -8,7 +8,6 @@ import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.IntId;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
 import com.xenaksys.szcore.score.web.audience.config.WebEnvelopeConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
@@ -21,6 +20,7 @@ import com.xenaksys.szcore.score.web.audience.export.WebElementStateExport;
 import com.xenaksys.szcore.score.web.audience.export.WebGranulatorConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthStateExport;
+import com.xenaksys.szcore.score.web.audience.handler.UnionRoseWebAudienceScore;
 import com.xenaksys.szcore.time.TstClock;
 import com.xenaksys.szcore.web.WebAudienceActionType;
 import org.junit.Before;
@@ -53,7 +53,7 @@ import static org.mockito.Mockito.when;
 public class TestWebAudienceScore {
     private static final String TEST_SCRIPT_PREFIX = "Test script";
 
-    private WebAudienceScore webAudienceScore;
+    private UnionRoseWebAudienceScore webAudienceScore;
     private BeatId[] beatIds;
 
     @Before
@@ -73,7 +73,7 @@ public class TestWebAudienceScore {
         EventFactory eventFactory = new EventFactory();
         Clock clock = new TstClock();
 
-        webAudienceScore = new WebAudienceScore(scoreProcessor, eventFactory, clock);
+        webAudienceScore = new UnionRoseWebAudienceScore(scoreProcessor, eventFactory, clock);
         beatIds = new BeatId[10];
 
         addBeat(1, true);

@@ -3,6 +3,7 @@ package com.xenaksys.szcore.score.web.audience;
 import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthState;
+import com.xenaksys.szcore.score.web.audience.handler.WebTile;
 import com.xenaksys.szcore.web.WebAudienceAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +30,7 @@ import static com.xenaksys.szcore.Consts.WEB_OBJ_ZOOM_LEVEL;
 public class WebAudienceServerState {
     static final Logger LOG = LoggerFactory.getLogger(WebAudienceServerState.class);
 
-    private volatile WebAudienceScore.Tile[][] tiles;
+    private volatile WebTile[][] tiles;
     private final List<WebAudienceAction> actions;
     private final PropertyChangeSupport pcs;
 
@@ -41,7 +42,7 @@ public class WebAudienceServerState {
     private volatile WebSpeechSynthState speechSynthState;
     private volatile double stageAlpha;
 
-    public WebAudienceServerState(WebAudienceScore.Tile[][] tiles, List<WebAudienceAction> currentActions, Map<String, WebAudienceElementState> elementStates,
+    public WebAudienceServerState(WebTile[][] tiles, List<WebAudienceAction> currentActions, Map<String, WebAudienceElementState> elementStates,
                                   String zoomLevel, WebTextState instructions, WebGranulatorConfig granulatorConfig,
                                   WebSpeechSynthConfig speechSynthConfig, WebSpeechSynthState speechSynthState, double stageAlpha, PropertyChangeSupport pcs) {
         this.tiles = tiles;
@@ -60,11 +61,11 @@ public class WebAudienceServerState {
         clearActions();
     }
 
-    public WebAudienceScore.Tile[][] getTiles() {
+    public WebTile[][] getTiles() {
         return tiles;
     }
 
-    public WebAudienceScore.Tile getTile(int row, int col) {
+    public WebTile getTile(int row, int col) {
         int i = row - 1;
         int j = col - 1;
         if (i < 0 || i >= tiles.length) {
@@ -76,16 +77,16 @@ public class WebAudienceServerState {
         return tiles[i][j];
     }
 
-    public WebAudienceScore.Tile getTile(String id) {
+    public WebTile getTile(String id) {
         return null;
     }
 
-    public void setTiles(WebAudienceScore.Tile[][] tiles) {
+    public void setTiles(WebTile[][] tiles) {
         this.tiles = tiles;
         pcs.firePropertyChange(WEB_OBJ_TILES, WEB_OBJ_TILES, tiles);
     }
 
-    public void setTile(WebAudienceScore.Tile tile, int i, int j) {
+    public void setTile(WebTile tile, int i, int j) {
         this.tiles[i][j] = tile;
         pcs.firePropertyChange(WEB_OBJ_TILE, tile.getId(), tile);
     }

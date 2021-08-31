@@ -112,6 +112,7 @@ import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
+import com.xenaksys.szcore.score.web.audience.handler.UnionRoseWebAudienceScore;
 import com.xenaksys.szcore.scripting.ScoreScriptingEngine;
 import com.xenaksys.szcore.scripting.ScriptingEngineScript;
 import com.xenaksys.szcore.task.ScheduledEventTask;
@@ -195,8 +196,8 @@ public class GenericScoreProcessor implements ScoreProcessor {
     private MaxMspScoreConfig maxMspConfig = null;
     private ScoreScriptingEngine scriptingEngine;
 
-    private volatile boolean isUpdateWindowOpen = false;
-    private volatile int currentBeatNo = 0;
+    protected volatile boolean isUpdateWindowOpen = false;
+    protected volatile int currentBeatNo = 0;
 
 
     public GenericScoreProcessor(TransportFactory transportFactory,
@@ -241,8 +242,8 @@ public class GenericScoreProcessor implements ScoreProcessor {
         ScoreRandomisationStrategyConfig randomisationStrategyConfig = StrategyConfigLoader.loadStrategyConfig(file.getParent(), szcore);
         szcore.setRandomisationStrategyConfig(randomisationStrategyConfig);
 
-        webAudienceScore = new WebAudienceScore(this, eventFactory, clock);
-        webAudienceScore.init(file.getParent());
+        createWebAudienceScore();
+        initWebScore(file.getParent());
 
         webScore = new WebScore(this, eventFactory, clock);
 
@@ -253,6 +254,22 @@ public class GenericScoreProcessor implements ScoreProcessor {
         scriptingEngine.init(file.getParent());
 
         return szcore;
+    }
+
+    protected void createWebAudienceScore() {
+        setWebAudienceScore(new UnionRoseWebAudienceScore(this, eventFactory, clock));
+    }
+
+    protected void initWebScore(String dir) {
+        this.webAudienceScore.init(dir);
+    }
+
+    public WebAudienceScore getWebAudienceScore() {
+        return webAudienceScore;
+    }
+
+    public void setWebAudienceScore(WebAudienceScore webAudienceScore) {
+        this.webAudienceScore = webAudienceScore;
     }
 
     @Override
@@ -838,6 +855,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
     public void onCloseModWindow(InstrumentId instId, Stave stave, Page nextPage, PageId currentPageId) {
         this.isUpdateWindowOpen = false;
 
+        UnionRoseWebAudienceScore urWebAudienceScore = (UnionRoseWebAudienceScore)webAudienceScore;
         LOG.debug("onCloseModWindow: instrument {} next page: {} ", instId.getName(), nextPage);
         ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
 
@@ -846,7 +864,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
             if (strategy.isPageRecalcTime()) {
                 int pageQuantity = strategy.getNumberOfRequiredPages();
                 LOG.debug("onCloseModWindow: pageQuantity {} next assignment Strategy: {} pageId: {} nextPage: {}  stave: {}", pageQuantity, Arrays.toString(strategy.getAssignmentStrategy().toArray()), currentPageId.getPageNo(), nextPage.getPageNo(), stave.getStaveId().getStaveNo());
-                List<Integer> selectedPageIds = webAudienceScore.prepareNextTilesToPlay(pageQuantity);
+                List<Integer> selectedPageIds = urWebAudienceScore.prepareNextTilesToPlay(pageQuantity);
                 strategy.setPageSelection(selectedPageIds);
             }
 
@@ -865,7 +883,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
         publishOscEvent(instrumentSlotsEvent);
     }
 
-    private void sendRndPageFileUpdate(Page page, Stave stave, InstrumentId instId) {
+    public void sendRndPageFileUpdate(Page page, Stave stave, InstrumentId instId) {
         if (page == null) {
             return;
         }
@@ -991,7 +1009,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
         }
     }
 
-    private void sendPageFileUpdate(Page page, Stave stave) {
+    public void sendPageFileUpdate(Page page, Stave stave) {
         if (page == null) {
             return;
         }
@@ -1993,7 +2011,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
         return eventFactory.createInstrumentSlotsEvent(instrumentsCsv, destination, clock.getSystemTimeMillis(), null);
     }
 
-    private OscEvent createInstrumentResetSlotsEvent(String destination) {
+    public OscEvent createInstrumentResetSlotsEvent(String destination) {
         return eventFactory.createResetInstrumentSlotsEvent(destination, clock.getSystemTimeMillis(), null);
     }
 
@@ -2059,13 +2077,13 @@ public class GenericScoreProcessor implements ScoreProcessor {
         initEvents.clear();
     }
 
-    private List<SzcoreEvent> createRequiredEventsForNewPosition(int beatNo) {
+    public List<SzcoreEvent> createRequiredEventsForNewPosition(int beatNo) {
         List<SzcoreEvent> initEvents = new ArrayList<>();
         if (szcore == null) {
             LOG.error("Invalid NULL score");
             return initEvents;
         }
-
+        UnionRoseWebAudienceScore urWebAudienceScore = (UnionRoseWebAudienceScore)webAudienceScore;
         Collection<Instrument> instruments = szcore.getInstruments();
         List<Id> transportIds = new ArrayList<>();
         for (Instrument instrument : instruments) {
@@ -2165,7 +2183,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
                     if (strategy.isPageRecalcTime()) {
                         strategy.recalcStrategy(page);
                         int pageQuantity = strategy.getNumberOfRequiredPages();
-                        List<Integer> pageIds = webAudienceScore.prepareNextTilesToPlay(pageQuantity);
+                        List<Integer> pageIds = urWebAudienceScore.prepareNextTilesToPlay(pageQuantity);
                         strategy.setPageSelection(pageIds);
                     }
                     Page rndPage = strategy.getRandomPageFileName(instrumentId);
@@ -2203,6 +2221,10 @@ public class GenericScoreProcessor implements ScoreProcessor {
 
     @Override
     public Score getScore() {
+        return szcore;
+    }
+
+    public BasicScore getBasicScore() {
         return szcore;
     }
 
@@ -2420,17 +2442,18 @@ public class GenericScoreProcessor implements ScoreProcessor {
         publishWebEvent(webEvent);
     }
 
-    private void processElementSelected(ElementSelectedAudienceEvent webEvent) {
+    public void processElementSelected(ElementSelectedAudienceEvent webEvent) {
         LOG.debug("processElementSelected: ");
+        UnionRoseWebAudienceScore urWebAudienceScore = (UnionRoseWebAudienceScore)webAudienceScore;
         String elementId = webEvent.getElementId();
         boolean isSelected = webEvent.isSelected();
         if (webAudienceScore == null) {
             return;
         }
-        webAudienceScore.setSelectedElement(elementId, isSelected);
+        urWebAudienceScore.setSelectedElement(elementId, isSelected);
     }
 
-    private void processWebAudienceStart() {
+    public void processWebAudienceStart() {
         LOG.debug("processWebStart: ");
         webAudienceScore.resetState();
         webAudienceScore.pushServerState();
@@ -3427,6 +3450,14 @@ public class GenericScoreProcessor implements ScoreProcessor {
 
     public void setScoreLoaded(boolean scoreLoaded) {
         isScoreLoaded = scoreLoaded;
+    }
+
+    public MutableClock getClock() {
+        return clock;
+    }
+
+    public EventFactory getEventFactory() {
+        return eventFactory;
     }
 
     class ScoreTransportListener implements TransportListener {

@@ -11,6 +11,8 @@ import com.xenaksys.szcore.score.web.audience.export.WebElementStateExport;
 import com.xenaksys.szcore.score.web.audience.export.WebGranulatorConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthStateExport;
+import com.xenaksys.szcore.score.web.audience.handler.WebTile;
+import com.xenaksys.szcore.score.web.audience.handler.WebTileText;
 import com.xenaksys.szcore.util.ScoreUtil;
 import com.xenaksys.szcore.web.WebAudienceAction;
 import org.slf4j.Logger;
@@ -318,17 +320,17 @@ public class WebAudienceStateDeltaTracker {
         if (id == null) {
             return;
         }
-        if (newValue instanceof WebAudienceScore.Tile[][]) {
-            addTiles((WebAudienceScore.Tile[][]) newValue);
+        if (newValue instanceof WebTile[][]) {
+            addTiles((WebTile[][]) newValue);
         } else {
             LOG.error("processTiles: invalid object type: {}", newValue);
         }
     }
 
-    public void addTiles(WebAudienceScore.Tile[][] tiles) {
-        for (WebAudienceScore.Tile[] value : tiles) {
+    public void addTiles(WebTile[][] tiles) {
+        for (WebTile[] value : tiles) {
             for (int j = 0; j < tiles[0].length; j++) {
-                WebAudienceScore.Tile tile = value[j];
+                WebTile tile = value[j];
                 if (tile == null) {
                     continue;
                 }
@@ -338,12 +340,12 @@ public class WebAudienceStateDeltaTracker {
     }
 
     public void addTile(String id, Object newValue) {
-        if (newValue instanceof WebAudienceScore.Tile) {
-            addTile(id, (WebAudienceScore.Tile) newValue);
+        if (newValue instanceof WebTile) {
+            addTile(id, (WebTile) newValue);
         } else if (newValue instanceof WebAudienceElementState) {
             addTileElementState(id,(WebAudienceElementState)newValue);
-        } else if (newValue instanceof WebAudienceScore.TileText) {
-            addTileText(id, (WebAudienceScore.TileText) newValue);
+        } else if (newValue instanceof WebTileText) {
+            addTileText(id, (WebTileText) newValue);
         }
     }
 
@@ -360,7 +362,7 @@ public class WebAudienceStateDeltaTracker {
         if (col < 0) {
             return;
         }
-        WebAudienceScore.Tile tile = state.getTile(row, col);
+        WebTile tile = state.getTile(row, col);
         if (tile == null) {
             return;
         }
@@ -371,15 +373,15 @@ public class WebAudienceStateDeltaTracker {
         if (id == null) {
             return;
         }
-        if (newValue instanceof WebAudienceScore.Tile) {
-            WebAudienceScore.Tile tile = (WebAudienceScore.Tile) newValue;
+        if (newValue instanceof WebTile) {
+            WebTile tile = (WebTile) newValue;
             addTile(tile.getId(), tile);
         } else {
             LOG.error("processTile: invalid object type: {}", newValue);
         }
     }
 
-    public void addTile(String id, WebAudienceScore.Tile tile) {
+    public void addTile(String id, WebTile tile) {
         if (tile == null) {
             return;
         }
@@ -391,7 +393,7 @@ public class WebAudienceStateDeltaTracker {
         tiles.add(tileExport);
     }
 
-    public void addTileText(String tileId, WebAudienceScore.TileText tileText) {
+    public void addTileText(String tileId, WebTileText tileText) {
         addTile(tileId);
     }
 }

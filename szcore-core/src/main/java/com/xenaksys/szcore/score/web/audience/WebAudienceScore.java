@@ -3,21 +3,15 @@ package com.xenaksys.szcore.score.web.audience;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceEventType;
-import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudiencePlayTilesEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudiencePrecountEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceSelectTilesEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceStateUpdateEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceStopEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Instrument;
-import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.Score;
 import com.xenaksys.szcore.model.ScoreProcessor;
-import com.xenaksys.szcore.model.ScriptPreset;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.MutablePageId;
 import com.xenaksys.szcore.score.PannerDistanceModel;
@@ -28,23 +22,11 @@ import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebPannerConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthState;
-import com.xenaksys.szcore.score.web.audience.config.WebscoreConfig;
-import com.xenaksys.szcore.score.web.audience.config.WebscoreConfigLoader;
-import com.xenaksys.szcore.score.web.audience.export.TileExport;
-import com.xenaksys.szcore.score.web.audience.export.WebAudienceInstructionsExport;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
-import com.xenaksys.szcore.score.web.audience.export.WebElementStateExport;
-import com.xenaksys.szcore.score.web.audience.export.WebGranulatorConfigExport;
-import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthConfigExport;
-import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthStateExport;
-import com.xenaksys.szcore.util.MathUtil;
-import com.xenaksys.szcore.util.ScoreUtil;
 import com.xenaksys.szcore.web.WebAudienceAction;
 import com.xenaksys.szcore.web.WebAudienceActionType;
 import com.xenaksys.szcore.web.WebScoreStateType;
-import gnu.trove.list.TIntList;
-import gnu.trove.list.array.TIntArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,16 +38,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
-import static com.xenaksys.szcore.Consts.EMPTY;
-import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_ALL;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_CONFIG;
-import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_DISPLAY;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_PLAY;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_RAMP_LINEAR;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_RAMP_SIN;
@@ -92,7 +69,6 @@ import static com.xenaksys.szcore.Consts.WEB_CONFIG_IS_INTERRUPT;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_IS_PLAY_SPEECH_ON_CLICK;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_IS_USE_PANNER;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_LANG;
-import static com.xenaksys.szcore.Consts.WEB_CONFIG_LOAD_PRESET;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_MASTER_GAIN_VAL;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_GRAINS;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_PAN_ANGLE;
@@ -121,57 +97,27 @@ import static com.xenaksys.szcore.Consts.WEB_CONFIG_UTTERANCE_TIMEOUT_SEC;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_VALUE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_VOLUME;
 import static com.xenaksys.szcore.Consts.WEB_GRANULATOR;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_CENTRE_SHAPE;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_ELEMENT_STATE;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_INNER_CIRCLE;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_INSTRUCTIONS;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_OUTER_CIRCLE;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_TILE;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_TILE_TEXT;
-import static com.xenaksys.szcore.Consts.WEB_OVERLAYS;
 import static com.xenaksys.szcore.Consts.WEB_SCORE_ID;
-import static com.xenaksys.szcore.Consts.WEB_SELECTED_TILES;
 import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_STAGE;
 import static com.xenaksys.szcore.Consts.WEB_TARGET_ALL;
-import static com.xenaksys.szcore.Consts.WEB_TEXT_BACKGROUND_COLOUR;
-import static com.xenaksys.szcore.Consts.WEB_TILE_PLAY_PAGE_DURATION_FACTOR;
-import static com.xenaksys.szcore.Consts.WEB_ZOOM_DEFAULT;
 
-public class WebAudienceScore {
+public abstract class WebAudienceScore {
     static final Logger LOG = LoggerFactory.getLogger(WebAudienceScore.class);
-
-    public static final Comparator<Tile> CLICK_COMPARATOR = (t, t1) -> t1.getState().getClickCount() - t.getState().getClickCount();
-    private static final long INTERNAL_EVENT_TIME_LIMIT = 1000 * 3;
 
     private final ScoreProcessor scoreProcessor;
     private final EventFactory eventFactory;
     private final Score score;
     private final Clock clock;
-    private final WebAudienceServerState state;
-
-    private WebAudienceStateDeltaTracker stateDeltaTracker;
-
     private PropertyChangeSupport pcs = new PropertyChangeSupport(this);
-
-    private final List<Tile> tilesAll = new ArrayList<>(64);
-    private final List<Tile> playingTiles = new ArrayList<>(4);
-    private final List<Tile> activeTiles = new ArrayList<>(8);
-    private final List<Tile> playingNextTiles = new ArrayList<>(4);
-    private final boolean[] visibleRows = new boolean[8];
-    private final boolean[] activeRows = new boolean[8];
-    private final Map<String, Integer> tileIdPageIdMap = new HashMap<>();
     private final Map<BeatId, List<WebAudienceScoreScript>> beatScripts = new HashMap<>();
     private final Map<BeatId, List<WebAudienceScoreScript>> beatResetScripts = new HashMap<>();
 
     private final ScriptEngineManager factory = new ScriptEngineManager();
     private final ScriptEngine jsEngine = factory.getEngineByName("nashorn");
-    private WebscoreConfig webscoreConfig;
 
     private final MutablePageId tempPageId;
-    private volatile long lastPlayTilesInternalEventTime = 0L;
-    private volatile long lastSelectTilesInternalEventTime = 0L;
-    private volatile boolean isSortByClickCount = true;
+    private WebAudienceServerState state;
 
     public WebAudienceScore(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock) {
         this.scoreProcessor = scoreProcessor;
@@ -182,26 +128,7 @@ public class WebAudienceScore {
         this.state = initState();
     }
 
-    private WebAudienceServerState initState() {
-        Tile[][] tiles = new Tile[8][8];
-        List<WebAudienceAction> currentActions = new ArrayList<>();
-        Map<String, WebAudienceElementState> elementStates = new HashMap<>();
-        WebTextState instructions = new WebTextState(WEB_OBJ_INSTRUCTIONS, 3);
-        WebGranulatorConfig granulatorConfig = createDefaultGranulatorConfig();
-        WebSpeechSynthConfig speechSynthConfig = createDefaultSpeechSynthConfig();
-        WebSpeechSynthState speechSynthState = createDefaultSpeechSynthState();
-
-        WebAudienceServerState webAudienceServerState =  new WebAudienceServerState(tiles, currentActions, elementStates, WEB_ZOOM_DEFAULT, instructions, granulatorConfig,
-                speechSynthConfig, speechSynthState, 1, pcs);
-
-        createWebAudienceStateDeltaTracker(webAudienceServerState);
-        pcs.addPropertyChangeListener(new WebAudienceChangeListener(stateDeltaTracker));
-        return webAudienceServerState;
-    }
-    private void createWebAudienceStateDeltaTracker(WebAudienceServerState webAudienceServerState) {
-        this.stateDeltaTracker = new WebAudienceStateDeltaTracker(webAudienceServerState);
-    }
-    private MutablePageId createTempPage() {
+    public MutablePageId createTempPage() {
         int pageNo = 0;
         if (score == null) {
             return null;
@@ -214,107 +141,57 @@ public class WebAudienceScore {
         return new MutablePageId(pageNo, instrument.getId(), score.getId());
     }
 
-    public void resetState() {
-        state.clearActions();
-        state.clearElementStates();
-        state.setTiles(new Tile[8][8]);
-        state.setZoomLevel(WEB_ZOOM_DEFAULT);
-
-        tilesAll.clear();
-        playingTiles.clear();
-        playingNextTiles.clear();
-        tileIdPageIdMap.clear();
-        activeTiles.clear();
-
-        for (int i = 0; i < 8; i++) {
-            int row = i + 1;
-            visibleRows[i] = true;
-            activeRows[i] = false;
-            int clickCount = 0;
-
-            for (int j = 0; j < 8; j++) {
-                int col = j + 1;
-                String id = ScoreUtil.createTileId(row, col);
-                Tile t = new Tile(row, col, id);
-                WebAudienceElementState ts = t.getState();
-                ts.setVisible(visibleRows[i]);
-                ts.setPlaying(false);
-                ts.setActive(activeRows[i]);
-                ts.setClickCount(clickCount);
-                TileText txt = t.getTileText();
-                txt.setVisible(false);
-                txt.setValue(EMPTY);
-                state.setTile(t, i, j);
-                tilesAll.add(t);
-
-                populateTilePageMap(row, col, id);
-            }
-        }
-
-        state.addElementState(WEB_OBJ_CENTRE_SHAPE, new WebAudienceElementState(WEB_OBJ_CENTRE_SHAPE, pcs));
-        state.addElementState(WEB_OBJ_INNER_CIRCLE, new WebAudienceElementState(WEB_OBJ_INNER_CIRCLE, pcs));
-        state.addElementState(WEB_OBJ_OUTER_CIRCLE, new WebAudienceElementState(WEB_OBJ_OUTER_CIRCLE, pcs));
-
-
-        state.setInstructions("Welcome to", 1);
-        state.setInstructions("<span style='color:blueviolet;'>ZScore</span>", 2);
-        state.setInstructions("awaiting performance start ...", 3);
-        state.setInstructionsVisible(true);
-
-        state.setGranulatorConfig(createDefaultGranulatorConfig());
-        state.setSpeechSynthConfig(createDefaultSpeechSynthConfig());
-        state.setSpeechSynthState(createDefaultSpeechSynthState());
-
-        reset(WEB_CONFIG_LOAD_PRESET);
-
-        updateServerState();
-        pushServerState();
+    public ScoreProcessor getScoreProcessor() {
+        return scoreProcessor;
     }
 
-    private void populateTilePageMap(int row, int col, String tileId) {
-        if (score == null) {
-            return;
-        }
-        int pageNo = getPageNo(row, col);
-        tileIdPageIdMap.put(tileId, pageNo);
+    public EventFactory getEventFactory() {
+        return eventFactory;
     }
 
-    public void reset(int presetNo) {
-        try {
-            ScriptPreset preset = webscoreConfig.getPreset(presetNo);
-            if (preset == null) {
-                LOG.info("resetState: Unknown preset: {}", presetNo);
-                return;
-            }
-
-            Map<String, Object> configs = preset.getConfigs();
-            if (!configs.isEmpty()) {
-                processPresetConfigs(configs);
-            }
-
-            List<String> scripts = preset.getScripts();
-            if (!scripts.isEmpty()) {
-                runScripts(scripts);
-            }
-        } catch (Exception e) {
-            LOG.error("resetState: Failed to run preset: {}", presetNo, e);
-        }
+    public Score getScore() {
+        return score;
     }
 
-    public void processPresetConfigs(Map<String, Object> configs) {
-        for (String key : configs.keySet()) {
-            switch (key) {
-                case WEB_GRANULATOR:
-                    updateGranulatorConfig((Map<String, Object>) configs.get(key));
-                    break;
-                case WEB_SPEECH_SYNTH:
-                    updateSpeechSynthConfig((Map<String, Object>) configs.get(key));
-                    break;
-                default:
-                    LOG.info("processPresetConfigs: unknown key: {}", key);
-            }
-        }
+    public Clock getClock() {
+        return clock;
     }
+
+    public PropertyChangeSupport getPcs() {
+        return pcs;
+    }
+
+    public Map<BeatId, List<WebAudienceScoreScript>> getBeatScripts() {
+        return beatScripts;
+    }
+
+    public Map<BeatId, List<WebAudienceScoreScript>> getBeatResetScripts() {
+        return beatResetScripts;
+    }
+
+    public ScriptEngineManager getFactory() {
+        return factory;
+    }
+
+    public ScriptEngine getJsEngine() {
+        return jsEngine;
+    }
+
+    public MutablePageId getTempPageId() {
+        return tempPageId;
+    }
+
+    public WebAudienceServerState getState() {
+        return state;
+    }
+
+    public abstract WebAudienceServerState initState();
+
+    public abstract void resetState();
+
+    public abstract void reset(int presetNo);
+
+    public abstract void processPresetConfigs(Map<String, Object> configs);
 
     private void updateGranulatorConfig(Map<String, Object> conf) {
         getGranulatorConfig().update(conf);
@@ -349,184 +226,13 @@ public class WebAudienceScore {
         }
     }
 
-    private int getPageNo(int row, int col) {
-
-        int pageNo = (row - 1) * 8 + col;
-        if (score == null || webscoreConfig == null) {
-            return pageNo;
-        }
-
-        int configPageNo = webscoreConfig.getPageNo(row, col);
-        if (configPageNo < 0) {
-            return pageNo;
-        }
-
-        return configPageNo;
-    }
-
     public void init(String configDir) {
         loadConfig(configDir);
         jsEngine.put(WEB_SCORE_ID, this);
         resetState();
     }
 
-    private void loadConfig(String configDir) {
-        if (configDir == null) {
-            return;
-        }
-        try {
-            webscoreConfig = WebscoreConfigLoader.load(configDir);
-        } catch (Exception e) {
-            LOG.error("Failed to load WebAudienceScore Presets", e);
-        }
-    }
-
-    public void deactivateRows(int[] rows) {
-        for (int row : rows) {
-            deactivateRow(row);
-        }
-    }
-
-    public void deactivateRow(int row) {
-        Tile[][] tiles = state.getTiles();
-        if (row < 1 || row > tiles.length) {
-            LOG.warn("deactivateTiles: invalid row: " + row);
-        }
-
-        int i = row - 1;
-        for (int j = 0; j < 8; j++) {
-            Tile t = tiles[i][j];
-            WebAudienceElementState ts = t.getState();
-            ts.setActive(false);
-            ts.setPlaying(false);
-            ts.setPlayingNext(false);
-            ts.setPlayed(true);
-            ts.setVisible(false);
-
-            visibleRows[i] = false;
-            activeRows[i] = false;
-
-            TileText txt = t.getTileText();
-            txt.setVisible(false);
-        }
-        recalcActiveTiles();
-    }
-
-    private void recalcActiveTiles() {
-        activeTiles.clear();
-        for (Tile tile : tilesAll) {
-            if (tile.getState().isActive()) {
-                activeTiles.add(tile);
-            }
-        }
-    }
-
-    public void setSelectedElement(String elementId, boolean isSelected) {
-        LOG.debug("setSelectedElement: Received elementId: {} isSelected: {}", elementId, isSelected);
-        if (ScoreUtil.isTileId(elementId)) {
-            Tile tile = getTile(elementId);
-            if (tile == null) {
-                return;
-            }
-            if (!isInActiveRow(tile)) {
-                LOG.info("setSelectedElement: Selected tile {} is not in active row", tile.getId());
-                return;
-            }
-
-            WebAudienceElementState state = tile.getState();
-            if (state.isPlaying() || state.isPlayingNext() || state.isPlayed() || !state.isVisible()) {
-                return;
-            }
-
-            if (isSelected) {
-                state.setSelected(true);
-                state.incrementClickCount();
-                LOG.debug("setSelectedElement: Received elementId: {} tile: {} click count: {} isSelected: true", elementId, tile.getId(), state.getClickCount());
-            } else {
-                if (state.getClickCount() <= 0) {
-                    state.setSelected(false);
-                }
-                state.decrementClickCount();
-                LOG.debug("setSelectedElement: Received elementId: {} tile: {} click count: {} isSelected: {}", elementId, tile.getId(), state.getClickCount(), state.isSelected());
-            }
-            if (isSortByClickCount) {
-                activeTiles.sort(CLICK_COMPARATOR);
-            } else {
-                LOG.debug("setSelectedElement: sort by click disabled, using natural order");
-            }
-        }
-    }
-
-    public boolean isInActiveRow(Tile tile) {
-        return activeRows[tile.getRow() - 1];
-    }
-
-    public boolean isInVisibleRow(Tile tile) {
-        return visibleRows[tile.getRow() - 1];
-    }
-
-    public List<Tile> getTopSelectedTiles(int quantity, boolean isIncludePlayed) {
-        List<Tile> topSelected = new ArrayList<>();
-        int count = 1;
-        for (Tile t : activeTiles) {
-            boolean isPlayed = t.getState().isPlayed() || t.getState().isPlaying();
-            if (isPlayed && !isIncludePlayed) {
-                continue;
-            }
-            if (count <= quantity) {
-                topSelected.add(t);
-                count++;
-            } else {
-                break;
-            }
-        }
-        return topSelected;
-    }
-
-    public List<Integer> prepareNextTilesToPlay(int pageQuantity) {
-        List<Tile> topTiles = null;
-        if (!playingNextTiles.isEmpty()) {
-            topTiles = new ArrayList<>(playingNextTiles);
-        } else {
-            topTiles = getTopSelectedTiles(pageQuantity, false);
-        }
-        List<Integer> pageIds = new ArrayList<>(topTiles.size());
-        List<String> tileIds = new ArrayList<>(topTiles.size());
-        if (topTiles.size() < pageQuantity) {
-            LOG.warn("prepareNextTilesToPlay: not enough pages retrieved: {} expected: {}", topTiles.size(), pageQuantity);
-            ArrayList<String> nextTileIds = calculateNextTilesToPlay();
-            LOG.warn("prepareNextTilesToPlay: calculated tiles to play: {}", nextTileIds);
-            for (String tileId : nextTileIds) {
-                if (topTiles.size() < pageQuantity) {
-                    topTiles.add(getTile(tileId));
-                } else {
-                    break;
-                }
-            }
-        }
-        for (Tile tile : topTiles) {
-            String tileId = tile.getId();
-            Integer pageNo = tileIdPageIdMap.get(tileId);
-            if (pageNo == null) {
-                LOG.error("prepareNextTilesToPlay: Failed to find pageId for tile id: {}", tileId);
-            } else {
-                pageIds.add(pageNo);
-                tileIds.add(tileId);
-            }
-            LOG.debug("prepareNextTilesToPlay: Found pageId: {} for tile id: {}", pageNo, tileId);
-        }
-
-        WebAudienceSelectTilesEvent playTilesEvent = eventFactory.createWebAudienceSelectTilesEvent(tileIds, clock.getSystemTimeMillis());
-        processWebAudienceEvent(playTilesEvent);
-
-        return pageIds;
-    }
-
-    public void resetClickCounts() {
-        for (Tile t : tilesAll) {
-            t.getState().setClickCount(0);
-        }
-    }
+    public abstract void loadConfig(String configDir);
 
     public void startScore() {
         LOG.info("startScore: ");
@@ -535,268 +241,10 @@ public class WebAudienceScore {
     public void updateServerStateAndPush() {
         updateServerState();
         updateServerStateDelta();
-//        pushServerState();
         pushServerStateDelta();
     }
 
-    public void setVisibleRows(int[] rows) {
-        Tile[][] tiles = state.getTiles();
-        TIntList tintRows = new TIntArrayList(rows);
-        for (int i = 0; i < 8; i++) {
-            int row = i + 1;
-            visibleRows[i] = tintRows.contains(row);
-            for (int j = 0; j < 8; j++) {
-                Tile t = tiles[i][j];
-                WebAudienceElementState ts = t.getState();
-                ts.setVisible(visibleRows[i]);
-            }
-        }
-    }
-
-    public void setZoomLevel(String zoomLevel) {
-        state.setZoomLevel(zoomLevel);
-    }
-
-    public void setInstructions(String l1, String l2, String l3) {
-        setInstructions(l1, l2, l3, WEB_TEXT_BACKGROUND_COLOUR, true);
-    }
-
-    public void setInstructions(String l1, String l2, String l3, boolean isVisible) {
-        setInstructions(l1, l2, l3, WEB_TEXT_BACKGROUND_COLOUR, isVisible);
-    }
-
-    public void setInstructions(boolean isVisible) {
-        setInstructions(EMPTY, EMPTY, EMPTY, WEB_TEXT_BACKGROUND_COLOUR, isVisible);
-    }
-
-    public void setInstructions(String l1, String l2, String l3, String colour, boolean isVisible) {
-        state.setInstructions(l1, 1);
-        state.setInstructions(l2, 2);
-        state.setInstructions(l3, 3);
-        state.setInstructionsColour(colour);
-        state.setInstructionsVisible(isVisible);
-    }
-
-    public void setVisible(String[] elementIds, boolean isVisible) {
-        LOG.debug("setVisible: {}", Arrays.toString(elementIds));
-        for (String elementId : elementIds) {
-            WebAudienceElementState elementState = state.getElementState(elementId);
-            if (elementState != null) {
-                elementState.setVisible(isVisible);
-            }
-        }
-    }
-
-    public void setTileTexts(String[] tileIds, String[] values) {
-        LOG.debug("setTileTexts: {}  {}", Arrays.toString(tileIds), Arrays.toString(values));
-
-        for (int i = 0; i < tileIds.length; i++) {
-            String tileId = tileIds[i];
-            String value;
-            if (values.length > i) {
-                value = values[i];
-            } else {
-                value = values[values.length - 1];
-                LOG.warn("setTileTexts: Invalid number of entries, using value {}", value);
-            }
-            setTileText(tileId, value);
-        }
-    }
-
-    public void resetPlayingTiles() {
-        List<String> targets = new ArrayList<>();
-        for (Tile t : playingTiles) {
-            t.getState().setPlaying(false);
-            t.getState().setPlayed(true);
-            t.getState().setVisible(false);
-            TileText txt = t.getTileText();
-            txt.setVisible(false);
-            targets.add(t.getId());
-        }
-//        setAction(WEB_ACTION_ID_RESET, WebAudienceActionType.ROTATE.name(), targets.toArray(new String[0]));
-        playingTiles.clear();
-    }
-
-    public boolean isPlayTilesInternalEventTime() {
-        long now = System.currentTimeMillis();
-        long diff = now - (lastPlayTilesInternalEventTime + INTERNAL_EVENT_TIME_LIMIT);
-        return diff > 0;
-    }
-
-    public boolean isSelectTilesInternalEventTime() {
-        long now = System.currentTimeMillis();
-        long diff = now - (lastSelectTilesInternalEventTime + INTERNAL_EVENT_TIME_LIMIT);
-        return diff > 0;
-    }
-
-    public boolean playNextTilesInternal(WebAudiencePlayTilesEvent event) {
-        if (!isPlayTilesInternalEventTime()) {
-            return false;
-        }
-
-        if (playingNextTiles.isEmpty()) {
-            if (playingTiles.isEmpty()) {
-                LOG.warn("playNextTiles: Can not find tiles to play, both playingTiles and playingNextTiles are empty");
-                return false;
-            }
-            ArrayList<String> tileIds = calculateNextTilesToPlay();
-            if (!tileIds.isEmpty()) {
-                playTiles(tileIds.toArray(new String[0]));
-            }
-        } else {
-            String[] tileIds = new String[playingNextTiles.size()];
-            for (int i = 0; i < tileIds.length; i++) {
-                Tile tile = playingNextTiles.get(i);
-                tileIds[i] = tile.getId();
-            }
-            playTiles(tileIds);
-        }
-
-        lastPlayTilesInternalEventTime = System.currentTimeMillis();
-        return true;
-    }
-
-    public ArrayList<String> calculateNextTilesToPlay() {
-        ArrayList<String> tileIds = new ArrayList<>(playingTiles.size());
-        for (Tile tile : playingTiles) {
-            Tile next = getNextTileToPlay(tile);
-            if (next != null) {
-                tileIds.add(next.getId());
-            }
-        }
-        return tileIds;
-    }
-
-    public boolean selectNextTilesInternal(WebAudienceSelectTilesEvent event) {
-        if (!isSelectTilesInternalEventTime()) {
-            return false;
-        }
-        List<String> tileIds = event.getTileIds();
-        setPlayingNextTiles(tileIds);
-        lastSelectTilesInternalEventTime = System.currentTimeMillis();
-        return true;
-    }
-
-    public Tile getNextTileToPlay(Tile tile) {
-        int col = tile.getColumn() - 1;
-        int row = tile.getRow() - 1;
-        Tile[][] tiles = state.getTiles();
-        for (int j = col + 1; j < tiles[row].length; j++) {
-            Tile next = tiles[row][++col];
-            if (!next.getState().isPlayed()) {
-                return next;
-            }
-        }
-        return null;
-    }
-
-    public void playTiles(String[] tileIds) {
-        LOG.debug("playTiles: {}", Arrays.toString(tileIds));
-        resetPlayingNextTiles();
-        if (tileIds == null || tileIds.length == 0) {
-            return;
-        }
-        setPlayingTiles(tileIds);
-        setPlayTileActions(tileIds);
-    }
-
-    public void setPlayTileActions(String[] tileIds) {
-        String first = tileIds[0];
-        Integer pageNo = tileIdPageIdMap.get(first);
-        tempPageId.setPageNo(pageNo);
-        Page page = scoreProcessor.getScore().getPage(tempPageId);
-
-        double duration = 0.0;
-        if (page != null) {
-            long durationMs = page.getDurationMs();
-            duration = MathUtil.roundTo2DecimalPlaces(durationMs / 1000.0);
-            LOG.debug("setPlayTileActions: calculated duration: {} for page: {}", duration, page.getId());
-            duration = MathUtil.roundTo2DecimalPlaces(duration * WEB_TILE_PLAY_PAGE_DURATION_FACTOR);
-        }
-
-        Map<String, Object> params = new HashMap<>(2);
-        params.put(WEB_CONFIG_DURATION, duration);
-        params.put(WEB_CONFIG_VALUE, 0);
-        setAction(WEB_ACTION_ID_START, WebAudienceActionType.ALPHA.name(), tileIds, params);
-    }
-
-    public void setPlayingTiles(String[] tileIds) {
-        LOG.debug("setPlayingTiles: {}", Arrays.toString(tileIds));
-        resetPlayingTiles();
-        for (String tileId : tileIds) {
-            setPlayingTile(tileId);
-        }
-    }
-
-    public void setPlayingTile(String tileId) {
-        Tile t = getTile(tileId);
-        if (t == null) {
-            LOG.error("setPlayedTile: invalid tileId: {}", tileId);
-            return;
-        }
-        t.getState().setPlaying(true);
-        playingTiles.add(t);
-    }
-
-    public void setTileText(String tileId, String value) {
-        Tile t = getTile(tileId);
-        if (t == null) {
-            LOG.error("setTileText: invalid tileId: {}", tileId);
-            return;
-        }
-        t.setText(value);
-    }
-
-    public void resetPlayingNextTiles() {
-        for (Tile t : playingNextTiles) {
-            t.getState().setPlayingNext(false);
-        }
-        playingNextTiles.clear();
-    }
-
-    public void setPlayingNextTiles(List<String> tileIds) {
-        LOG.debug("setPlayingNextTiles: {}", tileIds);
-        resetPlayingNextTiles();
-        for (String tileId : tileIds) {
-            setPlayingNextTile(tileId);
-        }
-    }
-
-    public void setPlayingNextTile(String tileId) {
-        Tile t = getTile(tileId);
-        if (t == null) {
-            LOG.error("setPlayedNextTile: invalid tileId: {}", tileId);
-            return;
-        }
-        t.getState().setPlayingNext(true);
-        playingNextTiles.add(t);
-    }
-
-    public void setActiveRows(int[] rows) {
-        setActiveRows(rows, true);
-    }
-
-    public void setActiveRows(int[] rows, boolean isSortByClickCount) {
-        LOG.debug("setActiveRows: {}", Arrays.toString(rows));
-        this.isSortByClickCount = isSortByClickCount;
-        Tile[][] tiles = state.getTiles();
-        TIntList tintRows = new TIntArrayList(rows);
-        for (int i = 0; i < 8; i++) {
-            int row = i + 1;
-            activeRows[i] = tintRows.contains(row);
-            for (int j = 0; j < 8; j++) {
-                Tile t = tiles[i][j];
-                WebAudienceElementState ts = t.getState();
-                ts.setActive(activeRows[i]);
-            }
-        }
-        recalcActiveTiles();
-    }
-
-    public void resetStateDelta() {
-        state.resetDelta();
-        stateDeltaTracker.reset();
-    }
+    public abstract void resetStateDelta();
 
     public void setAction(String actionId, String type, String[] targetIds) {
         setAction(actionId, type, targetIds, new HashMap<>());
@@ -846,16 +294,6 @@ public class WebAudienceScore {
 
     public void validateGranulatorConfig() {
         state.getGranulatorConfig().validate();
-    }
-
-    public void resetSelectedTiles() {
-        String[] target = {WEB_SELECTED_TILES};
-        setAction(WEB_ACTION_ID_ALL, WebAudienceActionType.RESET.name(), target, null);
-    }
-
-    public void removeOverlays() {
-        String[] target = {WEB_OVERLAYS};
-        setAction(WEB_ACTION_ID_DISPLAY, WebAudienceActionType.DEACTIVATE.name(), target, null);
     }
 
     public void setStageAlpha(double endValue, double durationSec) {
@@ -1225,7 +663,7 @@ public class WebAudienceScore {
         return state.getGranulatorConfig();
     }
 
-    private void setGranulatorPannerConfig(String name, Object value) {
+    public void setGranulatorPannerConfig(String name, Object value) {
         WebPannerConfig config = state.getGranulatorConfig().getPanner();
         switch (name) {
             case WEB_CONFIG_IS_USE_PANNER:
@@ -1263,7 +701,7 @@ public class WebAudienceScore {
         }
     }
 
-    private void setGrainConfig(String name, Object value) {
+    public void setGrainConfig(String name, Object value) {
         WebGrainConfig config = state.getGranulatorConfig().getGrain();
         switch (name) {
             case WEB_CONFIG_SIZE_MS:
@@ -1306,7 +744,7 @@ public class WebAudienceScore {
         }
     }
 
-    private void setGranulatorEnvelopeConfig(String name, Object value) {
+    public void setGranulatorEnvelopeConfig(String name, Object value) {
         WebEnvelopeConfig config = state.getGranulatorConfig().getEnvelope();
         switch (name) {
             case WEB_CONFIG_ATTACK_TIME:
@@ -1349,92 +787,11 @@ public class WebAudienceScore {
         }
     }
 
-    private Tile getTile(String tileId) {
-        try {
-            Tile[][] tiles = state.getTiles();
-            int start = tileId.indexOf(Consts.WEB_TILE_PREFIX) + 1;
-            int end = tileId.indexOf(Consts.WEB_ELEMENT_NAME_DELIMITER);
-            String s = tileId.substring(start, end);
-            int row = Integer.parseInt(s);
-            start = end + 1;
-            s = tileId.substring(start);
-            int column = Integer.parseInt(s);
+    public abstract WebAudienceScoreStateExport exportState();
 
-            int i = row - 1;
-            int j = column - 1;
-            if (i < 0 || i >= tiles.length) {
-                LOG.error("parseTileId: invalid row: {}", i);
-                return null;
-            }
-            if (j < 0 || j >= tiles[0].length) {
-                LOG.error("parseTileId: invalid col: {}", i);
-                return null;
-            }
+    public abstract void updateServerState();
 
-            return tiles[i][j];
-        } catch (Exception e) {
-            LOG.error("parseTileId: Failed to parse tileId: {}", tileId, e);
-        }
-        return null;
-    }
-
-    public WebAudienceScoreStateExport exportState() {
-        Tile[][] tiles = state.getTiles();
-        TileExport[][] tes = new TileExport[tiles.length][tiles[0].length];
-        for (int i = 0; i < tiles.length; i++) {
-            for (int j = 0; j < tiles[0].length; j++) {
-                Tile t = tiles[i][j];
-                TileExport te = new TileExport();
-                te.populate(t);
-                tes[i][j] = te;
-            }
-        }
-
-        WebElementStateExport centreShape = new WebElementStateExport();
-        centreShape.populate(state.getElementState(WEB_OBJ_CENTRE_SHAPE));
-
-        WebElementStateExport innerCircle = new WebElementStateExport();
-        innerCircle.populate(state.getElementState(WEB_OBJ_INNER_CIRCLE));
-
-        WebElementStateExport outerCircle = new WebElementStateExport();
-        outerCircle.populate(state.getElementState(WEB_OBJ_OUTER_CIRCLE));
-
-        WebAudienceInstructionsExport instructions = new WebAudienceInstructionsExport();
-        instructions.populate(state.getInstructions());
-
-        WebGranulatorConfigExport granulatorConfig = new WebGranulatorConfigExport();
-        granulatorConfig.populate(state.getGranulatorConfig());
-
-        WebSpeechSynthConfigExport speechSynthConfigExport = new WebSpeechSynthConfigExport();
-        speechSynthConfigExport.populate(state.getSpeechSynthConfig());
-
-        WebSpeechSynthStateExport speechSynthStateExport = new WebSpeechSynthStateExport();
-        speechSynthStateExport.populate(state.getSpeechSynthState());
-
-        List<WebAudienceAction> actions = state.getActions();
-        LOG.debug("WebAudienceScoreStateExport sending actions: {}", actions);
-
-        return new WebAudienceScoreStateExport(tes, actions, centreShape, innerCircle, outerCircle, state.getZoomLevel(),
-                instructions, granulatorConfig, speechSynthConfigExport, speechSynthStateExport, state.getStageAlpha());
-    }
-
-    public void updateServerState() {
-        try {
-            scoreProcessor.onWebAudienceStateChange(exportState());
-        } catch (Exception e) {
-            LOG.error("Failed to process updateServerState", e);
-        }
-    }
-
-    public void updateServerStateDelta() {
-        try {
-            if (stateDeltaTracker.hasChanges()) {
-                scoreProcessor.onWebAudienceStateDeltaChange(stateDeltaTracker.getDeltaExport());
-            }
-        } catch (Exception e) {
-            LOG.error("Failed to process updateServerState", e);
-        }
-    }
+    public abstract void updateServerStateDelta();
 
     public void pushServerState() {
         sendOutgoingWebEvent(OutgoingWebEventType.PUSH_SERVER_STATE);
@@ -1454,80 +811,9 @@ public class WebAudienceScore {
         }
     }
 
-    public void processWebAudienceEvent(WebAudienceEvent event) {
-        LOG.debug("processWebScoreEvent: execute event: {}", event);
-        WebAudienceEventType type = event.getWebAudienceEventType();
-        try {
-            resetStateDelta();
-            boolean isSendStateUpdate = true;
-            switch (type) {
-                case INSTRUCTIONS:
-                    isSendStateUpdate = processInstructionsEvent((WebAudienceInstructionsEvent) event);
-                    break;
-                case PRECOUNT:
-                    isSendStateUpdate = processPrecountEvent((WebAudiencePrecountEvent) event);
-                    break;
-                case STOP:
-                    isSendStateUpdate = processStopAll((WebAudienceStopEvent) event);
-                    break;
-                case PLAY_TILES:
-                    isSendStateUpdate = playNextTilesInternal((WebAudiencePlayTilesEvent) event);
-                    break;
-                case SELECT_TILES:
-                    isSendStateUpdate = selectNextTilesInternal((WebAudienceSelectTilesEvent) event);
-                    break;
-                case STATE_UPDATE:
-                    isSendStateUpdate = updateState((WebAudienceStateUpdateEvent) event);
-                    break;
-                case RESET:
-                case SCRIPT:
-                    List<WebAudienceScoreScript> jsScripts = event.getScripts();
-                    if (jsScripts == null) {
-                        return;
-                    }
-                    runWebScoreScripts(jsScripts);
-                    break;
-                default:
-                    LOG.warn("processWebScoreEvent: Ignoring event {}", type);
-            }
-            boolean isClickCountAdded = addClickCounts();
-            isSendStateUpdate = isSendStateUpdate || isClickCountAdded;
-            if (isSendStateUpdate) {
-                updateServerStateAndPush();
-            }
-        } catch (Exception e) {
-            LOG.error("Failed to evaluate script", e);
-        }
-    }
+    public abstract void processWebAudienceEvent(WebAudienceEvent event);
 
-    private boolean updateState(WebAudienceStateUpdateEvent event) {
-        WebScoreStateType propType = event.getPropertyType();
-        Object value = event.getPropertyValue();
-
-        switch (propType) {
-            case STAGE_ALPHA:
-                state.setStageAlpha((double) value);
-                return true;
-            default:
-                LOG.error("updateState: unknown property type: {}", propType);
-        }
-
-        return false;
-    }
-
-    private boolean addClickCounts() {
-        boolean isUpdate = false;
-        for (Tile tile : activeTiles) {
-            WebAudienceElementState tileState = tile.getState();
-            if (!tileState.isPlayed() && tileState.getClickCount() > 0) {
-                pcs.firePropertyChange(WEB_OBJ_TILE, tile.getId(), tile);
-                if (!isUpdate) {
-                    isUpdate = true;
-                }
-            }
-        }
-        return isUpdate;
-    }
+    public abstract boolean updateState(WebAudienceStateUpdateEvent event);
 
     public void addBeatScript(BeatId beatId, WebAudienceScoreScript webAudienceScoreScript) {
         if (beatId == null || webAudienceScoreScript == null) {
@@ -1577,24 +863,16 @@ public class WebAudienceScore {
         return beatResetScripts.get(outId);
     }
 
-    private WebSpeechSynthConfig createDefaultSpeechSynthConfig() {
-        WebSpeechSynthConfig speechSynthConfig = new WebSpeechSynthConfig(pcs);
-        return speechSynthConfig;
+    public WebSpeechSynthConfig createDefaultSpeechSynthConfig() {
+        return new WebSpeechSynthConfig(pcs);
     }
 
-    private WebSpeechSynthState createDefaultSpeechSynthState() {
-        WebSpeechSynthState webSpeechSynthState = new WebSpeechSynthState(pcs);
-        return webSpeechSynthState;
+    public WebSpeechSynthState createDefaultSpeechSynthState() {
+        return new WebSpeechSynthState(pcs);
     }
 
-    private WebGranulatorConfig createDefaultGranulatorConfig() {
-        WebGranulatorConfig granulatorConfig = new WebGranulatorConfig(pcs);
-        return granulatorConfig;
-    }
-
-    private boolean processInstructionsEvent(WebAudienceInstructionsEvent event) {
-        setInstructions(event.getL1(), event.getL2(), event.getL3(), event.isVisible());
-        return true;
+    public WebGranulatorConfig createDefaultGranulatorConfig() {
+        return new WebGranulatorConfig(pcs);
     }
 
     public boolean processPrecountEvent(WebAudiencePrecountEvent event) {
@@ -1614,10 +892,7 @@ public class WebAudienceScore {
         return false;
     }
 
-    public WebAudienceScoreStateDeltaExport getStateDeltaExport() {
-        return stateDeltaTracker.getDeltaExport();
-    }
-
+    public abstract WebAudienceScoreStateDeltaExport getStateDeltaExport();
 
     private double getDouble(Object value) {
         double v;
@@ -1658,161 +933,4 @@ public class WebAudienceScore {
         }
         return v;
     }
-
-    public class Tile {
-        private final String id;
-        private final int row;
-        private final int column;
-        private final WebAudienceElementState state;
-        private final TileText tileText;
-
-        public Tile(int row, int column, String id) {
-            this.id = id;
-            this.row = row;
-            this.column = column;
-            this.state = new WebAudienceElementState(id, pcs);
-            this.tileText = new TileText(EMPTY, false, this);
-        }
-
-        public WebAudienceElementState getState() {
-            return state;
-        }
-
-        public void setState(WebAudienceElementState newState) {
-            WebAudienceElementState old = new WebAudienceElementState(this.state.getId(), pcs);
-            this.state.copyTo(old);
-            newState.copyTo(this.state);
-            if (!this.state.equals(old)) {
-                pcs.firePropertyChange(WEB_OBJ_ELEMENT_STATE, this.id, this);
-            }
-        }
-
-        public void setText(TileText txt) {
-            TileText old = new TileText(this.tileText.getValue(), this.tileText.isVisible(), this.tileText.getParent());
-            txt.copyTo(this.tileText);
-            if (!this.tileText.equals(old)) {
-                pcs.firePropertyChange(WEB_OBJ_TILE_TEXT, this.id, this);
-            }
-        }
-
-        public void setText(String txt) {
-            TileText old = new TileText(this.tileText.getValue(), this.tileText.isVisible(), this.tileText.getParent());
-            this.tileText.setValue(txt);
-            this.tileText.setVisible(true);
-            if (!this.tileText.equals(old)) {
-                pcs.firePropertyChange(WEB_OBJ_TILE_TEXT, this.id, this);
-            }
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public int getRow() {
-            return row;
-        }
-
-        public int getRowIndex() {
-            return row - 1;
-        }
-
-        public int getColumn() {
-            return column;
-        }
-
-        public int getColumnIndex() {
-            return column - 1;
-        }
-
-        public TileText getTileText() {
-            return tileText;
-        }
-
-        public void copyTo(Tile other) {
-            state.copyTo(other.getState());
-            tileText.copyTo(other.getTileText());
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof Tile)) return false;
-            Tile tile = (Tile) o;
-            return getId().equals(tile.getId());
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(getId());
-        }
-
-        @Override
-        public String toString() {
-            return "Tile{" +
-                    "id='" + id + '\'' +
-                    ", row=" + row +
-                    ", column=" + column +
-                    ", state=" + state +
-                    '}';
-        }
-    }
-
-    public class TileText {
-        private String value;
-        private boolean isVisible;
-        private final Tile parent;
-
-        public TileText(String value, boolean isVisible, Tile parent) {
-            this.value = value;
-            this.isVisible = isVisible;
-            this.parent = parent;
-        }
-
-        public String getValue() {
-            return value;
-        }
-
-        public boolean isVisible() {
-            return isVisible;
-        }
-
-        public void setValue(String value) {
-            String old = this.value;
-            this.value = value;
-            if (!this.value.equals(old)) {
-                pcs.firePropertyChange(WEB_OBJ_TILE_TEXT, parent.getId(), parent);
-            }
-        }
-
-        public void setVisible(boolean visible) {
-            boolean old = this.isVisible;
-            this.isVisible = visible;
-            if (old != this.isVisible) {
-                pcs.firePropertyChange(WEB_OBJ_TILE_TEXT, parent.getId(), parent);
-            }
-        }
-
-        public Tile getParent() {
-            return parent;
-        }
-
-        public void copyTo(TileText other) {
-            other.setVisible(isVisible());
-            other.setValue(getValue());
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            TileText tileText = (TileText) o;
-            return isVisible == tileText.isVisible && Objects.equals(value, tileText.value) && Objects.equals(parent, tileText.parent);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(value, isVisible, parent);
-        }
-    }
-
 }

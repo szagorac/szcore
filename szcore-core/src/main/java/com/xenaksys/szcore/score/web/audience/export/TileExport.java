@@ -1,6 +1,6 @@
 package com.xenaksys.szcore.score.web.audience.export;
 
-import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
+import com.xenaksys.szcore.score.web.audience.handler.WebTile;
 
 import java.util.Objects;
 
@@ -31,7 +31,7 @@ public class TileExport {
         return tileText;
     }
 
-    public void populate(WebAudienceScore.Tile from) {
+    public void populate(WebTile from) {
         if (from == null) {
             return;
         }

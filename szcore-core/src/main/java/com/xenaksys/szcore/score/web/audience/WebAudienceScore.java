@@ -109,7 +109,7 @@ public abstract class WebAudienceScore {
     private final EventFactory eventFactory;
     private final Score score;
     private final Clock clock;
-    private PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private final Map<BeatId, List<WebAudienceScoreScript>> beatScripts = new HashMap<>();
     private final Map<BeatId, List<WebAudienceScoreScript>> beatResetScripts = new HashMap<>();
 

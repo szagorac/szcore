@@ -45,7 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptException;
-import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -78,7 +77,6 @@ public class UnionRoseWebAudienceScore extends WebAudienceScore {
 
     public static final Comparator<WebTile> CLICK_COMPARATOR = (t, t1) -> t1.getState().getClickCount() - t.getState().getClickCount();
     private static final long INTERNAL_EVENT_TIME_LIMIT = 1000 * 3;
-    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
     private WebAudienceStateDeltaTracker stateDeltaTracker;
     private final List<WebTile> tilesAll = new ArrayList<>(64);
@@ -109,10 +107,10 @@ public class UnionRoseWebAudienceScore extends WebAudienceScore {
         WebSpeechSynthState speechSynthState = createDefaultSpeechSynthState();
 
         WebAudienceServerState webAudienceServerState =  new WebAudienceServerState(tiles, currentActions, elementStates, WEB_ZOOM_DEFAULT, instructions, granulatorConfig,
-                speechSynthConfig, speechSynthState, 1, pcs);
+                speechSynthConfig, speechSynthState, 1, getPcs());
 
         createWebAudienceStateDeltaTracker(webAudienceServerState);
-        pcs.addPropertyChangeListener(new WebAudienceChangeListener(stateDeltaTracker));
+        getPcs().addPropertyChangeListener(new WebAudienceChangeListener(stateDeltaTracker));
         return webAudienceServerState;
     }
     private void createWebAudienceStateDeltaTracker(WebAudienceServerState webAudienceServerState) {
@@ -140,7 +138,7 @@ public class UnionRoseWebAudienceScore extends WebAudienceScore {
             for (int j = 0; j < 8; j++) {
                 int col = j + 1;
                 String id = ScoreUtil.createTileId(row, col);
-                WebTile t = new WebTile(row, col, id, pcs);
+                WebTile t = new WebTile(row, col, id, getPcs());
                 WebAudienceElementState ts = t.getState();
                 ts.setVisible(visibleRows[i]);
                 ts.setPlaying(false);
@@ -156,9 +154,9 @@ public class UnionRoseWebAudienceScore extends WebAudienceScore {
             }
         }
 
-        getState().addElementState(WEB_OBJ_CENTRE_SHAPE, new WebAudienceElementState(WEB_OBJ_CENTRE_SHAPE, pcs));
-        getState().addElementState(WEB_OBJ_INNER_CIRCLE, new WebAudienceElementState(WEB_OBJ_INNER_CIRCLE, pcs));
-        getState().addElementState(WEB_OBJ_OUTER_CIRCLE, new WebAudienceElementState(WEB_OBJ_OUTER_CIRCLE, pcs));
+        getState().addElementState(WEB_OBJ_CENTRE_SHAPE, new WebAudienceElementState(WEB_OBJ_CENTRE_SHAPE, getPcs()));
+        getState().addElementState(WEB_OBJ_INNER_CIRCLE, new WebAudienceElementState(WEB_OBJ_INNER_CIRCLE, getPcs()));
+        getState().addElementState(WEB_OBJ_OUTER_CIRCLE, new WebAudienceElementState(WEB_OBJ_OUTER_CIRCLE, getPcs()));
 
 
         getState().setInstructions("Welcome to", 1);
@@ -838,7 +836,7 @@ public class UnionRoseWebAudienceScore extends WebAudienceScore {
         for (WebTile tile : activeTiles) {
             WebAudienceElementState tileState = tile.getState();
             if (!tileState.isPlayed() && tileState.getClickCount() > 0) {
-                pcs.firePropertyChange(WEB_OBJ_TILE, tile.getId(), tile);
+                getPcs().firePropertyChange(WEB_OBJ_TILE, tile.getId(), tile);
                 if (!isUpdate) {
                     isUpdate = true;
                 }

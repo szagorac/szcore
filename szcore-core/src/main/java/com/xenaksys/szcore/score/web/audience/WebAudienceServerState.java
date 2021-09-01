@@ -3,7 +3,7 @@ package com.xenaksys.szcore.score.web.audience;
 import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthState;
-import com.xenaksys.szcore.score.web.audience.handler.WebTile;
+import com.xenaksys.szcore.score.web.audience.delegate.WebTile;
 import com.xenaksys.szcore.web.WebAudienceAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

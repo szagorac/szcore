@@ -25,7 +25,7 @@ public class WebAudienceScoreLoader {
             "unitBeatNo",       //1
     };
 
-    public static WebAudienceScore load(String path) throws Exception {
+    public static WebAudienceScoreProcessor load(String path) throws Exception {
         if (path != null) {
             File file = FileUtil.getFileFromClassPath(path);
             return load(file);
@@ -33,7 +33,7 @@ public class WebAudienceScoreLoader {
         return null;
     }
 
-    public static WebAudienceScore load(File file) throws Exception {
+    public static WebAudienceScoreProcessor load(File file) throws Exception {
         if (file == null) {
             return null;
         }
@@ -44,7 +44,7 @@ public class WebAudienceScoreLoader {
         return loadLines(lines);
     }
 
-    public static WebAudienceScore loadLines(List<String> lines) throws Exception {
+    public static WebAudienceScoreProcessor loadLines(List<String> lines) throws Exception {
         if (lines == null || lines.isEmpty()) {
             return null;
         }
@@ -65,12 +65,12 @@ public class WebAudienceScoreLoader {
             scoreElements.add(scoreElement);
         }
 
-        WebAudienceScore score = createScoreFromElements(scoreElements);
+        WebAudienceScoreProcessor score = createScoreFromElements(scoreElements);
 
         return score;
     }
 
-    private static WebAudienceScore createScoreFromElements(List<WebAudienceScoreElement> scoreElements) throws Exception {
+    private static WebAudienceScoreProcessor createScoreFromElements(List<WebAudienceScoreElement> scoreElements) throws Exception {
         if (scoreElements == null || scoreElements.isEmpty()) {
             return null;
         }

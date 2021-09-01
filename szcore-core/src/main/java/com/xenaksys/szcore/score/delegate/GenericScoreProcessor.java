@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.score.handler;
+package com.xenaksys.szcore.score.delegate;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
@@ -102,17 +102,17 @@ import com.xenaksys.szcore.score.OscScript;
 import com.xenaksys.szcore.score.OverlayElementType;
 import com.xenaksys.szcore.score.OverlayType;
 import com.xenaksys.szcore.score.ScoreLoader;
-import com.xenaksys.szcore.score.ScoreProcessorWrapper;
+import com.xenaksys.szcore.score.ScoreProcessorHandler;
 import com.xenaksys.szcore.score.StaveFactory;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.score.web.WebScore;
 import com.xenaksys.szcore.score.web.WebScoreState;
 import com.xenaksys.szcore.score.web.WebScoreTargetType;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScoreProcessor;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
+import com.xenaksys.szcore.score.web.audience.delegate.UnionRoseWebAudienceProcessor;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
-import com.xenaksys.szcore.score.web.audience.handler.UnionRoseWebAudienceScore;
 import com.xenaksys.szcore.scripting.ScoreScriptingEngine;
 import com.xenaksys.szcore.scripting.ScriptingEngineScript;
 import com.xenaksys.szcore.task.ScheduledEventTask;
@@ -166,7 +166,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
     private final EventFactory eventFactory;
     private final TaskFactory taskFactory;
     private final OscDestinationEventListener oscDestinationEventListener;
-    private final ScoreProcessorWrapper parentProcessor;
+    private final ScoreProcessorHandler parentProcessor;
 
     private BasicScore szcore = null;
     private boolean isScoreLoaded = false;
@@ -191,7 +191,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
     private final ValueScaler positionValueScaler = new ValueScaler(0.0, 100.0, POSITION_LINE_Y_MAX, 0.0);
     private final ValueScaler contentValueScaler = new ValueScaler(0.0, 100.0, 0.0, CONTENT_LINE_Y_MAX);
 
-    private WebAudienceScore webAudienceScore = null;
+    private WebAudienceScoreProcessor webAudienceScoreProcessor = null;
     private WebScore webScore = null;
     private MaxMspScoreConfig maxMspConfig = null;
     private ScoreScriptingEngine scriptingEngine;
@@ -208,7 +208,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
                                  EventFactory eventFactory,
                                  TaskFactory taskFactory,
                                  BasicScore szcore,
-                                 ScoreProcessorWrapper parent) {
+                                 ScoreProcessorHandler parent) {
         this.transportFactory = transportFactory;
         this.clock = clock;
         this.oscPublisher = oscPublisher;
@@ -242,8 +242,8 @@ public class GenericScoreProcessor implements ScoreProcessor {
         ScoreRandomisationStrategyConfig randomisationStrategyConfig = StrategyConfigLoader.loadStrategyConfig(file.getParent(), szcore);
         szcore.setRandomisationStrategyConfig(randomisationStrategyConfig);
 
-        createWebAudienceScore();
-        initWebScore(file.getParent());
+        createWebAudienceProcessor();
+        initWebAudienceScore(file.getParent());
 
         webScore = new WebScore(this, eventFactory, clock);
 
@@ -256,20 +256,20 @@ public class GenericScoreProcessor implements ScoreProcessor {
         return szcore;
     }
 
-    protected void createWebAudienceScore() {
-        setWebAudienceScore(new UnionRoseWebAudienceScore(this, eventFactory, clock));
+    protected void createWebAudienceProcessor() {
+        setWebAudienceProcessor(new UnionRoseWebAudienceProcessor(this, eventFactory, clock));
     }
 
-    protected void initWebScore(String dir) {
-        this.webAudienceScore.init(dir);
+    protected void initWebAudienceScore(String dir) {
+        this.webAudienceScoreProcessor.init(dir);
     }
 
-    public WebAudienceScore getWebAudienceScore() {
-        return webAudienceScore;
+    public WebAudienceScoreProcessor getWebAudienceProcessor() {
+        return webAudienceScoreProcessor;
     }
 
-    public void setWebAudienceScore(WebAudienceScore webAudienceScore) {
-        this.webAudienceScore = webAudienceScore;
+    public void setWebAudienceProcessor(WebAudienceScoreProcessor webAudienceScoreProcessor) {
+        this.webAudienceScoreProcessor = webAudienceScoreProcessor;
     }
 
     @Override
@@ -453,10 +453,10 @@ public class GenericScoreProcessor implements ScoreProcessor {
     }
 
     protected void addWebScoreBeatScripts(BeatId beatId, Id transportId) {
-        if(webAudienceScore == null) {
+        if(webAudienceScoreProcessor == null) {
             return;
         }
-        List<WebAudienceScoreScript> scripts = webAudienceScore.getBeatScripts(beatId);
+        List<WebAudienceScoreScript> scripts = webAudienceScoreProcessor.getBeatScripts(beatId);
         if (scripts != null && !scripts.isEmpty()) {
             addWebScoreEvent(beatId, scripts, transportId);
         }
@@ -472,7 +472,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
                 addBeatTransitionEvent(beatId, (BasicTransition) script, transportId);
                 break;
             case WEB_AUDIENCE_SCORE:
-                webAudienceScore.addBeatScript(beatId, (WebAudienceScoreScript) script);
+                webAudienceScoreProcessor.addBeatScript(beatId, (WebAudienceScoreScript) script);
                 break;
             case OSC_PLAYER:
                 addOscScriptEvent(beatId, (OscScript) script, transportId);
@@ -855,7 +855,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
     public void onCloseModWindow(InstrumentId instId, Stave stave, Page nextPage, PageId currentPageId) {
         this.isUpdateWindowOpen = false;
 
-        UnionRoseWebAudienceScore urWebAudienceScore = (UnionRoseWebAudienceScore)webAudienceScore;
+        UnionRoseWebAudienceProcessor urWebAudienceScore = (UnionRoseWebAudienceProcessor) webAudienceScoreProcessor;
         LOG.debug("onCloseModWindow: instrument {} next page: {} ", instId.getName(), nextPage);
         ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
 
@@ -1957,7 +1957,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
             return null;
         }
 
-        List<WebAudienceScoreScript> scripts = webAudienceScore.getBeatResetScripts(beatId);
+        List<WebAudienceScoreScript> scripts = webAudienceScoreProcessor.getBeatResetScripts(beatId);
         LOG.debug("createWebAudienceResetEvent: beat: {} scripts {}", beatId.getBeatNo(), scripts);
         if (scripts == null || scripts.isEmpty()) {
             return null;
@@ -2083,7 +2083,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
             LOG.error("Invalid NULL score");
             return initEvents;
         }
-        UnionRoseWebAudienceScore urWebAudienceScore = (UnionRoseWebAudienceScore)webAudienceScore;
+        UnionRoseWebAudienceProcessor urWebAudienceScore = (UnionRoseWebAudienceProcessor) webAudienceScoreProcessor;
         Collection<Instrument> instruments = szcore.getInstruments();
         List<Id> transportIds = new ArrayList<>();
         for (Instrument instrument : instruments) {
@@ -2444,10 +2444,10 @@ public class GenericScoreProcessor implements ScoreProcessor {
 
     public void processElementSelected(ElementSelectedAudienceEvent webEvent) {
         LOG.debug("processElementSelected: ");
-        UnionRoseWebAudienceScore urWebAudienceScore = (UnionRoseWebAudienceScore)webAudienceScore;
+        UnionRoseWebAudienceProcessor urWebAudienceScore = (UnionRoseWebAudienceProcessor) webAudienceScoreProcessor;
         String elementId = webEvent.getElementId();
         boolean isSelected = webEvent.isSelected();
-        if (webAudienceScore == null) {
+        if (webAudienceScoreProcessor == null) {
             return;
         }
         urWebAudienceScore.setSelectedElement(elementId, isSelected);
@@ -2455,9 +2455,9 @@ public class GenericScoreProcessor implements ScoreProcessor {
 
     public void processWebAudienceStart() {
         LOG.debug("processWebStart: ");
-        webAudienceScore.resetState();
-        webAudienceScore.pushServerState();
-        webAudienceScore.startScore();
+        webAudienceScoreProcessor.resetState();
+        webAudienceScoreProcessor.pushServerState();
+        webAudienceScoreProcessor.startScore();
     }
 
     public boolean isReadyToPlay() {
@@ -2551,11 +2551,11 @@ public class GenericScoreProcessor implements ScoreProcessor {
             case SELECT_TILES:
             case INSTRUCTIONS:
             case STATE_UPDATE:
-                webAudienceScore.processWebAudienceEvent(event);
+                webAudienceScoreProcessor.processWebAudienceEvent(event);
                 break;
             case SCRIPT:
             default:
-                WebAudienceEventTask task = taskFactory.createWebAudienceEventTask(0, event, webAudienceScore);
+                WebAudienceEventTask task = taskFactory.createWebAudienceEventTask(0, event, webAudienceScoreProcessor);
                 scheduleTask(task);
         }
     }
@@ -2605,7 +2605,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
                 PrecountBeatSetupEvent precountBeatSetupEvent = (PrecountBeatSetupEvent) event;
                 Id transportId = precountBeatSetupEvent.getInstrumentId();
                 transport = szcore.getTransport(transportId);
-                task = taskFactory.createPrecountBeatSetupTask(precountBeatSetupEvent, Consts.ALL_DESTINATIONS, transport, this, oscPublisher, eventFactory, taskFactory, webAudienceScore, clock);
+                task = taskFactory.createPrecountBeatSetupTask(precountBeatSetupEvent, Consts.ALL_DESTINATIONS, transport, this, oscPublisher, eventFactory, taskFactory, webAudienceScoreProcessor, clock);
                 break;
             case TRANSITION:
                 TransitionEvent transitionEvent = (TransitionEvent) event;
@@ -3432,7 +3432,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
         return taskFactory;
     }
 
-    public ScoreProcessorWrapper getParentProcessor() {
+    public ScoreProcessorHandler getParentProcessor() {
         return parentProcessor;
     }
 

@@ -1,6 +1,6 @@
 package com.xenaksys.szcore.score.web.audience.export;
 
-import com.xenaksys.szcore.score.web.audience.handler.WebTile;
+import com.xenaksys.szcore.score.web.audience.delegate.WebTile;
 
 import java.util.Objects;
 

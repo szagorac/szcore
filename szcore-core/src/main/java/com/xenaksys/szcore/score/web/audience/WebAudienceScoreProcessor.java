@@ -102,8 +102,8 @@ import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_STAGE;
 import static com.xenaksys.szcore.Consts.WEB_TARGET_ALL;
 
-public abstract class WebAudienceScore {
-    static final Logger LOG = LoggerFactory.getLogger(WebAudienceScore.class);
+public abstract class WebAudienceScoreProcessor {
+    static final Logger LOG = LoggerFactory.getLogger(WebAudienceScoreProcessor.class);
 
     private final ScoreProcessor scoreProcessor;
     private final EventFactory eventFactory;
@@ -119,7 +119,7 @@ public abstract class WebAudienceScore {
     private final MutablePageId tempPageId;
     private WebAudienceServerState state;
 
-    public WebAudienceScore(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock) {
+    public WebAudienceScoreProcessor(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock) {
         this.scoreProcessor = scoreProcessor;
         this.eventFactory = eventFactory;
         this.clock = clock;
@@ -213,7 +213,7 @@ public abstract class WebAudienceScore {
         }
     }
 
-    private void runScript(String script) {
+    public void runScript(String script) {
         if (jsEngine == null) {
             return;
         }

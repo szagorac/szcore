@@ -140,7 +140,7 @@ public class ClientEventProcessor implements Processor {
     }
 
     private void processWebScoreEvent(WebAudienceEvent event) {
-        LOG.debug("Received WebAudienceScore MUSIC event: " + event);
+        LOG.debug("Received WebAudienceScoreProcessor MUSIC event: " + event);
     }
 
     private void processWebScoreInEvent(WebScoreInEvent event) {

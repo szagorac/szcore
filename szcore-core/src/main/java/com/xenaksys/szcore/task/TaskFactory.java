@@ -19,7 +19,7 @@ import com.xenaksys.szcore.model.Stave;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.Transport;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScoreProcessor;
 import com.xenaksys.szcore.scripting.ScoreScriptingEngine;
 
 public class TaskFactory {
@@ -59,8 +59,8 @@ public class TaskFactory {
     }
 
     public PrecountBeatSetupTask createPrecountBeatSetupTask(PrecountBeatSetupEvent precountBeatSetupEvent, String destination, Transport transport, ScoreProcessor processor,
-                                                             OscPublisher oscPublisher, EventFactory eventFactory, TaskFactory taskFactory, WebAudienceScore webAudienceScore, Clock clock) {
-        return new PrecountBeatSetupTask(precountBeatSetupEvent, destination, transport, processor, oscPublisher, eventFactory, taskFactory, webAudienceScore, clock);
+                                                             OscPublisher oscPublisher, EventFactory eventFactory, TaskFactory taskFactory, WebAudienceScoreProcessor webAudienceScoreProcessor, Clock clock) {
+        return new PrecountBeatSetupTask(precountBeatSetupEvent, destination, transport, processor, oscPublisher, eventFactory, taskFactory, webAudienceScoreProcessor, clock);
     }
 
     public TransitionSetupTask createTransitionSetupTask(TransitionEvent transitionEvent, String destination, ScoreProcessor processor,
@@ -68,8 +68,8 @@ public class TaskFactory {
         return new TransitionSetupTask(transitionEvent, destination, processor, oscPublisher, eventFactory, clock);
     }
 
-    public WebAudienceEventTask createWebAudienceEventTask(long playTime, WebAudienceEvent event, WebAudienceScore webAudienceScore) {
-        return new WebAudienceEventTask(playTime, event, webAudienceScore);
+    public WebAudienceEventTask createWebAudienceEventTask(long playTime, WebAudienceEvent event, WebAudienceScoreProcessor webAudienceScoreProcessor) {
+        return new WebAudienceEventTask(playTime, event, webAudienceScoreProcessor);
     }
 
     public ScriptingEngineEventTask createScriptingEngineEventTask(long playTime, ScriptingEngineEvent event, ScoreScriptingEngine scriptingEngine) {

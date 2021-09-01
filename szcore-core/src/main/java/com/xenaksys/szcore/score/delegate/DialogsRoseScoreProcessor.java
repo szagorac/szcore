@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.score.handler;
+package com.xenaksys.szcore.score.delegate;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
@@ -21,7 +21,8 @@ import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.score.InscorePageMap;
 import com.xenaksys.szcore.score.InstrumentBeatTracker;
 import com.xenaksys.szcore.score.ScoreLoader;
-import com.xenaksys.szcore.score.ScoreProcessorWrapper;
+import com.xenaksys.szcore.score.ScoreProcessorHandler;
+import com.xenaksys.szcore.score.web.audience.delegate.DialogsWebAudienceProcessor;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
 
@@ -42,7 +43,7 @@ public class DialogsRoseScoreProcessor extends GenericScoreProcessor {
                                      EventFactory eventFactory,
                                      TaskFactory taskFactory,
                                      BasicScore szcore,
-                                     ScoreProcessorWrapper parent
+                                     ScoreProcessorHandler parent
                                    ) {
         super(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, szcore, parent);
     }
@@ -62,6 +63,10 @@ public class DialogsRoseScoreProcessor extends GenericScoreProcessor {
             szcore = (BasicScore) score;
         }
         return szcore;
+    }
+
+    protected void createWebAudienceProcessor() {
+        setWebAudienceProcessor(new DialogsWebAudienceProcessor(this, getEventFactory(), getClock()));
     }
 
     @Override

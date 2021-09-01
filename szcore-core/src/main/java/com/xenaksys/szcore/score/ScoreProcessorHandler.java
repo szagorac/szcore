@@ -22,7 +22,7 @@ import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.PageId;
-import com.xenaksys.szcore.score.handler.GenericScoreProcessor;
+import com.xenaksys.szcore.score.delegate.GenericScoreProcessor;
 import com.xenaksys.szcore.score.web.WebScoreState;
 import com.xenaksys.szcore.score.web.WebScoreTargetType;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
@@ -46,8 +46,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class ScoreProcessorWrapper implements ScoreProcessor {
-    static final Logger LOG = LoggerFactory.getLogger(ScoreProcessorWrapper.class);
+public class ScoreProcessorHandler implements ScoreProcessor {
+    static final Logger LOG = LoggerFactory.getLogger(ScoreProcessorHandler.class);
 
     private final TransportFactory transportFactory;
     private final MutableClock clock;
@@ -63,7 +63,7 @@ public class ScoreProcessorWrapper implements ScoreProcessor {
     protected final List<WebAudienceStateListener> webAudienceStateListeners = new CopyOnWriteArrayList<>();
 
 
-    public ScoreProcessorWrapper(TransportFactory transportFactory,
+    public ScoreProcessorHandler(TransportFactory transportFactory,
                                  MutableClock clock,
                                  OscPublisher oscPublisher,
                                  WebPublisher webPublisher,
@@ -127,7 +127,7 @@ public class ScoreProcessorWrapper implements ScoreProcessor {
             }
             Class<?> clazz = Class.forName(className);
             Constructor<?> constructor = clazz.getConstructor(TransportFactory.class, MutableClock.class, OscPublisher.class,
-                    WebPublisher.class, Scheduler.class, EventFactory.class, TaskFactory.class, BasicScore.class, ScoreProcessorWrapper.class);
+                    WebPublisher.class, Scheduler.class, EventFactory.class, TaskFactory.class, BasicScore.class, ScoreProcessorHandler.class);
             Object instance = constructor.newInstance(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, score, this);
             return (ScoreProcessor) instance;
         } catch (Exception e) {

@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.score.web.audience.handler;
+package com.xenaksys.szcore.score.web.audience.delegate;
 
 import com.xenaksys.szcore.score.web.audience.WebAudienceElementState;
 

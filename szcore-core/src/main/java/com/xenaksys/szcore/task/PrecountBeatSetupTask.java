@@ -11,7 +11,7 @@ import com.xenaksys.szcore.model.OscPublisher;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.Transport;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScoreProcessor;
 
 public class PrecountBeatSetupTask extends EventMusicTask {
     private final Transport transport;
@@ -21,10 +21,10 @@ public class PrecountBeatSetupTask extends EventMusicTask {
     private final String destination;
     private final Clock clock;
     private final TaskFactory taskFactory;
-    private final WebAudienceScore webAudienceScore;
+    private final WebAudienceScoreProcessor webAudienceScoreProcessor;
 
     public PrecountBeatSetupTask(PrecountBeatSetupEvent precountBeatSetupEvent, String destination, Transport transport, ScoreProcessor processor,
-                                 OscPublisher oscPublisher, EventFactory eventFactory, TaskFactory taskFactory, WebAudienceScore webAudienceScore, Clock clock) {
+                                 OscPublisher oscPublisher, EventFactory eventFactory, TaskFactory taskFactory, WebAudienceScoreProcessor webAudienceScoreProcessor, Clock clock) {
         super(0, precountBeatSetupEvent);
         this.transport = transport;
         this.processor = processor;
@@ -33,7 +33,7 @@ public class PrecountBeatSetupTask extends EventMusicTask {
         this.destination = destination;
         this.clock = clock;
         this.taskFactory = taskFactory;
-        this.webAudienceScore = webAudienceScore;
+        this.webAudienceScoreProcessor = webAudienceScoreProcessor;
     }
 
     @Override
@@ -134,7 +134,7 @@ public class PrecountBeatSetupTask extends EventMusicTask {
 
     private void addWebAudiencePrecountTask(long playTime, boolean isOn, int beaterNo, int colourId) {
         WebAudienceEvent event = eventFactory.createWebAudiencePrecountEvent(beaterNo, isOn, colourId, clock.getSystemTimeMillis());
-        WebAudienceEventTask task = taskFactory.createWebAudienceEventTask(playTime, event, webAudienceScore);
+        WebAudienceEventTask task = taskFactory.createWebAudienceEventTask(playTime, event, webAudienceScoreProcessor);
         processor.scheduleTask(task);
     }
 }

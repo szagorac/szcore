@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.score.web.audience.handler;
+package com.xenaksys.szcore.score.web.audience.delegate;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
@@ -16,7 +16,7 @@ import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.ScriptPreset;
 import com.xenaksys.szcore.score.web.audience.WebAudienceChangeListener;
 import com.xenaksys.szcore.score.web.audience.WebAudienceElementState;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScoreProcessor;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
 import com.xenaksys.szcore.score.web.audience.WebAudienceServerState;
 import com.xenaksys.szcore.score.web.audience.WebAudienceStateDeltaTracker;
@@ -34,6 +34,7 @@ import com.xenaksys.szcore.score.web.audience.export.WebElementStateExport;
 import com.xenaksys.szcore.score.web.audience.export.WebGranulatorConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthStateExport;
+import com.xenaksys.szcore.score.web.audience.export.delegate.UnionRoseWebAudienceExport;
 import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.ScoreUtil;
 import com.xenaksys.szcore.web.WebAudienceAction;
@@ -44,7 +45,6 @@ import gnu.trove.list.array.TIntArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.script.ScriptException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -72,8 +72,8 @@ import static com.xenaksys.szcore.Consts.WEB_TEXT_BACKGROUND_COLOUR;
 import static com.xenaksys.szcore.Consts.WEB_TILE_PLAY_PAGE_DURATION_FACTOR;
 import static com.xenaksys.szcore.Consts.WEB_ZOOM_DEFAULT;
 
-public class UnionRoseWebAudienceScore extends WebAudienceScore {
-    static final Logger LOG = LoggerFactory.getLogger(UnionRoseWebAudienceScore.class);
+public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
+    static final Logger LOG = LoggerFactory.getLogger(UnionRoseWebAudienceProcessor.class);
 
     public static final Comparator<WebTile> CLICK_COMPARATOR = (t, t1) -> t1.getState().getClickCount() - t.getState().getClickCount();
     private static final long INTERNAL_EVENT_TIME_LIMIT = 1000 * 3;
@@ -93,7 +93,7 @@ public class UnionRoseWebAudienceScore extends WebAudienceScore {
     private volatile long lastSelectTilesInternalEventTime = 0L;
     private volatile boolean isSortByClickCount = true;
 
-    public UnionRoseWebAudienceScore(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock) {
+    public UnionRoseWebAudienceProcessor(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock) {
         super(scoreProcessor, eventFactory, clock);
     }
 
@@ -227,19 +227,6 @@ public class UnionRoseWebAudienceScore extends WebAudienceScore {
         getSpeechSynthConfig().update(conf);
     }
 
-    private void runScript(String script) {
-        if (getJsEngine() == null) {
-            return;
-        }
-
-        try {
-            LOG.debug("runScript: {}", script);
-            getJsEngine().eval(script);
-        } catch (ScriptException e) {
-            LOG.error("Failed to execute script: {}", script, e);
-        }
-    }
-
     private int getPageNo(int row, int col) {
 
         int pageNo = (row - 1) * 8 + col;
@@ -262,7 +249,7 @@ public class UnionRoseWebAudienceScore extends WebAudienceScore {
         try {
             webscoreConfig = WebscoreConfigLoader.load(configDir);
         } catch (Exception e) {
-            LOG.error("Failed to load WebAudienceScore Presets", e);
+            LOG.error("Failed to load WebAudienceScoreProcessor Presets", e);
         }
     }
 
@@ -748,7 +735,7 @@ public class UnionRoseWebAudienceScore extends WebAudienceScore {
         List<WebAudienceAction> actions = state.getActions();
         LOG.debug("WebAudienceScoreStateExport sending actions: {}", actions);
 
-        return new WebAudienceScoreStateExport(tes, actions, centreShape, innerCircle, outerCircle, state.getZoomLevel(),
+        return new UnionRoseWebAudienceExport(tes, actions, centreShape, innerCircle, outerCircle, state.getZoomLevel(),
                 instructions, granulatorConfig, speechSynthConfigExport, speechSynthStateExport, state.getStageAlpha());
     }
 
@@ -852,45 +839,5 @@ public class UnionRoseWebAudienceScore extends WebAudienceScore {
 
     public WebAudienceScoreStateDeltaExport getStateDeltaExport() {
         return stateDeltaTracker.getDeltaExport();
-    }
-
-    private double getDouble(Object value) {
-        double v;
-        if (value instanceof String) {
-            v = Double.parseDouble((String) value);
-        } else {
-            v = (Double) value;
-        }
-        return v;
-    }
-
-    private int getInt(Object value) {
-        int v;
-        if (value instanceof String) {
-            v = Integer.parseInt((String) value);
-        } else {
-            v = (Integer) value;
-        }
-        return v;
-    }
-
-    private String getString(Object value) {
-        String v;
-        if (value instanceof String) {
-            v = (String) value;
-        } else {
-            v = value.toString();
-        }
-        return v;
-    }
-
-    private boolean getBoolean(Object value) {
-        boolean v;
-        if (value instanceof String) {
-            v = Boolean.parseBoolean((String) value);
-        } else {
-            v = (Boolean) value;
-        }
-        return v;
     }
 }

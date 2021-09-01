@@ -24,7 +24,7 @@ import com.xenaksys.szcore.model.id.BarId;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.score.OverlayType;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScoreProcessor;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.Util;
 import javafx.application.Platform;
@@ -74,7 +74,7 @@ public class ScoreController {
     private ScoreService scoreService;
 
     private Score score;
-    private WebAudienceScore webAudienceScore;
+    private WebAudienceScoreProcessor webAudienceScoreProcessor;
 
     @FXML
     private Label scoreNameLbl;

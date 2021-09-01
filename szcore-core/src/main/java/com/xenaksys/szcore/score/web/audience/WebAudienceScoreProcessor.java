@@ -859,6 +859,9 @@ public abstract class WebAudienceScoreProcessor {
             idx *= (-1);
             idx -= 1;
         }
+        if(idx < 0 || idx >= beats.size()) {
+            return null;
+        }
         BeatId outId = beats.get(idx);
         return beatResetScripts.get(outId);
     }

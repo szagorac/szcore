@@ -42,7 +42,7 @@ import com.xenaksys.szcore.publish.WebPublisherDisruptorProcessor;
 import com.xenaksys.szcore.receive.OscReceiveProcessor;
 import com.xenaksys.szcore.receive.SzcoreIncomingEventListener;
 import com.xenaksys.szcore.score.OverlayType;
-import com.xenaksys.szcore.score.ScoreProcessorHandler;
+import com.xenaksys.szcore.score.ScoreProcessorImpl;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.score.web.WebScoreTargetType;
 import com.xenaksys.szcore.server.processor.InEventContainerDisruptorProcessor;
@@ -226,7 +226,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         outOscDisruptor = DisruptorFactory.createOscOutDisruptor();
         oscEventPublisher = new OscDisruptorPublishProcessorWebWrapper(outOscDisruptor, webProcessor);
 
-        scoreProcessor = new ScoreProcessorHandler(transportFactory, clock, oscEventPublisher, webEventPublisher, scheduler, eventFactory, taskFactory, props);
+        scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, oscEventPublisher, webEventPublisher, scheduler, eventFactory, taskFactory, props);
         subscribe(webProcessor);
 
         String webRootScore = props.getProperty(WEB_ROOT_SCORE);

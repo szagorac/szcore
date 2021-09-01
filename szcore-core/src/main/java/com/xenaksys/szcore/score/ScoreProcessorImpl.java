@@ -22,7 +22,7 @@ import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.PageId;
-import com.xenaksys.szcore.score.delegate.GenericScoreProcessor;
+import com.xenaksys.szcore.score.delegate.ScoreProcessorDelegate;
 import com.xenaksys.szcore.score.web.WebScoreState;
 import com.xenaksys.szcore.score.web.WebScoreTargetType;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
@@ -46,8 +46,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class ScoreProcessorHandler implements ScoreProcessor {
-    static final Logger LOG = LoggerFactory.getLogger(ScoreProcessorHandler.class);
+public class ScoreProcessorImpl implements ScoreProcessor {
+    static final Logger LOG = LoggerFactory.getLogger(ScoreProcessorImpl.class);
 
     private final TransportFactory transportFactory;
     private final MutableClock clock;
@@ -58,19 +58,19 @@ public class ScoreProcessorHandler implements ScoreProcessor {
     private final TaskFactory taskFactory;
     private final Properties props;
 
-    private ScoreProcessor scoreHandler;
+    private ScoreProcessor scoreDelegate;
     private final List<SzcoreEngineEventListener> scoreEventListeners = new CopyOnWriteArrayList<>();
     protected final List<WebAudienceStateListener> webAudienceStateListeners = new CopyOnWriteArrayList<>();
 
 
-    public ScoreProcessorHandler(TransportFactory transportFactory,
-                                 MutableClock clock,
-                                 OscPublisher oscPublisher,
-                                 WebPublisher webPublisher,
-                                 Scheduler scheduler,
-                                 EventFactory eventFactory,
-                                 TaskFactory taskFactory,
-                                 Properties props) {
+    public ScoreProcessorImpl(TransportFactory transportFactory,
+                              MutableClock clock,
+                              OscPublisher oscPublisher,
+                              WebPublisher webPublisher,
+                              Scheduler scheduler,
+                              EventFactory eventFactory,
+                              TaskFactory taskFactory,
+                              Properties props) {
         this.transportFactory = transportFactory;
         this.clock = clock;
         this.oscPublisher = oscPublisher;
@@ -83,7 +83,7 @@ public class ScoreProcessorHandler implements ScoreProcessor {
 
     @Override
     public void loadAndPrepare(String filePath) throws Exception {
-        if (scoreHandler == null) {
+        if (scoreDelegate == null) {
             File scoreFile = new File(filePath);
             if (!scoreFile.exists()) {
                 ClassLoader classLoader = getClass().getClassLoader();
@@ -98,7 +98,7 @@ public class ScoreProcessorHandler implements ScoreProcessor {
             loadScore(scoreFile);
         }
 
-        prepare(scoreHandler.getScore());
+        prepare(scoreDelegate.getScore());
     }
 
     @Override
@@ -106,11 +106,11 @@ public class ScoreProcessorHandler implements ScoreProcessor {
         LOG.info("LOADING SCORE: " + file.getCanonicalPath());
         Score score = ScoreLoader.load(file);
         BasicScore szcore = (BasicScore) score;
-        scoreHandler = initScoreHandler(szcore);
-        return scoreHandler.loadScore(file);
+        scoreDelegate = initScoreDelegate(szcore);
+        return scoreDelegate.loadScore(file);
     }
 
-    public ScoreProcessor initScoreHandler(BasicScore score) {
+    public ScoreProcessor initScoreDelegate(BasicScore score) {
         if (score == null) {
             LOG.error("initScoreHandler: invalid score");
             return null;
@@ -118,59 +118,59 @@ public class ScoreProcessorHandler implements ScoreProcessor {
         String scoreName = score.getName();
         try {
             String scoreConfigName = ParseUtil.removeAllWhitespaces(scoreName).toLowerCase(Locale.ROOT);
-            String configName = Consts.SCORE_HANDLER_CONFIG_PREFIX + scoreConfigName;
+            String configName = Consts.SCORE_DELEGATE_CONFIG_PREFIX + scoreConfigName;
             String className = props.getProperty(configName);
             if(className == null) {
-                className = Consts.SCORE_HANDLER_PACKAGE + ParseUtil.removeAllWhitespaces(scoreName) + Consts.SCORE_PROCESSOR_CLS_SUFFIX;
+                className = Consts.SCORE_DELEGATE_PACKAGE + ParseUtil.removeAllWhitespaces(scoreName) + Consts.SCORE_PROCESSOR_CLS_SUFFIX;
             } else {
-                className = Consts.SCORE_HANDLER_PACKAGE + className;
+                className = Consts.SCORE_DELEGATE_PACKAGE + className;
             }
             Class<?> clazz = Class.forName(className);
             Constructor<?> constructor = clazz.getConstructor(TransportFactory.class, MutableClock.class, OscPublisher.class,
-                    WebPublisher.class, Scheduler.class, EventFactory.class, TaskFactory.class, BasicScore.class, ScoreProcessorHandler.class);
+                    WebPublisher.class, Scheduler.class, EventFactory.class, TaskFactory.class, BasicScore.class, ScoreProcessorImpl.class);
             Object instance = constructor.newInstance(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, score, this);
             return (ScoreProcessor) instance;
         } catch (Exception e) {
-            LOG.warn("initScoreHandler: Failed to initialise score handler for score {}, using GenericScoreProcessor", scoreName);
-            return new GenericScoreProcessor(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, score, this);
+            LOG.warn("initScoreHandler: Failed to initialise score handler for score {}, using ScoreProcessorDelegate", scoreName);
+            return new ScoreProcessorDelegate(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, score, this);
         }
     }
 
     @Override
     public void prepare(Score score) {
-        if (scoreHandler == null) {
+        if (scoreDelegate == null) {
             LOG.error("prepare: invalid score handler");
             return;
         }
-        scoreHandler.prepare(score);
+        scoreDelegate.prepare(score);
     }
 
     @Override
     public void play() throws Exception {
-        scoreHandler.play();
+        scoreDelegate.play();
     }
 
     @Override
     public void stop() {
-        scoreHandler.stop();
+        scoreDelegate.stop();
     }
 
     @Override
     public void setPosition(long millis) {
-        scoreHandler.setPosition(millis);
+        scoreDelegate.setPosition(millis);
     }
 
     @Override
     public Score getScore() {
-        return scoreHandler.getScore();
+        return scoreDelegate.getScore();
     }
 
     @Override
     public void reset() throws Exception {
-        if(scoreHandler == null) {
+        if(scoreDelegate == null) {
             return;
         }
-        scoreHandler.reset();
+        scoreDelegate.reset();
     }
 
     @Override
@@ -226,156 +226,156 @@ public class ScoreProcessorHandler implements ScoreProcessor {
 
     @Override
     public void setTempoModifier(Id transportId, TempoModifier tempoModifier) {
-        scoreHandler.setTempoModifier(transportId, tempoModifier);
+        scoreDelegate.setTempoModifier(transportId, tempoModifier);
     }
 
     @Override
     public void setRandomisationStrategy(List<Integer> randomisationStrategy) {
-        scoreHandler.setRandomisationStrategy(randomisationStrategy);
+        scoreDelegate.setRandomisationStrategy(randomisationStrategy);
     }
 
     @Override
     public void usePageRandomisation(Boolean value) {
-        scoreHandler.usePageRandomisation(value);
+        scoreDelegate.usePageRandomisation(value);
     }
 
     @Override
     public void useContinuousPageChange(Boolean value) {
-        scoreHandler.useContinuousPageChange(value);
+        scoreDelegate.useContinuousPageChange(value);
     }
 
     @Override
     public void setOverlayValue(OverlayType type, long value, List<Id> instrumentIds) {
-        scoreHandler.setOverlayValue(type, value, instrumentIds);
+        scoreDelegate.setOverlayValue(type, value, instrumentIds);
     }
 
     @Override
     public void onUseOverlayLine(OverlayType type, Boolean value, List<Id> instrumentIds) {
-        scoreHandler.onUseOverlayLine(type, value, instrumentIds);
+        scoreDelegate.onUseOverlayLine(type, value, instrumentIds);
     }
 
     @Override
     public void onUseOverlay(OverlayType type, Boolean value, List<Id> instrumentIds) {
-        scoreHandler.onUseOverlay(type, value, instrumentIds);
+        scoreDelegate.onUseOverlay(type, value, instrumentIds);
     }
 
     @Override
     public void onIncomingWebAudienceEvent(IncomingWebAudienceEvent webEvent) throws Exception {
-        scoreHandler.onIncomingWebAudienceEvent(webEvent);
+        scoreDelegate.onIncomingWebAudienceEvent(webEvent);
     }
 
     @Override
     public void onWebAudienceStateChange(WebAudienceScoreStateExport webAudienceScoreStateExport) throws Exception {
-        scoreHandler.onWebAudienceStateChange(webAudienceScoreStateExport);
+        scoreDelegate.onWebAudienceStateChange(webAudienceScoreStateExport);
     }
 
     @Override
     public void onWebAudienceStateDeltaChange(WebAudienceScoreStateDeltaExport webAudienceScoreStateDeltaExport) throws Exception {
-        scoreHandler.onWebAudienceStateDeltaChange(webAudienceScoreStateDeltaExport);
+        scoreDelegate.onWebAudienceStateDeltaChange(webAudienceScoreStateDeltaExport);
     }
 
     @Override
     public void onOutgoingWebEvent(OutgoingWebEvent webEvent) throws Exception {
-        scoreHandler.onOutgoingWebEvent(webEvent);
+        scoreDelegate.onOutgoingWebEvent(webEvent);
     }
 
     @Override
     public void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst) {
-        scoreHandler.processSelectInstrumentSlot(slotNo, slotInstrument, sourceInst);
+        scoreDelegate.processSelectInstrumentSlot(slotNo, slotInstrument, sourceInst);
     }
 
     public void processPrepStaveChange(Id instrumentId, BeatId activateBeatId, BeatId deactivateBeatId, BeatId pageChangeBeatId, PageId nextPageId) {
-        scoreHandler.processPrepStaveChange(instrumentId, activateBeatId, deactivateBeatId, pageChangeBeatId, nextPageId);
+        scoreDelegate.processPrepStaveChange(instrumentId, activateBeatId, deactivateBeatId, pageChangeBeatId, nextPageId);
     }
 
     @Override
     public WebScoreAction getOrCreateWebScoreAction(WebScoreActionType actionType, List<String> targets, Map<String, Object> params) {
-        return scoreHandler.getOrCreateWebScoreAction(actionType, targets, params);
+        return scoreDelegate.getOrCreateWebScoreAction(actionType, targets, params);
     }
 
     @Override
     public boolean isSchedulerRunning() {
-        return scoreHandler.isSchedulerRunning();
+        return scoreDelegate.isSchedulerRunning();
     }
 
     @Override
     public InstrumentBeatTracker getInstrumentBeatTracker(Id instrumentId) {
-        return scoreHandler.getInstrumentBeatTracker(instrumentId);
+        return scoreDelegate.getInstrumentBeatTracker(instrumentId);
     }
 
     @Override
     public void publishOscEvent(OscEvent event) {
-        scoreHandler.publishOscEvent(event);
+        scoreDelegate.publishOscEvent(event);
     }
 
     @Override
     public void addBeatEventToProcess(SzcoreEvent event) {
-        scoreHandler.addBeatEventToProcess(event);
+        scoreDelegate.addBeatEventToProcess(event);
     }
 
     @Override
     public void onOpenModWindow(InstrumentId instId, Stave stave, Page nextPage, PageId currentPageId) {
-        scoreHandler.onOpenModWindow(instId, stave, nextPage, currentPageId);
+        scoreDelegate.onOpenModWindow(instId, stave, nextPage, currentPageId);
     }
 
     @Override
     public void onCloseModWindow(InstrumentId instId, Stave stave, Page nextPage, PageId currentPageId) {
-        scoreHandler.onOpenModWindow(instId, stave, nextPage, currentPageId);
+        scoreDelegate.onOpenModWindow(instId, stave, nextPage, currentPageId);
     }
 
     @Override
     public int getCurrentBeatNo() {
-        return scoreHandler.getCurrentBeatNo();
+        return scoreDelegate.getCurrentBeatNo();
     }
 
     public void sendOscInstrumentRndPageUpdate(int bufferNo) {
-        scoreHandler.sendOscInstrumentRndPageUpdate(bufferNo);
+        scoreDelegate.sendOscInstrumentRndPageUpdate(bufferNo);
     }
 
     @Override
     public void setUpContinuousTempoChange(int endBpm, int timeInBeats) {
-        scoreHandler.setUpContinuousTempoChange(endBpm, timeInBeats);
+        scoreDelegate.setUpContinuousTempoChange(endBpm, timeInBeats);
     }
 
     @Override
     public void scheduleEvent(SzcoreEvent event, long timeDeltaMs) {
-        scoreHandler.scheduleEvent(event, timeDeltaMs);
+        scoreDelegate.scheduleEvent(event, timeDeltaMs);
     }
 
     public void scheduleTask(MusicTask task) {
-        scoreHandler.scheduleTask(task);
+        scoreDelegate.scheduleTask(task);
     }
 
     @Override
     public void onIncomingWebScoreEvent(WebScoreInEvent webEvent) throws Exception {
-        scoreHandler.onIncomingWebScoreEvent(webEvent);
+        scoreDelegate.onIncomingWebScoreEvent(webEvent);
     }
 
     @Override
     public void sendWebScoreState(String clientAddr, WebScoreTargetType host, WebScoreState scoreState) throws Exception {
-        scoreHandler.sendWebScoreState(clientAddr, host, scoreState);
+        scoreDelegate.sendWebScoreState(clientAddr, host, scoreState);
     }
 
     @Override
     public WebScoreState getOrCreateWebScoreState() {
-        return scoreHandler.getOrCreateWebScoreState();
+        return scoreDelegate.getOrCreateWebScoreState();
     }
 
     @Override
     public void onInterceptedOscOutEvent(OscEvent event) {
-        if(scoreHandler == null) {
+        if(scoreDelegate == null) {
             return;
         }
-        scoreHandler.onInterceptedOscOutEvent(event);
+        scoreDelegate.onInterceptedOscOutEvent(event);
     }
 
     @Override
     public List<WebClientInfo> getWebScoreInstrumentClients(String instrument) {
-        return scoreHandler.getWebScoreInstrumentClients(instrument);
+        return scoreDelegate.getWebScoreInstrumentClients(instrument);
     }
 
     @Override
     public void process(SzcoreEvent event) {
-        scoreHandler.process(event);
+        scoreDelegate.process(event);
     }
 }

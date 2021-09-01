@@ -67,8 +67,8 @@ public interface Consts {
     String SECONDS_SHORT = "s";
     String LOCALHOST = "localhost";
     String SCORE_PROCESSOR_CLS_SUFFIX = "ScoreProcessor";
-    String SCORE_HANDLER_CONFIG_PREFIX = "score.handler.";
-    String SCORE_HANDLER_PACKAGE = "com.xenaksys.szcore.score.handler.";
+    String SCORE_DELEGATE_CONFIG_PREFIX = "score.delegate.";
+    String SCORE_DELEGATE_PACKAGE = "com.xenaksys.szcore.score.delegate.";
 
     char MINUS_CHAR = '-';
     char DOT_CHAR = '.';

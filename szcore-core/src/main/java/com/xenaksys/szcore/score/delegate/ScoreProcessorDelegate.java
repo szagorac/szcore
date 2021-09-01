@@ -102,7 +102,7 @@ import com.xenaksys.szcore.score.OscScript;
 import com.xenaksys.szcore.score.OverlayElementType;
 import com.xenaksys.szcore.score.OverlayType;
 import com.xenaksys.szcore.score.ScoreLoader;
-import com.xenaksys.szcore.score.ScoreProcessorHandler;
+import com.xenaksys.szcore.score.ScoreProcessorImpl;
 import com.xenaksys.szcore.score.StaveFactory;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.score.web.WebScore;
@@ -155,8 +155,8 @@ import static com.xenaksys.szcore.Consts.PRESSURE_LINE_Y_MAX;
 import static com.xenaksys.szcore.Consts.SPEED_LINE_Y_MAX;
 import static com.xenaksys.szcore.Consts.UNDERSCORE;
 
-public class GenericScoreProcessor implements ScoreProcessor {
-    static final Logger LOG = LoggerFactory.getLogger(GenericScoreProcessor.class);
+public class ScoreProcessorDelegate implements ScoreProcessor {
+    static final Logger LOG = LoggerFactory.getLogger(ScoreProcessorDelegate.class);
 
     private final TransportFactory transportFactory;
     private final MutableClock clock;
@@ -166,7 +166,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
     private final EventFactory eventFactory;
     private final TaskFactory taskFactory;
     private final OscDestinationEventListener oscDestinationEventListener;
-    private final ScoreProcessorHandler parentProcessor;
+    private final ScoreProcessorImpl parentProcessor;
 
     private BasicScore szcore = null;
     private boolean isScoreLoaded = false;
@@ -200,15 +200,15 @@ public class GenericScoreProcessor implements ScoreProcessor {
     protected volatile int currentBeatNo = 0;
 
 
-    public GenericScoreProcessor(TransportFactory transportFactory,
-                                 MutableClock clock,
-                                 OscPublisher oscPublisher,
-                                 WebPublisher webPublisher,
-                                 Scheduler scheduler,
-                                 EventFactory eventFactory,
-                                 TaskFactory taskFactory,
-                                 BasicScore szcore,
-                                 ScoreProcessorHandler parent) {
+    public ScoreProcessorDelegate(TransportFactory transportFactory,
+                                  MutableClock clock,
+                                  OscPublisher oscPublisher,
+                                  WebPublisher webPublisher,
+                                  Scheduler scheduler,
+                                  EventFactory eventFactory,
+                                  TaskFactory taskFactory,
+                                  BasicScore szcore,
+                                  ScoreProcessorImpl parent) {
         this.transportFactory = transportFactory;
         this.clock = clock;
         this.oscPublisher = oscPublisher;
@@ -236,24 +236,35 @@ public class GenericScoreProcessor implements ScoreProcessor {
         reset();
         if(szcore == null) {
             Score score = ScoreLoader.load(file);
-            szcore = (BasicScore) score;
+            setScore((BasicScore)score);
         }
-
-        ScoreRandomisationStrategyConfig randomisationStrategyConfig = StrategyConfigLoader.loadStrategyConfig(file.getParent(), szcore);
-        szcore.setRandomisationStrategyConfig(randomisationStrategyConfig);
-
+        String dir = file.getParent();
+        initRandomisationStrategy(dir);
         createWebAudienceProcessor();
-        initWebAudienceScore(file.getParent());
+        initWebAudienceScore(dir);
+        initWebScore();
+        initMax();
+        initScriptingEngine(dir);
+        return szcore;
+    }
 
+    public void initWebScore() {
         webScore = new WebScore(this, eventFactory, clock);
+    }
 
+    public void initMax() {
         maxMspConfig = new MaxMspScoreConfig();
         maxMspConfig.setScoreName(szcore.getName());
+    }
 
+    public void initScriptingEngine(String dir) {
         scriptingEngine = new ScoreScriptingEngine(this, eventFactory, clock);
-        scriptingEngine.init(file.getParent());
+        scriptingEngine.init(dir);
+    }
 
-        return szcore;
+    public void initRandomisationStrategy(String dir) throws Exception {
+        ScoreRandomisationStrategyConfig randomisationStrategyConfig = StrategyConfigLoader.loadStrategyConfig(dir, szcore);
+        szcore.setRandomisationStrategyConfig(randomisationStrategyConfig);
     }
 
     protected void createWebAudienceProcessor() {
@@ -556,14 +567,14 @@ public class GenericScoreProcessor implements ScoreProcessor {
         szcore.addScoreBaseBeatEvent(transportId, webAudienceEvent);
     }
 
-    private void addTransportInitEvents(Tempo tempo, TimeSignature timeSignature, int startBaseBeatNo, int transportBeatNo, int tickNo, long positionMillis, Id transportId, List<SzcoreEvent> initEvents) {
+    protected void addTransportInitEvents(Tempo tempo, TimeSignature timeSignature, int startBaseBeatNo, int transportBeatNo, int tickNo, long positionMillis, Id transportId, List<SzcoreEvent> initEvents) {
         addTransportPositionEvent(transportId, startBaseBeatNo, transportBeatNo, tickNo, positionMillis, initEvents);
         addTempoChangeInitEvent(tempo, null, transportId, initEvents);
         addTimeSigChangeInitEvent(timeSignature, null, transportId, initEvents);
         addPrecountSetupEvent(szcore.getPrecountBeatNo(), szcore.getPrecountMillis(), szcore.getPrecountBeaterInterval(), transportId, initEvents);
     }
 
-    private void addPageInitEvents(Transport transport, Instrument instrument, BasicStave currentStave, BasicStave nextStave,
+    protected void addPageInitEvents(Transport transport, Instrument instrument, BasicStave currentStave, BasicStave nextStave,
                                    Page page, List<SzcoreEvent> initEvents) {
         addActiveStaveChangeEvent(currentStave.getId(), true, false, null, transport.getId(), instrument, initEvents);
         addActiveStaveChangeEvent(nextStave.getId(), false, false, null, transport.getId(), instrument, initEvents);
@@ -574,11 +585,15 @@ public class GenericScoreProcessor implements ScoreProcessor {
         }
     }
 
-    private void addInitAvEvent(Transport transport, Instrument instrument, List<SzcoreEvent> initEvents, BeatId startBeatId) {
+    protected void addInitAvEvent(Transport transport, Instrument instrument, List<SzcoreEvent> initEvents, BeatId startBeatId) {
 
         OscEvent resetInstrumentEvent = createResetInstrumentEvent(instrument.getName());
         ScriptEventPreset eventPreset = maxMspConfig.getBeatResetScripts(startBeatId);
-        List<OscEvent> presetEvents = eventPreset.getScriptEvents();
+        List<OscEvent> presetEvents = Collections.emptyList();
+        if(eventPreset != null) {
+            presetEvents = eventPreset.getScriptEvents();
+        }
+
         if (initEvents == null) {
             szcore.addScoreBaseBeatEvent(transport.getId(), resetInstrumentEvent);
             for (OscEvent presetEvent : presetEvents) {
@@ -591,7 +606,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
     }
 
 
-    private void addInitWebAudienceEvent(Transport transport, List<SzcoreEvent> initEvents, BeatId startBeatId) {
+    protected void addInitWebAudienceEvent(Transport transport, List<SzcoreEvent> initEvents, BeatId startBeatId) {
         WebAudienceResetEvent webScoreResetEvent = createWebAudienceResetEvent(startBeatId);
         if (webScoreResetEvent == null) {
             return;
@@ -603,7 +618,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
         }
     }
 
-    private void addInitWebScoreEvent(Transport transport, BeatId startBeatId, StaveId staveId) {
+    protected void addInitWebScoreEvent(Transport transport, BeatId startBeatId, StaveId staveId) {
         Instrument instrument = szcore.getInstrument(staveId.getInstrumentId());
         String destination = instrument.getName();
 
@@ -615,7 +630,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
         szcore.addOneOffBaseBeatEvent(transport.getId(), webScoreResetPlayStave);
     }
 
-    private void addInitScriptingEvent(Transport transport, List<SzcoreEvent> initEvents, BeatId startBeatId) {
+    protected void addInitScriptingEvent(Transport transport, List<SzcoreEvent> initEvents, BeatId startBeatId) {
         ScriptingEngineResetEvent scriptingEngineResetEvent = createScriptingEngineResetEvent(startBeatId);
         if (scriptingEngineResetEvent == null) {
             return;
@@ -1018,13 +1033,13 @@ public class GenericScoreProcessor implements ScoreProcessor {
         publishOscEvents(out);
     }
 
-    private void addNewPageInstrumentEvents(Instrument instrument, List<SzcoreEvent> initEvents) {
+    protected void addNewPageInstrumentEvents(Instrument instrument, List<SzcoreEvent> initEvents) {
         String destination = szcore.getOscDestination(instrument.getId());
         OscEvent instrumentSlotsEvent = createInstrumentResetSlotsEvent(destination);
         initEvents.add(instrumentSlotsEvent);
     }
 
-    private void addNewPageEvents(Page page, BasicStave stave, Id transportId, List<SzcoreEvent> initEvents) {
+    protected void addNewPageEvents(Page page, BasicStave stave, Id transportId, List<SzcoreEvent> initEvents) {
         if (page == null || stave == null || transportId == null) {
             return;
         }
@@ -1082,7 +1097,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
         }
     }
 
-    private void addOneOffNewPageEvents(Page page, boolean isInRndRange, BasicStave stave, BeatId pageChangeBeat, BeatId activatePageBeat, Id transportId) {
+    protected void addOneOffNewPageEvents(Page page, boolean isInRndRange, BasicStave stave, BeatId pageChangeBeat, BeatId activatePageBeat, Id transportId) {
         if (transportId == null) {
             return;
         }
@@ -1116,7 +1131,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
         szcore.addOneOffBaseBeatEvent(transportId, closeWindowEvent);
     }
 
-    private List<OscEvent> createPageChangeEvents(Page nextPage, String nextPageName, PageId rndPageId, BasicStave nextStave) {
+    protected List<OscEvent> createPageChangeEvents(Page nextPage, String nextPageName, PageId rndPageId, BasicStave nextStave) {
         List<OscEvent> out = new ArrayList<>(5);
         if (nextPage == null || nextStave == null) {
             return out;
@@ -2083,7 +2098,6 @@ public class GenericScoreProcessor implements ScoreProcessor {
             LOG.error("Invalid NULL score");
             return initEvents;
         }
-        UnionRoseWebAudienceProcessor urWebAudienceScore = (UnionRoseWebAudienceProcessor) webAudienceScoreProcessor;
         Collection<Instrument> instruments = szcore.getInstruments();
         List<Id> transportIds = new ArrayList<>();
         for (Instrument instrument : instruments) {
@@ -2181,10 +2195,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
                 boolean isInRndRange = strategy.isInActiveRange(instrumentId, page);
                 if (isInRndRange) {
                     if (strategy.isPageRecalcTime()) {
-                        strategy.recalcStrategy(page);
-                        int pageQuantity = strategy.getNumberOfRequiredPages();
-                        List<Integer> pageIds = urWebAudienceScore.prepareNextTilesToPlay(pageQuantity);
-                        strategy.setPageSelection(pageIds);
+                        recalcRndStrategy(strategy, page);
                     }
                     Page rndPage = strategy.getRandomPageFileName(instrumentId);
                     String pageFileName;
@@ -2219,6 +2230,17 @@ public class GenericScoreProcessor implements ScoreProcessor {
         return initEvents;
     }
 
+    public void recalcRndStrategy(ScoreRandomisationStrategy strategy, Page page) {
+        if (strategy == null || page == null) {
+            return;
+        }
+        strategy.recalcStrategy(page);
+        int pageQuantity = strategy.getNumberOfRequiredPages();
+        UnionRoseWebAudienceProcessor audienceProcessor = (UnionRoseWebAudienceProcessor) getWebAudienceProcessor();
+        List<Integer> pageIds = audienceProcessor.prepareNextTilesToPlay(pageQuantity);
+        strategy.setPageSelection(pageIds);
+    }
+
     @Override
     public Score getScore() {
         return szcore;
@@ -2226,6 +2248,10 @@ public class GenericScoreProcessor implements ScoreProcessor {
 
     public BasicScore getBasicScore() {
         return szcore;
+    }
+
+    public void setScore(BasicScore score) {
+        this.szcore = score;
     }
 
     @Override
@@ -3432,7 +3458,7 @@ public class GenericScoreProcessor implements ScoreProcessor {
         return taskFactory;
     }
 
-    public ScoreProcessorHandler getParentProcessor() {
+    public ScoreProcessorImpl getParentProcessor() {
         return parentProcessor;
     }
 

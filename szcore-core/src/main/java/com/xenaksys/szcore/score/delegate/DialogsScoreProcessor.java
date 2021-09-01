@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.score.delegate;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.model.Bar;
 import com.xenaksys.szcore.model.Id;
@@ -21,48 +22,30 @@ import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.score.InscorePageMap;
 import com.xenaksys.szcore.score.InstrumentBeatTracker;
 import com.xenaksys.szcore.score.ScoreLoader;
-import com.xenaksys.szcore.score.ScoreProcessorHandler;
+import com.xenaksys.szcore.score.ScoreProcessorImpl;
 import com.xenaksys.szcore.score.web.audience.delegate.DialogsWebAudienceProcessor;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
 
-import java.io.File;
 import java.util.Collection;
 
 import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NAME;
 import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NO;
 import static com.xenaksys.szcore.Consts.UNDERSCORE;
 
-public class DialogsRoseScoreProcessor extends GenericScoreProcessor {
+public class DialogsScoreProcessor extends ScoreProcessorDelegate {
 
-    public DialogsRoseScoreProcessor(TransportFactory transportFactory,
-                                     MutableClock clock,
-                                     OscPublisher oscPublisher,
-                                     WebPublisher webPublisher,
-                                     Scheduler scheduler,
-                                     EventFactory eventFactory,
-                                     TaskFactory taskFactory,
-                                     BasicScore szcore,
-                                     ScoreProcessorHandler parent
+    public DialogsScoreProcessor(TransportFactory transportFactory,
+                                 MutableClock clock,
+                                 OscPublisher oscPublisher,
+                                 WebPublisher webPublisher,
+                                 Scheduler scheduler,
+                                 EventFactory eventFactory,
+                                 TaskFactory taskFactory,
+                                 BasicScore szcore,
+                                 ScoreProcessorImpl parent
                                    ) {
         super(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, szcore, parent);
-    }
-
-    @Override
-    public Score loadScore(File file) throws Exception {
-        Scheduler scheduler = getScheduler();
-        if (scheduler.isActive()) {
-            LOG.warn("Scheduler is active, can not perform load score");
-            throw new Exception("Scheduler is active, can not perform load score");
-        }
-        LOG.info("LOADING SCORE: " + file.getCanonicalPath());
-        reset();
-        BasicScore szcore = (BasicScore)getScore();
-        if(szcore == null) {
-            Score score = ScoreLoader.load(file);
-            szcore = (BasicScore) score;
-        }
-        return szcore;
     }
 
     protected void createWebAudienceProcessor() {
@@ -122,5 +105,12 @@ public class DialogsRoseScoreProcessor extends GenericScoreProcessor {
         szcore.setPrecount(precountMillis, precountBeatNo);
 
         setScoreLoaded(true);
+    }
+
+    public void recalcRndStrategy(ScoreRandomisationStrategy strategy, Page page) {
+        if (strategy == null || page == null) {
+            return;
+        }
+        strategy.recalcStrategy(page);
     }
 }

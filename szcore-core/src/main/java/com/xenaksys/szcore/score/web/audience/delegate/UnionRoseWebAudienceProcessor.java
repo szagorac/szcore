@@ -21,11 +21,11 @@ import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
 import com.xenaksys.szcore.score.web.audience.WebAudienceServerState;
 import com.xenaksys.szcore.score.web.audience.WebAudienceStateDeltaTracker;
 import com.xenaksys.szcore.score.web.audience.WebTextState;
+import com.xenaksys.szcore.score.web.audience.config.AudienceWebscoreConfig;
+import com.xenaksys.szcore.score.web.audience.config.AudienceWebscoreConfigLoader;
 import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthState;
-import com.xenaksys.szcore.score.web.audience.config.WebscoreConfig;
-import com.xenaksys.szcore.score.web.audience.config.WebscoreConfigLoader;
 import com.xenaksys.szcore.score.web.audience.export.TileExport;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceInstructionsExport;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
@@ -87,7 +87,7 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
     private final boolean[] activeRows = new boolean[8];
     private final Map<String, Integer> tileIdPageIdMap = new HashMap<>();
 
-    private WebscoreConfig webscoreConfig;
+    private AudienceWebscoreConfig audienceWebscoreConfig;
 
     private volatile long lastPlayTilesInternalEventTime = 0L;
     private volatile long lastSelectTilesInternalEventTime = 0L;
@@ -184,7 +184,7 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
 
     public void reset(int presetNo) {
         try {
-            ScriptPreset preset = webscoreConfig.getPreset(presetNo);
+            ScriptPreset preset = audienceWebscoreConfig.getPreset(presetNo);
             if (preset == null) {
                 LOG.info("resetState: Unknown preset: {}", presetNo);
                 return;
@@ -230,11 +230,11 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
     private int getPageNo(int row, int col) {
 
         int pageNo = (row - 1) * 8 + col;
-        if (getScore() == null || webscoreConfig == null) {
+        if (getScore() == null || audienceWebscoreConfig == null) {
             return pageNo;
         }
 
-        int configPageNo = webscoreConfig.getPageNo(row, col);
+        int configPageNo = audienceWebscoreConfig.getPageNo(row, col);
         if (configPageNo < 0) {
             return pageNo;
         }
@@ -247,7 +247,7 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
             return;
         }
         try {
-            webscoreConfig = WebscoreConfigLoader.load(configDir);
+            audienceWebscoreConfig = AudienceWebscoreConfigLoader.load(configDir);
         } catch (Exception e) {
             LOG.error("Failed to load WebAudienceScoreProcessor Presets", e);
         }

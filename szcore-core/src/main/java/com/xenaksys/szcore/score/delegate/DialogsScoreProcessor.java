@@ -28,6 +28,7 @@ import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
 
 import java.util.Collection;
+import java.util.Properties;
 
 import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NAME;
 import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NO;
@@ -43,9 +44,10 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
                                  EventFactory eventFactory,
                                  TaskFactory taskFactory,
                                  BasicScore szcore,
-                                 ScoreProcessorImpl parent
+                                 ScoreProcessorImpl parent,
+                                 Properties props
                                    ) {
-        super(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, szcore, parent);
+        super(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, szcore, parent, props);
     }
 
     protected void createWebAudienceProcessor() {
@@ -105,6 +107,8 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
         szcore.setPrecount(precountMillis, precountBeatNo);
 
         setScoreLoaded(true);
+
+        getWebScore().init();
     }
 
     public void recalcRndStrategy(ScoreRandomisationStrategy strategy, Page page) {
@@ -112,5 +116,9 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
             return;
         }
         strategy.recalcStrategy(page);
+    }
+
+    public void processRndStrategyOnModClose(ScoreRandomisationStrategy strategy) {
+        //TODO
     }
 }

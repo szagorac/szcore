@@ -5,11 +5,11 @@ import com.xenaksys.szcore.algo.MultiIntRange;
 import com.xenaksys.szcore.algo.SequentalIntRange;
 import com.xenaksys.szcore.model.ScriptPreset;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScorePageRangeAssignmentType;
+import com.xenaksys.szcore.score.web.audience.config.AudienceWebscoreConfig;
+import com.xenaksys.szcore.score.web.audience.config.AudienceWebscoreConfigLoader;
+import com.xenaksys.szcore.score.web.audience.config.AudienceWebscorePageRangeConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
-import com.xenaksys.szcore.score.web.audience.config.WebscoreConfig;
-import com.xenaksys.szcore.score.web.audience.config.WebscoreConfigLoader;
-import com.xenaksys.szcore.score.web.audience.config.WebscorePageRangeConfig;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,8 +30,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class TestWebscoreConfig {
-    static final Logger LOG = LoggerFactory.getLogger(TestWebscoreConfig.class);
+public class TestAudienceWebscoreConfig {
+    static final Logger LOG = LoggerFactory.getLogger(TestAudienceWebscoreConfig.class);
     File file;
 
     @Before
@@ -42,7 +42,7 @@ public class TestWebscoreConfig {
 
     @Test
     public void testConfigLoad() throws Exception {
-        WebscoreConfig config = WebscoreConfigLoader.load(file);
+        AudienceWebscoreConfig config = AudienceWebscoreConfigLoader.load(file);
         assertNotNull(config);
 
         assertEquals("Test Score", config.getScoreName());
@@ -69,10 +69,10 @@ public class TestWebscoreConfig {
         double masterGain = (Double) masterGainObj;
         assertEquals(0.1, masterGain, 10E-5);
 
-        List<WebscorePageRangeConfig> webscorePageRangeConfigs = config.getPageRangeConfigs();
-        assertEquals(8, webscorePageRangeConfigs.size());
+        List<AudienceWebscorePageRangeConfig> audienceWebscorePageRangeConfigs = config.getPageRangeConfigs();
+        assertEquals(8, audienceWebscorePageRangeConfigs.size());
 
-        WebscorePageRangeConfig first = webscorePageRangeConfigs.get(0);
+        AudienceWebscorePageRangeConfig first = audienceWebscorePageRangeConfigs.get(0);
         assertEquals(WebAudienceScorePageRangeAssignmentType.SEQ, first.getAssignmentType());
         assertEquals(new Integer(1), first.getTileRow());
         IntRange pageRange = new SequentalIntRange(1, 8);
@@ -82,7 +82,7 @@ public class TestWebscoreConfig {
         assertEquals(pageRange, first.getTileCols());
         assertEquals(multiIntRange, first.getPageRange());
 
-        WebscorePageRangeConfig last = webscorePageRangeConfigs.get(7);
+        AudienceWebscorePageRangeConfig last = audienceWebscorePageRangeConfigs.get(7);
         assertEquals(WebAudienceScorePageRangeAssignmentType.RND, last.getAssignmentType());
         assertEquals(new Integer(8), last.getTileRow());
         pageRange = last.getPageRange();
@@ -143,7 +143,7 @@ public class TestWebscoreConfig {
         PropertyChangeSupport pcs = new PropertyChangeSupport(this);
         WebGranulatorConfig granulatorConfig = new WebGranulatorConfig(pcs);
 
-        WebscoreConfig config = WebscoreConfigLoader.load(file);
+        AudienceWebscoreConfig config = AudienceWebscoreConfigLoader.load(file);
         ScriptPreset preset1 = config.getPreset(1);
         Map<String, Object> presetConfigs = preset1.getConfigs();
         assertFalse(presetConfigs.isEmpty());
@@ -166,7 +166,7 @@ public class TestWebscoreConfig {
         PropertyChangeSupport pcs = new PropertyChangeSupport(this);
         WebSpeechSynthConfig speechSynthConfig = new WebSpeechSynthConfig(pcs);
 
-        WebscoreConfig config = WebscoreConfigLoader.load(file);
+        AudienceWebscoreConfig config = AudienceWebscoreConfigLoader.load(file);
         ScriptPreset preset1 = config.getPreset(1);
         Map<String, Object> presetConfigs = preset1.getConfigs();
         assertFalse(presetConfigs.isEmpty());

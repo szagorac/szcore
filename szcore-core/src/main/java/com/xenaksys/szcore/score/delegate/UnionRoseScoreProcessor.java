@@ -14,6 +14,7 @@ import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
 
 import java.util.List;
+import java.util.Properties;
 
 public class UnionRoseScoreProcessor extends ScoreProcessorDelegate {
 
@@ -25,9 +26,10 @@ public class UnionRoseScoreProcessor extends ScoreProcessorDelegate {
                                    EventFactory eventFactory,
                                    TaskFactory taskFactory,
                                    BasicScore szcore,
-                                   ScoreProcessorImpl parent
+                                   ScoreProcessorImpl parent,
+                                   Properties props
                                    ) {
-        super(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, szcore, parent);
+        super(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, szcore, parent, props);
     }
 
     protected void createWebAudienceProcessor() {

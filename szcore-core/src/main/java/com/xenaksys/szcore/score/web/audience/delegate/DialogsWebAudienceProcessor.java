@@ -14,11 +14,11 @@ import com.xenaksys.szcore.score.web.audience.WebAudienceScoreProcessor;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
 import com.xenaksys.szcore.score.web.audience.WebAudienceServerState;
 import com.xenaksys.szcore.score.web.audience.WebTextState;
+import com.xenaksys.szcore.score.web.audience.config.AudienceWebscoreConfig;
+import com.xenaksys.szcore.score.web.audience.config.AudienceWebscoreConfigLoader;
 import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthState;
-import com.xenaksys.szcore.score.web.audience.config.WebscoreConfig;
-import com.xenaksys.szcore.score.web.audience.config.WebscoreConfigLoader;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
 import com.xenaksys.szcore.score.web.audience.export.delegate.DialogsWebAudienceExport;
@@ -38,7 +38,7 @@ import static com.xenaksys.szcore.Consts.WEB_ZOOM_DEFAULT;
 public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(DialogsWebAudienceProcessor.class);
 
-    private WebscoreConfig webscoreConfig;
+    private AudienceWebscoreConfig audienceWebscoreConfig;
 
     public DialogsWebAudienceProcessor(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock) {
         super(scoreProcessor, eventFactory, clock);
@@ -65,7 +65,7 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
 
     public void reset(int presetNo) {
         try {
-            ScriptPreset preset = webscoreConfig.getPreset(presetNo);
+            ScriptPreset preset = audienceWebscoreConfig.getPreset(presetNo);
             if (preset == null) {
                 LOG.info("resetState: Unknown preset: {}", presetNo);
                 return;
@@ -99,7 +99,7 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
             return;
         }
         try {
-            webscoreConfig = WebscoreConfigLoader.load(configDir);
+            audienceWebscoreConfig = AudienceWebscoreConfigLoader.load(configDir);
         } catch (Exception e) {
             LOG.error("Failed to load WebAudienceScoreProcessor Presets", e);
         }

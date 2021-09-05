@@ -30,10 +30,10 @@ import static com.xenaksys.szcore.Consts.CONFIG_WEB_CONFIG;
 import static com.xenaksys.szcore.Consts.WEBSCORE_PRESET_FILE_SUFFIX;
 import static com.xenaksys.szcore.Consts.YAML_FILE_EXTENSION;
 
-public class WebscoreConfigLoader extends YamlLoader {
-    static final Logger LOG = LoggerFactory.getLogger(WebscoreConfigLoader.class);
+public class AudienceWebscoreConfigLoader extends YamlLoader {
+    static final Logger LOG = LoggerFactory.getLogger(AudienceWebscoreConfigLoader.class);
 
-    public static WebscoreConfig load(String workingDir) throws Exception {
+    public static AudienceWebscoreConfig load(String workingDir) throws Exception {
         String path = workingDir + Consts.SLASH + WEBSCORE_PRESET_FILE_SUFFIX + YAML_FILE_EXTENSION;
         File file = new File(path);
         if (!file.exists()) {
@@ -43,8 +43,8 @@ public class WebscoreConfigLoader extends YamlLoader {
         return load(file);
     }
 
-    public static WebscoreConfig load(File file) throws Exception {
-        WebscoreConfig config = new WebscoreConfig();
+    public static AudienceWebscoreConfig load(File file) throws Exception {
+        AudienceWebscoreConfig config = new AudienceWebscoreConfig();
         Map<String, Object> configMap = loadYaml(file);
 
         Object yamlScoreName = configMap.get(CONFIG_SCORE_NAME);
@@ -79,7 +79,7 @@ public class WebscoreConfigLoader extends YamlLoader {
 
         List<Map<String, Object>> pageRangeMappings = getListOfMaps(CONFIG_PAGE_RANGE_MAPPING, configMap);
         for (Map<String, Object> pageRangeMapping : pageRangeMappings) {
-            WebscorePageRangeConfig pageRangeConfig = new WebscorePageRangeConfig();
+            AudienceWebscorePageRangeConfig pageRangeConfig = new AudienceWebscorePageRangeConfig();
 
             Integer tileRow = getInteger(CONFIG_TILE_ROW, pageRangeMapping);
             if (tileRow == null) {

@@ -141,6 +141,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -167,6 +168,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     private final TaskFactory taskFactory;
     private final OscDestinationEventListener oscDestinationEventListener;
     private final ScoreProcessorImpl parentProcessor;
+    private final Properties props;
 
     private BasicScore szcore = null;
     private boolean isScoreLoaded = false;
@@ -208,7 +210,8 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                                   EventFactory eventFactory,
                                   TaskFactory taskFactory,
                                   BasicScore szcore,
-                                  ScoreProcessorImpl parent) {
+                                  ScoreProcessorImpl parent,
+                                  Properties props) {
         this.transportFactory = transportFactory;
         this.clock = clock;
         this.oscPublisher = oscPublisher;
@@ -219,6 +222,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         this.szcore = szcore;
         this.parentProcessor = parent;
         this.oscDestinationEventListener = new OscDestinationEventListener(this, eventFactory, clock);
+        this.props = props;
     }
 
     @Override
@@ -249,7 +253,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     }
 
     public void initWebScore() {
-        webScore = new WebScore(this, eventFactory, clock);
+        webScore = new WebScore(this, eventFactory, clock, props);
     }
 
     public void initMax() {
@@ -870,17 +874,14 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     public void onCloseModWindow(InstrumentId instId, Stave stave, Page nextPage, PageId currentPageId) {
         this.isUpdateWindowOpen = false;
 
-        UnionRoseWebAudienceProcessor urWebAudienceScore = (UnionRoseWebAudienceProcessor) webAudienceScoreProcessor;
         LOG.debug("onCloseModWindow: instrument {} next page: {} ", instId.getName(), nextPage);
         ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
 
         boolean isInRange = strategy.isInActiveRange(instId, nextPage);
         if (isInRange) {
             if (strategy.isPageRecalcTime()) {
-                int pageQuantity = strategy.getNumberOfRequiredPages();
-                LOG.debug("onCloseModWindow: pageQuantity {} next assignment Strategy: {} pageId: {} nextPage: {}  stave: {}", pageQuantity, Arrays.toString(strategy.getAssignmentStrategy().toArray()), currentPageId.getPageNo(), nextPage.getPageNo(), stave.getStaveId().getStaveNo());
-                List<Integer> selectedPageIds = urWebAudienceScore.prepareNextTilesToPlay(pageQuantity);
-                strategy.setPageSelection(selectedPageIds);
+                LOG.debug("onCloseModWindow: next assignment Strategy: {} pageId: {} nextPage: {}  stave: {}", Arrays.toString(strategy.getAssignmentStrategy().toArray()), currentPageId.getPageNo(), nextPage.getPageNo(), stave.getStaveId().getStaveNo());
+                processRndStrategyOnModClose(strategy);
             }
 
             sendRndPageFileUpdate(nextPage, stave, instId);
@@ -2241,6 +2242,17 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         strategy.setPageSelection(pageIds);
     }
 
+    public void processRndStrategyOnModClose(ScoreRandomisationStrategy strategy) {
+        if (strategy == null) {
+            return;
+        }
+        int pageQuantity = strategy.getNumberOfRequiredPages();
+        LOG.debug("processRndStrategyOnModClose: pageQuantity {} ", pageQuantity);
+        UnionRoseWebAudienceProcessor urWebAudienceScore = (UnionRoseWebAudienceProcessor) getWebAudienceProcessor();
+        List<Integer> selectedPageIds = urWebAudienceScore.prepareNextTilesToPlay(pageQuantity);
+        strategy.setPageSelection(selectedPageIds);
+    }
+
     @Override
     public Score getScore() {
         return szcore;
@@ -3484,6 +3496,10 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
 
     public EventFactory getEventFactory() {
         return eventFactory;
+    }
+
+    public WebScore getWebScore() {
+        return webScore;
     }
 
     class ScoreTransportListener implements TransportListener {

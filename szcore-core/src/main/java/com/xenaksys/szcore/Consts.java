@@ -69,6 +69,7 @@ public interface Consts {
     String SCORE_PROCESSOR_CLS_SUFFIX = "ScoreProcessor";
     String SCORE_DELEGATE_CONFIG_PREFIX = "score.delegate.";
     String SCORE_DELEGATE_PACKAGE = "com.xenaksys.szcore.score.delegate.";
+    String WEBSCORE_DIR_CONFIG_PREFIX = "webscore.dir.";
 
     char MINUS_CHAR = '-';
     char DOT_CHAR = '.';

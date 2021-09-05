@@ -3,7 +3,7 @@ package com.xenaksys.szcore.score.web.audience.config;
 import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScorePageRangeAssignmentType;
 
-public class WebscorePageRangeConfig {
+public class AudienceWebscorePageRangeConfig {
 
     private Integer tileRow;
     private IntRange tileCols;

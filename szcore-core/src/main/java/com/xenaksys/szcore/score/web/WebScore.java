@@ -38,6 +38,7 @@ import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.score.InscoreMapElement;
 import com.xenaksys.szcore.score.OverlayElementType;
 import com.xenaksys.szcore.score.OverlayType;
+import com.xenaksys.szcore.util.ParseUtil;
 import com.xenaksys.szcore.util.WebUtil;
 import com.xenaksys.szcore.web.WebClientInfo;
 import com.xenaksys.szcore.web.WebScoreAction;
@@ -50,7 +51,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WebScore {
@@ -63,14 +66,16 @@ public class WebScore {
     private final Map<String, List<WebClientInfo>> instrumentClients = new ConcurrentHashMap<>();
     private final Map<String, WebClientInfo> clients = new ConcurrentHashMap<>();
     private final Map<StaveId, OverlayProcessor> overlayProcessors = new ConcurrentHashMap<>();
+    private final Properties props;
 
     private WebScoreInfo scoreInfo;
 
-    public WebScore(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock) {
+    public WebScore(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock, Properties props) {
         this.scoreProcessor = scoreProcessor;
         this.eventFactory = eventFactory;
         this.clock = clock;
         this.score = (BasicScore) scoreProcessor.getScore();
+        this.props = props;
     }
 
     public void init() {
@@ -101,7 +106,14 @@ public class WebScore {
         if (tempo != null) {
             info.setBpm(tempo.getBpm());
         }
-        String scoreNameDir = info.getTitle().replaceAll("\\s+", "");
+
+        String scoreConfigName = ParseUtil.removeAllWhitespaces(info.getTitle()).toLowerCase(Locale.ROOT);
+        String configName = Consts.WEBSCORE_DIR_CONFIG_PREFIX + scoreConfigName;
+        String scoreNameDir = props.getProperty(configName);
+        if(scoreNameDir == null) {
+            scoreNameDir = info.getTitle().replaceAll("\\s+", "");
+        }
+
         String scoreDir = Consts.WEB_SCORE_ROOT_DIR + scoreNameDir + Consts.SLASH;
         info.setScoreDir(scoreDir);
 

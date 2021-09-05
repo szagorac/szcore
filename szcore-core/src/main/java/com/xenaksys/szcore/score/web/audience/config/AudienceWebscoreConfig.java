@@ -8,10 +8,10 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WebscoreConfig {
+public class AudienceWebscoreConfig {
 
     private String scoreName;
-    private final List<WebscorePageRangeConfig> pageRangeConfigs = new ArrayList<>();
+    private final List<AudienceWebscorePageRangeConfig> pageRangeConfigs = new ArrayList<>();
     private final TIntObjectHashMap<ScriptPreset> presets = new TIntObjectHashMap<>();
     private int[][] tilePageMap;
 
@@ -35,7 +35,7 @@ public class WebscoreConfig {
         this.scoreName = scoreName;
     }
 
-    public List<WebscorePageRangeConfig> getPageRangeConfigs() {
+    public List<AudienceWebscorePageRangeConfig> getPageRangeConfigs() {
         return pageRangeConfigs;
     }
 
@@ -55,7 +55,7 @@ public class WebscoreConfig {
         return tilePageMap[rowIndex][colIndex];
     }
 
-    public void addPageRangeConfig(WebscorePageRangeConfig pageRangeConfig) {
+    public void addPageRangeConfig(AudienceWebscorePageRangeConfig pageRangeConfig) {
         pageRangeConfigs.add(pageRangeConfig);
     }
 
@@ -66,7 +66,7 @@ public class WebscoreConfig {
             tilePageMap = new int[rowSize][colSize];
         }
 
-        for (WebscorePageRangeConfig pageRangeConfig : pageRangeConfigs) {
+        for (AudienceWebscorePageRangeConfig pageRangeConfig : pageRangeConfigs) {
             int row = pageRangeConfig.getTileRow();
 
             IntRange cols = pageRangeConfig.getTileCols();
@@ -98,7 +98,7 @@ public class WebscoreConfig {
 
     private int getRowsSize() {
         int out = 0;
-        for (WebscorePageRangeConfig pageRangeConfig : pageRangeConfigs) {
+        for (AudienceWebscorePageRangeConfig pageRangeConfig : pageRangeConfigs) {
             int row = pageRangeConfig.getTileRow();
             if (row > out) {
                 out = row;
@@ -109,7 +109,7 @@ public class WebscoreConfig {
 
     private Integer getColsSize() {
         int out = 0;
-        for (WebscorePageRangeConfig pageRangeConfig : pageRangeConfigs) {
+        for (AudienceWebscorePageRangeConfig pageRangeConfig : pageRangeConfigs) {
             IntRange cols = pageRangeConfig.getTileCols();
             int end = cols.getEnd();
             if (end > out) {

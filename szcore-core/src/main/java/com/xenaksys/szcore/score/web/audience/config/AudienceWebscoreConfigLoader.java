@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static com.xenaksys.szcore.Consts.AUDIENCE_WEBSCORE_CONFIG_FILE_SUFFIX;
 import static com.xenaksys.szcore.Consts.CONFIG_ASSIGNMENT_TYPE;
 import static com.xenaksys.szcore.Consts.CONFIG_END;
 import static com.xenaksys.szcore.Consts.CONFIG_ID;
@@ -27,14 +28,13 @@ import static com.xenaksys.szcore.Consts.CONFIG_START;
 import static com.xenaksys.szcore.Consts.CONFIG_TILE_COLS;
 import static com.xenaksys.szcore.Consts.CONFIG_TILE_ROW;
 import static com.xenaksys.szcore.Consts.CONFIG_WEB_CONFIG;
-import static com.xenaksys.szcore.Consts.WEBSCORE_PRESET_FILE_SUFFIX;
 import static com.xenaksys.szcore.Consts.YAML_FILE_EXTENSION;
 
 public class AudienceWebscoreConfigLoader extends YamlLoader {
     static final Logger LOG = LoggerFactory.getLogger(AudienceWebscoreConfigLoader.class);
 
     public static AudienceWebscoreConfig load(String workingDir) throws Exception {
-        String path = workingDir + Consts.SLASH + WEBSCORE_PRESET_FILE_SUFFIX + YAML_FILE_EXTENSION;
+        String path = workingDir + Consts.SLASH + AUDIENCE_WEBSCORE_CONFIG_FILE_SUFFIX + YAML_FILE_EXTENSION;
         File file = new File(path);
         if (!file.exists()) {
             throw new RuntimeException("loadStrategyConfig: Invalid Strategy Config File: " + path);

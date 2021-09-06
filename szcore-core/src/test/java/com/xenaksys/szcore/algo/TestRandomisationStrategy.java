@@ -1,5 +1,6 @@
 package com.xenaksys.szcore.algo;
 
+import com.xenaksys.szcore.algo.config.ScoreRandomisationStrategyConfig;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.id.InstrumentId;

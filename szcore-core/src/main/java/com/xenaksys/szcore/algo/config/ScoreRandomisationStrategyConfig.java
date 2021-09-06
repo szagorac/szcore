@@ -1,13 +1,15 @@
-package com.xenaksys.szcore.algo;
+package com.xenaksys.szcore.algo.config;
 
+import com.xenaksys.szcore.algo.IntRange;
+import com.xenaksys.szcore.algo.StrategyType;
 import com.xenaksys.szcore.model.Page;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ScoreRandomisationStrategyConfig {
+public class ScoreRandomisationStrategyConfig  implements StrategyConfig{
 
-    private List<RndPageRangeConfig> pageRangeConfigs = new ArrayList<>();
+    private final List<RndPageRangeConfig> pageRangeConfigs = new ArrayList<>();
     private String scoreName;
 
     public String getScoreName() {
@@ -76,4 +78,8 @@ public class ScoreRandomisationStrategyConfig {
         return false;
     }
 
+    @Override
+    public StrategyType getType() {
+        return StrategyType.RND;
+    }
 }

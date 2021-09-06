@@ -2,9 +2,10 @@ package com.xenaksys.szcore.score.delegate;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
-import com.xenaksys.szcore.algo.ScoreRandomisationStrategyConfig;
-import com.xenaksys.szcore.algo.StrategyConfigLoader;
 import com.xenaksys.szcore.algo.ValueScaler;
+import com.xenaksys.szcore.algo.config.ScoreBuilderStrategyConfig;
+import com.xenaksys.szcore.algo.config.ScoreRandomisationStrategyConfig;
+import com.xenaksys.szcore.algo.config.StrategyConfigLoader;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.EventType;
 import com.xenaksys.szcore.event.music.ModWindowEvent;
@@ -243,7 +244,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             setScore((BasicScore)score);
         }
         String dir = file.getParent();
-        initRandomisationStrategy(dir);
+        loadStrategyConfig(dir);
         createWebAudienceProcessor();
         initWebAudienceScore(dir);
         initWebScore();
@@ -266,9 +267,20 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         scriptingEngine.init(dir);
     }
 
-    public void initRandomisationStrategy(String dir) throws Exception {
-        ScoreRandomisationStrategyConfig randomisationStrategyConfig = StrategyConfigLoader.loadStrategyConfig(dir, szcore);
-        szcore.setRandomisationStrategyConfig(randomisationStrategyConfig);
+    public void loadStrategyConfig(String dir) throws Exception {
+        Map<String, Object> strategyConfig = StrategyConfigLoader.loadConfig(dir);
+        initRandomisationStrategyConfig(strategyConfig);
+        initScoreBuilderStrategyConfig(strategyConfig);
+    }
+
+    public void initRandomisationStrategyConfig(Map<String, Object> strategyConfig) throws Exception {
+        ScoreRandomisationStrategyConfig randomisationStrategyConfig = StrategyConfigLoader.loadRndStrategyConfig(strategyConfig, szcore);
+        szcore.addStrategyConfig(randomisationStrategyConfig);
+    }
+
+    public void initScoreBuilderStrategyConfig(Map<String, Object> strategyConfig) throws Exception {
+        ScoreBuilderStrategyConfig builderStrategyConfig = StrategyConfigLoader.loadBuilderStrategyConfig(strategyConfig, szcore);
+        szcore.addStrategyConfig(builderStrategyConfig);
     }
 
     protected void createWebAudienceProcessor() {
@@ -328,9 +340,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             }
         }
 
-        if (szcore.isRandomizeContinuousPageContent()) {
-            szcore.initRandomisation();
-        }
+        szcore.initScoreStrategies();
 
         if (!szcore.isUseContinuousPage()) {
             addStopEvent(lastBeat, transport.getId());

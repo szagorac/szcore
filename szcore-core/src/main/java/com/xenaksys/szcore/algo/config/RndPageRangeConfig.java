@@ -1,5 +1,6 @@
-package com.xenaksys.szcore.algo;
+package com.xenaksys.szcore.algo.config;
 
+import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -95,13 +95,12 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
             }
         }
 
-        if (szcore.isRandomizeContinuousPageContent()) {
-            szcore.initRandomisation();
-        }
+        szcore.initScoreStrategies();
 
         if (!szcore.isUseContinuousPage()) {
             addStopEvent(lastBeat, transport.getId());
         }
+
         int precountMillis = 5 * 1000;
         int precountBeatNo = 4;
         szcore.setPrecount(precountMillis, precountBeatNo);

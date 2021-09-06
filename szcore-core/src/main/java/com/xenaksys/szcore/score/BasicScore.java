@@ -1,8 +1,11 @@
 package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
-import com.xenaksys.szcore.algo.ScoreRandomisationStrategyConfig;
+import com.xenaksys.szcore.algo.ScoreStrategy;
+import com.xenaksys.szcore.algo.ScoreStrategyContainer;
+import com.xenaksys.szcore.algo.config.StrategyConfig;
 import com.xenaksys.szcore.model.Bar;
 import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.Id;
@@ -65,6 +68,7 @@ public class BasicScore implements Score {
     private final Map<Id, Instrument> oscPlayers = new HashMap<>();
     private final Map<Id, Page> instrumentContinuousPage = new HashMap<>();
     private final Map<Id, Page> instrumentEndPage = new HashMap<>();
+    private final ScoreStrategyContainer scoreStrategyContainer = new ScoreStrategyContainer();
 
     private boolean isPrecount = true;
     private int precountBeatNo = 4;
@@ -79,28 +83,8 @@ public class BasicScore implements Score {
     public int noContinuousPages = 10;
     private boolean isRandomizeContinuousPageContent = true;
 
-    private ScoreRandomisationStrategyConfig randomisationStrategyConfig;
-    private ScoreRandomisationStrategy randomisationStrategy;
-
     public BasicScore(StrId id) {
         this.id = id;
-    }
-
-    public void initRandomisation() {
-        if (randomisationStrategyConfig == null) {
-            LOG.info("initRandomisation: no config, ignoring ...");
-            return;
-        }
-        randomisationStrategy = new ScoreRandomisationStrategy(this, randomisationStrategyConfig);
-        randomisationStrategy.init();
-    }
-
-    public void setRandomisationStrategy(List<Integer> strategy) {
-        if (randomisationStrategy == null || strategy == null) {
-            return;
-        }
-
-        randomisationStrategy.setAssignmentStrategy(strategy);
     }
 
     public boolean isUseContinuousPage() {
@@ -869,11 +853,27 @@ public class BasicScore implements Score {
         return beats.get(offsetBeatId);
     }
 
-    public ScoreRandomisationStrategy getRandomisationStrategy() {
-        return randomisationStrategy;
+    public void setRandomisationStrategy(List<Integer> strategy) {
+        scoreStrategyContainer.setRandomisationStrategy(strategy);
     }
 
-    public void setRandomisationStrategyConfig(ScoreRandomisationStrategyConfig config) {
-        this.randomisationStrategyConfig = config;
+    public ScoreRandomisationStrategy getRandomisationStrategy() {
+        return scoreStrategyContainer.getRandomisationStrategy();
+    }
+
+    public ScoreBuilderStrategy getScoreBuilderStrategy() {
+        return scoreStrategyContainer.getScoreBuilderStrategy();
+    }
+
+    public void addStrategy(ScoreStrategy strategy) {
+        scoreStrategyContainer.addStrategy(strategy);
+    }
+
+    public void addStrategyConfig(StrategyConfig strategyConfig) {
+        scoreStrategyContainer.addStrategyConfig(strategyConfig);
+    }
+
+    public void initScoreStrategies() {
+        scoreStrategyContainer.init(this);
     }
 }

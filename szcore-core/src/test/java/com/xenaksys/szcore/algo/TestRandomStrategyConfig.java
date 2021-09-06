@@ -1,5 +1,8 @@
 package com.xenaksys.szcore.algo;
 
+import com.xenaksys.szcore.algo.config.RndPageRangeConfig;
+import com.xenaksys.szcore.algo.config.ScoreRandomisationStrategyConfig;
+import com.xenaksys.szcore.algo.config.StrategyConfigLoader;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.StrId;
@@ -48,7 +51,7 @@ public class TestRandomStrategyConfig {
 
     @Test
     public void testConfigLoad() throws Exception {
-        ScoreRandomisationStrategyConfig config = StrategyConfigLoader.loadStrategyConfig(file, score);
+        ScoreRandomisationStrategyConfig config = StrategyConfigLoader.loadRndStrategyConfig(file, score);
         assertNotNull(config);
 
         assertEquals(score.getName(), config.getScoreName());

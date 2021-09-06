@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.algo;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.algo.config.ScoreRandomisationStrategyConfig;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.Page;
@@ -20,7 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 
-public class ScoreRandomisationStrategy {
+public class ScoreRandomisationStrategy implements ScoreStrategy{
     static final Logger LOG = LoggerFactory.getLogger(ScoreRandomisationStrategy.class);
     private static final long RECALC_TIME_LIMIT = 1000 * 3;
 
@@ -301,5 +302,10 @@ public class ScoreRandomisationStrategy {
         List<InstrumentId> ids = getAssignedInstruments();
         Collections.sort(ids);
         return ids;
+    }
+
+    @Override
+    public StrategyType getType() {
+        return StrategyType.RND;
     }
 }

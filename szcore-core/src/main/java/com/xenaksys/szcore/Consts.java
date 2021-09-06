@@ -47,7 +47,7 @@ public interface Consts {
     String YAML_FILE_EXTENSION = ".yml";
     String INSCORE_FILE_SUFFIX = "_InScoreMap";
     String STRATEGY_CONFIG_FILE_SUFFIX = "strategyConfig";
-    String WEBSCORE_PRESET_FILE_SUFFIX = "webscoreConfig";
+    String AUDIENCE_WEBSCORE_CONFIG_FILE_SUFFIX = "audienceScoreConfig";
     String SCRIPTING_ENGINE_PRESET_FILE_SUFFIX = "scriptingEngineConfig";
     String INSCORE_ADDR = "INScore";
     String SZCORE_ADDR = "/SZCORE";
@@ -574,10 +574,12 @@ public interface Consts {
 
     String CONFIG_SCORE_NAME = "scoreName";
     String CONFIG_RND_STRATEGY = "rndStrategy";
+    String CONFIG_BUILDER_STRATEGY = "builderStrategy";
     String CONFIG_ACTIVE_RANGES = "activePageRanges";
     String CONFIG_PAGE_RANGE_MAPPING = "pageRangeMapping";
     String CONFIG_PAGE_RANGE = "pageRange";
     String CONFIG_PAGE_RANGES = "pageRanges";
+    String CONFIG_SECTIONS = "sections";
     String CONFIG_INSTRUMENTS = "instruments";
     String CONFIG_ACTIVE_RANGE = "activeRange";
     String CONFIG_RANGE = "range";

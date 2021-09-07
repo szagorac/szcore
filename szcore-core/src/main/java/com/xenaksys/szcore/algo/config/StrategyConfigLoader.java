@@ -13,28 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
-import static com.xenaksys.szcore.Consts.CONFIG_ALL;
-import static com.xenaksys.szcore.Consts.CONFIG_ASSIGNMENT_TYPE;
-import static com.xenaksys.szcore.Consts.CONFIG_BUILDER_STRATEGY;
-import static com.xenaksys.szcore.Consts.CONFIG_END;
-import static com.xenaksys.szcore.Consts.CONFIG_INSTRUMENTS;
-import static com.xenaksys.szcore.Consts.CONFIG_IS_RND_ACTIVE;
-import static com.xenaksys.szcore.Consts.CONFIG_PAGE_RANGES;
-import static com.xenaksys.szcore.Consts.CONFIG_RANGE;
-import static com.xenaksys.szcore.Consts.CONFIG_RND_STRATEGY;
-import static com.xenaksys.szcore.Consts.CONFIG_SCORE_NAME;
-import static com.xenaksys.szcore.Consts.CONFIG_SECTIONS;
-import static com.xenaksys.szcore.Consts.CONFIG_SELECTION_RANGE;
-import static com.xenaksys.szcore.Consts.CONFIG_START;
-import static com.xenaksys.szcore.Consts.NAME_FULL_SCORE;
-import static com.xenaksys.szcore.Consts.STRATEGY_CONFIG_FILE_SUFFIX;
-import static com.xenaksys.szcore.Consts.YAML_FILE_EXTENSION;
+import static com.xenaksys.szcore.Consts.*;
 
 public class StrategyConfigLoader extends YamlLoader {
     static final Logger LOG = LoggerFactory.getLogger(StrategyConfigLoader.class);
@@ -221,19 +202,24 @@ public class StrategyConfigLoader extends YamlLoader {
             }
 
             Map<String, Object> activeRangeConfig = getMap(CONFIG_RANGE, instConfig);
-            Integer start =  null;
-            Integer end =  null;
-            if(activeRangeConfig != null) {
+            Integer start = null;
+            Integer end = null;
+            if (activeRangeConfig != null) {
                 start = getInteger(CONFIG_START, activeRangeConfig);
                 end = getInteger(CONFIG_END, activeRangeConfig);
             }
-            if(start == null || end == null) {
+            if (start == null || end == null) {
                 LOG.error("loadBuilderStrategyConfig: invalid start - end range");
                 continue;
             }
 
+            String sectionName = getString(CONFIG_NAME, instConfig);
+            if (sectionName == null) {
+                sectionName = EMPTY;
+            }
+
             IntRange range = new SequentalIntRange(start, end);
-            BuilderPageRangeConfig pageRangeConfig = new BuilderPageRangeConfig(participatingInsts, range);
+            BuilderPageRangeConfig pageRangeConfig = new BuilderPageRangeConfig(participatingInsts, range, sectionName);
 
             config.addPageRangeConfig(pageRangeConfig);
         }

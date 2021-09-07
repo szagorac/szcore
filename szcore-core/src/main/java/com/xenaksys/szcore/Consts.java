@@ -583,6 +583,7 @@ public interface Consts {
     String CONFIG_INSTRUMENTS = "instruments";
     String CONFIG_ACTIVE_RANGE = "activeRange";
     String CONFIG_RANGE = "range";
+    String CONFIG_NAME = "name";
     String CONFIG_IS_RND_ACTIVE = "isRndActive";
     String CONFIG_SELECTION_RANGE = "selectionRange";
     String CONFIG_START = "start";

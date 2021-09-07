@@ -12,10 +12,12 @@ public class BuilderPageRangeConfig {
 
     private final List<InstrumentId> instruments;
     private final IntRange range;
+    private final String sectionName;
 
-    public BuilderPageRangeConfig(List<InstrumentId> instruments, IntRange range) {
+    public BuilderPageRangeConfig(List<InstrumentId> instruments, IntRange range, String sectionName) {
         this.instruments = instruments;
         this.range = range;
+        this.sectionName = sectionName;
     }
 
     public List<InstrumentId> getInstruments() {
@@ -24,5 +26,9 @@ public class BuilderPageRangeConfig {
 
     public IntRange getRange() {
         return range;
+    }
+
+    public String getSectionName() {
+        return sectionName;
     }
 }

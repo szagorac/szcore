@@ -6,19 +6,7 @@ import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
-import com.xenaksys.szcore.model.Id;
-import com.xenaksys.szcore.model.MusicTask;
-import com.xenaksys.szcore.model.MutableClock;
-import com.xenaksys.szcore.model.OscPublisher;
-import com.xenaksys.szcore.model.Page;
-import com.xenaksys.szcore.model.Scheduler;
-import com.xenaksys.szcore.model.Score;
-import com.xenaksys.szcore.model.ScoreProcessor;
-import com.xenaksys.szcore.model.Stave;
-import com.xenaksys.szcore.model.SzcoreEvent;
-import com.xenaksys.szcore.model.Tempo;
-import com.xenaksys.szcore.model.TempoModifier;
-import com.xenaksys.szcore.model.WebPublisher;
+import com.xenaksys.szcore.model.*;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.PageId;
@@ -348,6 +336,9 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     @Override
     public void onIncomingWebScoreEvent(WebScoreInEvent webEvent) throws Exception {
+        if (scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.onIncomingWebScoreEvent(webEvent);
     }
 

@@ -1,17 +1,7 @@
 package com.xenaksys.szcore.time;
 
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.model.BeatTimeStrategy;
-import com.xenaksys.szcore.model.Clock;
-import com.xenaksys.szcore.model.Id;
-import com.xenaksys.szcore.model.NoteDuration;
-import com.xenaksys.szcore.model.Scheduler;
-import com.xenaksys.szcore.model.Tempo;
-import com.xenaksys.szcore.model.TempoImpl;
-import com.xenaksys.szcore.model.TimeSignature;
-import com.xenaksys.szcore.model.TimeSignatureImpl;
-import com.xenaksys.szcore.model.Transport;
-import com.xenaksys.szcore.model.TransportListener;
+import com.xenaksys.szcore.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -147,6 +137,11 @@ public class BasicTransport implements Transport {
 
         int bpm = tempo.getBpm();
         return MILLIS_IN_MINUTE / bpm;
+    }
+
+    @Override
+    public void reset() {
+        listeners.clear();
     }
 
     private void caluclateNextBeatTime(long previousPublishBeatTime) {

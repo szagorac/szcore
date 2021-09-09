@@ -70,6 +70,7 @@ public interface Consts {
     String SCORE_DELEGATE_CONFIG_PREFIX = "score.delegate.";
     String SCORE_DELEGATE_PACKAGE = "com.xenaksys.szcore.score.delegate.";
     String WEBSCORE_DIR_CONFIG_PREFIX = "webscore.dir.";
+    String WEBSCORE_PART_HTML_PREFIX = "webscore.part.html.";
 
     char MINUS_CHAR = '-';
     char DOT_CHAR = '.';

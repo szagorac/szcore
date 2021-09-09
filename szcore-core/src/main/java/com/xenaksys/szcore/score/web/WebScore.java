@@ -19,6 +19,7 @@ import com.xenaksys.szcore.event.osc.PageDisplayEvent;
 import com.xenaksys.szcore.event.osc.PageMapDisplayEvent;
 import com.xenaksys.szcore.event.osc.PrecountBeatOffEvent;
 import com.xenaksys.szcore.event.osc.PrecountBeatOnEvent;
+import com.xenaksys.szcore.event.osc.ResetScoreEvent;
 import com.xenaksys.szcore.event.osc.ResetStavesEvent;
 import com.xenaksys.szcore.event.osc.StaveStartMarkEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
@@ -113,9 +114,15 @@ public class WebScore {
         if(scoreNameDir == null) {
             scoreNameDir = info.getTitle().replaceAll("\\s+", "");
         }
-
         String scoreDir = Consts.WEB_SCORE_ROOT_DIR + scoreNameDir + Consts.SLASH;
         info.setScoreDir(scoreDir);
+
+        String partPageConfigName = Consts.WEBSCORE_PART_HTML_PREFIX + scoreConfigName;
+        String partPageName = props.getProperty(partPageConfigName);
+        if(partPageName == null) {
+            partPageName = "zsPart.html";
+        }
+        info.setPartPageName(partPageName);
 
         return info;
     }
@@ -172,6 +179,8 @@ public class WebScore {
                 case ELEMENT_COLOR:
                     processElementColour((ElementColorEvent) event);
                     break;
+                case RESET_SCORE:
+                    processResetScore((ResetScoreEvent)event);
                 case STAVE_TICK_DY:
                 case HELLO:
                 case SERVER_HELLO:
@@ -184,6 +193,10 @@ public class WebScore {
         } catch (Exception e) {
             LOG.error("publishToWebScoreHack: failed to publish web score event", e);
         }
+    }
+
+    private void processResetScore(ResetScoreEvent event) {
+        instrumentClients.clear();
     }
 
     private void processElementColour(ElementColorEvent event) throws Exception {
@@ -376,7 +389,7 @@ public class WebScore {
         String instrumentName = clientInfo.getInstrument();
         Instrument instrument = score.getInstrument(instrumentName);
         if (instrument == null) {
-            LOG.error("sendPartInfo: unknown instrument: {}", instrumentName);
+            LOG.warn("sendPartInfo: unknown instrument: {}", instrumentName);
             return;
         }
         int firstPageNo = 1;

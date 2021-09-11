@@ -2,7 +2,10 @@ package com.xenaksys.szcore.score.web;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.IntRange;
+import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
+import com.xenaksys.szcore.algo.SectionAssignmentType;
 import com.xenaksys.szcore.algo.SequentalIntRange;
+import com.xenaksys.szcore.algo.StrategyType;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.osc.DateTickEvent;
 import com.xenaksys.szcore.event.osc.ElementAlphaEvent;
@@ -39,6 +42,7 @@ import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.score.InscoreMapElement;
 import com.xenaksys.szcore.score.OverlayElementType;
 import com.xenaksys.szcore.score.OverlayType;
+import com.xenaksys.szcore.score.web.strategy.WebBuilderStrategy;
 import com.xenaksys.szcore.util.ParseUtil;
 import com.xenaksys.szcore.util.WebUtil;
 import com.xenaksys.szcore.web.WebClientInfo;
@@ -123,6 +127,21 @@ public class WebScore {
             partPageName = "zsPart.html";
         }
         info.setPartPageName(partPageName);
+
+        ScoreBuilderStrategy builderStrategy = score.getScoreBuilderStrategy();
+        if(builderStrategy != null) {
+            WebBuilderStrategy webBuilderStrategy = new WebBuilderStrategy();
+            webBuilderStrategy.setName(StrategyType.BUILDER.name());
+            SectionAssignmentType assignmentType = builderStrategy.getConfig().getAssignmentType();
+            if (assignmentType != null) {
+                webBuilderStrategy.setAssignmentType(assignmentType.name());
+            }
+            List<String> sections = builderStrategy.getConfig().getSections();
+            if(sections != null) {
+                webBuilderStrategy.setSections(sections);
+            }
+            info.addStrategy(webBuilderStrategy);
+        }
 
         return info;
     }

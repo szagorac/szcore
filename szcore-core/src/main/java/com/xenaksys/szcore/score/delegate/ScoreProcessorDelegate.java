@@ -3120,11 +3120,16 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
 
     @Override
     public void processSelectSection(String section, WebClientInfo clientInfo) {
-        if(section == null) {
+        if(section == null || clientInfo == null) {
             return;
         }
         ScoreBuilderStrategy scoreBuilderStrategy = szcore.getScoreBuilderStrategy();
-        scoreBuilderStrategy.appendSection(section, clientInfo.getClientAddr());
+        String clientId = clientInfo.getClientId();
+        if(clientId == null) {
+            LOG.warn("processSelectSection: unknown clientId, using source addr as id");
+            clientId = clientInfo.getClientAddr();
+        }
+        scoreBuilderStrategy.appendSection(section, clientId);
     }
 
     public InstrumentBeatTracker getInstrumentBeatTracker(Id instrumentId) {

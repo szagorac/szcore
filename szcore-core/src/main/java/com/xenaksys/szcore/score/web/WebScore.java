@@ -632,6 +632,11 @@ public class WebScore {
             return;
         }
 
+        if (clients.containsKey(destination)) {
+            WebClientInfo client = clients.get(destination);
+            scoreProcessor.sendWebScoreState(client.getClientAddr(), WebScoreTargetType.HOST, scoreState);
+        }
+
         if (allClients.containsKey(destination)) {
             WebClientInfo client = allClients.get(destination);
             scoreProcessor.sendWebScoreState(client.getClientAddr(), WebScoreTargetType.HOST, scoreState);
@@ -741,10 +746,9 @@ public class WebScore {
 
     public void processSelectSection(WebScoreSelectSectionEvent event) {
         try {
-            String clientId = event.getSourceAddr();
-            WebClientInfo clientInfo = allClients.get(clientId);
+            WebClientInfo clientInfo = getClientInfo(event);
             if (clientInfo == null) {
-                LOG.error("processSelectSection: Unknown client: {}", clientId);
+                LOG.error("processSelectSection: Unknown client source: {} id: {}", event.getSourceAddr(), event.getClientId());
                 return;
             }
             String section = event.getSection();
@@ -775,7 +779,23 @@ public class WebScore {
     }
 
     public boolean isDestination(String destination) {
-        return allClients.containsKey(destination) || instrumentClients.containsKey(destination) || Consts.ALL_DESTINATIONS.equals(destination);
+        return allClients.containsKey(destination) ||
+                clients.containsKey(destination) ||
+                instrumentClients.containsKey(destination) ||
+                Consts.ALL_DESTINATIONS.equals(destination);
+    }
+
+    public WebClientInfo getClientInfo(WebScoreInEvent webEvent) {
+        String clientId = webEvent.getClientId();
+        if(clientId != null) {
+            WebClientInfo clientInfo = clients.get(clientId);
+            if(clientInfo != null) {
+                return clientInfo;
+            }
+        }
+
+        clientId = webEvent.getSourceAddr();
+        return allClients.get(clientId);
     }
 
     public boolean isReady() {

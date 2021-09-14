@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.score.delegate;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.model.Bar;
@@ -35,6 +36,13 @@ import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NO;
 import static com.xenaksys.szcore.Consts.UNDERSCORE;
 
 public class DialogsScoreProcessor extends ScoreProcessorDelegate {
+
+    private final static String INSTRUMENT_DEFAULT = "Abstain";
+    private final static String INSTRUMENT_PRESENTER = "Present";
+    private final static String INSTRUMENT_AGREE = "Concur";
+    private final static String INSTRUMENT_DISAGREE = "Dissent";
+    private final static String INSTRUMENT_ABSTAIN = INSTRUMENT_DEFAULT;
+    private final static String[] INSTRUMENTS = {INSTRUMENT_PRESENTER, INSTRUMENT_AGREE, INSTRUMENT_DISAGREE, INSTRUMENT_ABSTAIN};
 
     public DialogsScoreProcessor(TransportFactory transportFactory,
                                  MutableClock clock,
@@ -96,6 +104,9 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
         }
 
         szcore.initScoreStrategies();
+        ScoreBuilderStrategy scoreBuilderStrategy = szcore.getScoreBuilderStrategy();
+        scoreBuilderStrategy.setInstruments(INSTRUMENTS);
+        scoreBuilderStrategy.setDefaultInstrument(INSTRUMENT_DEFAULT);
 
         if (!szcore.isUseContinuousPage()) {
             addStopEvent(lastBeat, transport.getId());

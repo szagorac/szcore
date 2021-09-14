@@ -44,6 +44,7 @@ public class ScoreStrategyContainer {
 
     public void initBuilderStrategy(ScoreBuilderStrategyConfig config, BasicScore szcore) {
         ScoreBuilderStrategy scoreBuilderStrategy = new ScoreBuilderStrategy(szcore, config);
+        scoreBuilderStrategy.init();
         addStrategy(scoreBuilderStrategy);
     }
 

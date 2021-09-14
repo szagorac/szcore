@@ -5,8 +5,8 @@ public class WebScoreSelectInstrumentSlotEvent extends WebScoreInEvent {
     private final int slotNo;
     private final String slotInstrument;
 
-    public WebScoreSelectInstrumentSlotEvent(String eventId, String sourceAddr, String part, int slotNo, String slotInstrument, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        super(eventId, sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public WebScoreSelectInstrumentSlotEvent(String clientId, String eventId, String sourceAddr, String part, int slotNo, String slotInstrument, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        super(clientId, eventId, sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
         this.part = part;
         this.slotNo = slotNo;
         this.slotInstrument = slotInstrument;
@@ -30,7 +30,7 @@ public class WebScoreSelectInstrumentSlotEvent extends WebScoreInEvent {
 
     @Override
     public String toString() {
-        return "WebScoreConnectionEvent{" +
+        return "WebScoreSelectInstrumentSlotEvent{" +
                 "part=" + part +
                 '}';
     }

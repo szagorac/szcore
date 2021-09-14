@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.score.delegate;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.algo.ValueScaler;
 import com.xenaksys.szcore.algo.config.ScoreBuilderStrategyConfig;
@@ -54,6 +55,7 @@ import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreSelectInstrumentSlotEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreSelectSectionEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import com.xenaksys.szcore.model.Bar;
@@ -2447,6 +2449,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         if (webScore == null) {
             return;
         }
+        webScore.processInEvent(webEvent);
         WebScoreInEventType type = webEvent.getWebScoreEventType();
         switch (type) {
             case CONNECTION:
@@ -2463,6 +2466,9 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                 break;
             case SELECT_ISLOT:
                 webScore.processSelectInstrumentSlot((WebScoreSelectInstrumentSlotEvent) webEvent);
+                break;
+            case SELECT_SECTION:
+                webScore.processSelectSection((WebScoreSelectSectionEvent) webEvent);
                 break;
             default:
                 LOG.info("onIncomingWebScoreEvent: unknown IncomingWebAudienceEventType: {}", type);
@@ -3112,10 +3118,18 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         baseBeatEventsToProcess.add(event);
     }
 
+    @Override
+    public void processSelectSection(String section, WebClientInfo clientInfo) {
+        if(section == null) {
+            return;
+        }
+        ScoreBuilderStrategy scoreBuilderStrategy = szcore.getScoreBuilderStrategy();
+        scoreBuilderStrategy.appendSection(section, clientInfo.getClientAddr());
+    }
+
     public InstrumentBeatTracker getInstrumentBeatTracker(Id instrumentId) {
         return instrumentBeatTrackers.get(instrumentId);
     }
-
 
     @Override
     public void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst) {

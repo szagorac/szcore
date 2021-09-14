@@ -26,10 +26,12 @@ import com.xenaksys.szcore.event.osc.ResetScoreEvent;
 import com.xenaksys.szcore.event.osc.ResetStavesEvent;
 import com.xenaksys.szcore.event.osc.StaveStartMarkEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreSelectInstrumentSlotEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreSelectSectionEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.Page;
@@ -69,6 +71,7 @@ public class WebScore {
     private final BasicScore score;
     private final Clock clock;
     private final Map<String, List<WebClientInfo>> instrumentClients = new ConcurrentHashMap<>();
+    private final Map<String, WebClientInfo> allClients = new ConcurrentHashMap<>();
     private final Map<String, WebClientInfo> clients = new ConcurrentHashMap<>();
     private final Map<StaveId, OverlayProcessor> overlayProcessors = new ConcurrentHashMap<>();
     private final Properties props;
@@ -136,7 +139,7 @@ public class WebScore {
             if (assignmentType != null) {
                 webBuilderStrategy.setAssignmentType(assignmentType.name());
             }
-            List<String> sections = builderStrategy.getConfig().getSections();
+            List<String> sections = builderStrategy.getSections();
             if(sections != null) {
                 webBuilderStrategy.setSections(sections);
             }
@@ -358,7 +361,7 @@ public class WebScore {
         }
         try {
             WebClientInfo clientInfo = event.getWebClientInfo();
-            boolean isRegistered = clients.containsKey(clientInfo.getClientAddr());
+            boolean isRegistered = allClients.containsKey(clientInfo.getClientAddr());
             addOrUpdateClientInfo(clientInfo);
             if (!isRegistered) {
                 sendScoreInfo(clientInfo);
@@ -372,8 +375,31 @@ public class WebScore {
         if (clientInfo == null) {
             return;
         }
-        clients.put(clientInfo.getClientAddr(), clientInfo);
+        allClients.put(clientInfo.getClientAddr(), clientInfo);
+        addClientIdClient(clientInfo);
         addInstrumentClient(clientInfo);
+    }
+
+    private void addClientIdClient(WebClientInfo clientInfo) {
+        String clientId = clientInfo.getClientId();
+        addOrUpdateClient(clientInfo, clientId);
+    }
+
+    private void addOrUpdateClient(WebClientInfo clientInfo, String clientId) {
+        if(clientId == null) {
+            return;
+        }
+        if(clients.containsKey(clientId)) {
+            clients.get(clientId);
+        }
+        if(clients.containsKey(clientId)) {
+            WebClientInfo currentClientInfo = clients.get(clientId);
+            String addr = clientInfo.getClientAddr();
+            if(addr != null && addr.equals(currentClientInfo.getClientAddr())) {
+                return;
+            }
+        }
+        clients.put(clientId, clientInfo);
     }
 
     private void addInstrumentClient(WebClientInfo clientInfo) throws Exception {
@@ -606,8 +632,8 @@ public class WebScore {
             return;
         }
 
-        if (clients.containsKey(destination)) {
-            WebClientInfo client = clients.get(destination);
+        if (allClients.containsKey(destination)) {
+            WebClientInfo client = allClients.get(destination);
             scoreProcessor.sendWebScoreState(client.getClientAddr(), WebScoreTargetType.HOST, scoreState);
         }
     }
@@ -619,7 +645,7 @@ public class WebScore {
         }
         List<String> toRemove = webEvent.getConnectionIds();
         for(String connId : toRemove) {
-            WebClientInfo removed = clients.remove(connId);
+            WebClientInfo removed = allClients.remove(connId);
             if(removed != null) {
                 for(String instrument : instrumentClients.keySet()) {
                     List<WebClientInfo> instClients = instrumentClients.get(instrument);
@@ -629,10 +655,35 @@ public class WebScore {
         }
     }
 
+    public void processInEvent(WebScoreInEvent event) {
+        try {
+            String sourceAddr = event.getSourceAddr();
+            if(sourceAddr == null) {
+                return;
+            }
+            WebClientInfo clientInfo = allClients.get(sourceAddr);
+            if (clientInfo == null) {
+                LOG.debug("processInEvent: Unknown client: {}", sourceAddr);
+                return;
+            }
+            String eventClientId = event.getClientId();
+            if (eventClientId == null) {
+                LOG.debug("processInEvent: invalid client ID");
+                return;
+            }
+            if(!eventClientId.equals(clientInfo.getClientId())) {
+                clientInfo.setClientId(eventClientId);
+            }
+            addOrUpdateClient(clientInfo, eventClientId);
+        } catch (Exception e) {
+            LOG.error("processInEvent: failed to process web in event", e);
+        }
+    }
+
     public void processPartRegistration(WebScorePartRegEvent event) {
         try {
             String clientId = event.getSourceAddr();
-            WebClientInfo clientInfo = clients.get(clientId);
+            WebClientInfo clientInfo = allClients.get(clientId);
             if (clientInfo == null) {
                 LOG.error("processPartRegistration: Unknown client: {}", clientId);
                 return;
@@ -655,7 +706,7 @@ public class WebScore {
     public void processPartReady(WebScorePartReadyEvent event) {
         try {
             String clientId = event.getSourceAddr();
-            WebClientInfo clientInfo = clients.get(clientId);
+            WebClientInfo clientInfo = allClients.get(clientId);
             if (clientInfo == null) {
                 LOG.error("processPartReady: Unknown client: {}", clientId);
                 return;
@@ -688,6 +739,21 @@ public class WebScore {
         }
     }
 
+    public void processSelectSection(WebScoreSelectSectionEvent event) {
+        try {
+            String clientId = event.getSourceAddr();
+            WebClientInfo clientInfo = allClients.get(clientId);
+            if (clientInfo == null) {
+                LOG.error("processSelectSection: Unknown client: {}", clientId);
+                return;
+            }
+            String section = event.getSection();
+            scoreProcessor.processSelectSection(section, clientInfo);
+        } catch (Exception e) {
+            LOG.error("processSelectInstrumentSlot: failed to process select intrument slot", e);
+        }
+    }
+
     public WebClientInfo getInstrumentClient(String instrument, String addr) {
         if(instrument == null || addr == null) {
             return null;
@@ -709,7 +775,7 @@ public class WebScore {
     }
 
     public boolean isDestination(String destination) {
-        return clients.containsKey(destination) || instrumentClients.containsKey(destination) || Consts.ALL_DESTINATIONS.equals(destination);
+        return allClients.containsKey(destination) || instrumentClients.containsKey(destination) || Consts.ALL_DESTINATIONS.equals(destination);
     }
 
     public boolean isReady() {

@@ -104,4 +104,6 @@ public interface ScoreProcessor extends Processor {
     void publishOscEvent(OscEvent event);
 
     void addBeatEventToProcess(SzcoreEvent event);
+
+    void processSelectSection(String section, WebClientInfo clientInfo);
 }

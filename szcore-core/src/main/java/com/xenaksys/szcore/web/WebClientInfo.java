@@ -21,6 +21,7 @@ public class WebClientInfo {
     private boolean isMobile;
     private boolean isBanned;
     private boolean isReady;
+    private String clientId;
 
     private TLongArrayStack latencies = new TLongArrayStack(100);
 
@@ -140,6 +141,14 @@ public class WebClientInfo {
         isReady = ready;
     }
 
+    public String getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+    }
+
     public long getLatency() {
         long[] ls = latencies.toArray();
         long sum = 0L;
@@ -182,6 +191,7 @@ public class WebClientInfo {
     public String toString() {
         return "WebClientInfo{" +
                 "clientAddr='" + clientAddr + '\'' +
+                ", clientId=" + clientId +
                 ", bt=" + bt +
                 ", os=" + os +
                 ", isMobile=" + isMobile +

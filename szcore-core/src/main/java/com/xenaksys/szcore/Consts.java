@@ -58,6 +58,7 @@ public interface Consts {
     String ARG_PING = "PING";
     String ARG_SET_INSTRUMENT = "SET_INSTRUMENT";
     String ARG_SELECT_INST_SLOT = "SELECT_ISLOT";
+    String ARG_SELECT_SECTION = "SELECT_SECTION";
     String BLANK_PAGE_NAME = "blank";
     String BLANK_PAGE_FILE = "blankStave";
     String DEFAULT_FILE_NAME = "part" + INSCORE_FILE_EXTENSION;
@@ -313,6 +314,8 @@ public interface Consts {
     String WEB_EVENT_ELEMENT_ID = "elementId";
     String WEB_EVENT_IS_SELECTED = "selected";
     String WEB_EVENT_PART = "part";
+    String WEB_EVENT_CLIENT_ID = "clientId";
+    String WEB_EVENT_SECTION = "section";
     String WEB_EVENT_SERVER_TIME = "serverTime";
     String WEB_EVENT_SLOT_NO = "slotNo";
     String WEB_EVENT_SLOT_INSTRUMENT = "slotInstrument";

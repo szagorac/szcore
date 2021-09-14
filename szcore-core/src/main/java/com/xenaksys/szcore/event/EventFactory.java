@@ -62,11 +62,13 @@ import com.xenaksys.szcore.event.web.audience.WebAudienceStopEvent;
 import com.xenaksys.szcore.event.web.audience.WebPollAudienceEvent;
 import com.xenaksys.szcore.event.web.audience.WebStartAudienceEvent;
 import com.xenaksys.szcore.event.web.in.UpdateWebScoreConnectionsEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreClientHelloEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreSelectInstrumentSlotEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreSelectSectionEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import com.xenaksys.szcore.model.HistoBucketView;
@@ -433,17 +435,26 @@ public class EventFactory {
         return new WebScoreConnectionEvent(webClientInfo, creationTime);
     }
 
-    public WebScorePartRegEvent createWebScorePartRegEvent(String eventId, String sourceAddr, String part, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        return new WebScorePartRegEvent(eventId, sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public WebScoreClientHelloEvent createWebScoreClientHelloEvent(String clientId, String eventId, String sourceAddr, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new WebScoreClientHelloEvent(clientId, eventId, sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
-    public WebScorePartReadyEvent createWebScorePartReadyEvent(String eventId, String sourceAddr, String part, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        return new WebScorePartReadyEvent(eventId, sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public WebScorePartRegEvent createWebScorePartRegEvent(String clientId, String eventId, String sourceAddr, String part, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new WebScorePartRegEvent(clientId, eventId, sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
-    public WebScoreSelectInstrumentSlotEvent createWebScoreSelectInstrumentSlotEvent(String eventId, String sourceAddr, String part, int slotNo, String slotInstrument, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        return new WebScoreSelectInstrumentSlotEvent(eventId, sourceAddr, part, slotNo, slotInstrument, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public WebScorePartReadyEvent createWebScorePartReadyEvent(String clientId, String eventId, String sourceAddr, String part, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new WebScorePartReadyEvent(clientId, eventId, sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
+
+    public WebScoreSelectInstrumentSlotEvent createWebScoreSelectInstrumentSlotEvent(String clientId, String eventId, String sourceAddr, String part, int slotNo, String slotInstrument, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new WebScoreSelectInstrumentSlotEvent(clientId, eventId, sourceAddr, part, slotNo, slotInstrument, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    }
+
+    public WebScoreSelectSectionEvent createWebScoreSelectSectionEvent(String clientId, String eventId, String sourceAddr, String section, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new WebScoreSelectSectionEvent(clientId, eventId, sourceAddr, section, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    }
+
     public List<Object> createJavaScriptArgs() {
         List<Object> jsArgs = new ArrayList<>();
         jsArgs.add(Consts.RUN);

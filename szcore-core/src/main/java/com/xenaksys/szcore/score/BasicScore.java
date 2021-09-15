@@ -803,6 +803,11 @@ public class BasicScore implements Score {
         }
     }
 
+    @Override
+    public boolean isReady() {
+        return scoreStrategyContainer.isReady();
+    }
+
     public void setIsPrecount(boolean isPrecount) {
         this.isPrecount = isPrecount;
     }

@@ -105,7 +105,7 @@ import com.xenaksys.szcore.score.OscScript;
 import com.xenaksys.szcore.score.OverlayElementType;
 import com.xenaksys.szcore.score.OverlayType;
 import com.xenaksys.szcore.score.ScoreLoader;
-import com.xenaksys.szcore.score.ScoreProcessorImpl;
+import com.xenaksys.szcore.score.ScoreProcessorDelegator;
 import com.xenaksys.szcore.score.StaveFactory;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.score.web.WebScore;
@@ -170,7 +170,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     private final EventFactory eventFactory;
     private final TaskFactory taskFactory;
     private final OscDestinationEventListener oscDestinationEventListener;
-    private final ScoreProcessorImpl parentProcessor;
+    private final ScoreProcessorDelegator parentProcessor;
     private final Properties props;
 
     private BasicScore szcore = null;
@@ -213,7 +213,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                                   EventFactory eventFactory,
                                   TaskFactory taskFactory,
                                   BasicScore szcore,
-                                  ScoreProcessorImpl parent,
+                                  ScoreProcessorDelegator parent,
                                   Properties props) {
         this.transportFactory = transportFactory;
         this.clock = clock;
@@ -2509,7 +2509,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     }
 
     public boolean isReadyToPlay() {
-        return isScoreLoaded && isInitDone && webScore.isReady();
+        return isScoreLoaded && isInitDone && szcore.isReady() && webScore.isReady();
     }
 
     @Override
@@ -3493,7 +3493,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         return taskFactory;
     }
 
-    public ScoreProcessorImpl getParentProcessor() {
+    public ScoreProcessorDelegator getParentProcessor() {
         return parentProcessor;
     }
 

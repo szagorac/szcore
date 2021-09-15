@@ -4,4 +4,5 @@ public interface ScoreStrategy {
 
     StrategyType getType();
 
+    boolean isReady();
 }

@@ -36,6 +36,7 @@ public class ScoreRandomisationStrategy implements ScoreStrategy{
     private final Map<InstrumentId, Integer> instrumentPage = new HashMap<>();
     private final List<Integer> assignmentStrategy = new ArrayList<>();
     private final Random rnd = new Random();
+    private boolean isReady = false;
 
     public ScoreRandomisationStrategy(BasicScore szcore, ScoreRandomisationStrategyConfig config) {
         this.szcore = szcore;
@@ -55,6 +56,7 @@ public class ScoreRandomisationStrategy implements ScoreStrategy{
         }
 
         assignmentStrategy.add(2);
+        isReady = true;
     }
 
     private void reset() {
@@ -307,5 +309,10 @@ public class ScoreRandomisationStrategy implements ScoreStrategy{
     @Override
     public StrategyType getType() {
         return StrategyType.RND;
+    }
+
+    @Override
+    public boolean isReady() {
+        return isReady;
     }
 }

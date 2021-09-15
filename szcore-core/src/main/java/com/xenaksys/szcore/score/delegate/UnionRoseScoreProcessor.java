@@ -8,7 +8,7 @@ import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.Scheduler;
 import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.score.BasicScore;
-import com.xenaksys.szcore.score.ScoreProcessorImpl;
+import com.xenaksys.szcore.score.ScoreProcessorDelegator;
 import com.xenaksys.szcore.score.web.audience.delegate.UnionRoseWebAudienceProcessor;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
@@ -26,7 +26,7 @@ public class UnionRoseScoreProcessor extends ScoreProcessorDelegate {
                                    EventFactory eventFactory,
                                    TaskFactory taskFactory,
                                    BasicScore szcore,
-                                   ScoreProcessorImpl parent,
+                                   ScoreProcessorDelegator parent,
                                    Properties props
                                    ) {
         super(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, szcore, parent, props);

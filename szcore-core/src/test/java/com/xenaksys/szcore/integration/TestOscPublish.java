@@ -15,7 +15,7 @@ import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.publish.OscPublishProcessor;
 import com.xenaksys.szcore.publish.WebPublisherProcessor;
-import com.xenaksys.szcore.score.ScoreProcessorImpl;
+import com.xenaksys.szcore.score.ScoreProcessorDelegator;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.BasicScheduler;
 import com.xenaksys.szcore.time.BasicTimer;
@@ -65,7 +65,7 @@ public class TestOscPublish {
         TaskFactory taskFactory = new TaskFactory();
         Properties props  = new Properties();
 
-        scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, props);
+        scoreProcessor = new ScoreProcessorDelegator(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, props);
     }
 
     @Test

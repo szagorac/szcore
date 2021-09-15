@@ -45,6 +45,7 @@ import com.xenaksys.szcore.score.InscoreMapElement;
 import com.xenaksys.szcore.score.OverlayElementType;
 import com.xenaksys.szcore.score.OverlayType;
 import com.xenaksys.szcore.score.web.strategy.WebBuilderStrategy;
+import com.xenaksys.szcore.score.web.strategy.WebStrategy;
 import com.xenaksys.szcore.util.ParseUtil;
 import com.xenaksys.szcore.util.WebUtil;
 import com.xenaksys.szcore.web.WebClientInfo;
@@ -135,6 +136,7 @@ public class WebScore {
         if(builderStrategy != null) {
             WebBuilderStrategy webBuilderStrategy = new WebBuilderStrategy();
             webBuilderStrategy.setName(StrategyType.BUILDER.name());
+            webBuilderStrategy.setReady(false);
             SectionAssignmentType assignmentType = builderStrategy.getConfig().getAssignmentType();
             if (assignmentType != null) {
                 webBuilderStrategy.setAssignmentType(assignmentType.name());
@@ -144,6 +146,9 @@ public class WebScore {
                 webBuilderStrategy.setSections(sections);
             }
             info.addStrategy(webBuilderStrategy);
+            for(String clientId : clients.keySet()) {
+                builderStrategy.addClientId(clientId);
+            }
         }
 
         return info;
@@ -382,7 +387,14 @@ public class WebScore {
 
     private void addClientIdClient(WebClientInfo clientInfo) {
         String clientId = clientInfo.getClientId();
+        if(clientId == null) {
+            return;
+        }
         addOrUpdateClient(clientInfo, clientId);
+        ScoreBuilderStrategy builderStrategy = score.getScoreBuilderStrategy();
+        if(builderStrategy != null) {
+            builderStrategy.addClientId(clientId);
+        }
     }
 
     private void addOrUpdateClient(WebClientInfo clientInfo, String clientId) {
@@ -418,15 +430,28 @@ public class WebScore {
     }
 
     public void sendScoreInfo() throws Exception {
-        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
-        scoreState.setScoreInfo(scoreInfo);
-        scoreProcessor.sendWebScoreState(WebScoreTargetType.ALL.name(), WebScoreTargetType.ALL, scoreState);
+        sendScoreInfo(WebScoreTargetType.ALL.name(), WebScoreTargetType.ALL);
     }
 
     public void sendScoreInfo(WebClientInfo clientInfo) throws Exception {
+        sendScoreInfo(clientInfo.getClientAddr(), WebScoreTargetType.HOST);
+    }
+
+    public void sendScoreInfo(String addr, WebScoreTargetType targetType) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         scoreState.setScoreInfo(scoreInfo);
-        scoreProcessor.sendWebScoreState(clientInfo.getClientAddr(), WebScoreTargetType.HOST, scoreState);
+        scoreProcessor.sendWebScoreState(addr, targetType, scoreState);
+    }
+
+    public void sendBuilderStrategyReady(boolean isReady) throws Exception {
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
+        WebScoreInfo info = new WebScoreInfo();
+        WebBuilderStrategy webBuilderStrategy = new WebBuilderStrategy();
+        webBuilderStrategy.setName(StrategyType.BUILDER.name());
+        webBuilderStrategy.setReady(isReady);
+        info.addStrategy(webBuilderStrategy);
+        scoreState.setScoreInfo(info);
+        scoreProcessor.sendWebScoreState(WebScoreTargetType.ALL.name(), WebScoreTargetType.ALL, scoreState);
     }
 
     public void sendPartInfo(WebClientInfo clientInfo) throws Exception {
@@ -484,7 +509,6 @@ public class WebScore {
         scoreState.setPageInfo(webPageInfo);
         sendToDestination(destination, scoreState);
     }
-
 
     private void sendTimeSpaceMapInfo(String destination, String webPageId, String webStaveId, List<InscoreMapElement> mapElements) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
@@ -753,8 +777,26 @@ public class WebScore {
             }
             String section = event.getSection();
             scoreProcessor.processSelectSection(section, clientInfo);
+            ScoreBuilderStrategy scoreBuilderStrategy = score.getScoreBuilderStrategy();
+            if(scoreBuilderStrategy.isReady()) {
+                setBuilderWebStrategyReady(true);
+                sendBuilderStrategyReady(true);
+            }
         } catch (Exception e) {
             LOG.error("processSelectInstrumentSlot: failed to process select intrument slot", e);
+        }
+    }
+
+    private void setBuilderWebStrategyReady(boolean isReady) {
+        List<WebStrategy> webStrategies = scoreInfo.getStrategies();
+        if(webStrategies == null) {
+            return;
+        }
+        for(WebStrategy strategy : webStrategies) {
+            if(strategy instanceof WebBuilderStrategy) {
+                WebBuilderStrategy builderStrategy = (WebBuilderStrategy)strategy;
+                builderStrategy.setReady(isReady);
+            }
         }
     }
 

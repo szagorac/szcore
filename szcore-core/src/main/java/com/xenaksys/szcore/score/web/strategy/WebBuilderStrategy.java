@@ -5,6 +5,7 @@ import java.util.List;
 public class WebBuilderStrategy extends WebStrategy {
     private List<String> sections;
     private String assignmentType;
+    private boolean isReady;
 
     public List<String> getSections() {
         return sections;
@@ -20,5 +21,13 @@ public class WebBuilderStrategy extends WebStrategy {
 
     public void setAssignmentType(String assignmentType) {
         this.assignmentType = assignmentType;
+    }
+
+    public boolean isReady() {
+        return isReady;
+    }
+
+    public void setReady(boolean ready) {
+        isReady = ready;
     }
 }

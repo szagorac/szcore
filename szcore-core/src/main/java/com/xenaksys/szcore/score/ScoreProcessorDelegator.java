@@ -46,8 +46,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class ScoreProcessorImpl implements ScoreProcessor {
-    static final Logger LOG = LoggerFactory.getLogger(ScoreProcessorImpl.class);
+public class ScoreProcessorDelegator implements ScoreProcessor {
+    static final Logger LOG = LoggerFactory.getLogger(ScoreProcessorDelegator.class);
 
     private final TransportFactory transportFactory;
     private final MutableClock clock;
@@ -63,14 +63,14 @@ public class ScoreProcessorImpl implements ScoreProcessor {
     protected final List<WebAudienceStateListener> webAudienceStateListeners = new CopyOnWriteArrayList<>();
 
 
-    public ScoreProcessorImpl(TransportFactory transportFactory,
-                              MutableClock clock,
-                              OscPublisher oscPublisher,
-                              WebPublisher webPublisher,
-                              Scheduler scheduler,
-                              EventFactory eventFactory,
-                              TaskFactory taskFactory,
-                              Properties props) {
+    public ScoreProcessorDelegator(TransportFactory transportFactory,
+                                   MutableClock clock,
+                                   OscPublisher oscPublisher,
+                                   WebPublisher webPublisher,
+                                   Scheduler scheduler,
+                                   EventFactory eventFactory,
+                                   TaskFactory taskFactory,
+                                   Properties props) {
         this.transportFactory = transportFactory;
         this.clock = clock;
         this.oscPublisher = oscPublisher;
@@ -127,7 +127,7 @@ public class ScoreProcessorImpl implements ScoreProcessor {
             }
             Class<?> clazz = Class.forName(className);
             Constructor<?> constructor = clazz.getConstructor(TransportFactory.class, MutableClock.class, OscPublisher.class,
-                    WebPublisher.class, Scheduler.class, EventFactory.class, TaskFactory.class, BasicScore.class, ScoreProcessorImpl.class, Properties.class);
+                    WebPublisher.class, Scheduler.class, EventFactory.class, TaskFactory.class, BasicScore.class, ScoreProcessorDelegator.class, Properties.class);
             Object instance = constructor.newInstance(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, score, this, props);
             return (ScoreProcessor) instance;
         } catch (Exception e) {
@@ -147,21 +147,33 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     @Override
     public void play() throws Exception {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.play();
     }
 
     @Override
     public void stop() {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.stop();
     }
 
     @Override
     public void setPosition(long millis) {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.setPosition(millis);
     }
 
     @Override
     public Score getScore() {
+        if(scoreDelegate == null) {
+            return null;
+        }
         return scoreDelegate.getScore();
     }
 
@@ -226,128 +238,206 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     @Override
     public void setTempoModifier(Id transportId, TempoModifier tempoModifier) {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.setTempoModifier(transportId, tempoModifier);
     }
 
     @Override
     public void setRandomisationStrategy(List<Integer> randomisationStrategy) {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.setRandomisationStrategy(randomisationStrategy);
     }
 
     @Override
     public void usePageRandomisation(Boolean value) {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.usePageRandomisation(value);
     }
 
     @Override
     public void useContinuousPageChange(Boolean value) {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.useContinuousPageChange(value);
     }
 
     @Override
     public void setOverlayValue(OverlayType type, long value, List<Id> instrumentIds) {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.setOverlayValue(type, value, instrumentIds);
     }
 
     @Override
     public void onUseOverlayLine(OverlayType type, Boolean value, List<Id> instrumentIds) {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.onUseOverlayLine(type, value, instrumentIds);
     }
 
     @Override
     public void onUseOverlay(OverlayType type, Boolean value, List<Id> instrumentIds) {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.onUseOverlay(type, value, instrumentIds);
     }
 
     @Override
     public void onIncomingWebAudienceEvent(IncomingWebAudienceEvent webEvent) throws Exception {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.onIncomingWebAudienceEvent(webEvent);
     }
 
     @Override
     public void onWebAudienceStateChange(WebAudienceScoreStateExport webAudienceScoreStateExport) throws Exception {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.onWebAudienceStateChange(webAudienceScoreStateExport);
     }
 
     @Override
     public void onWebAudienceStateDeltaChange(WebAudienceScoreStateDeltaExport webAudienceScoreStateDeltaExport) throws Exception {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.onWebAudienceStateDeltaChange(webAudienceScoreStateDeltaExport);
     }
 
     @Override
     public void onOutgoingWebEvent(OutgoingWebEvent webEvent) throws Exception {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.onOutgoingWebEvent(webEvent);
     }
 
     @Override
     public void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst) {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.processSelectInstrumentSlot(slotNo, slotInstrument, sourceInst);
     }
 
     public void processPrepStaveChange(Id instrumentId, BeatId activateBeatId, BeatId deactivateBeatId, BeatId pageChangeBeatId, PageId nextPageId) {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.processPrepStaveChange(instrumentId, activateBeatId, deactivateBeatId, pageChangeBeatId, nextPageId);
     }
 
     @Override
     public WebScoreAction getOrCreateWebScoreAction(WebScoreActionType actionType, List<String> targets, Map<String, Object> params) {
+        if(scoreDelegate == null) {
+            return null;
+        }
         return scoreDelegate.getOrCreateWebScoreAction(actionType, targets, params);
     }
 
     @Override
     public boolean isSchedulerRunning() {
+        if(scoreDelegate == null) {
+            return false;
+        }
         return scoreDelegate.isSchedulerRunning();
     }
 
     @Override
     public InstrumentBeatTracker getInstrumentBeatTracker(Id instrumentId) {
+        if(scoreDelegate == null) {
+            return null;
+        }
         return scoreDelegate.getInstrumentBeatTracker(instrumentId);
     }
 
     @Override
     public void publishOscEvent(OscEvent event) {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.publishOscEvent(event);
     }
 
     @Override
     public void addBeatEventToProcess(SzcoreEvent event) {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.addBeatEventToProcess(event);
     }
 
     @Override
     public void processSelectSection(String section, WebClientInfo clientInfo) {
-
+        if(scoreDelegate == null) {
+            return;
+        }
+        scoreDelegate.processSelectSection(section, clientInfo);
     }
 
     @Override
     public void onOpenModWindow(InstrumentId instId, Stave stave, Page nextPage, PageId currentPageId) {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.onOpenModWindow(instId, stave, nextPage, currentPageId);
     }
 
     @Override
     public void onCloseModWindow(InstrumentId instId, Stave stave, Page nextPage, PageId currentPageId) {
-        scoreDelegate.onOpenModWindow(instId, stave, nextPage, currentPageId);
+        if(scoreDelegate == null) {
+            return;
+        }
+        scoreDelegate.onCloseModWindow(instId, stave, nextPage, currentPageId);
     }
 
     @Override
     public int getCurrentBeatNo() {
+        if(scoreDelegate == null) {
+            return 0;
+        }
         return scoreDelegate.getCurrentBeatNo();
     }
 
     public void sendOscInstrumentRndPageUpdate(int bufferNo) {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.sendOscInstrumentRndPageUpdate(bufferNo);
     }
 
     @Override
     public void setUpContinuousTempoChange(int endBpm, int timeInBeats) {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.setUpContinuousTempoChange(endBpm, timeInBeats);
     }
 
     @Override
     public void scheduleEvent(SzcoreEvent event, long timeDeltaMs) {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.scheduleEvent(event, timeDeltaMs);
     }
 
     public void scheduleTask(MusicTask task) {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.scheduleTask(task);
     }
 
@@ -361,11 +451,17 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     @Override
     public void sendWebScoreState(String clientAddr, WebScoreTargetType host, WebScoreState scoreState) throws Exception {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.sendWebScoreState(clientAddr, host, scoreState);
     }
 
     @Override
     public WebScoreState getOrCreateWebScoreState() {
+        if(scoreDelegate == null) {
+            return null;
+        }
         return scoreDelegate.getOrCreateWebScoreState();
     }
 
@@ -379,11 +475,17 @@ public class ScoreProcessorImpl implements ScoreProcessor {
 
     @Override
     public List<WebClientInfo> getWebScoreInstrumentClients(String instrument) {
+        if(scoreDelegate == null) {
+            return null;
+        }
         return scoreDelegate.getWebScoreInstrumentClients(instrument);
     }
 
     @Override
     public void process(SzcoreEvent event) {
+        if(scoreDelegate == null) {
+            return;
+        }
         scoreDelegate.process(event);
     }
 }

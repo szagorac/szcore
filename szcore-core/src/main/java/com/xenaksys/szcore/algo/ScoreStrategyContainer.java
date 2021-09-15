@@ -78,4 +78,14 @@ public class ScoreStrategyContainer {
     public void addStrategy(ScoreStrategy strategy) {
         strategies.put(strategy.getType(), strategy);
     }
+
+    public boolean isReady() {
+        for(ScoreStrategy strategy : strategies.values() ) {
+            if(!strategy.isReady()) {
+                LOG.warn("Strategy: {} not ready", strategy.getType());
+                return false;
+            }
+        }
+        return true;
+    }
 }

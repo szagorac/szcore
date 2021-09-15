@@ -23,7 +23,7 @@ import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.score.InscorePageMap;
 import com.xenaksys.szcore.score.InstrumentBeatTracker;
 import com.xenaksys.szcore.score.ScoreLoader;
-import com.xenaksys.szcore.score.ScoreProcessorImpl;
+import com.xenaksys.szcore.score.ScoreProcessorDelegator;
 import com.xenaksys.szcore.score.web.audience.delegate.DialogsWebAudienceProcessor;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
@@ -52,7 +52,7 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
                                  EventFactory eventFactory,
                                  TaskFactory taskFactory,
                                  BasicScore szcore,
-                                 ScoreProcessorImpl parent,
+                                 ScoreProcessorDelegator parent,
                                  Properties props
                                    ) {
         super(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, szcore, parent, props);

@@ -17,6 +17,7 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
     private final List<String> sectionOrder = new ArrayList<>();
     private String[] instruments;
     private String defaultInstrument;
+    private boolean isReady = false;
 
     public ScoreBuilderStrategy(BasicScore szcore, ScoreBuilderStrategyConfig config) {
         this.szcore = szcore;
@@ -27,7 +28,7 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
         if(config == null) {
             return;
         }
-        List<String> sections = config.getSections();
+        List<String> sections = getSections();
         if(sections == null) {
             return;
         }
@@ -36,7 +37,7 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
         }
     }
 
-    private SectionInfo getOrCreateSectionInfo(String section) {
+    private SectionInfo getOrCreateSectionInfo(final String section) {
         return sectionInfos.computeIfAbsent(section, k -> new SectionInfo(section));
     }
 
@@ -65,6 +66,25 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
             SectionInfo sectionInfo = getOrCreateSectionInfo(section);
             sectionInfo.setOwner(owner);
         }
+        this.isReady = isBuildComplete();
+    }
+
+    public boolean isReady() {
+        return isReady;
+    }
+
+    private boolean isBuildComplete() {
+        List<String> sections = getSections();
+        if(sections == null) {
+            return true;
+        }
+
+        for(String section : sections) {
+            if(!sectionOrder.contains(section)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -78,6 +98,21 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
 
     public void setDefaultInstrument(String instrumentDefault) {
         this.defaultInstrument = instrumentDefault;
+    }
+
+    public void addClientId(String clientId) {
+        if(clientId == null) {
+            return;
+        }
+        if(defaultInstrument == null) {
+            return;
+        }
+        for(SectionInfo sectionInfo : sectionInfos.values()) {
+            String instrument = sectionInfo.getClientInstrument(clientId);
+            if(instrument == null) {
+                sectionInfo.addClientInstrument(clientId, defaultInstrument);
+            }
+        }
     }
 
     class SectionInfo {

@@ -61,7 +61,7 @@ public class TestScoreProcessorRun {
         TaskFactory taskFactory = new TaskFactory();
         Properties props  = new Properties();
 
-        scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, props);
+        scoreProcessor = new ScoreProcessorDelegator(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, props);
     }
 
     @Test

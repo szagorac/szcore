@@ -5,7 +5,6 @@ import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.model.Bar;
-import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.MutableClock;
 import com.xenaksys.szcore.model.OscPublisher;
@@ -16,6 +15,7 @@ import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.Transport;
 import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.model.id.BeatId;
+import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StrId;
 import com.xenaksys.szcore.score.BasicPage;
@@ -27,6 +27,7 @@ import com.xenaksys.szcore.score.ScoreProcessorDelegator;
 import com.xenaksys.szcore.score.web.audience.delegate.DialogsWebAudienceProcessor;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
+import com.xenaksys.szcore.web.WebClientInfo;
 
 import java.util.Collection;
 import java.util.Properties;
@@ -42,7 +43,11 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
     private final static String INSTRUMENT_AGREE = "Concur";
     private final static String INSTRUMENT_DISAGREE = "Dissent";
     private final static String INSTRUMENT_ABSTAIN = INSTRUMENT_DEFAULT;
+    private final static String INSTRUMENT_OWNER = INSTRUMENT_PRESENTER;
     private final static String[] INSTRUMENTS = {INSTRUMENT_PRESENTER, INSTRUMENT_AGREE, INSTRUMENT_DISAGREE, INSTRUMENT_ABSTAIN};
+    private final static String INSTRUMENT_ABSTAIN_PAGE_FILE_NAME = "Abstain_pagex";
+
+    private Page abstainPage;
 
     public DialogsScoreProcessor(TransportFactory transportFactory,
                                  MutableClock clock,
@@ -77,10 +82,13 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
         Page blankPage = new BasicPage(bpid, Consts.BLANK_PAGE_NAME, Consts.BLANK_PAGE_FILE);
         szcore.setBlankPage(blankPage);
 
+        Instrument presentInstrument = szcore.getInstrument(INSTRUMENT_PRESENTER);
+        copyInstrument(presentInstrument, INSTRUMENT_ABSTAIN, INSTRUMENT_ABSTAIN_PAGE_FILE_NAME, false);
+
         Collection<Instrument> instruments = szcore.getInstruments();
         BeatId lastBeat = null;
         for (Instrument instrument : instruments) {
-            Id instrumentId = instrument.getId();
+            InstrumentId instrumentId = (InstrumentId)instrument.getId();
             getInstrumentBeatTrackers().put(instrumentId, new InstrumentBeatTracker(transport, instrumentId));
             lastBeat = prepareInstrument(instrument, transport);
             Page lastPage = szcore.getLastInstrumentPage(instrumentId);
@@ -130,5 +138,20 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
 
     public void processRndStrategyOnModClose(ScoreRandomisationStrategy strategy) {
         //TODO
+    }
+
+    @Override
+    public void processSelectSection(String section, WebClientInfo clientInfo) {
+        super.processSelectSection(section, clientInfo);
+        ScoreBuilderStrategy scoreBuilderStrategy = getBasicScore().getScoreBuilderStrategy();
+        if(scoreBuilderStrategy == null) {
+            return;
+        }
+        if(scoreBuilderStrategy.isSectionOwned(section)) {
+            String owner = scoreBuilderStrategy.getSectionOwner(section);
+            if(owner != null) {
+                scoreBuilderStrategy.addClientInstrument(section, owner, INSTRUMENT_OWNER);
+            }
+        }
     }
 }

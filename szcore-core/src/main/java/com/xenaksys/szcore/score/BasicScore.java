@@ -685,8 +685,6 @@ public class BasicScore implements Score {
         return next;
     }
 
-
-
     @Override
     public List<BeatId> getBeatIds(Id transportId, int beatNo) {
         TransportContext transportContext = transportSpecificData.get(transportId);

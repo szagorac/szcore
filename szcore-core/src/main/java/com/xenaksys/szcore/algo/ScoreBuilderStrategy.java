@@ -115,6 +115,36 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
         }
     }
 
+    public void addClientInstrument(String section, String clientId, String instrumentId) {
+        if(section == null || clientId == null || instrumentId == null) {
+            return;
+        }
+        SectionInfo info = getSectionInfo(section);
+        if(info == null) {
+            return;
+        }
+        info.addClientInstrument(clientId, instrumentId);
+    }
+
+
+    public String getSectionOwner(String section) {
+        if(section == null) {
+            return null;
+        }
+        SectionInfo info = getSectionInfo(section);
+        if(info == null) {
+            return null;
+        }
+        return info.getOwner();
+    }
+
+    public SectionInfo getSectionInfo(String section) {
+        if(section == null) {
+            return null;
+        }
+        return sectionInfos.get(section);
+    }
+
     class SectionInfo {
         private final String sectionId;
         private String owner;

@@ -58,6 +58,7 @@ import com.xenaksys.szcore.event.web.in.WebScoreSelectInstrumentSlotEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreSelectSectionEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
+import com.xenaksys.szcore.instrument.BasicInstrument;
 import com.xenaksys.szcore.model.Bar;
 import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.Id;
@@ -85,6 +86,7 @@ import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.model.id.BarId;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.InstrumentId;
+import com.xenaksys.szcore.model.id.IntId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.model.id.StrId;
@@ -94,6 +96,7 @@ import com.xenaksys.szcore.score.BasicBar;
 import com.xenaksys.szcore.score.BasicBeat;
 import com.xenaksys.szcore.score.BasicPage;
 import com.xenaksys.szcore.score.BasicScore;
+import com.xenaksys.szcore.score.BasicScript;
 import com.xenaksys.szcore.score.BasicStave;
 import com.xenaksys.szcore.score.BasicTransition;
 import com.xenaksys.szcore.score.BeatFollowerPositionStrategy;
@@ -359,6 +362,85 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     protected void prepareContinuousPages(Id instrumentId, Page lastPage) {
         for (int i = 0; i < szcore.noContinuousPages; i++) {
             lastPage = prepareContinuousPage(instrumentId, (PageId) lastPage.getId());
+        }
+    }
+
+    protected void copyInstrument(Instrument fromInstrument, String toInstrumentName, String pageFileName, boolean isCopyScripts) {
+        Instrument exitingInst = szcore.getInstrument(toInstrumentName);
+        if(exitingInst != null) {
+            LOG.warn("copyInstrument: instrument {} already exists, ignoring copy...", toInstrumentName);
+            return;
+        }
+
+        InstrumentId instrumentId = new InstrumentId(toInstrumentName);
+        BasicInstrument instrument = new BasicInstrument(instrumentId, toInstrumentName, fromInstrument.isAv());
+        szcore.addInstrument(instrument);
+
+        List<Page> fromPages = new ArrayList<>(szcore.getInstrumentPages(fromInstrument.getId()));
+        for(Page fromPg : fromPages) {
+            BasicPage fromPage = (BasicPage)fromPg;
+            PageId fromPageId = fromPage.getPageId();
+            Id scoreId = fromPageId.getScoreId();
+            PageId pageId = new PageId(fromPageId.getPageNo(), instrumentId, scoreId);
+            String fileName = fromPage.getFileName();
+            if(pageFileName != null) {
+                fileName = pageFileName;
+            }
+            BasicPage page = new BasicPage(pageId, fromPage.getPageName(), fileName, fromPage.getInscorePageMap(), fromPage.isSendInscoreMap());
+            if (!szcore.containsPage(page)) {
+                szcore.addPage(page);
+            }
+            List<Bar> bars = (List<Bar>) fromPage.getBars();
+            for (Bar fromBar : bars) {
+                BarId fromBarId = (BarId)fromBar.getId();
+                BarId barId = new BarId(fromBarId.getBarNo(), instrumentId, pageId, scoreId);
+                BasicBar bar = new BasicBar(barId, fromBar.getBarName(), fromBar.getTempo(), fromBar.getTimeSignature());
+                if (szcore.doesNotcontainBar(bar)) {
+                    szcore.addBar(bar);
+                }
+                List<Beat> fromBeats = (List<Beat>) fromBar.getBeats();
+                for (Beat fromBeat : fromBeats) {
+                    BeatId fromBeatId = fromBeat.getBeatId();
+                    BeatId beatId = new BeatId(fromBeatId.getBeatNo(), instrumentId, pageId, scoreId, barId, fromBeatId.getBaseBeatNo());
+                    BasicBeat beat = new BasicBeat(beatId, fromBeat.getStartTimeMillis(), fromBeat.getDurationMillis(), fromBeat.getEndTimeMillis(),
+                            fromBeat.getBaseBeatUnitsNoAtStart(), fromBeat.getBaseBeatUnitsDuration(), fromBeat.getBaseBeatUnitsNoOnEnd(),
+                            fromBeat.getPositionXStartPxl(), fromBeat.getPositionXEndPxl(), fromBeat.getPositionYStartPxl(), fromBeat.getPositionYEndPxl(), fromBeat.isUpbeat());
+                    if (!szcore.containsBeat(beat)) {
+                        szcore.addBeat(beat);
+                    }
+                    if(isCopyScripts) {
+                        List<Script> fromBeatScripts = szcore.getBeatScripts(fromBeatId);
+                        if (fromBeatScripts != null && !fromBeatScripts.isEmpty()) {
+                            for (Script fromScript : fromBeatScripts) {
+                                Script script = null;
+                                if(fromScript instanceof BasicScript) {
+                                    IntId id = new IntId(Consts.ID_SOURCE.incrementAndGet());
+                                    script = new BasicScript(id, beatId, fromScript.getContent());
+                                } else if(fromScript instanceof BasicTransition) {
+                                    IntId id = new IntId(Consts.ID_SOURCE.incrementAndGet());
+                                    BasicTransition fromTransition = (BasicTransition)fromScript;
+                                    script = new BasicTransition(id, beatId, fromTransition.getComponent(), fromTransition.getDuration(), fromTransition.getStartValue(), fromTransition.getEndValue(), fromTransition.getFrequency());
+                                } else if(fromScript instanceof OscScript) {
+                                    IntId id = new IntId(Consts.ID_SOURCE.incrementAndGet());
+                                    OscScript fromOscScript = (OscScript)fromScript;
+                                    script = new OscScript(id, beatId, fromOscScript.getTarget(), fromOscScript.getArgs(), fromOscScript.isResetPoint(), fromOscScript.isResetOnly());
+                                } else if(fromScript instanceof ScriptingEngineScript) {
+                                    IntId id = new IntId(Consts.ID_SOURCE.incrementAndGet());
+                                    ScriptingEngineScript fromSeScript = (ScriptingEngineScript)fromScript;
+                                    script = new ScriptingEngineScript(id, beatId, fromSeScript.getContent(), fromSeScript.isResetPoint(), fromSeScript.isResetOnly());
+                                } else if(fromScript instanceof WebAudienceScoreScript) {
+                                    IntId id = new IntId(Consts.ID_SOURCE.incrementAndGet());
+                                    WebAudienceScoreScript fromWebScript = (WebAudienceScoreScript)fromScript;
+                                    script = new WebAudienceScoreScript(id, beatId, fromWebScript.getContent(), fromWebScript.isResetPoint(), fromWebScript.isResetOnly());
+                                }
+                                if(script != null) {
+                                    szcore.addScript(script);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -791,9 +873,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                         szcore.addScript(newScript);
                     }
                 }
-
             }
-
         }
 
         Instrument instrument = szcore.getInstrument(instrumentId);

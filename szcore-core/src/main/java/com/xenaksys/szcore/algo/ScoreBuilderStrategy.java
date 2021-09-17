@@ -1,13 +1,14 @@
 package com.xenaksys.szcore.algo;
 
 import com.xenaksys.szcore.algo.config.ScoreBuilderStrategyConfig;
+import com.xenaksys.szcore.model.PageInfo;
+import com.xenaksys.szcore.model.SectionInfo;
 import com.xenaksys.szcore.score.BasicScore;
+import com.xenaksys.szcore.web.WebClientInfo;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ScoreBuilderStrategy implements ScoreStrategy {
@@ -15,6 +16,7 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
     private final ScoreBuilderStrategyConfig config;
     private final Map<String, SectionInfo> sectionInfos = new ConcurrentHashMap<>();
     private final List<String> sectionOrder = new ArrayList<>();
+    private List<PageInfo> pageOrder = new ArrayList<>();
     private String[] instruments;
     private String defaultInstrument;
     private boolean isReady = false;
@@ -33,7 +35,8 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
             return;
         }
         for(String section : sections) {
-            getOrCreateSectionInfo(section);
+            SectionInfo sectionInfo = getOrCreateSectionInfo(section);
+            sectionInfo.setPageRange(config.getSectionPageRange(section));
         }
     }
 
@@ -51,6 +54,10 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
 
     public List<String> getSections() {
         return config.getSections();
+    }
+
+    public List<String> getSectionOrder() {
+        return sectionOrder;
     }
 
     public boolean isSectionOwned(String section) {
@@ -145,57 +152,68 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
         return sectionInfos.get(section);
     }
 
-    class SectionInfo {
-        private final String sectionId;
-        private String owner;
-        private final Map<String, String> clientInstrument = new HashMap<>();
+    public List<SectionInfo> getSectionInfos() {
+        return new ArrayList<>(sectionInfos.values());
+    }
 
-        public SectionInfo(String sectionId) {
-            this.sectionId = sectionId;
-        }
-
-        public void setOwner(String owner) {
-            this.owner = owner;
-        }
-
-        public String getOwner() {
-            return owner;
-        }
-
-        public void addClientInstrument(String clientId, String instrumentId) {
-            if(clientId == null || instrumentId == null) {
-                return;
+    public void setPageOrder() {
+        pageOrder.clear();
+        int pageNo = 0;
+        for(String section : sectionOrder) {
+            SectionInfo sectionInfo = getSectionInfo(section);
+            IntRange intRange = sectionInfo.getPageRange();
+            if(intRange == null) {
+                continue;
             }
-            clientInstrument.put(clientId, instrumentId);
-        }
-
-        public String getClientInstrument(String clientId) {
-            if(clientId == null) {
-                return null;
+            int[] range = intRange.getFullRange();
+            for (int j : range) {
+                pageNo++;
+                PageInfo pageInfo = new PageInfo(pageNo, j, section);
+                pageOrder.add(pageInfo);
             }
-            return clientInstrument.get(clientId);
         }
+    }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            SectionInfo that = (SectionInfo) o;
-            return sectionId.equals(that.sectionId);
+    public String getSection(int pageNo) {
+        int index = pageNo - 1;
+        if(index < 0 || index >= pageOrder.size()) {
+            return null;
         }
+        PageInfo pageInfo = pageOrder.get(index);
+        if(pageInfo == null) {
+            return null;
+        }
+        return pageInfo.getSection();
+    }
 
-        @Override
-        public int hashCode() {
-            return Objects.hash(sectionId);
+    public String getClientInstrument(String section, WebClientInfo client) {
+        SectionInfo sectionInfo = sectionInfos.get(section);
+        String instrument = sectionInfo.getClientInstrument(client.getClientId());
+        if(instrument == null) {
+            instrument = sectionInfo.getClientInstrument(client.getClientAddr());
         }
+        return instrument;
+    }
 
-        @Override
-        public String toString() {
-            return "SectionInfo{" +
-                    "sectionId='" + sectionId + '\'' +
-                    ", owner='" + owner + '\'' +
-                    ", clientInstrument=" + clientInstrument +
-                    '}';
+    public IntRange getSectionPageRange(String section) {
+        if(section == null) {
+            return null;
         }
+        SectionInfo info = getSectionInfo(section);
+        if(info == null) {
+            return null;
+        }
+        return info.getPageRange();
+    }
+
+    public Map<String, String> getSectionClientInstruments(String section) {
+        if(section == null) {
+            return null;
+        }
+        SectionInfo info = getSectionInfo(section);
+        if(info == null) {
+            return null;
+        }
+        return info.getClientInstruments();
     }
 }

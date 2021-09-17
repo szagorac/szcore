@@ -5,6 +5,7 @@ import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.event.osc.PrecountBeatOffEvent;
 import com.xenaksys.szcore.event.osc.PrecountBeatOnEvent;
 import com.xenaksys.szcore.model.BeatTimeStrategy;
+import com.xenaksys.szcore.model.EventReceiver;
 import com.xenaksys.szcore.model.MutableClock;
 import com.xenaksys.szcore.model.OscPublisher;
 import com.xenaksys.szcore.model.Scheduler;
@@ -46,6 +47,7 @@ public class TestOscPublish {
     OscPublisher oscPublisher;
     WebPublisher webPublisher;
     WebProcessor webProcessor;
+    EventReceiver eventReceiver;
 
     boolean isSkip = true;
 
@@ -65,7 +67,7 @@ public class TestOscPublish {
         TaskFactory taskFactory = new TaskFactory();
         Properties props  = new Properties();
 
-        scoreProcessor = new ScoreProcessorDelegator(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, props);
+        scoreProcessor = new ScoreProcessorDelegator(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, null, props);
     }
 
     @Test

@@ -9,6 +9,8 @@ import com.xenaksys.szcore.algo.config.ScoreRandomisationStrategyConfig;
 import com.xenaksys.szcore.algo.config.StrategyConfigLoader;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.EventType;
+import com.xenaksys.szcore.event.gui.ClientEvent;
+import com.xenaksys.szcore.event.gui.ScoreSectionInfoEvent;
 import com.xenaksys.szcore.event.music.ModWindowEvent;
 import com.xenaksys.szcore.event.music.MusicEvent;
 import com.xenaksys.szcore.event.music.MusicEventType;
@@ -61,6 +63,7 @@ import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import com.xenaksys.szcore.instrument.BasicInstrument;
 import com.xenaksys.szcore.model.Bar;
 import com.xenaksys.szcore.model.Beat;
+import com.xenaksys.szcore.model.EventReceiver;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.MusicTask;
@@ -73,6 +76,7 @@ import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.Script;
 import com.xenaksys.szcore.model.ScriptEventPreset;
 import com.xenaksys.szcore.model.ScriptType;
+import com.xenaksys.szcore.model.SectionInfo;
 import com.xenaksys.szcore.model.Stave;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.Tempo;
@@ -174,6 +178,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     private final TaskFactory taskFactory;
     private final OscDestinationEventListener oscDestinationEventListener;
     private final ScoreProcessorDelegator parentProcessor;
+    private final EventReceiver eventReceiver;
     private final Properties props;
 
     private BasicScore szcore = null;
@@ -217,6 +222,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                                   TaskFactory taskFactory,
                                   BasicScore szcore,
                                   ScoreProcessorDelegator parent,
+                                  EventReceiver eventReceiver,
                                   Properties props) {
         this.transportFactory = transportFactory;
         this.clock = clock;
@@ -228,6 +234,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         this.szcore = szcore;
         this.parentProcessor = parent;
         this.oscDestinationEventListener = new OscDestinationEventListener(this, eventFactory, clock);
+        this.eventReceiver = eventReceiver;
         this.props = props;
     }
 
@@ -299,6 +306,13 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
 
     public void setWebAudienceProcessor(WebAudienceScoreProcessor webAudienceScoreProcessor) {
         this.webAudienceScoreProcessor = webAudienceScoreProcessor;
+    }
+
+    public void sendClientEvent(ClientEvent clientEvent) {
+        if(eventReceiver == null) {
+            return;
+        }
+        eventReceiver.notifyListeners(clientEvent);
     }
 
     @Override
@@ -3210,6 +3224,35 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             clientId = clientInfo.getClientAddr();
         }
         scoreBuilderStrategy.appendSection(section, clientId);
+
+        if(scoreBuilderStrategy.isReady()) {
+            onScoreBuilderStrategyReady();
+        }
+        updateClients(scoreBuilderStrategy);
+    }
+
+    protected void updateClients(ScoreBuilderStrategy scoreBuilderStrategy) {
+        if(scoreBuilderStrategy == null) {
+            return;
+        }
+        Id scoreId = getScore().getId();
+        List<SectionInfo> sectionInfos = scoreBuilderStrategy.getSectionInfos();
+        List<String> sectionOrder = scoreBuilderStrategy.getSectionOrder();
+        boolean isReady = scoreBuilderStrategy.isReady();
+        long creationTime = clock.getSystemTimeMillis();
+        ScoreSectionInfoEvent sectionInfoEvent = eventFactory.createScoreSectionInfoEvent(scoreId, sectionInfos, sectionOrder, isReady, creationTime);
+        sendClientEvent(sectionInfoEvent);
+    }
+
+    protected void onScoreBuilderStrategyReady() {
+        ScoreBuilderStrategy scoreBuilderStrategy = szcore.getScoreBuilderStrategy();
+        if(scoreBuilderStrategy == null || !scoreBuilderStrategy.isReady()) {
+            return;
+        }
+        scoreBuilderStrategy.setPageOrder();
+
+        String section = scoreBuilderStrategy.getSection(1);
+
     }
 
     public InstrumentBeatTracker getInstrumentBeatTracker(Id instrumentId) {

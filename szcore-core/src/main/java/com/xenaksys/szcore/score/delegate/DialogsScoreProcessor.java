@@ -5,6 +5,7 @@ import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.model.Bar;
+import com.xenaksys.szcore.model.EventReceiver;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.MutableClock;
 import com.xenaksys.szcore.model.OscPublisher;
@@ -58,9 +59,10 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
                                  TaskFactory taskFactory,
                                  BasicScore szcore,
                                  ScoreProcessorDelegator parent,
+                                 EventReceiver eventReceiver,
                                  Properties props
                                    ) {
-        super(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, szcore, parent, props);
+        super(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, szcore, parent, eventReceiver, props);
     }
 
     protected void createWebAudienceProcessor() {

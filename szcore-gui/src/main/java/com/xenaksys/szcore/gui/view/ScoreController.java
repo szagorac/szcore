@@ -24,7 +24,6 @@ import com.xenaksys.szcore.model.id.BarId;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.score.OverlayType;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScoreProcessor;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.Util;
 import javafx.application.Platform;
@@ -68,13 +67,9 @@ import static com.xenaksys.szcore.Consts.EMPTY;
 public class ScoreController {
     static final Logger LOG = LoggerFactory.getLogger(ScoreController.class);
 
-    private final static String NL = "\n";
-    private final static int UNSET_VALUE = 0;
-
     private ScoreService scoreService;
 
     private Score score;
-    private WebAudienceScoreProcessor webAudienceScoreProcessor;
 
     @FXML
     private Label scoreNameLbl;
@@ -216,7 +211,7 @@ public class ScoreController {
     private ObservableList<Participant> selectedParticipants = FXCollections.observableArrayList();
     private ObservableList<Participant> participants;
     private WebscoreInstructions webscoreInstructions;
-    private int tempo;
+    private DialogsScoreController dialogsScoreController;
 
     private long positionMillis = 0L;
 
@@ -1211,6 +1206,10 @@ public class ScoreController {
         contentSldr.setValue(50.0);
         tempoModifierSldr.setValue(1.0);
         presetsChob.getSelectionModel().select(Consts.PRESET_ALL_OFF);
+
+        if(dialogsScoreController != null) {
+            dialogsScoreController.onScoreLoad(score);
+        }
     }
 
 
@@ -1744,6 +1743,17 @@ public class ScoreController {
 
     public static String fixedLengthString(String string, int length) {
         return String.format("%1$" + length + "s", string);
+    }
+
+    public void setDialogsController(DialogsScoreController dialogsScoreController) {
+        this.dialogsScoreController = dialogsScoreController;
+    }
+
+    public String getScoreName() {
+        if(score == null) {
+            return null;
+        }
+        return score.getName();
     }
 
     class TransportBeatUpdater implements Runnable {

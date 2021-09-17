@@ -6,6 +6,7 @@ import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
+import com.xenaksys.szcore.model.EventReceiver;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.MusicTask;
 import com.xenaksys.szcore.model.MutableClock;
@@ -57,6 +58,7 @@ public class ScoreProcessorDelegator implements ScoreProcessor {
     private final EventFactory eventFactory;
     private final TaskFactory taskFactory;
     private final Properties props;
+    private final EventReceiver eventReceiver;
 
     private ScoreProcessor scoreDelegate;
     private final List<SzcoreEngineEventListener> scoreEventListeners = new CopyOnWriteArrayList<>();
@@ -70,6 +72,7 @@ public class ScoreProcessorDelegator implements ScoreProcessor {
                                    Scheduler scheduler,
                                    EventFactory eventFactory,
                                    TaskFactory taskFactory,
+                                   EventReceiver eventReceiver,
                                    Properties props) {
         this.transportFactory = transportFactory;
         this.clock = clock;
@@ -79,6 +82,7 @@ public class ScoreProcessorDelegator implements ScoreProcessor {
         this.eventFactory = eventFactory;
         this.taskFactory = taskFactory;
         this.props = props;
+        this.eventReceiver = eventReceiver;
     }
 
     @Override
@@ -127,12 +131,12 @@ public class ScoreProcessorDelegator implements ScoreProcessor {
             }
             Class<?> clazz = Class.forName(className);
             Constructor<?> constructor = clazz.getConstructor(TransportFactory.class, MutableClock.class, OscPublisher.class,
-                    WebPublisher.class, Scheduler.class, EventFactory.class, TaskFactory.class, BasicScore.class, ScoreProcessorDelegator.class, Properties.class);
-            Object instance = constructor.newInstance(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, score, this, props);
+                    WebPublisher.class, Scheduler.class, EventFactory.class, TaskFactory.class, BasicScore.class, ScoreProcessorDelegator.class, EventReceiver.class, Properties.class);
+            Object instance = constructor.newInstance(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, score, this, eventReceiver, props);
             return (ScoreProcessor) instance;
         } catch (Exception e) {
             LOG.warn("initScoreHandler: Failed to initialise score handler for score {}, using ScoreProcessorDelegate", scoreName);
-            return new ScoreProcessorDelegate(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, score, this, props);
+            return new ScoreProcessorDelegate(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, score, this, eventReceiver, props);
         }
     }
 

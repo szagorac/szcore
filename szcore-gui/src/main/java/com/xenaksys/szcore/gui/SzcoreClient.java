@@ -3,6 +3,7 @@ package com.xenaksys.szcore.gui;
 
 import com.aquafx_project.AquaFx;
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.event.gui.ScoreSectionInfoEvent;
 import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
 import com.xenaksys.szcore.gui.event.ClientIncomingEventReceiver;
@@ -10,6 +11,7 @@ import com.xenaksys.szcore.gui.event.ClientScoreEngineEventReceiver;
 import com.xenaksys.szcore.gui.model.Participant;
 import com.xenaksys.szcore.gui.processor.ClientEventProcessor;
 import com.xenaksys.szcore.gui.processor.GuiLoggerProcessor;
+import com.xenaksys.szcore.gui.view.DialogsScoreController;
 import com.xenaksys.szcore.gui.view.LoggerController;
 import com.xenaksys.szcore.gui.view.RootLayoutController;
 import com.xenaksys.szcore.gui.view.ScoreController;
@@ -17,9 +19,11 @@ import com.xenaksys.szcore.gui.view.SettingsController;
 import com.xenaksys.szcore.model.EventService;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.ScoreService;
+import com.xenaksys.szcore.model.SectionInfo;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.id.OscListenerId;
+import com.xenaksys.szcore.model.id.StrId;
 import com.xenaksys.szcore.server.SzcoreServer;
 import com.xenaksys.szcore.time.clock.SimpleClock;
 import com.xenaksys.szcore.web.WebClientInfo;
@@ -43,6 +47,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 public class SzcoreClient extends Application {
@@ -61,6 +66,7 @@ public class SzcoreClient extends Application {
     private ClientEventProcessor clientEventProcessor;
     private GuiLoggerProcessor loggerProcessor;
 
+    private DialogsScoreController dialogsScoreController;
     private ScoreController scoreController;
     private SettingsController settingsController;
 
@@ -86,6 +92,7 @@ public class SzcoreClient extends Application {
         initRootLayout();
         initLoggerTab();
         initSettingsTab();
+        initDialogTab();
         initScoreTab();
 
         initProcessors();
@@ -190,6 +197,7 @@ public class SzcoreClient extends Application {
             scoreController.setMainApp(this);
             scoreController.setScoreService(scoreService);
             scoreController.setPublisher(eventService);
+            scoreController.setDialogsController(dialogsScoreController);
 
             scoreController.populate();
         } catch (IOException e) {
@@ -197,6 +205,28 @@ public class SzcoreClient extends Application {
         }
     }
 
+    public void initDialogTab() {
+        try {
+
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(SzcoreClient.class.getResource("/DialogsTabLayout.fxml"));
+            BorderPane scorePane = (BorderPane) loader.load();
+
+            Tab scoreTab = rootController.getDialogsScoreTab();
+
+            scoreTab.setContent(scorePane);
+            dialogsScoreController = loader.getController();
+
+            dialogsScoreController.setMainApp(this);
+            dialogsScoreController.setScoreService(scoreService);
+            dialogsScoreController.setPublisher(eventService);
+            dialogsScoreController.setScoreController(scoreController);
+
+            dialogsScoreController.populate();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public void show() {
         if(primaryStage == null){
@@ -252,7 +282,6 @@ public class SzcoreClient extends Application {
             toUpdate.setIsReady(participant.getIsReady());
             toUpdate.setBanned(participant.isBanned());
         });
-
     }
 
     public Participant getParticipant(String hostAddress, int port) {
@@ -265,7 +294,6 @@ public class SzcoreClient extends Application {
                 return participant;
             }
         }
-
         return null;
     }
 
@@ -350,5 +378,18 @@ public class SzcoreClient extends Application {
                 }
             }
         }
+    }
+
+    public void processScoreSectionInfos(ScoreSectionInfoEvent event) {
+        StrId scoreId = (StrId)event.getScoreId();
+        String currentScore = scoreController.getScoreName();
+        if(!scoreId.getName().equals(currentScore)) {
+            return;
+        }
+        List<String> sectionOrder = event.getSectionOrder();
+        List<SectionInfo> sectionInfos = event.getSectionInfos();
+        boolean isReady = event.isReady();
+        dialogsScoreController.onSectionInfo(sectionInfos, sectionOrder, isReady);
+
     }
 }

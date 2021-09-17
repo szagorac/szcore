@@ -8,6 +8,7 @@ import com.xenaksys.szcore.event.gui.ErrorEvent;
 import com.xenaksys.szcore.event.gui.InstrumentEvent;
 import com.xenaksys.szcore.event.gui.ParticipantEvent;
 import com.xenaksys.szcore.event.gui.ParticipantStatsEvent;
+import com.xenaksys.szcore.event.gui.ScoreSectionInfoEvent;
 import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.music.MusicEvent;
@@ -176,6 +177,9 @@ public class ClientEventProcessor implements Processor {
             case WEB_SCORE_CLIENT_INFOS:
                 processWebScoreClientInfoEvent((WebScoreClientInfoUpdateEvent) event);
                 break;
+            case SECTION_INFO:
+                processSectionInfoEvent((ScoreSectionInfoEvent) event);
+                break;
             default:
                 LOG.error("processClientEvent: Unknown event type: " + type);
         }
@@ -193,6 +197,13 @@ public class ClientEventProcessor implements Processor {
             return;
         }
         client.processWebScoreClientInfos(event);
+    }
+
+    private void processSectionInfoEvent(ScoreSectionInfoEvent event) {
+        if (event == null) {
+            return;
+        }
+        client.processScoreSectionInfos(event);
     }
 
     private void processErrorEvent(ErrorEvent event) {

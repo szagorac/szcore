@@ -3,6 +3,7 @@ package com.xenaksys.szcore.event;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.gui.ParticipantEvent;
 import com.xenaksys.szcore.event.gui.ParticipantStatsEvent;
+import com.xenaksys.szcore.event.gui.ScoreSectionInfoEvent;
 import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.music.ModWindowEvent;
@@ -74,6 +75,7 @@ import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import com.xenaksys.szcore.model.HistoBucketView;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.SectionInfo;
 import com.xenaksys.szcore.model.Stave;
 import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.TimeSignature;
@@ -185,6 +187,10 @@ public class EventFactory {
 
     public ParticipantStatsEvent createParticipantStatsEvent(InetAddress inetAddress, String hostAddress, int port, double pingLatencyMillis, double halfPingLatencyMillis, boolean isExpired, long lastPingLatency, long creationTime) {
         return new ParticipantStatsEvent(inetAddress, hostAddress, port, pingLatencyMillis, halfPingLatencyMillis, isExpired, lastPingLatency, creationTime);
+    }
+
+    public ScoreSectionInfoEvent createScoreSectionInfoEvent(Id scoreId, List<SectionInfo> sectionInfos, List<String> sectionOrder, boolean isReady, long creationTime) {
+        return new ScoreSectionInfoEvent(scoreId, sectionInfos, sectionOrder, isReady, creationTime);
     }
 
     public OscEvent createOscEvent(String address, List<Object> args, String destination, long creationTime) {

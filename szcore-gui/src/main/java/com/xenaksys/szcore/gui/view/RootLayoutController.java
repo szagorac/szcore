@@ -15,6 +15,8 @@ public class RootLayoutController {
     @FXML
     private Tab settingsTab;
     @FXML
+    private Tab dialogsScoreTab;
+    @FXML
     private Tab scoreTab;
 
     public void setMainApp(SzcoreClient mainApp) {
@@ -41,6 +43,10 @@ public class RootLayoutController {
 
     public Tab getScoreTab() {
         return scoreTab;
+    }
+
+    public Tab getDialogsScoreTab() {
+        return dialogsScoreTab;
     }
 
     @FXML

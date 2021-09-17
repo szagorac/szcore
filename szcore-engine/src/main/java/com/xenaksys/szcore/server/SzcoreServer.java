@@ -226,7 +226,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         outOscDisruptor = DisruptorFactory.createOscOutDisruptor();
         oscEventPublisher = new OscDisruptorPublishProcessorWebWrapper(outOscDisruptor, webProcessor);
 
-        scoreProcessor = new ScoreProcessorDelegator(transportFactory, clock, oscEventPublisher, webEventPublisher, scheduler, eventFactory, taskFactory, props);
+        scoreProcessor = new ScoreProcessorDelegator(transportFactory, clock, oscEventPublisher, webEventPublisher, scheduler, eventFactory, taskFactory, eventProcessor, props);
         subscribe(webProcessor);
 
         String webRootScore = props.getProperty(WEB_ROOT_SCORE);

@@ -359,7 +359,6 @@ public class WebScore {
         return Consts.WEB_SCORE_PAGE_PREFIX + pageId.getPageNo();
     }
 
-
     public void processConnectionEvent(WebScoreConnectionEvent event) {
         if (event == null) {
             return;

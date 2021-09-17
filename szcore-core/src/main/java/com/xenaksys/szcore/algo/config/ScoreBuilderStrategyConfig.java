@@ -1,5 +1,6 @@
 package com.xenaksys.szcore.algo.config;
 
+import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.algo.SectionAssignmentType;
 import com.xenaksys.szcore.algo.StrategyType;
 
@@ -47,6 +48,18 @@ public class ScoreBuilderStrategyConfig implements StrategyConfig{
 
     public void setAssignmentType(SectionAssignmentType assignmentType) {
         this.assignmentType = assignmentType;
+    }
+
+    public IntRange getSectionPageRange(String section) {
+        if(section == null) {
+            return null;
+        }
+        for(BuilderPageRangeConfig pageRangeConfig : pageRangeConfigs) {
+            if(section.equals(pageRangeConfig.getSectionName())) {
+                return pageRangeConfig.getRange();
+            }
+        }
+        return null;
     }
 
     @Override

@@ -3,8 +3,12 @@ package com.xenaksys.szcore.gui.view;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
+import com.xenaksys.szcore.event.EventFactory;
+import com.xenaksys.szcore.event.gui.StrategyEvent;
+import com.xenaksys.szcore.event.gui.StrategyEventType;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Section;
+import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.EventService;
 import com.xenaksys.szcore.model.Score;
 import com.xenaksys.szcore.model.ScoreService;
@@ -13,7 +17,12 @@ import com.xenaksys.szcore.score.BasicScore;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import org.slf4j.Logger;
@@ -26,9 +35,13 @@ public class DialogsScoreController {
     static final Logger LOG = LoggerFactory.getLogger(ScoreController.class);
 
     public static final String SCORE_NAME = "Dialogs";
+    public static final String LABEL_GREEN = "label-green";
+    public static final String LABEL_RED = "label-red";
 
     @FXML
     private TableView<Section> sectionsTableView;
+    @FXML
+    private ListView<String> sectionOrderLvw;
     @FXML
     private TableColumn<Section, String> sectionColumn;
     @FXML
@@ -37,12 +50,20 @@ public class DialogsScoreController {
     private TableColumn<Section, Integer> startPageColumn;
     @FXML
     private TableColumn<Section, Integer> endPageColumn;
+    @FXML
+    private Button assignOwnersRndBtn;
+    @FXML
+    private Button resetOwnersRndBtn;
+    @FXML
+    private Label sectionsStatusLbl;
 
     private SzcoreClient mainApp;
     private EventService publisher;
     private ScoreService scoreService;
     private ScoreController scoreController;
+    private Clock clock;
     private ObservableList<Section> sections = FXCollections.observableArrayList();
+    private ObservableList<String> sectionOrder = FXCollections.observableArrayList();
 
     public void setMainApp(SzcoreClient mainApp) {
         this.mainApp = mainApp;
@@ -51,12 +72,16 @@ public class DialogsScoreController {
 
     public void populate() {
         sectionsTableView.setItems(sections);
+        sectionOrderLvw.setItems(sectionOrder);
     }
 
     @FXML
     private void initialize() {
-        sectionsTableView.setSelectionModel(null);
+        sectionsTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         sectionsTableView.setEditable(false);
+
+        sectionOrderLvw.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        sectionOrderLvw.setEditable(false);
 
         sectionColumn.setCellValueFactory(cellData -> cellData.getValue().sectionProperty());
         ownerColumn.setCellValueFactory(cellData -> cellData.getValue().ownerProperty());
@@ -70,6 +95,7 @@ public class DialogsScoreController {
 
     public void setPublisher(EventService publisher) {
         this.publisher = publisher;
+        this.clock = publisher.getClock();
     }
 
     public void setScoreController(ScoreController scoreController) {
@@ -125,7 +151,37 @@ public class DialogsScoreController {
                 addSection(section);
             }
         }
-        //TODO section order and ready
+        if(isReady) {
+            setSectionStatyls(Consts.READY, LABEL_GREEN, LABEL_RED);
+        } else {
+            setSectionStatyls(Consts.WAITING, LABEL_RED, LABEL_GREEN);
+        }
+
+        if(sectionOrder != null && !sectionOrder.isEmpty()) {
+            setSectionOrder(sectionOrder);
+        }
+    }
+
+    private void setSectionOrder(List<String> sections) {
+        Platform.runLater(() -> {
+            String selectedItem = sectionOrderLvw.getSelectionModel().getSelectedItem();
+            sectionOrder.clear();
+            sectionOrder.addAll(sections);
+            if(sections.contains(selectedItem)) {
+                sectionOrderLvw.getSelectionModel().select(selectedItem);
+            }
+        });
+    }
+
+    private void setSectionStatyls(final String text, final String style, final String styleToRemove) {
+        Platform.runLater(() -> {
+            sectionsStatusLbl.setText(text);
+            ObservableList<String> styleClass = sectionsStatusLbl.getStyleClass();
+            styleClass.remove(styleToRemove);
+            if(!styleClass.contains(style)) {
+                styleClass.add(style);
+            }
+        });
     }
 
     public void addSection(Section section) {
@@ -166,5 +222,17 @@ public class DialogsScoreController {
             }
         }
         return null;
+    }
+
+    public void assignSectionOwnersRnd(ActionEvent actionEvent) {
+        EventFactory eventFactory = publisher.getEventFactory();
+        StrategyEvent instructionsEvent = eventFactory.createStrategyEvent(StrategyEventType.ASSIGN_OWNERS_RND, clock.getSystemTimeMillis());
+        publisher.receive(instructionsEvent);
+    }
+
+    public void resetSectionOwners(ActionEvent actionEvent) {
+        EventFactory eventFactory = publisher.getEventFactory();
+        StrategyEvent instructionsEvent = eventFactory.createStrategyEvent(StrategyEventType.RESET_OWNERS, clock.getSystemTimeMillis());
+        publisher.receive(instructionsEvent);
     }
 }

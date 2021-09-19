@@ -11,6 +11,7 @@ import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class MathUtil {
 
@@ -92,6 +93,10 @@ public class MathUtil {
     public static double mean(double[] values) {
         Mean median = new Mean();
         return median.evaluate(values);
+    }
+
+    public static int getRandomInRange(int rangeStart, int rangeEnd) {
+        return ThreadLocalRandom.current().nextInt(rangeStart, rangeEnd + 1);
     }
 
     public static double[] mode(double[] values) {

@@ -5,6 +5,7 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventContainer;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.EventType;
+import com.xenaksys.szcore.event.gui.ClientInEvent;
 import com.xenaksys.szcore.event.gui.InstrumentEvent;
 import com.xenaksys.szcore.event.gui.ParticipantEvent;
 import com.xenaksys.szcore.event.gui.ParticipantStatsEvent;
@@ -75,12 +76,17 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
                 case WEB_SCORE_IN:
                     processWebScoreInEvent((WebScoreInEvent) event);
                     break;
-
+                case ADMIN_IN:
+                    processClientInEvent((ClientInEvent) event);
             }
 
         } catch (Exception e) {
             LOG.error("Failed to process event: " + eventContainer, e);
         }
+    }
+
+    private void processClientInEvent(ClientInEvent event) {
+        server.getScoreProcessor().process(event);
     }
 
     private void processWebScoreInEvent(WebScoreInEvent event) {

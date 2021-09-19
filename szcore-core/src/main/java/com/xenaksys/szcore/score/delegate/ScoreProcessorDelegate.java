@@ -10,7 +10,11 @@ import com.xenaksys.szcore.algo.config.StrategyConfigLoader;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.EventType;
 import com.xenaksys.szcore.event.gui.ClientEvent;
+import com.xenaksys.szcore.event.gui.ClientInEvent;
+import com.xenaksys.szcore.event.gui.ClientInEventType;
 import com.xenaksys.szcore.event.gui.ScoreSectionInfoEvent;
+import com.xenaksys.szcore.event.gui.StrategyEvent;
+import com.xenaksys.szcore.event.gui.StrategyEventType;
 import com.xenaksys.szcore.event.music.ModWindowEvent;
 import com.xenaksys.szcore.event.music.MusicEvent;
 import com.xenaksys.szcore.event.music.MusicEventType;
@@ -2632,11 +2636,14 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             case SCRIPTING_ENGINE:
                 processScriptingEngineEvent((ScriptingEngineEvent) event);
                 break;
-            case CLIENT:
+            case ADMIN_OUT:
                 //do nothing
                 break;
             case WEB_SCORE_OUT:
                 processWebScoreOutEvent((OutgoingWebEvent)event);
+                break;
+            case ADMIN_IN:
+                processClientInEvent((ClientInEvent)event);
                 break;
             default:
                 LOG.error("Unknown event type " + type);
@@ -2680,6 +2687,84 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         } catch (Exception e) {
             LOG.error("processWebScoreOutEvent: failed to send webscore event {}", event, e);
         }
+    }
+
+    private void processClientInEvent(ClientInEvent event) {
+        try {
+            ClientInEventType clientInEventType = event.getClientEventType();
+            switch (clientInEventType) {
+                case STRATEGY:
+                    processStrategyEvent((StrategyEvent)event);
+                    break;
+            }
+
+        } catch (Exception e) {
+            LOG.error("processWebScoreOutEvent: failed to send webscore event {}", event, e);
+        }
+
+    }
+
+    private void processStrategyEvent(StrategyEvent event) throws Exception {
+        StrategyEventType strategyType = event.getStrategyEventType();
+        switch (strategyType) {
+            case ASSIGN_OWNERS_RND:
+                assignStrategyOwnersRandom();
+                break;
+            case RESET_OWNERS:
+                resetStrategyOwners();
+                break;
+        }
+    }
+
+    protected void resetStrategyOwners() throws Exception {
+        ScoreBuilderStrategy strategy = szcore.getScoreBuilderStrategy();
+        if(strategy == null) {
+            return;
+        }
+        List<WebClientInfo> scoreClients = webScore.getScoreClients();
+        if(scoreClients == null || scoreClients.isEmpty()) {
+            return;
+        }
+        List<String> sectionOrder = strategy.getSectionOrder();
+        List<String> orphanSections = new ArrayList<>(sectionOrder);
+        sectionOrder.clear();
+        for(String section : orphanSections) {
+            int index = MathUtil.getRandomInRange(0, scoreClients.size() - 1);
+            WebClientInfo clientInfo = scoreClients.get(index);
+            processSelectSection(section, clientInfo);
+            if(strategy.isReady()) {
+                break;
+            }
+        }
+        webScore.createOrUpdateWebBuilderStrategy(strategy);
+        webScore.sendStrategyInfo();
+    }
+
+    protected void assignStrategyOwnersRandom() throws Exception {
+        ScoreBuilderStrategy strategy = szcore.getScoreBuilderStrategy();
+        if(strategy == null) {
+            return;
+        }
+        List<WebClientInfo> scoreClients = webScore.getScoreClients();
+        if(scoreClients == null || scoreClients.isEmpty()) {
+            return;
+        }
+        List<String> orphanSections = strategy.getOrphanSections();
+        List<String> sectionOrder = strategy.getSectionOrder();
+        for(String section : orphanSections) {
+            if(sectionOrder.contains(section)) {
+                LOG.warn("assignStrategyOwnersRandom: unexpected section {}, already set in sectionOrder, removing ...", section);
+                sectionOrder.remove(section);
+            }
+            int index = MathUtil.getRandomInRange(0, scoreClients.size() - 1);
+            WebClientInfo clientInfo = scoreClients.get(index);
+            processSelectSection(section, clientInfo);
+            if(strategy.isReady()) {
+                break;
+            }
+        }
+        webScore.createOrUpdateWebBuilderStrategy(strategy);
+        webScore.sendStrategyInfo();
     }
 
     private void processWebAudienceEvent(WebAudienceEvent event) {
@@ -3250,9 +3335,6 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             return;
         }
         scoreBuilderStrategy.setPageOrder();
-
-        String section = scoreBuilderStrategy.getSection(1);
-
     }
 
     public InstrumentBeatTracker getInstrumentBeatTracker(Id instrumentId) {

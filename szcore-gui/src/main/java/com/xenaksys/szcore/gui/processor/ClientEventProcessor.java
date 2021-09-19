@@ -59,7 +59,7 @@ public class ClientEventProcessor implements Processor {
                     processScoreOscEvent((OscEvent) event);
                 }
                 break;
-            case CLIENT:
+            case ADMIN_OUT:
                 if ((event instanceof ClientEvent)) {
                     processClientEvent((ClientEvent) event);
                 }

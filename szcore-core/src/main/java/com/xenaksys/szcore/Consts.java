@@ -17,6 +17,8 @@ public interface Consts {
     String ERROR_SCHEDULED_TASKS = " Failed to process scheduled tasks";
     String ERROR_TANSPORTS = " Failed to process transports";
     String RESULT_OK = "OK";
+    String READY = "READY";
+    String WAITING = "WAITING";
     String COMMA = ",";
     String DOT = ".";
     String QUOTE = "'";

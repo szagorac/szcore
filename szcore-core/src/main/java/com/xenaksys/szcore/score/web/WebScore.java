@@ -73,11 +73,12 @@ public class WebScore {
     private final Clock clock;
     private final Map<String, List<WebClientInfo>> instrumentClients = new ConcurrentHashMap<>();
     private final Map<String, WebClientInfo> allClients = new ConcurrentHashMap<>();
-    private final Map<String, WebClientInfo> clients = new ConcurrentHashMap<>();
+    private final Map<String, WebClientInfo> playerClients = new ConcurrentHashMap<>();
     private final Map<StaveId, OverlayProcessor> overlayProcessors = new ConcurrentHashMap<>();
     private final Properties props;
 
     private WebScoreInfo scoreInfo;
+    private WebStrategyInfo webStrategyInfo;
 
     public WebScore(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock, Properties props) {
         this.scoreProcessor = scoreProcessor;
@@ -89,6 +90,7 @@ public class WebScore {
 
     public void init() {
         this.scoreInfo = initScoreInfo();
+        initWebStrategyInfo();
         try {
             sendScoreInfo();
         } catch (Exception e) {
@@ -132,26 +134,18 @@ public class WebScore {
         }
         info.setPartPageName(partPageName);
 
+        return info;
+    }
+
+    private void initWebStrategyInfo() {
+        webStrategyInfo = new WebStrategyInfo();
         ScoreBuilderStrategy builderStrategy = score.getScoreBuilderStrategy();
         if(builderStrategy != null) {
-            WebBuilderStrategy webBuilderStrategy = new WebBuilderStrategy();
-            webBuilderStrategy.setName(StrategyType.BUILDER.name());
-            webBuilderStrategy.setReady(false);
-            SectionAssignmentType assignmentType = builderStrategy.getConfig().getAssignmentType();
-            if (assignmentType != null) {
-                webBuilderStrategy.setAssignmentType(assignmentType.name());
-            }
-            List<String> sections = builderStrategy.getSections();
-            if(sections != null) {
-                webBuilderStrategy.setSections(sections);
-            }
-            info.addStrategy(webBuilderStrategy);
-            for(String clientId : clients.keySet()) {
+            for(String clientId : playerClients.keySet()) {
                 builderStrategy.addClientId(clientId);
             }
+            createOrUpdateWebBuilderStrategy(builderStrategy);
         }
-
-        return info;
     }
 
     public void resetState() {
@@ -400,17 +394,14 @@ public class WebScore {
         if(clientId == null) {
             return;
         }
-        if(clients.containsKey(clientId)) {
-            clients.get(clientId);
-        }
-        if(clients.containsKey(clientId)) {
-            WebClientInfo currentClientInfo = clients.get(clientId);
+        if(playerClients.containsKey(clientId)) {
+            WebClientInfo currentClientInfo = playerClients.get(clientId);
             String addr = clientInfo.getClientAddr();
             if(addr != null && addr.equals(currentClientInfo.getClientAddr())) {
                 return;
             }
         }
-        clients.put(clientId, clientInfo);
+        playerClients.put(clientId, clientInfo);
     }
 
     private void addInstrumentClient(WebClientInfo clientInfo) throws Exception {
@@ -439,18 +430,8 @@ public class WebScore {
     public void sendScoreInfo(String addr, WebScoreTargetType targetType) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         scoreState.setScoreInfo(scoreInfo);
+        scoreState.setStrategyInfo(webStrategyInfo);
         scoreProcessor.sendWebScoreState(addr, targetType, scoreState);
-    }
-
-    public void sendBuilderStrategyReady(boolean isReady) throws Exception {
-        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
-        WebScoreInfo info = new WebScoreInfo();
-        WebBuilderStrategy webBuilderStrategy = new WebBuilderStrategy();
-        webBuilderStrategy.setName(StrategyType.BUILDER.name());
-        webBuilderStrategy.setReady(isReady);
-        info.addStrategy(webBuilderStrategy);
-        scoreState.setScoreInfo(info);
-        scoreProcessor.sendWebScoreState(WebScoreTargetType.ALL.name(), WebScoreTargetType.ALL, scoreState);
     }
 
     public void sendPartInfo(WebClientInfo clientInfo) throws Exception {
@@ -507,6 +488,16 @@ public class WebScore {
         webPageInfo.setRndPageId(webRndPageId);
         scoreState.setPageInfo(webPageInfo);
         sendToDestination(destination, scoreState);
+    }
+
+    public void sendStrategyInfo() throws Exception {
+        sendStrategyInfo(WebScoreTargetType.ALL.name(), WebScoreTargetType.ALL);
+    }
+
+    public void sendStrategyInfo(String addr, WebScoreTargetType targetType) throws Exception {
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
+        scoreState.setStrategyInfo(webStrategyInfo);
+        scoreProcessor.sendWebScoreState(addr, targetType, scoreState);
     }
 
     private void sendTimeSpaceMapInfo(String destination, String webPageId, String webStaveId, List<InscoreMapElement> mapElements) throws Exception {
@@ -655,8 +646,8 @@ public class WebScore {
             return;
         }
 
-        if (clients.containsKey(destination)) {
-            WebClientInfo client = clients.get(destination);
+        if (playerClients.containsKey(destination)) {
+            WebClientInfo client = playerClients.get(destination);
             scoreProcessor.sendWebScoreState(client.getClientAddr(), WebScoreTargetType.HOST, scoreState);
         }
 
@@ -777,26 +768,62 @@ public class WebScore {
             String section = event.getSection();
             scoreProcessor.processSelectSection(section, clientInfo);
             ScoreBuilderStrategy scoreBuilderStrategy = score.getScoreBuilderStrategy();
-            if(scoreBuilderStrategy.isReady()) {
-                setBuilderWebStrategyReady(true);
-                sendBuilderStrategyReady(true);
-            }
+            createOrUpdateWebBuilderStrategy(scoreBuilderStrategy);
+            sendStrategyInfo();
         } catch (Exception e) {
             LOG.error("processSelectInstrumentSlot: failed to process select intrument slot", e);
         }
     }
 
-    private void setBuilderWebStrategyReady(boolean isReady) {
-        List<WebStrategy> webStrategies = scoreInfo.getStrategies();
-        if(webStrategies == null) {
+    public void createOrUpdateWebBuilderStrategy(ScoreBuilderStrategy scoreBuilderStrategy) {
+        if(scoreBuilderStrategy == null) {
             return;
         }
-        for(WebStrategy strategy : webStrategies) {
-            if(strategy instanceof WebBuilderStrategy) {
-                WebBuilderStrategy builderStrategy = (WebBuilderStrategy)strategy;
-                builderStrategy.setReady(isReady);
+        WebBuilderStrategy webBuilderStrategy = getOrCreateWebBuilderStrategy();
+        webBuilderStrategy.setName(StrategyType.BUILDER.name());
+        webBuilderStrategy.setReady(scoreBuilderStrategy.isReady());
+        SectionAssignmentType assignmentType = scoreBuilderStrategy.getConfig().getAssignmentType();
+        if (assignmentType != null) {
+            webBuilderStrategy.setAssignmentType(assignmentType.name());
+        }
+        List<String> sections = scoreBuilderStrategy.getSections();
+        if(sections != null) {
+            webBuilderStrategy.setSections(sections);
+            for(String section : sections) {
+                String owner = scoreBuilderStrategy.getSectionOwner(section);
+                if(owner != null) {
+                    webBuilderStrategy.addSectionOwner(section, owner);
+                }
             }
         }
+    }
+
+    private WebBuilderStrategy getWebBuilderStrategy() {
+        List<WebStrategy> webStrategies = webStrategyInfo.getStrategies();
+        if(webStrategies == null) {
+            return null;
+        }
+        for (WebStrategy strategy : webStrategies) {
+            if (strategy instanceof WebBuilderStrategy) {
+                return (WebBuilderStrategy) strategy;
+            }
+        }
+        return null;
+    }
+
+    private WebBuilderStrategy getOrCreateWebBuilderStrategy() {
+        WebBuilderStrategy webBuilderStrategy = getWebBuilderStrategy();
+        if(webBuilderStrategy != null) {
+            return webBuilderStrategy;
+        }
+        webBuilderStrategy = new WebBuilderStrategy();
+        webStrategyInfo.addStrategy(webBuilderStrategy);
+        return webBuilderStrategy;
+    }
+
+    private void setBuilderWebStrategyReady(boolean isReady) {
+        WebBuilderStrategy webBuilderStrategy = getOrCreateWebBuilderStrategy();
+        webBuilderStrategy.setReady(isReady);
     }
 
     public WebClientInfo getInstrumentClient(String instrument, String addr) {
@@ -821,7 +848,7 @@ public class WebScore {
 
     public boolean isDestination(String destination) {
         return allClients.containsKey(destination) ||
-                clients.containsKey(destination) ||
+                playerClients.containsKey(destination) ||
                 instrumentClients.containsKey(destination) ||
                 Consts.ALL_DESTINATIONS.equals(destination);
     }
@@ -829,7 +856,7 @@ public class WebScore {
     public WebClientInfo getClientInfo(WebScoreInEvent webEvent) {
         String clientId = webEvent.getClientId();
         if(clientId != null) {
-            WebClientInfo clientInfo = clients.get(clientId);
+            WebClientInfo clientInfo = playerClients.get(clientId);
             if(clientInfo != null) {
                 return clientInfo;
             }
@@ -837,6 +864,16 @@ public class WebScore {
 
         clientId = webEvent.getSourceAddr();
         return allClients.get(clientId);
+    }
+
+    public List<WebClientInfo> getScoreClients() {
+        List<WebClientInfo> scoreClients = new ArrayList<>();
+        for(WebClientInfo player : playerClients.values()) {
+            if(player.isScoreClient()) {
+                scoreClients.add(player);
+            }
+        }
+        return scoreClients;
     }
 
     public boolean isReady() {

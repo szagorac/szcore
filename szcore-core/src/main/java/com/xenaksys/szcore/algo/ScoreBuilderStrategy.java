@@ -5,6 +5,8 @@ import com.xenaksys.szcore.model.PageInfo;
 import com.xenaksys.szcore.model.SectionInfo;
 import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.web.WebClientInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +14,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ScoreBuilderStrategy implements ScoreStrategy {
+    static final Logger LOG = LoggerFactory.getLogger(ScoreBuilderStrategy.class);
+
     private final BasicScore szcore;
     private final ScoreBuilderStrategyConfig config;
     private final Map<String, SectionInfo> sectionInfos = new ConcurrentHashMap<>();
@@ -68,7 +72,9 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
         if(section == null) {
             return;
         }
-        sectionOrder.add(section);
+        if(!sectionOrder.contains(section)) {
+            sectionOrder.add(section);
+        }
         if(owner != null) {
             SectionInfo sectionInfo = getOrCreateSectionInfo(section);
             sectionInfo.setOwner(owner);
@@ -133,7 +139,6 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
         info.addClientInstrument(clientId, instrumentId);
     }
 
-
     public String getSectionOwner(String section) {
         if(section == null) {
             return null;
@@ -154,6 +159,17 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
 
     public List<SectionInfo> getSectionInfos() {
         return new ArrayList<>(sectionInfos.values());
+    }
+
+    public List<String> getOrphanSections() {
+        List<String> out = new ArrayList<>();
+        List<SectionInfo> infos = getSectionInfos();
+        for(SectionInfo sectionInfo : infos) {
+            if (sectionInfo.getOwner() == null) {
+                out.add(sectionInfo.getSectionId());
+            }
+        }
+        return out;
     }
 
     public void setPageOrder() {

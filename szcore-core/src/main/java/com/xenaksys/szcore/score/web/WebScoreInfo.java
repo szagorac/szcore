@@ -1,8 +1,5 @@
 package com.xenaksys.szcore.score.web;
 
-import com.xenaksys.szcore.score.web.strategy.WebStrategy;
-
-import java.util.ArrayList;
 import java.util.List;
 
 public class WebScoreInfo {
@@ -11,7 +8,6 @@ public class WebScoreInfo {
     private String partHtmlPage;
     private List<String> instruments;
     private int bpm;
-    private List<WebStrategy> strategies;
 
     public String getTitle() {
         return title;
@@ -51,16 +47,5 @@ public class WebScoreInfo {
 
     public String getPartHtmlPage() {
         return partHtmlPage;
-    }
-
-    public void addStrategy(WebStrategy strategy) {
-        if(strategies == null) {
-            strategies = new ArrayList<>();
-        }
-        strategies.add(strategy);
-    }
-
-    public List<WebStrategy> getStrategies() {
-        return strategies;
     }
 }

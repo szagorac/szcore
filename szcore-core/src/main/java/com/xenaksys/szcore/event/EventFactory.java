@@ -4,6 +4,8 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.gui.ParticipantEvent;
 import com.xenaksys.szcore.event.gui.ParticipantStatsEvent;
 import com.xenaksys.szcore.event.gui.ScoreSectionInfoEvent;
+import com.xenaksys.szcore.event.gui.StrategyEvent;
+import com.xenaksys.szcore.event.gui.StrategyEventType;
 import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.music.ModWindowEvent;
@@ -175,6 +177,10 @@ public class EventFactory {
 
     public ParticipantEvent createParticipantEvent(InetAddress inetAddress, String hostAddress, int portIn, int portOut, int portErr, int ping, String instrument, boolean isReady, boolean isBanned, long creationTime) {
         return new ParticipantEvent(inetAddress, hostAddress, portIn, portOut, portErr, ping, instrument, isReady, isBanned, creationTime);
+    }
+
+    public StrategyEvent createStrategyEvent(StrategyEventType strategyEventType, long creationTime) {
+        return new StrategyEvent(strategyEventType, creationTime);
     }
 
     public WebAudienceClientInfoUpdateEvent createWebAudienceClientInfoUpdateEvent(ArrayList<WebClientInfo> webClientInfos, List<HistoBucketView> histoBucketViews, int totalWebHits, long creationTime) {

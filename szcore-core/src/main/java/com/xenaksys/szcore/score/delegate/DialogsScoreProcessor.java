@@ -48,8 +48,6 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
     private final static String[] INSTRUMENTS = {INSTRUMENT_PRESENTER, INSTRUMENT_AGREE, INSTRUMENT_DISAGREE, INSTRUMENT_ABSTAIN};
     private final static String INSTRUMENT_ABSTAIN_PAGE_FILE_NAME = "Abstain_pagex";
 
-    private Page abstainPage;
-
     public DialogsScoreProcessor(TransportFactory transportFactory,
                                  MutableClock clock,
                                  OscPublisher oscPublisher,

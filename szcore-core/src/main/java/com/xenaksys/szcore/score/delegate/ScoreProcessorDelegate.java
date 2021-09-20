@@ -2190,9 +2190,28 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
 
         this.startBaseBeat = startBeatId.getBaseBeatNo();
 
+        processStrategyOnPosition(startBeatId);
+
         initEvents = createRequiredEventsForNewPosition(beatId.getBaseBeatNo());
 
         processInitEvents(initEvents);
+    }
+
+    private void processStrategyOnPosition(BeatId startBeatId) {
+        if(startBeatId == null) {
+            return;
+        }
+        PageId startPageId = (PageId)startBeatId.getPageId();
+        ScoreBuilderStrategy strategy = szcore.getScoreBuilderStrategy();
+        if(strategy == null) {
+            return;
+        }
+        String sectionToPlay = strategy.getSection(startPageId.getPageNo());
+        if(sectionToPlay == null) {
+            return;
+        }
+        Map<String, List<String>> instrumentClients = strategy.getInstrumentClients(sectionToPlay);
+        webScore.setSectionInstrumentClients(sectionToPlay, instrumentClients);
     }
 
     private void resetTasks() {

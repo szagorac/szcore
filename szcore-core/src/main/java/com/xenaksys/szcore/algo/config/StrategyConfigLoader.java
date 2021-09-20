@@ -13,9 +13,31 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
-import static com.xenaksys.szcore.Consts.*;
+import static com.xenaksys.szcore.Consts.CONFIG_ALL;
+import static com.xenaksys.szcore.Consts.CONFIG_ASSIGNMENT_TYPE;
+import static com.xenaksys.szcore.Consts.CONFIG_BUILDER_STRATEGY;
+import static com.xenaksys.szcore.Consts.CONFIG_END;
+import static com.xenaksys.szcore.Consts.CONFIG_INSTRUMENTS;
+import static com.xenaksys.szcore.Consts.CONFIG_IS_RND_ACTIVE;
+import static com.xenaksys.szcore.Consts.CONFIG_NAME;
+import static com.xenaksys.szcore.Consts.CONFIG_PAGE_RANGES;
+import static com.xenaksys.szcore.Consts.CONFIG_RANGE;
+import static com.xenaksys.szcore.Consts.CONFIG_RND_STRATEGY;
+import static com.xenaksys.szcore.Consts.CONFIG_SCORE_NAME;
+import static com.xenaksys.szcore.Consts.CONFIG_SECTIONS;
+import static com.xenaksys.szcore.Consts.CONFIG_SELECTION_RANGE;
+import static com.xenaksys.szcore.Consts.CONFIG_START;
+import static com.xenaksys.szcore.Consts.CONFIG_STOP_ON_SECTION_END;
+import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.Consts.NAME_FULL_SCORE;
+import static com.xenaksys.szcore.Consts.STRATEGY_CONFIG_FILE_SUFFIX;
+import static com.xenaksys.szcore.Consts.YAML_FILE_EXTENSION;
 
 public class StrategyConfigLoader extends YamlLoader {
     static final Logger LOG = LoggerFactory.getLogger(StrategyConfigLoader.class);
@@ -181,6 +203,11 @@ public class StrategyConfigLoader extends YamlLoader {
                 LOG.error("loadBuilderStrategyConfig: invalid assignment type config");
             }
             config.setAssignmentType(assignmentType);
+        }
+
+        Boolean isStopOnSectionEnd = getBoolean(CONFIG_STOP_ON_SECTION_END, builderStrategyConfig);
+        if(isStopOnSectionEnd != null) {
+            config.setStopOnSectionEnd(isStopOnSectionEnd);
         }
 
         List<Map<String, Object>> instActiveRangesConfigs = getListOfMaps(CONFIG_PAGE_RANGES, builderStrategyConfig);

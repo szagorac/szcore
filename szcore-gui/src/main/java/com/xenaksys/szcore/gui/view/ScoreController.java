@@ -211,7 +211,6 @@ public class ScoreController {
     private ObservableList<Participant> selectedParticipants = FXCollections.observableArrayList();
     private ObservableList<Participant> participants;
     private WebscoreInstructions webscoreInstructions;
-    private DialogsScoreController dialogsScoreController;
 
     private long positionMillis = 0L;
 
@@ -759,7 +758,7 @@ public class ScoreController {
         if (pagesList.isEmpty()) {
             return;
         }
-
+        LOG.info("setPageValue ####");
         Object selected = pageNoCbx.getSelectionModel().getSelectedItem();
         if (selected == null) {
             return;
@@ -993,6 +992,10 @@ public class ScoreController {
         pageNoCbx.getSelectionModel().select(minPageNo);
     }
 
+    public void sendPosition(){
+        sendPosition(null);
+    }
+
     @FXML
     private void sendPosition(ActionEvent event) {
         if (beatNoCbx == null || beatNoCbx.getSelectionModel() == null || beatNoCbx.getSelectionModel().isEmpty()) {
@@ -1207,8 +1210,8 @@ public class ScoreController {
         tempoModifierSldr.setValue(1.0);
         presetsChob.getSelectionModel().select(Consts.PRESET_ALL_OFF);
 
-        if(dialogsScoreController != null) {
-            dialogsScoreController.onScoreLoad(score);
+        if(mainApp != null) {
+            mainApp.onScoreLoad(score);
         }
     }
 
@@ -1745,15 +1748,17 @@ public class ScoreController {
         return String.format("%1$" + length + "s", string);
     }
 
-    public void setDialogsController(DialogsScoreController dialogsScoreController) {
-        this.dialogsScoreController = dialogsScoreController;
-    }
-
     public String getScoreName() {
         if(score == null) {
             return null;
         }
         return score.getName();
+    }
+
+    public void setPage(int startPage) {
+        Integer selection = startPage;
+        pageNoCbx.getSelectionModel().select(selection);
+        setPageNo(null);
     }
 
     class TransportBeatUpdater implements Runnable {

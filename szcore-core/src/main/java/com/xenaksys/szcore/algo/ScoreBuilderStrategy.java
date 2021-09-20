@@ -113,6 +113,10 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
         this.defaultInstrument = instrumentDefault;
     }
 
+    public String getDefaultInstrument() {
+        return defaultInstrument;
+    }
+
     public void addClientId(String clientId) {
         if(clientId == null) {
             return;
@@ -211,6 +215,11 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
         return instrument;
     }
 
+    public Map<String, List<String>> getInstrumentClients(String section) {
+        SectionInfo sectionInfo = sectionInfos.get(section);
+        return sectionInfo.getInstrumentClients();
+    }
+
     public IntRange getSectionPageRange(String section) {
         if(section == null) {
             return null;
@@ -222,14 +231,7 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
         return info.getPageRange();
     }
 
-    public Map<String, String> getSectionClientInstruments(String section) {
-        if(section == null) {
-            return null;
-        }
-        SectionInfo info = getSectionInfo(section);
-        if(info == null) {
-            return null;
-        }
-        return info.getClientInstruments();
+    public boolean isStopOnSectionEnd() {
+        return config.isStopOnSectionEnd();
     }
 }

@@ -13,6 +13,7 @@ public class ScoreBuilderStrategyConfig implements StrategyConfig{
     private final List<String> sections = new ArrayList<>();
     private String scoreName;
     private SectionAssignmentType assignmentType;
+    private boolean isStopOnSectionEnd;
 
     public String getScoreName() {
         return scoreName;
@@ -60,6 +61,14 @@ public class ScoreBuilderStrategyConfig implements StrategyConfig{
             }
         }
         return null;
+    }
+
+    public boolean isStopOnSectionEnd() {
+        return isStopOnSectionEnd;
+    }
+
+    public void setStopOnSectionEnd(boolean stopOnSectionEnd) {
+        isStopOnSectionEnd = stopOnSectionEnd;
     }
 
     @Override

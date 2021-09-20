@@ -18,6 +18,7 @@ import com.xenaksys.szcore.gui.view.ScoreController;
 import com.xenaksys.szcore.gui.view.SettingsController;
 import com.xenaksys.szcore.model.EventService;
 import com.xenaksys.szcore.model.Id;
+import com.xenaksys.szcore.model.Score;
 import com.xenaksys.szcore.model.ScoreService;
 import com.xenaksys.szcore.model.SectionInfo;
 import com.xenaksys.szcore.model.SzcoreEvent;
@@ -197,7 +198,6 @@ public class SzcoreClient extends Application {
             scoreController.setMainApp(this);
             scoreController.setScoreService(scoreService);
             scoreController.setPublisher(eventService);
-            scoreController.setDialogsController(dialogsScoreController);
 
             scoreController.populate();
         } catch (IOException e) {
@@ -220,7 +220,6 @@ public class SzcoreClient extends Application {
             dialogsScoreController.setMainApp(this);
             dialogsScoreController.setScoreService(scoreService);
             dialogsScoreController.setPublisher(eventService);
-            dialogsScoreController.setScoreController(scoreController);
 
             dialogsScoreController.populate();
         } catch (IOException e) {
@@ -391,5 +390,25 @@ public class SzcoreClient extends Application {
         boolean isReady = event.isReady();
         dialogsScoreController.onSectionInfo(sectionInfos, sectionOrder, isReady);
 
+    }
+
+    public void setPage(int startPage) {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.setPage(startPage);
+    }
+
+    public void onScoreLoad(Score score) {
+        if(dialogsScoreController != null) {
+            dialogsScoreController.onScoreLoad(score);
+        }
+    }
+
+    public void sendPosition() {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.sendPosition();
     }
 }

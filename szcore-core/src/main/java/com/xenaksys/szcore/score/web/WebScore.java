@@ -151,6 +151,10 @@ public class WebScore {
     public void resetState() {
     }
 
+    public void resetInstrumentClients() {
+        this.instrumentClients.clear();
+    }
+
     public void processInterceptedOscEvent(OscEvent event) {
         OscEventType oscEventType = event.getOscEventType();
         try {
@@ -404,12 +408,21 @@ public class WebScore {
         playerClients.put(clientId, clientInfo);
     }
 
-    private void addInstrumentClient(WebClientInfo clientInfo) throws Exception {
+    public void addInstrumentClient(WebClientInfo clientInfo) throws Exception {
         String instrument = clientInfo.getInstrument();
         if (instrument == null) {
             return;
         }
+        addInstrumentClient(instrument, clientInfo);
+    }
 
+    public void addInstrumentClient(String instrument, WebClientInfo clientInfo) throws Exception {
+        if (instrument == null || clientInfo == null) {
+            return;
+        }
+        if(!instrument.equals(clientInfo.getInstrument())) {
+            clientInfo.setInstrument(instrument);
+        }
         List<WebClientInfo> clientInfos = instrumentClients.computeIfAbsent(instrument, k -> new ArrayList<>());
         if (!clientInfos.contains(clientInfo)) {
             clientInfos.add(clientInfo);
@@ -886,5 +899,29 @@ public class WebScore {
             }
         }
         return true;
+    }
+
+    public void setSectionInstrumentClients(String sectionToPlay, Map<String, List<String>> instrumentClients){
+        try {
+            if(instrumentClients == null) {
+                return;
+            }
+            resetInstrumentClients();
+            for(String instrument : instrumentClients.keySet()) {
+                List<String> clients = instrumentClients.get(instrument);
+                for(String client : clients) {
+                    WebClientInfo clientInfo = playerClients.get(client);
+                    if(clientInfo == null) {
+                        clientInfo = allClients.get(client);
+                    }
+                    if(clientInfo == null) {
+                        continue;
+                    }
+                    addInstrumentClient(instrument, clientInfo);
+                }
+            }
+        } catch (Exception e) {
+            LOG.error("setSectionInstrumentClients: failed to add section instrument clients", e);
+        }
     }
 }

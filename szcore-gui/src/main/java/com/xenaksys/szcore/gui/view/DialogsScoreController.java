@@ -15,6 +15,8 @@ import com.xenaksys.szcore.model.ScoreService;
 import com.xenaksys.szcore.model.SectionInfo;
 import com.xenaksys.szcore.score.BasicScore;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -56,14 +58,25 @@ public class DialogsScoreController {
     private Button resetOwnersRndBtn;
     @FXML
     private Label sectionsStatusLbl;
+    @FXML
+    private Button setNextSectionBtn;
+    @FXML
+    private Button playNextSectionBtn;
+    @FXML
+    private Button stopNextSectionBtn;
+    @FXML
+    private Label nextSectionLbl;
+    @FXML
+    private Label playingSectionLbl;
 
     private SzcoreClient mainApp;
     private EventService publisher;
     private ScoreService scoreService;
-    private ScoreController scoreController;
     private Clock clock;
     private ObservableList<Section> sections = FXCollections.observableArrayList();
     private ObservableList<String> sectionOrder = FXCollections.observableArrayList();
+    private StringProperty nextSectionProp = new SimpleStringProperty("N/A");
+    private StringProperty playingSectionProp = new SimpleStringProperty("N/A");
 
     public void setMainApp(SzcoreClient mainApp) {
         this.mainApp = mainApp;
@@ -87,6 +100,9 @@ public class DialogsScoreController {
         ownerColumn.setCellValueFactory(cellData -> cellData.getValue().ownerProperty());
         startPageColumn.setCellValueFactory(cellData -> cellData.getValue().startPageProperty().asObject());
         endPageColumn.setCellValueFactory(cellData -> cellData.getValue().endPageProperty().asObject());
+
+        nextSectionLbl.textProperty().bind(nextSectionProp);
+        playingSectionLbl.textProperty().bind(playingSectionProp);
     }
 
     public void setScoreService(ScoreService scoreService) {
@@ -96,10 +112,6 @@ public class DialogsScoreController {
     public void setPublisher(EventService publisher) {
         this.publisher = publisher;
         this.clock = publisher.getClock();
-    }
-
-    public void setScoreController(ScoreController scoreController) {
-        this.scoreController = scoreController;
     }
 
     public void onScoreLoad(Score score) {
@@ -170,6 +182,7 @@ public class DialogsScoreController {
             if(sections.contains(selectedItem)) {
                 sectionOrderLvw.getSelectionModel().select(selectedItem);
             }
+            nextSectionProp.setValue(sections.get(0));
         });
     }
 
@@ -234,5 +247,25 @@ public class DialogsScoreController {
         EventFactory eventFactory = publisher.getEventFactory();
         StrategyEvent instructionsEvent = eventFactory.createStrategyEvent(StrategyEventType.RESET_OWNERS, clock.getSystemTimeMillis());
         publisher.receive(instructionsEvent);
+    }
+
+    public void setNextSection(ActionEvent actionEvent) {
+        String nextSectionName = nextSectionProp.getValue();
+        if(nextSectionName == null) {
+            return;
+        }
+        Section nextSection = getSection(nextSectionName);
+        if(nextSection == null) {
+            return;
+        }
+        int startPage = nextSection.getStartPage();
+        mainApp.setPage(startPage);
+        mainApp.sendPosition();
+    }
+
+    public void playNextSection(ActionEvent actionEvent) {
+    }
+
+    public void stopNextSection(ActionEvent actionEvent) {
     }
 }

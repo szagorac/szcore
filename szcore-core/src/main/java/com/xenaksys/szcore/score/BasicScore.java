@@ -552,6 +552,13 @@ public class BasicScore implements Score {
         return null;
     }
 
+    public Page getPageNo(int pageNo, InstrumentId instrumentId) {
+        tempPageId.setInstrumentId(instrumentId);
+        tempPageId.setScoreId(getId());
+        tempPageId.setPageNo(pageNo);
+        return getPage(tempPageId);
+    }
+
     @Override
     public long getBeatTime(BeatId beatId) {
         if (beatId == null) {

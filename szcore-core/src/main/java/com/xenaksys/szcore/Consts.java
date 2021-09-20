@@ -602,6 +602,7 @@ public interface Consts {
     String CONFIG_TILE_ROW = "tileRow";
     String CONFIG_TILE_COLS = "tileCols";
     String CONFIG_ASSIGNMENT_TYPE = "assignmentType";
+    String CONFIG_STOP_ON_SECTION_END = "isStopOnSectionEnd";
 
     String MAXMSP_ID = "max";
     String MAXMSP_CMD_SET_FILE = "setFile";

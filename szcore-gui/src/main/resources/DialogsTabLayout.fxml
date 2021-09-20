@@ -21,6 +21,14 @@
                         <Label fx:id="sectionsStatusLbl" styleClass="label-red" stylesheets="@css/szcoreStyle.css" text="WAITING" />
                         <Button fx:id="assignOwnersRndBtn" mnemonicParsing="false" onAction="#assignSectionOwnersRnd" text="Assign Owners Rnd" />
                         <Button fx:id="resetOwnersRndBtn" layoutX="147.0" layoutY="11.0" mnemonicParsing="false" onAction="#resetSectionOwners" text="Reset Owners" />
+                        <Label prefHeight="17.0" prefWidth="28.0" text="    " />
+                        <Label text="Next Section:" />
+                        <Label fx:id="nextSectionLbl" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="N/A" />
+                        <Button fx:id="setNextSectionBtn" mnemonicParsing="false" onAction="#setNextSection" text="Set" />
+                        <Button fx:id="playNextSectionBtn" layoutX="539.0" layoutY="11.0" mnemonicParsing="false" onAction="#playNextSection" text="Play" />
+                        <Button fx:id="stopNextSectionBtn" layoutX="586.0" layoutY="11.0" mnemonicParsing="false" onAction="#stopNextSection" text="Stop" />
+                        <Label text="Playing: " />
+                        <Label fx:id="playingSectionLbl" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="N/A" />
                             </children>
                         </HBox>
                         <HBox spacing="10.0">

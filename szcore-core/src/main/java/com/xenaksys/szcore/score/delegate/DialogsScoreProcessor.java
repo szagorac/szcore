@@ -1,10 +1,12 @@
 package com.xenaksys.szcore.score.delegate;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.model.Bar;
+import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.EventReceiver;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.MutableClock;
@@ -12,6 +14,7 @@ import com.xenaksys.szcore.model.OscPublisher;
 import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.Scheduler;
 import com.xenaksys.szcore.model.Score;
+import com.xenaksys.szcore.model.SectionInfo;
 import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.Transport;
 import com.xenaksys.szcore.model.WebPublisher;
@@ -30,7 +33,9 @@ import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.web.WebClientInfo;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
 
 import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NAME;
@@ -87,10 +92,12 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
 
         Collection<Instrument> instruments = szcore.getInstruments();
         BeatId lastBeat = null;
+        Instrument lastInstrument = null;
         for (Instrument instrument : instruments) {
             InstrumentId instrumentId = (InstrumentId)instrument.getId();
             getInstrumentBeatTrackers().put(instrumentId, new InstrumentBeatTracker(transport, instrumentId));
             lastBeat = prepareInstrument(instrument, transport);
+            lastInstrument = instrument;
             Page lastPage = szcore.getLastInstrumentPage(instrumentId);
 
             String contPageName = instrument.getName() + UNDERSCORE + CONTINUOUS_PAGE_NAME;
@@ -111,13 +118,36 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
             }
         }
 
+        List<Integer> stopEventBeats = new ArrayList<>();
         szcore.initScoreStrategies();
         ScoreBuilderStrategy scoreBuilderStrategy = szcore.getScoreBuilderStrategy();
         scoreBuilderStrategy.setInstruments(INSTRUMENTS);
         scoreBuilderStrategy.setDefaultInstrument(INSTRUMENT_DEFAULT);
+        if(scoreBuilderStrategy.isStopOnSectionEnd()) {
+            List<String> sections = scoreBuilderStrategy.getSections();
+            for(String section : sections) {
+                SectionInfo sectionInfo = scoreBuilderStrategy.getSectionInfo(section);
+                IntRange pageRange = sectionInfo.getPageRange();
+                int endPageNo = pageRange.getEnd();
+                Page sectionEndPage = null;
+                if(lastInstrument != null) {
+                    sectionEndPage = szcore.getPageNo(endPageNo, (InstrumentId)lastInstrument.getId());
+                }
+                if(sectionEndPage != null) {
+                    Beat sectionLastBeat = sectionEndPage.getLastBeat();
+                    if(!stopEventBeats.contains(sectionLastBeat.getBeatNo())) {
+                        addStopEvent(sectionLastBeat.getBeatId(), transport.getId());
+                        stopEventBeats.add(sectionLastBeat.getBeatNo());
+                    }
+                }
+            }
+        }
 
-        if (!szcore.isUseContinuousPage()) {
-            addStopEvent(lastBeat, transport.getId());
+        if (lastBeat != null && !szcore.isUseContinuousPage()) {
+            if(!stopEventBeats.contains(lastBeat.getBeatNo())) {
+                addStopEvent(lastBeat, transport.getId());
+                stopEventBeats.add(lastBeat.getBeatNo());
+            }
         }
 
         int precountMillis = 5 * 1000;

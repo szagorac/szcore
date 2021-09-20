@@ -2,7 +2,9 @@ package com.xenaksys.szcore.model;
 
 import com.xenaksys.szcore.algo.IntRange;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -11,6 +13,7 @@ public class SectionInfo {
     private String owner;
     private IntRange pageRange;
     private final Map<String, String> clientInstrument = new HashMap<>();
+    private final Map<String, List<String>> instrumentClients = new HashMap<>();
 
     public SectionInfo(String sectionId) {
         this.sectionId = sectionId;
@@ -33,6 +36,25 @@ public class SectionInfo {
             return;
         }
         clientInstrument.put(clientId, instrumentId);
+        updateInstrumentClient(clientId, instrumentId);
+    }
+
+    private void updateInstrumentClient(String clientId, String instrumentId) {
+        removeClientFromOtherInstrument(clientId, instrumentId);
+        List<String> clients = instrumentClients.computeIfAbsent(instrumentId, k -> new ArrayList<>());
+        if(!clients.contains(clientId)) {
+            clients.add(clientId);
+        }
+    }
+
+    private void removeClientFromOtherInstrument(String clientId, String instrumentId) {
+        for(String instrument : instrumentClients.keySet()) {
+            if(instrument.equals(instrumentId)) {
+                continue;
+            }
+            List<String> clients = instrumentClients.get(instrument);
+            clients.remove(clientId);
+        }
     }
 
     public String getClientInstrument(String clientId) {
@@ -44,6 +66,10 @@ public class SectionInfo {
 
     public Map<String, String> getClientInstruments() {
         return clientInstrument;
+    }
+
+    public Map<String, List<String>> getInstrumentClients() {
+        return instrumentClients;
     }
 
     public void setPageRange(IntRange sectionPageRange) {

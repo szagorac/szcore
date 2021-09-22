@@ -11,6 +11,7 @@ public class ScoreBuilderStrategyConfig implements StrategyConfig{
 
     private final List<BuilderPageRangeConfig> pageRangeConfigs = new ArrayList<>();
     private final List<String> sections = new ArrayList<>();
+    private boolean isActive;
     private String scoreName;
     private SectionAssignmentType assignmentType;
     private boolean isStopOnSectionEnd;
@@ -22,7 +23,6 @@ public class ScoreBuilderStrategyConfig implements StrategyConfig{
     public void setScoreName(String scoreName) {
         this.scoreName = scoreName;
     }
-
 
     public List<BuilderPageRangeConfig> getPageRangeConfigs() {
         return pageRangeConfigs;
@@ -74,5 +74,14 @@ public class ScoreBuilderStrategyConfig implements StrategyConfig{
     @Override
     public StrategyType getType() {
         return StrategyType.BUILDER;
+    }
+
+    @Override
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
     }
 }

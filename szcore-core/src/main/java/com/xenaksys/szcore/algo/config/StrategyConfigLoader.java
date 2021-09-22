@@ -24,6 +24,7 @@ import static com.xenaksys.szcore.Consts.CONFIG_ASSIGNMENT_TYPE;
 import static com.xenaksys.szcore.Consts.CONFIG_BUILDER_STRATEGY;
 import static com.xenaksys.szcore.Consts.CONFIG_END;
 import static com.xenaksys.szcore.Consts.CONFIG_INSTRUMENTS;
+import static com.xenaksys.szcore.Consts.CONFIG_IS_ACTIVE;
 import static com.xenaksys.szcore.Consts.CONFIG_IS_RND_ACTIVE;
 import static com.xenaksys.szcore.Consts.CONFIG_NAME;
 import static com.xenaksys.szcore.Consts.CONFIG_PAGE_RANGES;
@@ -98,6 +99,12 @@ public class StrategyConfigLoader extends YamlLoader {
                 participatingScoreInsts.add((InstrumentId) instrument.getId());
             }
         }
+
+        Boolean isActiveConfig = getBoolean(CONFIG_IS_ACTIVE, rndStrategyConfig);
+        if(isActiveConfig == null) {
+            isActiveConfig = false;
+        }
+        config.setActive(isActiveConfig);
 
         List<Map<String, Object>> instActiveRangesConfigs = getListOfMaps(CONFIG_PAGE_RANGES, rndStrategyConfig);
         for (Map<String, Object> instConfig : instActiveRangesConfigs) {
@@ -179,6 +186,12 @@ public class StrategyConfigLoader extends YamlLoader {
                 participatingScoreInsts.add((InstrumentId) instrument.getId());
             }
         }
+
+        Boolean isActiveConfig = getBoolean(CONFIG_IS_ACTIVE, builderStrategyConfig);
+        if(isActiveConfig == null) {
+            isActiveConfig = false;
+        }
+        config.setActive(isActiveConfig);
 
         List<Object> sectionsConfig = getList(CONFIG_SECTIONS, builderStrategyConfig);
         if(sectionsConfig != null) {

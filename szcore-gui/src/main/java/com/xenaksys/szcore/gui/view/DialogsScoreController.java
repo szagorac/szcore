@@ -164,9 +164,9 @@ public class DialogsScoreController {
             }
         }
         if(isReady) {
-            setSectionStatyls(Consts.READY, LABEL_GREEN, LABEL_RED);
+            setSectionStatusStyle(Consts.READY, LABEL_GREEN, LABEL_RED);
         } else {
-            setSectionStatyls(Consts.WAITING, LABEL_RED, LABEL_GREEN);
+            setSectionStatusStyle(Consts.WAITING, LABEL_RED, LABEL_GREEN);
         }
 
         if(sectionOrder != null && !sectionOrder.isEmpty()) {
@@ -186,7 +186,7 @@ public class DialogsScoreController {
         });
     }
 
-    private void setSectionStatyls(final String text, final String style, final String styleToRemove) {
+    private void setSectionStatusStyle(final String text, final String style, final String styleToRemove) {
         Platform.runLater(() -> {
             sectionsStatusLbl.setText(text);
             ObservableList<String> styleClass = sectionsStatusLbl.getStyleClass();
@@ -237,23 +237,12 @@ public class DialogsScoreController {
         return null;
     }
 
-    public void assignSectionOwnersRnd(ActionEvent actionEvent) {
-        EventFactory eventFactory = publisher.getEventFactory();
-        StrategyEvent instructionsEvent = eventFactory.createStrategyEvent(StrategyEventType.ASSIGN_OWNERS_RND, clock.getSystemTimeMillis());
-        publisher.receive(instructionsEvent);
-    }
-
-    public void resetSectionOwners(ActionEvent actionEvent) {
-        EventFactory eventFactory = publisher.getEventFactory();
-        StrategyEvent instructionsEvent = eventFactory.createStrategyEvent(StrategyEventType.RESET_OWNERS, clock.getSystemTimeMillis());
-        publisher.receive(instructionsEvent);
-    }
-
     public void setNextSection(ActionEvent actionEvent) {
         String nextSectionName = nextSectionProp.getValue();
         if(nextSectionName == null) {
             return;
         }
+        sendSetSection(nextSectionName);
         Section nextSection = getSection(nextSectionName);
         if(nextSection == null) {
             return;
@@ -263,9 +252,29 @@ public class DialogsScoreController {
         mainApp.sendPosition();
     }
 
+
     public void playNextSection(ActionEvent actionEvent) {
     }
 
     public void stopNextSection(ActionEvent actionEvent) {
+    }
+
+    public void assignSectionOwnersRnd(ActionEvent actionEvent) {
+        EventFactory eventFactory = publisher.getEventFactory();
+        StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.ASSIGN_OWNERS_RND, clock.getSystemTimeMillis());
+        publisher.receive(strategyEvent);
+    }
+
+    public void resetSectionOwners(ActionEvent actionEvent) {
+        EventFactory eventFactory = publisher.getEventFactory();
+        StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.RESET_OWNERS, clock.getSystemTimeMillis());
+        publisher.receive(strategyEvent);
+    }
+
+    private void sendSetSection(String nextSectionName) {
+        EventFactory eventFactory = publisher.getEventFactory();
+        StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.SET_SECTION, clock.getSystemTimeMillis());
+        strategyEvent.setSectionName(nextSectionName);
+        publisher.receive(strategyEvent);
     }
 }

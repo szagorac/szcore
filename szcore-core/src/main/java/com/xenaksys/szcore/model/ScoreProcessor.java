@@ -106,4 +106,6 @@ public interface ScoreProcessor extends Processor {
     void addBeatEventToProcess(SzcoreEvent event);
 
     void processSelectSection(String section, WebClientInfo clientInfo);
+
+    boolean isNoScoreInstrument(String instrument);
 }

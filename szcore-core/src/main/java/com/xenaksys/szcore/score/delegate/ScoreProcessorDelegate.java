@@ -196,6 +196,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     private final Map<Id, InstrumentBeatTracker> instrumentBeatTrackers = new HashMap<>();
     private final BeatFollowerPositionStrategy beatFollowerPositionStrategy = new BeatFollowerPositionStrategy();
     private final Map<Id, TempoModifier> transportTempoModifiers = new ConcurrentHashMap<>();
+    private final List<String> noScoreInstruments = new ArrayList<>();
 
     private final ValueScaler dynamicsValueScaler = new ValueScaler(0.0, 100.0, 0.0, DYNAMICS_LINE_Y_MAX);
     private final ValueScaler dynamicsForteColorValueScaler = new ValueScaler(50.0, 100.0, 255, 0);
@@ -215,7 +216,6 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
 
     protected volatile boolean isUpdateWindowOpen = false;
     protected volatile int currentBeatNo = 0;
-
 
     public ScoreProcessorDelegate(TransportFactory transportFactory,
                                   MutableClock clock,
@@ -940,8 +940,52 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     @Override
     public void onOpenModWindow(InstrumentId instId, Stave stave, Page nextPage, PageId currentPageId) {
         this.isUpdateWindowOpen = true;
-        ScoreRandomisationStrategy strategy = szcore.getRandomisationStrategy();
+        processStrategiesOnOpenModWindow(instId, nextPage, currentPageId);
+    }
 
+    protected void processStrategiesOnOpenModWindow(InstrumentId instId, Page nextPage, PageId currentPageId) {
+        ScoreRandomisationStrategy rndStrategy = szcore.getRandomisationStrategy();
+        if(rndStrategy != null) {
+            processRndStrategyOnOpenModWindow(rndStrategy, instId, nextPage, currentPageId);
+        }
+
+        ScoreBuilderStrategy builderStrategy = szcore.getScoreBuilderStrategy();
+        if(builderStrategy != null) {
+            processBuilderStrategyOnOpenModWindow(builderStrategy, instId);
+        }
+    }
+
+    private void processBuilderStrategyOnOpenModWindow(ScoreBuilderStrategy builderStrategy, InstrumentId instId) {
+        if(!builderStrategy.isActive()) {
+            return;
+        }
+        String[] instruments = builderStrategy.getDynamicInstruments();
+        if(instruments == null || instruments.length < 1) {
+            return;
+        }
+        String instSlotsCsv = ParseUtil.convertToCsv(instruments);
+        String section = builderStrategy.getCurrentSection();
+        if(section == null) {
+            return;
+        }
+        List<String> clients = builderStrategy.getInstrumentClients(section, instId.getName());
+        if(clients == null || clients.isEmpty()) {
+            String destination = szcore.getOscDestination(instId);
+            LOG.debug("processBuilderStrategyOnOpenModWindow: Invalid instrumentSlotsEvent, isInRndRange: true, destination: {} instSlotsCsv: {}", destination, instSlotsCsv);
+            OscEvent instrumentSlotsEvent =  createInstrumentResetSlotsEvent(destination);
+            publishOscEvent(instrumentSlotsEvent);
+        } else {
+            for(String client : clients) {
+                OscEvent instrumentSlotsEvent = createInstrumentSlotsEvent(client, instSlotsCsv);
+                publishOscEvent(instrumentSlotsEvent);
+            }
+        }
+    }
+
+    private void processRndStrategyOnOpenModWindow(ScoreRandomisationStrategy strategy, InstrumentId instId, Page nextPage, PageId currentPageId) {
+        if(!strategy.isActive()) {
+            return;
+        }
         boolean isNextPageInRndRange = nextPage != null && strategy.isInActiveRange(instId, nextPage);
         LOG.debug("onOpenModWindow: isNextPageInRndRange : {} page: {}", isNextPageInRndRange, nextPage);
 
@@ -2210,7 +2254,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         if(sectionToPlay == null) {
             return;
         }
-        Map<String, List<String>> instrumentClients = strategy.getInstrumentClients(sectionToPlay);
+        Map<String, List<String>> instrumentClients = strategy.getInstrumentClientsMap(sectionToPlay);
         webScore.setSectionInstrumentClients(sectionToPlay, instrumentClients);
     }
 
@@ -2732,7 +2776,21 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             case RESET_OWNERS:
                 resetStrategyOwners();
                 break;
+            case SET_SECTION:
+                setSectionName(event.getSectionName());
+                break;
         }
+    }
+
+    private void setSectionName(String sectionName) {
+        if(sectionName == null) {
+            return;
+        }
+        ScoreBuilderStrategy strategy = szcore.getScoreBuilderStrategy();
+        if(strategy == null) {
+            return;
+        }
+        strategy.setCurrentSection(sectionName);
     }
 
     protected void resetStrategyOwners() throws Exception {
@@ -3691,6 +3749,16 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
 
     private boolean inNotOverlayInstrument(Instrument instrument) {
         return instrument.isAv() || Consts.NAME_FULL_SCORE.equalsIgnoreCase(instrument.getName());
+    }
+
+    public void addNoScoreInstrument(String instrument) {
+        if(!this.noScoreInstruments.contains(instrument)) {
+            this.noScoreInstruments.add(instrument);
+        }
+    }
+
+    public boolean isNoScoreInstrument(String instrument) {
+        return this.noScoreInstruments.contains(instrument);
     }
 
     public boolean isSchedulerRunning() {

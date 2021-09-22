@@ -36,6 +36,7 @@ import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.ScoreProcessor;
+import com.xenaksys.szcore.model.SectionInfo;
 import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.Transport;
 import com.xenaksys.szcore.model.id.PageId;
@@ -411,6 +412,13 @@ public class WebScore {
     public void addInstrumentClient(WebClientInfo clientInfo) throws Exception {
         String instrument = clientInfo.getInstrument();
         if (instrument == null) {
+            ScoreBuilderStrategy builderStrategy = score.getScoreBuilderStrategy();
+            if(builderStrategy == null) {
+                return;
+            }
+            instrument = builderStrategy.getDefaultInstrument();
+        }
+        if (instrument == null) {
             return;
         }
         addInstrumentClient(instrument, clientInfo);
@@ -462,24 +470,44 @@ public class WebScore {
             lastPageNo = lastPage.getPageNo();
         }
 
+        ScoreBuilderStrategy scoreBuilderStrategy = score.getScoreBuilderStrategy();
+        if(scoreBuilderStrategy != null) {
+            String section = scoreBuilderStrategy.getCurrentSection();
+            SectionInfo sectionInfo = scoreBuilderStrategy.getSectionInfo(section);
+            if(sectionInfo != null) {
+                IntRange pageRange = sectionInfo.getPageRange();
+                if(pageRange != null) {
+                    firstPageNo = pageRange.getStart();
+                    lastPageNo = pageRange.getEnd();
+                }
+            }
+        }
+
+        boolean isNoScoreInstrument = scoreProcessor.isNoScoreInstrument(instrumentName);
+
         SequentalIntRange pageRange = new SequentalIntRange(firstPageNo, lastPageNo);
         ArrayList<IntRange> pageRanges = new ArrayList<>();
         pageRanges.add(pageRange);
         String imgDir = scoreInfo.getScoreDir() + Consts.RSRC_DIR;
-        // ligetiTest6_Cello_page19.png
-        String scoreNameToken = scoreInfo.getTitle().replaceAll("\\s+", "_");
-        String imgPageNameToken = scoreNameToken
-                + Consts.UNDERSCORE
-                + instrumentName
-                + Consts.UNDERSCORE
-                + Consts.DEFAULT_PAGE_PREFIX
-                + Consts.WEB_SCORE_PAGE_NO_TOKEN
-                + Consts.PNG_FILE_EXTENSION;
 
         String imgContPageName = instrumentName
                 + Consts.UNDERSCORE
                 + Consts.CONTINUOUS_PAGE_NAME
                 + Consts.PNG_FILE_EXTENSION;
+
+        String imgPageNameToken;
+        if(isNoScoreInstrument) {
+            imgPageNameToken = imgContPageName;
+        } else {
+            String scoreNameToken = scoreInfo.getTitle().replaceAll("\\s+", "_");
+            imgPageNameToken = scoreNameToken
+                    + Consts.UNDERSCORE
+                    + instrumentName
+                    + Consts.UNDERSCORE
+                    + Consts.DEFAULT_PAGE_PREFIX
+                    + Consts.WEB_SCORE_PAGE_NO_TOKEN
+                    + Consts.PNG_FILE_EXTENSION;
+        }
 
         WebPartInfo partInfo = new WebPartInfo();
         partInfo.setName(instrumentName);

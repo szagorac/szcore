@@ -392,6 +392,14 @@ public class ScoreProcessorDelegator implements ScoreProcessor {
     }
 
     @Override
+    public boolean isNoScoreInstrument(String instrument) {
+        if(scoreDelegate == null) {
+            return false;
+        }
+        return scoreDelegate.isNoScoreInstrument(instrument);
+    }
+
+    @Override
     public void onOpenModWindow(InstrumentId instId, Stave stave, Page nextPage, PageId currentPageId) {
         if(scoreDelegate == null) {
             return;

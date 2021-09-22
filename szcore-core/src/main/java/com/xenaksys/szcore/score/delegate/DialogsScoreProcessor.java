@@ -51,6 +51,7 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
     private final static String INSTRUMENT_ABSTAIN = INSTRUMENT_DEFAULT;
     private final static String INSTRUMENT_OWNER = INSTRUMENT_PRESENTER;
     private final static String[] INSTRUMENTS = {INSTRUMENT_PRESENTER, INSTRUMENT_AGREE, INSTRUMENT_DISAGREE, INSTRUMENT_ABSTAIN};
+    private final static String[] DYNAMIC_INSTRUMENTS = {INSTRUMENT_AGREE, INSTRUMENT_DISAGREE, INSTRUMENT_ABSTAIN};
     private final static String INSTRUMENT_ABSTAIN_PAGE_FILE_NAME = "Abstain_pagex";
 
     public DialogsScoreProcessor(TransportFactory transportFactory,
@@ -122,6 +123,7 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
         szcore.initScoreStrategies();
         ScoreBuilderStrategy scoreBuilderStrategy = szcore.getScoreBuilderStrategy();
         scoreBuilderStrategy.setInstruments(INSTRUMENTS);
+        scoreBuilderStrategy.setDynamicInstruments(DYNAMIC_INSTRUMENTS);
         scoreBuilderStrategy.setDefaultInstrument(INSTRUMENT_DEFAULT);
         if(scoreBuilderStrategy.isStopOnSectionEnd()) {
             List<String> sections = scoreBuilderStrategy.getSections();
@@ -153,6 +155,8 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
         int precountMillis = 5 * 1000;
         int precountBeatNo = 4;
         szcore.setPrecount(precountMillis, precountBeatNo);
+
+        addNoScoreInstrument(INSTRUMENT_ABSTAIN);
 
         setScoreLoaded(true);
 

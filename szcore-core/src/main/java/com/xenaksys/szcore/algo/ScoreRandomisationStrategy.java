@@ -315,4 +315,9 @@ public class ScoreRandomisationStrategy implements ScoreStrategy{
     public boolean isReady() {
         return isReady;
     }
+
+    @Override
+    public boolean isActive() {
+        return config.isActive();
+    }
 }

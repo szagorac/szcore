@@ -11,6 +11,7 @@ public class ScoreRandomisationStrategyConfig  implements StrategyConfig{
 
     private final List<RndPageRangeConfig> pageRangeConfigs = new ArrayList<>();
     private String scoreName;
+    private boolean isActive;
 
     public String getScoreName() {
         return scoreName;
@@ -81,5 +82,14 @@ public class ScoreRandomisationStrategyConfig  implements StrategyConfig{
     @Override
     public StrategyType getType() {
         return StrategyType.RND;
+    }
+
+    @Override
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
     }
 }

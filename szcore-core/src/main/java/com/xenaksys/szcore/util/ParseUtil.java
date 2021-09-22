@@ -147,5 +147,13 @@ public class ParseUtil {
         }
         return csvBuilder.toString();
     }
+
+    public static String convertToCsv(String[] values) {
+        if(values == null) {
+            return null;
+        }
+        return String.join(COMMA, values);
+    }
+
 }
 

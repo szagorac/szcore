@@ -581,6 +581,7 @@ public interface Consts {
     String CONFIG_SCORE_NAME = "scoreName";
     String CONFIG_RND_STRATEGY = "rndStrategy";
     String CONFIG_BUILDER_STRATEGY = "builderStrategy";
+    String CONFIG_IS_ACTIVE = "isActive";
     String CONFIG_ACTIVE_RANGES = "activePageRanges";
     String CONFIG_PAGE_RANGE_MAPPING = "pageRangeMapping";
     String CONFIG_PAGE_RANGE = "pageRange";

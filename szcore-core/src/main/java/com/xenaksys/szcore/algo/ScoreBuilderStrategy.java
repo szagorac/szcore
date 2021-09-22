@@ -22,8 +22,10 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
     private final List<String> sectionOrder = new ArrayList<>();
     private List<PageInfo> pageOrder = new ArrayList<>();
     private String[] instruments;
+    private String[] dynamicInstruments;
     private String defaultInstrument;
     private boolean isReady = false;
+    private String currentSection;
 
     public ScoreBuilderStrategy(BasicScore szcore, ScoreBuilderStrategyConfig config) {
         this.szcore = szcore;
@@ -41,6 +43,11 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
         for(String section : sections) {
             SectionInfo sectionInfo = getOrCreateSectionInfo(section);
             sectionInfo.setPageRange(config.getSectionPageRange(section));
+        }
+        if(sections.size() > 0) {
+            this.currentSection = sections.get(0);
+        } else {
+            isReady = true;
         }
     }
 
@@ -79,11 +86,20 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
             SectionInfo sectionInfo = getOrCreateSectionInfo(section);
             sectionInfo.setOwner(owner);
         }
+        String first = sectionOrder.get(0);
+        if(!first.equals(this.currentSection)) {
+            this.currentSection = first;
+        }
         this.isReady = isBuildComplete();
     }
 
     public boolean isReady() {
         return isReady;
+    }
+
+    @Override
+    public boolean isActive() {
+        return config.isActive();
     }
 
     private boolean isBuildComplete() {
@@ -107,6 +123,18 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
 
     public void setInstruments(String[] instruments) {
         this.instruments = instruments;
+    }
+
+    public String[] getInstruments() {
+        return instruments;
+    }
+
+    public void setDynamicInstruments(String[] instruments) {
+        this.dynamicInstruments = instruments;
+    }
+
+    public String[] getDynamicInstruments() {
+        return dynamicInstruments;
     }
 
     public void setDefaultInstrument(String instrumentDefault) {
@@ -215,9 +243,14 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
         return instrument;
     }
 
-    public Map<String, List<String>> getInstrumentClients(String section) {
+    public Map<String, List<String>> getInstrumentClientsMap(String section) {
         SectionInfo sectionInfo = sectionInfos.get(section);
         return sectionInfo.getInstrumentClients();
+    }
+
+    public List<String> getInstrumentClients(String section, String instrument) {
+        SectionInfo sectionInfo = sectionInfos.get(section);
+        return sectionInfo.getInstrumentClients().get(instrument);
     }
 
     public IntRange getSectionPageRange(String section) {
@@ -233,5 +266,13 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
 
     public boolean isStopOnSectionEnd() {
         return config.isStopOnSectionEnd();
+    }
+
+    public String getCurrentSection() {
+        return currentSection;
+    }
+
+    public void setCurrentSection(String currentSection) {
+        this.currentSection = currentSection;
     }
 }

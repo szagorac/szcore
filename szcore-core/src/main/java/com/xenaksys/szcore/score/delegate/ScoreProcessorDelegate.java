@@ -976,6 +976,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             return;
         }
         List<String> clients = builderStrategy.getInstrumentClients(section, instId.getName());
+        boolean isSendSlotEvent = isSendInstrumentSlotsEvent(instId.getName());
         if(clients == null || clients.isEmpty()) {
             String destination = szcore.getOscDestination(instId);
             LOG.debug("processBuilderStrategyOnOpenModWindow: Invalid instrumentSlotsEvent, isInRndRange: true, destination: {} instSlotsCsv: {}", destination, instSlotsCsv);
@@ -983,10 +984,19 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             publishOscEvent(instrumentSlotsEvent);
         } else {
             for(String client : clients) {
-                OscEvent instrumentSlotsEvent = createInstrumentSlotsEvent(client, instSlotsCsv);
-                publishOscEvent(instrumentSlotsEvent);
+                if(isSendSlotEvent) {
+                    OscEvent instrumentSlotsEvent = createInstrumentSlotsEvent(client, instSlotsCsv);
+                    publishOscEvent(instrumentSlotsEvent);
+                } else {
+                    OscEvent instrumentSlotsEvent =  createInstrumentResetSlotsEvent(client);
+                    publishOscEvent(instrumentSlotsEvent);
+                }
             }
         }
+    }
+
+    protected boolean isSendInstrumentSlotsEvent(String name) {
+        return true;
     }
 
     private void processRndStrategyOnOpenModWindow(ScoreRandomisationStrategy strategy, InstrumentId instId, Page nextPage, PageId currentPageId) {

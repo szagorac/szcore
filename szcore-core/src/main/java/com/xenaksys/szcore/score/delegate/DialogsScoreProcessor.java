@@ -172,6 +172,13 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
         //TODO
     }
 
+    protected boolean isSendInstrumentSlotsEvent(String name) {
+        if(name == null) {
+            return false;
+        }
+        return !INSTRUMENT_PRESENTER.equals(name);
+    }
+
     @Override
     public void processSelectSection(String section, WebClientInfo clientInfo) {
         super.processSelectSection(section, clientInfo);

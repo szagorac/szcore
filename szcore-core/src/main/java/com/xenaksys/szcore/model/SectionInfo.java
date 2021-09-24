@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public class SectionInfo {
     private final String sectionId;
@@ -78,6 +79,26 @@ public class SectionInfo {
 
     public IntRange getPageRange() {
         return pageRange;
+    }
+
+    public int getEndPageNo() {
+        IntRange intRange = getPageRange();
+        if(intRange == null) {
+            return -1;
+        }
+        return intRange.getEnd();
+    }
+
+    public int getStartPageNo() {
+        IntRange intRange = getPageRange();
+        if(intRange == null) {
+            return -1;
+        }
+        return intRange.getStart();
+    }
+
+    public Set<String> getClients() {
+        return clientInstrument.keySet();
     }
 
     @Override

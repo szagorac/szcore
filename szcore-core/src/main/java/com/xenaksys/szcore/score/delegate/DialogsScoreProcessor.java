@@ -1,7 +1,6 @@
 package com.xenaksys.szcore.score.delegate;
 
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.event.EventFactory;
@@ -129,8 +128,7 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
             List<String> sections = scoreBuilderStrategy.getSections();
             for(String section : sections) {
                 SectionInfo sectionInfo = scoreBuilderStrategy.getSectionInfo(section);
-                IntRange pageRange = sectionInfo.getPageRange();
-                int endPageNo = pageRange.getEnd();
+                int endPageNo = sectionInfo.getEndPageNo();
                 Page sectionEndPage = null;
                 if(lastInstrument != null) {
                     sectionEndPage = szcore.getPageNo(endPageNo, (InstrumentId)lastInstrument.getId());
@@ -184,7 +182,7 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
         if(scoreBuilderStrategy.isSectionOwned(section)) {
             String owner = scoreBuilderStrategy.getSectionOwner(section);
             if(owner != null) {
-                scoreBuilderStrategy.addClientInstrument(section, owner, INSTRUMENT_OWNER);
+                scoreBuilderStrategy.addClientInstrumentAndResetOthersToDefault(section, owner, INSTRUMENT_OWNER);
             }
         }
     }

@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ScoreBuilderStrategy implements ScoreStrategy {
@@ -160,6 +161,11 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
         }
     }
 
+    public void addClientInstrumentAndResetOthersToDefault(String section, String clientId, String instrumentId) {
+        addClientInstrument(section, clientId, instrumentId);
+        resetOtherClientsToDefaultInstrument(section, clientId);
+    }
+
     public void addClientInstrument(String section, String clientId, String instrumentId) {
         if(section == null || clientId == null || instrumentId == null) {
             return;
@@ -169,6 +175,22 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
             return;
         }
         info.addClientInstrument(clientId, instrumentId);
+    }
+
+    public void resetOtherClientsToDefaultInstrument(String section, String clientId) {
+        if(section == null || clientId == null || defaultInstrument == null) {
+            return;
+        }
+        SectionInfo info = getSectionInfo(section);
+        if(info == null) {
+            return;
+        }
+        Set<String> clients = info.getClients();
+        for(String client : clients) {
+            if(!client.equals(clientId)) {
+                info.addClientInstrument(client, defaultInstrument);
+            }
+        }
     }
 
     public String getSectionOwner(String section) {

@@ -929,7 +929,7 @@ public class WebScore {
         return true;
     }
 
-    public void setSectionInstrumentClients(String sectionToPlay, Map<String, List<String>> instrumentClients){
+    public void setSectionInstrumentClients(Map<String, List<String>> instrumentClients){
         try {
             if(instrumentClients == null) {
                 return;
@@ -945,7 +945,10 @@ public class WebScore {
                     if(clientInfo == null) {
                         continue;
                     }
-                    addInstrumentClient(instrument, clientInfo);
+                    if(!instrument.equals(clientInfo.getInstrument())) {
+                        clientInfo.setInstrument(instrument);
+                    }
+                    addOrUpdateClientInfo(clientInfo);
                 }
             }
         } catch (Exception e) {

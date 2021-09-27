@@ -400,6 +400,22 @@ public class ScoreProcessorDelegator implements ScoreProcessor {
     }
 
     @Override
+    public void onSectionStart(String section) {
+        if(scoreDelegate == null) {
+            return;
+        }
+        scoreDelegate.onSectionStart(section);
+    }
+
+    @Override
+    public void onSectionStop(String section) {
+        if(scoreDelegate == null) {
+            return;
+        }
+        scoreDelegate.onSectionStop(section);
+    }
+
+    @Override
     public void onOpenModWindow(InstrumentId instId, Stave stave, Page nextPage, PageId currentPageId) {
         if(scoreDelegate == null) {
             return;

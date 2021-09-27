@@ -53,9 +53,11 @@ public class DialogsScoreController {
     @FXML
     private TableColumn<Section, Integer> endPageColumn;
     @FXML
-    private Button assignOwnersRndBtn;
+    private Button assignOwnersBtn;
     @FXML
-    private Button resetOwnersRndBtn;
+    private Button resetOwnersBtn;
+    @FXML
+    private Button shuffleOrderBtn;
     @FXML
     private Label sectionsStatusLbl;
     @FXML
@@ -95,6 +97,13 @@ public class DialogsScoreController {
 
         sectionOrderLvw.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         sectionOrderLvw.setEditable(false);
+        sectionOrderLvw.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            String out  = newSelection;
+            if (newSelection == null) {
+                out = oldSelection;
+            }
+            onSectionSelect(out);
+        });
 
         sectionColumn.setCellValueFactory(cellData -> cellData.getValue().sectionProperty());
         ownerColumn.setCellValueFactory(cellData -> cellData.getValue().ownerProperty());
@@ -103,6 +112,62 @@ public class DialogsScoreController {
 
         nextSectionLbl.textProperty().bind(nextSectionProp);
         playingSectionLbl.textProperty().bind(playingSectionProp);
+    }
+
+    private void onSectionSelect(String sectionName) {
+        Section section = getSection(sectionName);
+        if(section == null) {
+            return;
+        }
+        onSectionSelect(section);
+    }
+
+    private void onSectionSelect(Section section) {
+        if(section == null) {
+            return;
+        }
+        setCurrentSectionLabel(section.getSection());
+    }
+
+    private void setCurrentSectionLabel(String value){
+        if(value == null) {
+            value = Consts.NAME_NA;
+        }
+        String old = playingSectionProp.getValue();
+        if(value.equals(old)) {
+            return;
+        }
+        playingSectionProp.setValue(value);
+        selectSection(value);
+    }
+
+    private void selectSection(String value){
+        Section section = getSection(value);
+        if(section == null) {
+            return;
+        }
+        Section selected = sectionsTableView.getSelectionModel().getSelectedItem();
+        if(section.equals(selected)) {
+            return;
+        }
+        sectionsTableView.getSelectionModel().select(section);
+
+        String selectedOrder = sectionOrderLvw.getSelectionModel().getSelectedItem();
+        if(value.equals(selectedOrder)) {
+            return;
+        }
+        sectionOrderLvw.getSelectionModel().select(value);
+    }
+
+    private void setNextSectionLabel(String value){
+        if(value == null) {
+            value = Consts.NAME_NA;;
+        }
+        String old = nextSectionProp.getValue();
+        if(value.equals(old)) {
+            return;
+        }
+        nextSectionProp.setValue(value);
     }
 
     public void setScoreService(ScoreService scoreService) {
@@ -149,7 +214,7 @@ public class DialogsScoreController {
         });
     }
 
-    public void onSectionInfo(List<SectionInfo> sectionInfos, List<String> sectionOrder, boolean isReady) {
+    public void onSectionInfo(List<SectionInfo> sectionInfos, List<String> sectionOrder, boolean isReady, String currentSection, String nextSection) {
         if(sectionInfos != null) {
             for(SectionInfo info : sectionInfos) {
                 Section section = new Section();
@@ -163,6 +228,7 @@ public class DialogsScoreController {
                 addSection(section);
             }
         }
+
         if(isReady) {
             setSectionStatusStyle(Consts.READY, LABEL_GREEN, LABEL_RED);
         } else {
@@ -170,11 +236,11 @@ public class DialogsScoreController {
         }
 
         if(sectionOrder != null && !sectionOrder.isEmpty()) {
-            setSectionOrder(sectionOrder);
+            setSectionOrderInfo(sectionOrder, currentSection, nextSection);
         }
     }
 
-    private void setSectionOrder(List<String> sections) {
+    private void setSectionOrderInfo(final List<String> sections, final String currentSection, final String nextSection) {
         Platform.runLater(() -> {
             String selectedItem = sectionOrderLvw.getSelectionModel().getSelectedItem();
             sectionOrder.clear();
@@ -182,7 +248,8 @@ public class DialogsScoreController {
             if(sections.contains(selectedItem)) {
                 sectionOrderLvw.getSelectionModel().select(selectedItem);
             }
-            nextSectionProp.setValue(sections.get(0));
+            setCurrentSectionLabel(currentSection);
+            setNextSectionLabel(nextSection);
         });
     }
 
@@ -237,13 +304,13 @@ public class DialogsScoreController {
         return null;
     }
 
-    public void setNextSection(ActionEvent actionEvent) {
-        String nextSectionName = nextSectionProp.getValue();
-        if(nextSectionName == null) {
+    public void setSection(ActionEvent actionEvent) {
+        String playSectionName = playingSectionProp.getValue();
+        if(playSectionName == null) {
             return;
         }
-        sendSetSection(nextSectionName);
-        Section nextSection = getSection(nextSectionName);
+        sendSetSection(playSectionName);
+        Section nextSection = getSection(playSectionName);
         if(nextSection == null) {
             return;
         }
@@ -252,11 +319,12 @@ public class DialogsScoreController {
         mainApp.sendPosition();
     }
 
-
-    public void playNextSection(ActionEvent actionEvent) {
+    public void playSection(ActionEvent actionEvent) {
+        mainApp.playSection();
     }
 
-    public void stopNextSection(ActionEvent actionEvent) {
+    public void stopSection(ActionEvent actionEvent) {
+        mainApp.stopSection();
     }
 
     public void assignSectionOwnersRnd(ActionEvent actionEvent) {
@@ -271,10 +339,16 @@ public class DialogsScoreController {
         publisher.receive(strategyEvent);
     }
 
-    private void sendSetSection(String nextSectionName) {
+    private void sendSetSection(String sectionName) {
         EventFactory eventFactory = publisher.getEventFactory();
         StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.SET_SECTION, clock.getSystemTimeMillis());
-        strategyEvent.setSectionName(nextSectionName);
+        strategyEvent.setSectionName(sectionName);
+        publisher.receive(strategyEvent);
+    }
+
+    public void shuffleSectionOrder(ActionEvent actionEvent) {
+        EventFactory eventFactory = publisher.getEventFactory();
+        StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.SHUFFLE_ORDER, clock.getSystemTimeMillis());
         publisher.receive(strategyEvent);
     }
 }

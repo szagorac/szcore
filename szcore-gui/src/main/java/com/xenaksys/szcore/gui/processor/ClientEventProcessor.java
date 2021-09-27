@@ -111,6 +111,11 @@ public class ClientEventProcessor implements Processor {
             case WEB_SCORE_OUT:
                 processWebScoreOutEvent((OutgoingWebEvent) event);
                 break;
+            case ADMIN_OUT:
+                if ((event instanceof ClientEvent)) {
+                    processClientEvent((ClientEvent) event);
+                }
+                break;
             case ADMIN_IN:
             case SCRIPTING_ENGINE:
                 //TODO

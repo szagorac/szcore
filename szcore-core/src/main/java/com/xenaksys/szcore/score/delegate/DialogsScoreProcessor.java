@@ -4,9 +4,12 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.event.EventFactory;
+import com.xenaksys.szcore.event.music.ScoreSectionEvent;
+import com.xenaksys.szcore.event.music.ScoreSectionEventType;
 import com.xenaksys.szcore.model.Bar;
 import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.EventReceiver;
+import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.MutableClock;
 import com.xenaksys.szcore.model.OscPublisher;
@@ -128,6 +131,16 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
             List<String> sections = scoreBuilderStrategy.getSections();
             for(String section : sections) {
                 SectionInfo sectionInfo = scoreBuilderStrategy.getSectionInfo(section);
+                int startPageNo = sectionInfo.getStartPageNo();
+                Page sectionStartPage = null;
+                if(lastInstrument != null) {
+                    sectionStartPage = szcore.getPageNo(startPageNo, (InstrumentId)lastInstrument.getId());
+                }
+                if(sectionStartPage != null) {
+                    Beat sectionFirstBeat = sectionStartPage.getFirstBeat();
+                    addProcessSectionsEvent(sectionFirstBeat.getBeatId(), section, ScoreSectionEventType.START, transport.getId());
+                }
+
                 int endPageNo = sectionInfo.getEndPageNo();
                 Page sectionEndPage = null;
                 if(lastInstrument != null) {
@@ -137,6 +150,7 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
                     Beat sectionLastBeat = sectionEndPage.getLastBeat();
                     if(!stopEventBeats.contains(sectionLastBeat.getBeatNo())) {
                         addStopEvent(sectionLastBeat.getBeatId(), transport.getId());
+                        addProcessSectionsEvent(sectionLastBeat.getBeatId(), section, ScoreSectionEventType.STOP, transport.getId());
                         stopEventBeats.add(sectionLastBeat.getBeatNo());
                     }
                 }
@@ -159,6 +173,12 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
         setScoreLoaded(true);
 
         getWebScore().init();
+    }
+
+    public void addProcessSectionsEvent(BeatId beatId, String section, ScoreSectionEventType eventType, Id transportId) {
+        long now = getClock().getSystemTimeMillis();
+        ScoreSectionEvent sectionEvent = getEventFactory().createScoreSectionEvent(beatId, section, eventType, transportId, now);
+        getBasicScore().addScoreBaseBeatEvent(transportId, sectionEvent);
     }
 
     public void recalcRndStrategy(ScoreRandomisationStrategy strategy, Page page) {

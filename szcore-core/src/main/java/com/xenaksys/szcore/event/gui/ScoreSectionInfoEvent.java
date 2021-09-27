@@ -11,13 +11,17 @@ public class ScoreSectionInfoEvent extends ClientEvent {
     private final List<String> sectionOrder;
     private final Id scoreId;
     private final boolean isReady;
+    private final String currentSection;
+    private final String nextSection;
 
-    public ScoreSectionInfoEvent(Id scoreId, List<SectionInfo> sectionInfos, List<String> sectionOrder, boolean isReady, long creationTime) {
+    public ScoreSectionInfoEvent(Id scoreId, List<SectionInfo> sectionInfos, List<String> sectionOrder, boolean isReady, String currentSection, String nextSection, long creationTime) {
         super(creationTime);
         this.scoreId = scoreId;
         this.sectionInfos = sectionInfos;
         this.sectionOrder = sectionOrder;
         this.isReady = isReady;
+        this.currentSection = currentSection;
+        this.nextSection = nextSection;
     }
 
     public Id getScoreId() {
@@ -34,6 +38,14 @@ public class ScoreSectionInfoEvent extends ClientEvent {
 
     public boolean isReady() {
         return isReady;
+    }
+
+    public String getCurrentSection() {
+        return currentSection;
+    }
+
+    public String getNextSection() {
+        return nextSection;
     }
 
     @Override

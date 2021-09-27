@@ -4,6 +4,7 @@ import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.music.ModWindowEvent;
 import com.xenaksys.szcore.event.music.PrecountBeatSetupEvent;
 import com.xenaksys.szcore.event.music.PrepStaveChangeEvent;
+import com.xenaksys.szcore.event.music.ScoreSectionEvent;
 import com.xenaksys.szcore.event.music.StopEvent;
 import com.xenaksys.szcore.event.music.TimeSigChangeEvent;
 import com.xenaksys.szcore.event.music.TransitionEvent;
@@ -40,6 +41,10 @@ public class TaskFactory {
 
     public StopPlayTask createStopPlayTask(StopEvent event, long playTime, ScoreProcessor scoreProcessor) {
         return new StopPlayTask(playTime, event, scoreProcessor);
+    }
+
+    public ScoreSectionTask createScoreSectionTask(ScoreSectionEvent event, long playTime, ScoreProcessor scoreProcessor) {
+        return new ScoreSectionTask(playTime, event, scoreProcessor);
     }
 
     public ModWindowTask createModWindowTask(ModWindowEvent event, long playTime, ScoreProcessor scoreProcessor) {

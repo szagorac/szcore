@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,6 +28,8 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
     private String defaultInstrument;
     private boolean isReady = false;
     private String currentSection;
+    private int currentSectionIndex;
+    private String nextSection;
 
     public ScoreBuilderStrategy(BasicScore szcore, ScoreBuilderStrategyConfig config) {
         this.szcore = szcore;
@@ -244,16 +247,15 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
         }
     }
 
-    public String getSection(int pageNo) {
-        int index = pageNo - 1;
-        if(index < 0 || index >= pageOrder.size()) {
-            return null;
+    public List<String> getSectionsForPageNo(int pageNo) {
+        List<String> out = new ArrayList<>();
+
+        for(PageInfo pageInfo : pageOrder) {
+            if(pageInfo.getDisplayPageNo() == pageNo) {
+                out.add(pageInfo.getSection());
+            }
         }
-        PageInfo pageInfo = pageOrder.get(index);
-        if(pageInfo == null) {
-            return null;
-        }
-        return pageInfo.getSection();
+        return out;
     }
 
     public String getClientInstrument(String section, WebClientInfo client) {
@@ -296,5 +298,48 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
 
     public void setCurrentSection(String currentSection) {
         this.currentSection = currentSection;
+        setNextSection();
+    }
+
+    public void setNextSection() {
+        if(currentSection == null) {
+            return;
+        }
+        int idx = sectionOrder.indexOf(currentSection);
+        if(idx < 0 || idx >= sectionOrder.size() -1 ) {
+            nextSection = null;
+            return;
+        }
+        idx++;
+        nextSection = sectionOrder.get(idx);
+    }
+
+    public String getNextSection() {
+        return nextSection;
+    }
+
+    public void onSectionStart(String section) {
+        if(currentSection != null && !currentSection.equals(section)) {
+            LOG.error("onSectionStart: Unexpected section start: {}, expected: {}", section, currentSection);
+        }
+        setNextSection();
+    }
+
+    public void onSectionEnd() {
+        onSectionEnd(currentSection);
+    }
+
+    public void onSectionEnd(String section) {
+        if(currentSection != null && !currentSection.equals(section)) {
+            LOG.error("onSectionEnd: Unexpected section end: {}, expected: {}", section, currentSection);
+        }
+        setCurrentSection(getNextSection());
+    }
+
+    public void shuffleSectionOrder() {
+        if(sectionOrder.size() > 1) {
+            Collections.shuffle(sectionOrder);
+            setCurrentSection(sectionOrder.get(0));
+        }
     }
 }

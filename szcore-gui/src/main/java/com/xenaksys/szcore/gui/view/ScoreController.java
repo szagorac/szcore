@@ -1761,6 +1761,14 @@ public class ScoreController {
         setPageNo(null);
     }
 
+    public void playSection() {
+        playScore(null);
+    }
+
+    public void stopSection() {
+        stopScore(null);
+    }
+
     class TransportBeatUpdater implements Runnable {
         private Id transportId;
         private int pageNo;

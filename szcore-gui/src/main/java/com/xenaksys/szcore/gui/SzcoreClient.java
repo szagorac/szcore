@@ -388,8 +388,9 @@ public class SzcoreClient extends Application {
         List<String> sectionOrder = event.getSectionOrder();
         List<SectionInfo> sectionInfos = event.getSectionInfos();
         boolean isReady = event.isReady();
-        dialogsScoreController.onSectionInfo(sectionInfos, sectionOrder, isReady);
-
+        String currentSection = event.getCurrentSection();
+        String nextSection = event.getNextSection();
+        dialogsScoreController.onSectionInfo(sectionInfos, sectionOrder, isReady, currentSection, nextSection);
     }
 
     public void setPage(int startPage) {
@@ -410,5 +411,19 @@ public class SzcoreClient extends Application {
             return;
         }
         scoreController.sendPosition();
+    }
+
+    public void playSection() {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.playSection();
+    }
+
+    public void stopSection() {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.stopSection();
     }
 }

@@ -20,6 +20,8 @@ import com.xenaksys.szcore.event.music.MusicEvent;
 import com.xenaksys.szcore.event.music.MusicEventType;
 import com.xenaksys.szcore.event.music.PrecountBeatSetupEvent;
 import com.xenaksys.szcore.event.music.PrepStaveChangeEvent;
+import com.xenaksys.szcore.event.music.ScoreSectionEvent;
+import com.xenaksys.szcore.event.music.ScoreSectionEventType;
 import com.xenaksys.szcore.event.music.StopEvent;
 import com.xenaksys.szcore.event.music.TimeSigChangeEvent;
 import com.xenaksys.szcore.event.music.TransitionEvent;
@@ -2322,12 +2324,13 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         if(strategy == null) {
             return;
         }
-        String sectionToPlay = strategy.getSection(startPageId.getPageNo());
-        if(sectionToPlay == null) {
-            return;
+        String currentSection = strategy.getCurrentSection();
+        List<String> pageSections = strategy.getSectionsForPageNo(startPageId.getPageNo());
+        if(!pageSections.contains(currentSection)) {
+            currentSection = pageSections.get(0);
+            strategy.setCurrentSection(currentSection);
         }
-        strategy.setCurrentSection(sectionToPlay);
-        Map<String, List<String>> instrumentClients = strategy.getInstrumentClientsMap(sectionToPlay);
+        Map<String, List<String>> instrumentClients = strategy.getInstrumentClientsMap(currentSection);
         webScore.setSectionInstrumentClients(instrumentClients);
     }
 
@@ -2478,6 +2481,12 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                 addInitWebAudienceEvent(transport, initEvents, startBeatId);
                 addInitScriptingEvent(transport, initEvents, startBeatId);
             }
+        }
+
+        ScoreBuilderStrategy builderStrategy = szcore.getScoreBuilderStrategy();
+        ScoreSectionInfoEvent sectionInfoEvent = createSectionInfoEvent(builderStrategy);
+        if(sectionInfoEvent != null) {
+            initEvents.add(sectionInfoEvent);
         }
 
         return initEvents;
@@ -2861,7 +2870,21 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             case SET_SECTION:
                 setSectionName(event.getSectionName());
                 break;
+            case SHUFFLE_ORDER:
+                shuffleSectionOrder();
+                break;
+            default:
+                LOG.error("processStrategyEvent: unknown event type: {}", strategyType);
         }
+    }
+
+    private void shuffleSectionOrder() {
+        ScoreBuilderStrategy strategy = szcore.getScoreBuilderStrategy();
+        if(strategy == null) {
+            return;
+        }
+        strategy.shuffleSectionOrder();
+        updateClients(strategy);
     }
 
     private void setSectionName(String sectionName) {
@@ -3006,6 +3029,9 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                 LOG.debug("processMusicEvent: STOP time event beat duration: {} elapsedTime: {} stopTime: {}", duration, elapsedTime, stopTime);
                 task = taskFactory.createStopPlayTask(stopEvent, stopTime, this);
                 break;
+            case SCORE_SECTION:
+                task = processScoreSectionEvent((ScoreSectionEvent)event);
+                break;
             case MOD_WINDOW:
                 ModWindowEvent modWindowEvent = (ModWindowEvent) event;
                 task = taskFactory.createModWindowTask(modWindowEvent, 0, this);
@@ -3015,6 +3041,26 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
 
         }
         scheduleTask(task);
+    }
+
+    private MusicTask processScoreSectionEvent(ScoreSectionEvent sectionEvent) {
+        if(sectionEvent == null) {
+            return null;
+        }
+
+        ScoreSectionEventType eventType = sectionEvent.getSectionEventType();
+        switch (eventType) {
+            case START:
+                long execTime = clock.getElapsedTimeMillis() + 25;
+                return taskFactory.createScoreSectionTask(sectionEvent, execTime, this);
+            case STOP:
+                long elapsedTime = clock.getElapsedTimeMillis();
+                Transport transport = szcore.getTransport(sectionEvent.getTransportId());
+                int duration = transport.getCurrentBeatDuration();
+                execTime = elapsedTime + duration - 50;
+                return taskFactory.createScoreSectionTask(sectionEvent, execTime, this);
+        }
+        return null;
     }
 
     private void processOscEvent(OscEvent event, int beatNo) {
@@ -3479,13 +3525,24 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         if(scoreBuilderStrategy == null) {
             return;
         }
+        ScoreSectionInfoEvent sectionInfoEvent = createSectionInfoEvent(scoreBuilderStrategy);
+        if(sectionInfoEvent != null) {
+            sendClientEvent(sectionInfoEvent);
+        }
+    }
+
+    protected ScoreSectionInfoEvent createSectionInfoEvent(ScoreBuilderStrategy scoreBuilderStrategy) {
+        if(scoreBuilderStrategy == null) {
+            return null;
+        }
         Id scoreId = getScore().getId();
         List<SectionInfo> sectionInfos = scoreBuilderStrategy.getSectionInfos();
         List<String> sectionOrder = scoreBuilderStrategy.getSectionOrder();
         boolean isReady = scoreBuilderStrategy.isReady();
+        String currentSection = scoreBuilderStrategy.getCurrentSection();
+        String nextSection = scoreBuilderStrategy.getNextSection();
         long creationTime = clock.getSystemTimeMillis();
-        ScoreSectionInfoEvent sectionInfoEvent = eventFactory.createScoreSectionInfoEvent(scoreId, sectionInfos, sectionOrder, isReady, creationTime);
-        sendClientEvent(sectionInfoEvent);
+        return eventFactory.createScoreSectionInfoEvent(scoreId, sectionInfos, sectionOrder, isReady, currentSection, nextSection, creationTime);
     }
 
     protected void onScoreBuilderStrategyReady() {
@@ -3494,6 +3551,10 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             return;
         }
         scoreBuilderStrategy.setPageOrder();
+        List<String> sectionOrder = scoreBuilderStrategy.getSectionOrder();
+        if(sectionOrder != null && sectionOrder.size() > 0) {
+            scoreBuilderStrategy.setCurrentSection(sectionOrder.get(0));
+        }
     }
 
     public InstrumentBeatTracker getInstrumentBeatTracker(Id instrumentId) {
@@ -3841,6 +3902,37 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
 
     public boolean isNoScoreInstrument(String instrument) {
         return this.noScoreInstruments.contains(instrument);
+    }
+
+    @Override
+    public void onSectionStart(String section) {
+        ScoreBuilderStrategy builderStrategy = szcore.getScoreBuilderStrategy();
+        if(builderStrategy == null) {
+            return;
+        }
+        String current = builderStrategy.getCurrentSection();
+        if(current != null && !current.equals(section)) {
+            return;
+        }
+        if(section != null) {
+           builderStrategy.onSectionStart(section);
+        }
+        updateClients(builderStrategy);
+    }
+
+    @Override
+    public void onSectionStop(String section) {
+        ScoreBuilderStrategy builderStrategy = szcore.getScoreBuilderStrategy();
+        if(builderStrategy == null) {
+            return;
+        }
+        String current = builderStrategy.getCurrentSection();
+        if(current != null && !current.equals(section)) {
+            builderStrategy.onSectionEnd();;
+        } else if(section != null) {
+            builderStrategy.onSectionEnd(current);
+        }
+        updateClients(builderStrategy);
     }
 
     public boolean isSchedulerRunning() {

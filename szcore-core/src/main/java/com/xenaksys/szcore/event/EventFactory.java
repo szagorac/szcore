@@ -11,6 +11,8 @@ import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.music.ModWindowEvent;
 import com.xenaksys.szcore.event.music.PrecountBeatSetupEvent;
 import com.xenaksys.szcore.event.music.PrepStaveChangeEvent;
+import com.xenaksys.szcore.event.music.ScoreSectionEvent;
+import com.xenaksys.szcore.event.music.ScoreSectionEventType;
 import com.xenaksys.szcore.event.music.StopEvent;
 import com.xenaksys.szcore.event.music.TimeSigChangeEvent;
 import com.xenaksys.szcore.event.music.TransitionEvent;
@@ -146,6 +148,10 @@ public class EventFactory {
         return new StopEvent(lastEvent, transportId, creationTime);
     }
 
+    public ScoreSectionEvent createScoreSectionEvent(BeatId lastEvent, String section, ScoreSectionEventType sectionEventType, Id transportId, long creationTime) {
+        return new ScoreSectionEvent(lastEvent, section, sectionEventType, transportId, creationTime);
+    }
+
     public ModWindowEvent createModWindowEvent(BeatId beatId, Page nextPage, PageId currentPageId, Stave stave, boolean isOpen, long creationTime) {
         return new ModWindowEvent(beatId, nextPage, currentPageId, stave, isOpen, creationTime);
     }
@@ -195,8 +201,8 @@ public class EventFactory {
         return new ParticipantStatsEvent(inetAddress, hostAddress, port, pingLatencyMillis, halfPingLatencyMillis, isExpired, lastPingLatency, creationTime);
     }
 
-    public ScoreSectionInfoEvent createScoreSectionInfoEvent(Id scoreId, List<SectionInfo> sectionInfos, List<String> sectionOrder, boolean isReady, long creationTime) {
-        return new ScoreSectionInfoEvent(scoreId, sectionInfos, sectionOrder, isReady, creationTime);
+    public ScoreSectionInfoEvent createScoreSectionInfoEvent(Id scoreId, List<SectionInfo> sectionInfos, List<String> sectionOrder, boolean isReady, String currentSection, String nextSection, long creationTime) {
+        return new ScoreSectionInfoEvent(scoreId, sectionInfos, sectionOrder, isReady, currentSection, nextSection, creationTime);
     }
 
     public OscEvent createOscEvent(String address, List<Object> args, String destination, long creationTime) {

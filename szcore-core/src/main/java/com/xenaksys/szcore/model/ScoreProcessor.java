@@ -108,4 +108,8 @@ public interface ScoreProcessor extends Processor {
     void processSelectSection(String section, WebClientInfo clientInfo);
 
     boolean isNoScoreInstrument(String instrument);
+
+    void onSectionStart(String section);
+
+    void onSectionStop(String section);
 }

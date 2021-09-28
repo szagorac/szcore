@@ -456,12 +456,17 @@ public class WebScore {
     }
 
     public void sendPartInfo(WebClientInfo clientInfo) throws Exception {
+        WebScoreState scoreState = createPartInfoUpdate(clientInfo);
+        scoreProcessor.sendWebScoreState(clientInfo.getClientAddr(), WebScoreTargetType.HOST, scoreState);
+    }
+
+    public WebScoreState createPartInfoUpdate(WebClientInfo clientInfo) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         String instrumentName = clientInfo.getInstrument();
         Instrument instrument = score.getInstrument(instrumentName);
         if (instrument == null) {
-            LOG.warn("sendPartInfo: unknown instrument: {}", instrumentName);
-            return;
+            LOG.warn("createPartInfoUpdate: unknown instrument: {}", instrumentName);
+            return null;
         }
         int firstPageNo = 1;
         int lastPageNo = 1;
@@ -470,9 +475,10 @@ public class WebScore {
             lastPageNo = lastPage.getPageNo();
         }
 
+        String section = null;
         ScoreBuilderStrategy scoreBuilderStrategy = score.getScoreBuilderStrategy();
         if(scoreBuilderStrategy != null) {
-            String section = scoreBuilderStrategy.getCurrentSection();
+            section = scoreBuilderStrategy.getCurrentSection();
             SectionInfo sectionInfo = scoreBuilderStrategy.getSectionInfo(section);
             if(sectionInfo != null) {
                 IntRange pageRange = sectionInfo.getPageRange();
@@ -484,7 +490,6 @@ public class WebScore {
         }
 
         boolean isNoScoreInstrument = scoreProcessor.isNoScoreInstrument(instrumentName);
-
         SequentalIntRange pageRange = new SequentalIntRange(firstPageNo, lastPageNo);
         ArrayList<IntRange> pageRanges = new ArrayList<>();
         pageRanges.add(pageRange);
@@ -516,8 +521,9 @@ public class WebScore {
         partInfo.setImgPageNameToken(imgPageNameToken);
         partInfo.setImgContPageName(imgContPageName);
         partInfo.setContPageNo(Consts.CONTINUOUS_PAGE_NO);
+        partInfo.setCurrentSection(section);
         scoreState.setPartInfo(partInfo);
-        scoreProcessor.sendWebScoreState(clientInfo.getClientAddr(), WebScoreTargetType.HOST, scoreState);
+        return scoreState;
     }
 
     public void sendPageInfo(String destination, String pageId, String webRndPageId, String filename, String staveId) throws Exception {
@@ -793,7 +799,8 @@ public class WebScore {
             int slotNo = webEvent.getSlotNo();
             String slotInstrument = webEvent.getSlotInstrument();
             String sourceInst = webEvent.getPart();
-            scoreProcessor.processSelectInstrumentSlot(slotNo, slotInstrument, sourceInst);
+            WebClientInfo clientInfo = getClientInfo(webEvent);
+            scoreProcessor.processSelectInstrumentSlot(slotNo, slotInstrument, sourceInst, clientInfo);
         } catch (Exception e) {
             LOG.error("processSelectInstrumentSlot: failed to process select intrument slot", e);
         }

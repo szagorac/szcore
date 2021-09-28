@@ -181,8 +181,8 @@ public class EventFactory {
         return new PrepStaveChangeEvent(executeOnBaseBeat, activateOnBaseBeat, deactivateOnBaseBeat, pageChangeOnBaseBeat, nextPageId, creationTime);
     }
 
-    public ParticipantEvent createParticipantEvent(InetAddress inetAddress, String hostAddress, int portIn, int portOut, int portErr, int ping, String instrument, boolean isReady, boolean isBanned, long creationTime) {
-        return new ParticipantEvent(inetAddress, hostAddress, portIn, portOut, portErr, ping, instrument, isReady, isBanned, creationTime);
+    public ParticipantEvent createParticipantEvent(String clientId, InetAddress inetAddress, String hostAddress, int portIn, int portOut, int portErr, int ping, String instrument, boolean isReady, boolean isBanned, long creationTime) {
+        return new ParticipantEvent(clientId, inetAddress, hostAddress, portIn, portOut, portErr, ping, instrument, isReady, isBanned, creationTime);
     }
 
     public StrategyEvent createStrategyEvent(StrategyEventType strategyEventType, long creationTime) {

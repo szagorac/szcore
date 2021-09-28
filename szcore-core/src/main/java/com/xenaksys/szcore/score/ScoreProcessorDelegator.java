@@ -329,11 +329,11 @@ public class ScoreProcessorDelegator implements ScoreProcessor {
     }
 
     @Override
-    public void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst) {
+    public void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst, WebClientInfo clientInfo) {
         if(scoreDelegate == null) {
             return;
         }
-        scoreDelegate.processSelectInstrumentSlot(slotNo, slotInstrument, sourceInst);
+        scoreDelegate.processSelectInstrumentSlot(slotNo, slotInstrument, sourceInst, clientInfo);
     }
 
     public void processPrepStaveChange(Id instrumentId, BeatId activateBeatId, BeatId deactivateBeatId, BeatId pageChangeBeatId, PageId nextPageId) {

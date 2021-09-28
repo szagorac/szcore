@@ -67,7 +67,7 @@ public interface ScoreProcessor extends Processor {
 
     void onOutgoingWebEvent(OutgoingWebEvent webEvent) throws Exception;
 
-    void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst);
+    void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst, WebClientInfo clientInfo);
 
     void onOpenModWindow(InstrumentId instId, Stave nextStave, Page nextPage, PageId currentPageId);
 

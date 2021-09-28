@@ -273,6 +273,7 @@ public class SzcoreClient extends Application {
         }
         Platform.runLater(() -> {
             LOG.info("Updating Participant: " + toUpdate);
+            toUpdate.setClientId(participant.getClientId());
             toUpdate.setInstrument(participant.getInstrument());
             toUpdate.setPing(participant.getPing());
             toUpdate.setPortErr(participant.getPortErr());
@@ -352,6 +353,7 @@ public class SzcoreClient extends Application {
         for (WebClientInfo clientInfo : webClientInfos) {
             Participant participant = new Participant();
             InetAddress addr = null;
+            participant.setClientId(clientInfo.getClientId());
             try {
                 addr = InetAddress.getByName(clientInfo.getHost());
             } catch (UnknownHostException e) {

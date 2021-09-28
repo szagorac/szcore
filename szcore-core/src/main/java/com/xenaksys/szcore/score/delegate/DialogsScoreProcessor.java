@@ -213,4 +213,19 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
             }
         }
     }
+
+    protected void processInstrumentReplace(String sourceInst, String slotInstrument, Instrument currentInst, Instrument replaceInst, WebClientInfo clientInfo) {
+        ScoreBuilderStrategy builderStrategy = getBasicScore().getScoreBuilderStrategy();
+        if(builderStrategy == null || clientInfo == null) {
+            return;
+        }
+
+        try {
+            getWebScore().addInstrumentClient(slotInstrument, clientInfo);
+            builderStrategy.addClientInstrument(builderStrategy.getCurrentSection(), clientInfo.getClientId(), slotInstrument);
+            getWebScore().sendPartInfo(clientInfo);
+        } catch (Exception e) {
+            LOG.error("processInstrumentReplace: cailed to set instrument client", e);
+        }
+    }
 }

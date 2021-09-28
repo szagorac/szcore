@@ -98,6 +98,8 @@ public class ScoreController {
     @FXML
     private TableView<Participant> participantsTableView;
     @FXML
+    private TableColumn<Participant, String> clientIdColumn;
+    @FXML
     private TableColumn<Participant, String> hostAddressColumn;
     @FXML
     private TableColumn<Participant, Integer> inPortColumn;
@@ -518,6 +520,7 @@ public class ScoreController {
         participantsTableView.setSelectionModel(null);
         participantsTableView.setEditable(true);
 
+        clientIdColumn.setCellValueFactory(cellData -> cellData.getValue().clientIdProperty());
         hostAddressColumn.setCellValueFactory(cellData -> cellData.getValue().getHostAddressProperty());
         inPortColumn.setCellValueFactory(cellData -> cellData.getValue().getPortInProperty().asObject());
         pingColumn.setCellValueFactory(cellData -> cellData.getValue().getPingProperty().asObject());

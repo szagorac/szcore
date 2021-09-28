@@ -16,6 +16,7 @@ import java.net.InetAddress;
 import java.util.Objects;
 
 public class Participant {
+    private StringProperty clientId = new SimpleStringProperty(Consts.EMPTY);
     private ObjectProperty<InetAddress> inetAddress = new SimpleObjectProperty<>();
     private StringProperty hostAddress = new SimpleStringProperty(Consts.EMPTY);
     private IntegerProperty portIn = new SimpleIntegerProperty(0);
@@ -29,6 +30,18 @@ public class Participant {
     private BooleanProperty isWebClient = new SimpleBooleanProperty(false);
     private BooleanProperty isReady = new SimpleBooleanProperty(false);
     private BooleanProperty banned = new SimpleBooleanProperty(false);
+
+    public String getClientId() {
+        return clientId.get();
+    }
+
+    public StringProperty clientIdProperty() {
+        return clientId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId.set(clientId);
+    }
 
     public InetAddress getInetAddress() {
         return inetAddress.get();

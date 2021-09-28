@@ -585,7 +585,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
 
             if (!participants.containsKey(clientId)) {
                 addParticipant(clientId, inetAddress, host, port);
-                ParticipantEvent participantEvent = eventFactory.createParticipantEvent(inetAddress, host, port, 0,
+                ParticipantEvent participantEvent = eventFactory.createParticipantEvent(clientInfo.getClientId(), inetAddress, host, port, 0,
                         0, 0, Consts.NAME_NA, clientInfo.isReady(), clientInfo.isBanned(), clock.getSystemTimeMillis());
                 eventProcessor.notifyListeners(participantEvent);
             }
@@ -631,7 +631,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     public void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst) {
-        scoreProcessor.processSelectInstrumentSlot(slotNo, slotInstrument, sourceInst);
+        scoreProcessor.processSelectInstrumentSlot(slotNo, slotInstrument, sourceInst, null);
     }
 
     public void sendScoreInfo(String instrument) {

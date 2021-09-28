@@ -977,13 +977,11 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         if(section == null) {
             return;
         }
-        List<String> clients = builderStrategy.getInstrumentClients(section, instId.getName());
-        boolean isSendSlotEvent = isSendInstrumentSlotsEvent(instId.getName());
+        String inst = instId.getName();
+        List<String> clients = builderStrategy.getInstrumentClients(section, inst);
+        boolean isSendSlotEvent = isSendInstrumentSlotsEvent(inst);
         if(clients == null || clients.isEmpty()) {
-            String destination = szcore.getOscDestination(instId);
-            LOG.debug("processBuilderStrategyOnOpenModWindow: Invalid instrumentSlotsEvent, isInRndRange: true, destination: {} instSlotsCsv: {}", destination, instSlotsCsv);
-            OscEvent instrumentSlotsEvent =  createInstrumentResetSlotsEvent(destination);
-            publishOscEvent(instrumentSlotsEvent);
+            LOG.debug("processBuilderStrategy OpenModWindow, no clients for instrument: {} section: {}", inst, section);
         } else {
             for(String client : clients) {
                 if(isSendSlotEvent) {
@@ -3562,7 +3560,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     }
 
     @Override
-    public void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst) {
+    public void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst, WebClientInfo clientInfo) {
         if (slotInstrument == null || sourceInst == null) {
             LOG.error("processSelectInstrumentSlot: Invalid slot: {} or source {} instrument", slotInstrument, sourceInst);
             return;
@@ -3584,11 +3582,14 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             LOG.error("processSelectInstrumentSlot: could not find instrument for source value: {}", sourceInst);
             return;
         }
+        processInstrumentReplace(sourceInst, slotInstrument, inst, replaceInst, clientInfo);
+    }
 
+    protected void processInstrumentReplace(String sourceInst, String slotInstrument, Instrument currentInst, Instrument replaceInst, WebClientInfo clientInfo) {
         boolean isOptOut = slotInstrument.equals(sourceInst);
 
         ScoreRandomisationStrategy randomisationStrategy = szcore.getRandomisationStrategy();
-        randomisationStrategy.optOutInstrument(inst, replaceInst, isOptOut);
+        randomisationStrategy.optOutInstrument(currentInst, replaceInst, isOptOut);
 
         List<InstrumentId> slotInstrumentIds = randomisationStrategy.getInstrumentSlotIds();
         String instSlotsCsv = ParseUtil.convertToCsv(slotInstrumentIds);

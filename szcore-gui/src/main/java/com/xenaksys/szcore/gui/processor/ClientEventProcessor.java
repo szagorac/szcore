@@ -263,6 +263,7 @@ public class ClientEventProcessor implements Processor {
         }
 
         Participant participant = new Participant();
+        participant.setClientId(event.getClientId());
         participant.setInetAddress(event.getInetAddress());
         participant.setHostAddress(event.getHostAddress());
         participant.setPortIn(event.getPortIn());

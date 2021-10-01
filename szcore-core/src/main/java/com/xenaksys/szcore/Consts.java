@@ -116,6 +116,12 @@ public interface Consts {
     String OSC_ADDRESS_SCORE_CONTENT_BOX_STAVE2 = "/ITL/scene/contentStaveBox2";
     String OSC_ADDRESS_SCORE_CONTENT_LINE1 = "/ITL/scene/contentStaveValueLine";
     String OSC_ADDRESS_SCORE_CONTENT_LINE2 = "/ITL/scene/contentStaveValueLine2";
+    String OSC_ADDRESS_SCORE_TIMBRE_BOX_STAVE1 = "/ITL/scene/timbreStaveBox";
+    String OSC_ADDRESS_SCORE_TIMBRE_BOX_STAVE2 = "/ITL/scene/timbreStaveBox2";
+    String OSC_ADDRESS_SCORE_TIMBRE_LINE1 = "/ITL/scene/timbreStaveValueLine";
+    String OSC_ADDRESS_SCORE_TIMBRE_LINE2 = "/ITL/scene/timbreStaveValueLine2";
+    String OSC_ADDRESS_SCORE_TIMBRE_ORD_LINE1 = "/ITL/scene/timbreStaveOrdLine";
+    String OSC_ADDRESS_SCORE_TIMBRE_ORD_LINE2 = "/ITL/scene/timbreStaveOrdLine2";
 
     String OSC_ADDRESS_SCORE_JAVASCRIPT = "/ITL/scene/javascript";
     String OSC_ADDRESS_ZSCORE = "/zs/";
@@ -472,26 +478,6 @@ public interface Consts {
 
     String WEB_WS_CLOSE_REASON_NORMAL = "Closed by the server";
 
-    double WEB_OVRL_DYNAMICS_Y_SIZE = 22;
-    double WEB_OVRL_DYNAMICS_TOP_Y_MIN = 259;
-    double WEB_OVRL_DYNAMICS_BOT_Y_MIN = 480;
-
-    double WEB_OVRL_PRESSURE_Y_SIZE = 15;
-    double WEB_OVRL_PRESSURE_TOP_Y_MIN = 171;
-    double WEB_OVRL_PRESSURE_BOT_Y_MIN = 392;
-
-    double WEB_OVRL_SPEED_Y_SIZE = 15;
-    double WEB_OVRL_SPEED_TOP_Y_MIN = 154;
-    double WEB_OVRL_SPEED_BOT_Y_MIN = 375;
-
-    double WEB_OVRL_POS_Y_SIZE = 38.0;
-    double WEB_OVRL_POS_TOP_Y_MIN = 115.0;
-    double WEB_OVRL_POS_BOT_Y_MIN = 336.0;
-
-    double WEB_OVRL_PITCH_Y_SIZE = 69;
-    double WEB_OVRL_PITCH_TOP_Y_MIN = 188;
-    double WEB_OVRL_PITCH_BOT_Y_MIN = 409;
-
     String NAME_FULL_SCORE = "FullScore";
 
     int DEFAULT_THREAD_SLEEP_MILLIS = 10;
@@ -524,6 +510,7 @@ public interface Consts {
     String PRESET_ALL_ON_CONTENT_OFF = "All ON Content OFF";
     String PRESET_ALL_ON_CONTENT_POSITION_OFF = "All ON Cnt/Pos OFF";
     String[] PRESETS = {PRESET_ALL_OFF, PRESET_ALL_ON, PRESET_ALL_LINES_ON, PRESET_ALL_OFF_CONTENT_ON, PRESET_ALL_ON_CONTENT_OFF, PRESET_ALL_ON_CONTENT_POSITION_OFF};
+    String[] DIALOGS_OVERLAY_PRESETS = {PRESET_ALL_OFF, PRESET_ALL_ON, PRESET_ALL_LINES_ON, PRESET_ALL_OFF_CONTENT_ON, PRESET_ALL_ON_CONTENT_OFF};
 
     String DISRUPTOR_THREAD_FACTORY = "SZCore_Dsrptr";
     String DISRUPTOR_OSC_OUT_THREAD_FACTORY = "SZCore_OSC_Out_Dsrptr";
@@ -532,51 +519,6 @@ public interface Consts {
     String DISRUPTOR_CONTAINER_IN_THREAD_FACTORY = "SZCore_Container_In_Dsrptr";
     String SCHEDULER_THREAD_FACTORY = "SZCore_Schedlr";
     String DEFAULT_THREAD_SUFFIX = "-Thread-";
-
-    double DYNAMICS_LINE_Y_MAX = 0.074;      //half  0.037
-    double DYNAMICS_LINE_Y_MIN = 0.0;
-    double DYNAMICS_LINE1_Y_MID_POSITION = -0.077;
-    double DYNAMICS_LINE1_Y_MIN_POSITION = -0.04;
-    double DYNAMICS_LINE1_Y_MAX_POSITION = -0.114;
-    double DYNAMICS_LINE2_Y_MID_POSITION = 0.713;
-    double DYNAMICS_LINE2_Y_MAX_POSITION = 0.676;
-    double DYNAMICS_LINE2_Y_MIN_POSITION = 0.75;
-
-    double PRESSURE_LINE_Y_MAX = 0.055;  //half 0.0275
-    double PRESSURE_LINE_Y_MIN = 0.0;
-    double PRESSURE_LINE1_Y_MID_POSITION = -0.4;
-    double PRESSURE_LINE1_Y_MIN_POSITION = -0.3725;
-    double PRESSURE_LINE1_Y_MAX_POSITION = -0.4275;
-    double PRESSURE_LINE2_Y_MID_POSITION = 0.391;
-    double PRESSURE_LINE2_Y_MAX_POSITION = 0.3635;
-    double PRESSURE_LINE2_Y_MIN_POSITION = 0.4185;
-
-    double SPEED_LINE_Y_MAX = 0.045;      //half  0.0275
-    double SPEED_LINE_Y_MIN = 0.0;
-    double SPEED_LINE1_Y_MID_POSITION = -0.457;
-    double SPEED_LINE1_Y_MIN_POSITION = -0.435;
-    double SPEED_LINE1_Y_MAX_POSITION = -0.48;
-    double SPEED_LINE2_Y_MID_POSITION = 0.334;
-    double SPEED_LINE2_Y_MAX_POSITION = 0.308;
-    double SPEED_LINE2_Y_MIN_POSITION = 0.355;
-
-    double POSITION_LINE_Y_MAX = 0.128;      //half 0.0675
-    double POSITION_LINE_Y_MIN = 0.0;
-    double POSITION_LINE1_Y_MID_POSITION = -0.555;
-    double POSITION_LINE1_Y_MIN_POSITION = -0.492;
-    double POSITION_LINE1_Y_MAX_POSITION = -0.62;
-    double POSITION_LINE2_Y_MID_POSITION = 0.236;
-    double POSITION_LINE2_Y_MAX_POSITION = 0.17;
-    double POSITION_LINE2_Y_MIN_POSITION = 0.298;
-
-    double CONTENT_LINE_Y_MAX = 0.244;      //half 0.125
-    double CONTENT_LINE_Y_MIN = 0.0;
-    double CONTENT_LINE1_Y_MID_POSITION = -0.245;
-    double CONTENT_LINE1_Y_MIN_POSITION = -0.125;
-    double CONTENT_LINE1_Y_MAX_POSITION = -0.365;
-    double CONTENT_LINE2_Y_MID_POSITION = 0.545;
-    double CONTENT_LINE2_Y_MAX_POSITION = 0.425;
-    double CONTENT_LINE2_Y_MIN_POSITION = 0.665;
 
     String CONFIG_SCORE_NAME = "scoreName";
     String CONFIG_RND_STRATEGY = "rndStrategy";

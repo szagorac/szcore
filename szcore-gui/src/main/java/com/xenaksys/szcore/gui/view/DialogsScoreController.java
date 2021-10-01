@@ -10,6 +10,7 @@ import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Section;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.EventService;
+import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Score;
 import com.xenaksys.szcore.model.ScoreService;
 import com.xenaksys.szcore.model.SectionInfo;
@@ -22,16 +23,23 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.Slider;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.input.MouseButton;
+import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.xenaksys.szcore.gui.view.ScoreController.fixedLengthString;
 
 public class DialogsScoreController {
     static final Logger LOG = LoggerFactory.getLogger(ScoreController.class);
@@ -70,6 +78,34 @@ public class DialogsScoreController {
     private Label nextSectionLbl;
     @FXML
     private Label playingSectionLbl;
+    @FXML
+    private Slider dynamicsSldr;
+    @FXML
+    private Label dynamicsValLbl;
+    @FXML
+    private CheckBox useDynamicsOverlayChb;
+    @FXML
+    private CheckBox useDynamicsLineChb;
+    @FXML
+    private Slider timbreSldr;
+    @FXML
+    private Label timbreValLbl;
+    @FXML
+    private CheckBox useTimbreOverlayChb;
+    @FXML
+    private CheckBox useTimbreLineChb;
+    @FXML
+    private Slider pitchSldr;
+    @FXML
+    private Label pitchValLbl;
+    @FXML
+    private CheckBox usePitchOverlayChb;
+    @FXML
+    private CheckBox usePitchLineChb;
+    @FXML
+    private ChoiceBox<String> presetsChob;
+    @FXML
+    private CheckBox sendToAllChb;
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -79,6 +115,7 @@ public class DialogsScoreController {
     private ObservableList<String> sectionOrder = FXCollections.observableArrayList();
     private StringProperty nextSectionProp = new SimpleStringProperty("N/A");
     private StringProperty playingSectionProp = new SimpleStringProperty("N/A");
+    private ObservableList<String> overlayPresets = FXCollections.observableArrayList();
 
     public void setMainApp(SzcoreClient mainApp) {
         this.mainApp = mainApp;
@@ -88,6 +125,116 @@ public class DialogsScoreController {
     public void populate() {
         sectionsTableView.setItems(sections);
         sectionOrderLvw.setItems(sectionOrder);
+
+        useDynamicsOverlayChb.setSelected(false);
+        useDynamicsLineChb.setSelected(false);
+        usePitchOverlayChb.setSelected(false);
+        usePitchLineChb.setSelected(false);
+        useTimbreOverlayChb.setSelected(false);
+        useTimbreLineChb.setSelected(false);
+        sendToAllChb.setSelected(true);
+
+        usePitchOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePitchOverlay(newValue));
+        usePitchLineChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePitchLine(newValue));
+        useDynamicsOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseDynamicsOverlay(newValue));
+        useDynamicsLineChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseDynamicsLine(newValue));
+        useTimbreOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseTimbreOverlay(newValue));
+        useTimbreLineChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseTimbreLine(newValue));
+
+        dynamicsSldr.setLabelFormatter(new StringConverter<Double>() {
+            @Override
+            public String toString(Double n) {
+                if (n < 10.0) return "ppp";
+                if (n < 25.0) return "pp";
+                if (n < 50.0) return "p";
+                if (n < 75.0) return "mf";
+                if (n < 85.0) return "f";
+                if (n < 90.0) return "ff";
+                return "fff";
+            }
+            @Override
+            public Double fromString(String s) {
+                switch (s) {
+                    case "ppp":
+                        return 10d;
+                    case "pp":
+                        return 25d;
+                    case "p":
+                        return 35d;
+                    case "mf":
+                        return 50d;
+                    case "f":
+                        return 75d;
+                    case "ff":
+                        return 85d;
+                    case "fff":
+                        return 100d;
+                    default:
+                        return 50d;
+                }
+            }
+        });
+
+        dynamicsSldr.valueProperty().addListener((ov, old_val, new_val) -> {
+            long newVal = Math.round(new_val.doubleValue());
+            onDynamicsValueChange(newVal);
+            String lblVal = String.valueOf(newVal);
+            String out = fixedLengthString(lblVal, 3);
+            dynamicsValLbl.setText(out);
+        });
+
+        pitchSldr.valueProperty().addListener((ov, old_val, new_val) -> {
+//            LOG.debug("old_val: {}, new_val: {}", old_val, new_val);
+            long newVal = Math.round(new_val.doubleValue());
+            onPitchValueChange(newVal);
+            String lblVal = String.valueOf(newVal);
+            String out = fixedLengthString(lblVal, 3);
+            pitchValLbl.setText(out);
+        });
+
+        timbreSldr.valueProperty().addListener((ov, old_val, new_val) -> {
+//            LOG.debug("old_val: {}, new_val: {}", old_val, new_val);
+            long newVal = Math.round(new_val.doubleValue());
+            onTimbreValueChange(newVal);
+            String lblVal = String.valueOf(newVal);
+            String out = fixedLengthString(lblVal, 3);
+            timbreValLbl.setText(out);
+        });
+
+        timbreValLbl.setOnMouseClicked(mouseEvent -> {
+            if(mouseEvent.getButton().equals(MouseButton.PRIMARY)){
+                if(mouseEvent.getClickCount() == 2){
+                    setTimbreDefaultValue();
+                }
+            }
+        });
+
+        dynamicsValLbl.setOnMouseClicked(mouseEvent -> {
+            if(mouseEvent.getButton().equals(MouseButton.PRIMARY)){
+                if(mouseEvent.getClickCount() == 2){
+                    setDynamicsDefaultValue();
+                }
+            }
+        });
+
+        pitchValLbl.setOnMouseClicked(mouseEvent -> {
+            if(mouseEvent.getButton().equals(MouseButton.PRIMARY)){
+                if(mouseEvent.getClickCount() == 2){
+                    setPitchDefaultValue();
+                }
+            }
+        });
+
+        presetsChob.setItems(overlayPresets);
+        overlayPresets.addAll(getOverlayPresetValues());
+        presetsChob.getSelectionModel().select(Consts.PRESET_ALL_OFF);
+        presetsChob.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            String out  = newSelection;
+            if (newSelection == null) {
+                out = oldSelection;
+            }
+            onPresetsChobChange(out);
+        });
     }
 
     @FXML
@@ -210,6 +357,7 @@ public class DialogsScoreController {
             guiSections.add(guiSection);
         }
         Platform.runLater(() -> {
+            resetOverlays();
             sections.addAll(guiSections);
         });
     }
@@ -305,6 +453,7 @@ public class DialogsScoreController {
     }
 
     public void setSection(ActionEvent actionEvent) {
+        presetsChob.getSelectionModel().select(Consts.PRESET_ALL_ON);
         String playSectionName = playingSectionProp.getValue();
         if(playSectionName == null) {
             return;
@@ -317,6 +466,7 @@ public class DialogsScoreController {
         int startPage = nextSection.getStartPage();
         mainApp.setPage(startPage);
         mainApp.sendPosition();
+        updateOverlays();
     }
 
     public void playSection(ActionEvent actionEvent) {
@@ -350,5 +500,213 @@ public class DialogsScoreController {
         EventFactory eventFactory = publisher.getEventFactory();
         StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.SHUFFLE_ORDER, clock.getSystemTimeMillis());
         publisher.receive(strategyEvent);
+    }
+
+    private void onUsePitchOverlay(Boolean newValue) {
+        List<Id> instrumentIds = getInstrumentsToSend();
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        if(!newValue) {
+            usePitchLineChb.setSelected(false);
+        }
+        mainApp.sendPitchValueChange(Math.round(pitchSldr.getValue()), instrumentIds);
+        mainApp.sendUsePitchOverlay(newValue, instrumentIds);
+    }
+
+    private void onUsePitchLine(Boolean newValue) {
+        List<Id> instrumentIds = getInstrumentsToSend();
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        if(newValue && !usePitchOverlayChb.isSelected()) {
+            usePitchOverlayChb.setSelected(true);
+        }
+        mainApp.sendPitchValueChange(Math.round(pitchSldr.getValue()), instrumentIds);
+        mainApp.sendUsePitchLine(newValue, instrumentIds);
+    }
+
+    private void onPitchValueChange(long newVal) {
+        if(!usePitchOverlayChb.isSelected()) {
+            return;
+        }
+        List<Id> instrumentIds = getInstrumentsToSend();
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        mainApp.sendPitchValueChange(newVal, instrumentIds);
+    }
+
+    private void onUseDynamicsOverlay(Boolean newValue) {
+        List<Id> instrumentIds = getInstrumentsToSend();
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        if(!newValue) {
+            useDynamicsLineChb.setSelected(false);
+        }
+        mainApp.sendDynamicsValueChange(Math.round(dynamicsSldr.getValue()), instrumentIds);
+        mainApp.sendUseDynamicsOverlay(newValue, instrumentIds);
+    }
+
+    private void onUseDynamicsLine(Boolean newValue) {
+        List<Id> instrumentIds = getInstrumentsToSend();
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        if(newValue && !useDynamicsOverlayChb.isSelected()) {
+            useDynamicsOverlayChb.setSelected(true);
+        }
+        mainApp.sendDynamicsValueChange(Math.round(dynamicsSldr.getValue()), instrumentIds);
+        mainApp.sendUseDynamicsLine(newValue, instrumentIds);
+    }
+
+    private void onTimbreValueChange(long newVal) {
+        if(!useTimbreOverlayChb.isSelected()) {
+            return;
+        }
+        List<Id> instrumentIds = getInstrumentsToSend();
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        mainApp.sendTimbreValueChange(newVal, instrumentIds);
+    }
+
+    private void onUseTimbreOverlay(Boolean newValue) {
+        List<Id> instrumentIds = getInstrumentsToSend();
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        if(!newValue) {
+            useTimbreLineChb.setSelected(false);
+        }
+        mainApp.sendTimbreValueChange(Math.round(timbreSldr.getValue()), instrumentIds);
+        mainApp.sendUseTimbreOverlay(newValue, instrumentIds);
+    }
+
+    private void onUseTimbreLine(Boolean newValue) {
+        List<Id> instrumentIds = getInstrumentsToSend();
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        if(newValue && !useTimbreOverlayChb.isSelected()) {
+            useTimbreOverlayChb.setSelected(true);
+        }
+        mainApp.sendTimbreValueChange(Math.round(timbreSldr.getValue()), instrumentIds);
+        mainApp.sendUseTimbreLine(newValue, instrumentIds);
+    }
+
+    private void updateOverlays() {
+        Platform.runLater(() -> {
+            presetsChob.getSelectionModel().select(Consts.PRESET_ALL_OFF);
+        });
+    }
+
+    private void onPresetsChobChange(String newSelection) {
+        LOG.info("Have new preset selection: " + newSelection);
+
+        switch (newSelection) {
+            case Consts.PRESET_ALL_OFF:
+                onUseAllLines(false);
+                onUseAllOverlays(false);
+                break;
+            case Consts.PRESET_ALL_ON:
+                onUseAllOverlays(true);
+                onUseAllLines(false);
+                break;
+            case Consts.PRESET_ALL_LINES_ON:
+                onUseAllOverlays(true);
+                onUseAllLines(true);
+                break;
+            case Consts.PRESET_ALL_OFF_CONTENT_ON:
+                onUsePitchOnly(true);
+                break;
+            case Consts.PRESET_ALL_ON_CONTENT_OFF:
+                onUsePitchOnly(false);
+                break;
+            default:
+                LOG.error("Unknown preset selection {}", newSelection);
+        }
+    }
+
+    private void onUseAllLines(Boolean newValue) {
+        Platform.runLater(() -> {
+            useDynamicsLineChb.setSelected(newValue);
+            useTimbreLineChb.setSelected(newValue);
+            usePitchLineChb.setSelected(newValue);
+        });
+    }
+
+    private void onUseAllOverlays(Boolean newValue) {
+        Platform.runLater(() -> {
+            useDynamicsOverlayChb.setSelected(newValue);
+            useTimbreOverlayChb.setSelected(newValue);
+            usePitchOverlayChb.setSelected(newValue);
+        });
+    }
+
+    private void onUsePitchOnly(Boolean newValue) {
+        Platform.runLater(() -> {
+            if (newValue) {
+                useDynamicsLineChb.setSelected(false);
+                useTimbreLineChb.setSelected(false);
+                usePitchLineChb.setSelected(true);
+
+                useDynamicsOverlayChb.setSelected(false);
+                useTimbreOverlayChb.setSelected(false);
+                usePitchOverlayChb.setSelected(true);
+            } else {
+                useDynamicsLineChb.setSelected(true);
+                useTimbreLineChb.setSelected(true);
+                usePitchLineChb.setSelected(false);
+
+                useDynamicsOverlayChb.setSelected(true);
+                useTimbreOverlayChb.setSelected(true);
+                usePitchOverlayChb.setSelected(false);
+            }
+        });
+    }
+
+    private String[] getOverlayPresetValues() {
+        return Consts.DIALOGS_OVERLAY_PRESETS;
+    }
+
+    private void onDynamicsValueChange(long newVal) {
+        if(!useDynamicsOverlayChb.isSelected()) {
+            return;
+        }
+        List<Id> instrumentIds = getInstrumentsToSend();
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        mainApp.sendDynamicsValueChange(newVal, instrumentIds);
+    }
+
+    private List<Id> getInstrumentsToSend() {
+        List<Id> instrumentIds;
+        if(sendToAllChb.isSelected()) {
+            instrumentIds = mainApp.getAllInstruments();
+        } else {
+            instrumentIds = mainApp.getSelectedInstruments();
+        }
+        return instrumentIds;
+    }
+
+    public void resetOverlays() {
+        setTimbreDefaultValue();
+        setDynamicsDefaultValue();
+        setPitchDefaultValue();
+        presetsChob.getSelectionModel().select(Consts.PRESET_ALL_OFF);
+    }
+    public void setTimbreDefaultValue() {
+        timbreSldr.setValue(50.0);
+    }
+
+    public void setDynamicsDefaultValue() {
+        dynamicsSldr.setValue(50.0);
+    }
+
+    public void setPitchDefaultValue() {
+        pitchSldr.setValue(50.0);
     }
 }

@@ -30,7 +30,9 @@ import com.xenaksys.szcore.score.InscorePageMap;
 import com.xenaksys.szcore.score.InstrumentBeatTracker;
 import com.xenaksys.szcore.score.ScoreLoader;
 import com.xenaksys.szcore.score.ScoreProcessorDelegator;
+import com.xenaksys.szcore.score.web.WebScore;
 import com.xenaksys.szcore.score.web.audience.delegate.DialogsWebAudienceProcessor;
+import com.xenaksys.szcore.score.web.overlay.DialogsWebOverlayFactory;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.web.WebClientInfo;
@@ -73,6 +75,10 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
 
     protected void createWebAudienceProcessor() {
         setWebAudienceProcessor(new DialogsWebAudienceProcessor(this, getEventFactory(), getClock()));
+    }
+
+    public void initWebScore() {
+        setWebScore(new WebScore(this, getEventFactory(), getClock(), getProps(), new DialogsWebOverlayFactory()));
     }
 
     @Override

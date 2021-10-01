@@ -42,6 +42,12 @@ public interface Stave extends Identifiable {
 
     String getOscAddressScoreContentLine();
 
+    String getOscAddressScoreTimbreBox();
+
+    String getOscAddressScoreTimbreLine();
+
+    String getOscAddressScoreTimbreOrdLine();
+
     double getDynamicsValue();
 
     void setDynamicsValue(double value);
@@ -61,6 +67,10 @@ public interface Stave extends Identifiable {
     double getContentValue();
 
     void setContentValue(double value);
+
+    double getTimbreValue();
+
+    void setTimbreValue(double value);
 
     double getxPosition();
 

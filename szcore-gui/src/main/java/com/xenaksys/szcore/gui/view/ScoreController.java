@@ -46,6 +46,7 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.util.StringConverter;
@@ -497,6 +498,46 @@ public class ScoreController {
             String lblVal = String.valueOf(newVal);
             String out = fixedLengthString(lblVal, 3);
             contentValLbl.setText(out);
+        });
+
+        dynamicsValLbl.setOnMouseClicked(mouseEvent -> {
+            if(mouseEvent.getButton().equals(MouseButton.PRIMARY)){
+                if(mouseEvent.getClickCount() == 2){
+                    setDynamicsDefaultValue();
+                }
+            }
+        });
+
+        pressureValLbl.setOnMouseClicked(mouseEvent -> {
+            if(mouseEvent.getButton().equals(MouseButton.PRIMARY)){
+                if(mouseEvent.getClickCount() == 2){
+                    setPressureDefaultValue();
+                }
+            }
+        });
+
+        speedValLbl.setOnMouseClicked(mouseEvent -> {
+            if(mouseEvent.getButton().equals(MouseButton.PRIMARY)){
+                if(mouseEvent.getClickCount() == 2){
+                    setSpeedDefaultValue();
+                }
+            }
+        });
+
+        positionValLbl.setOnMouseClicked(mouseEvent -> {
+            if(mouseEvent.getButton().equals(MouseButton.PRIMARY)){
+                if(mouseEvent.getClickCount() == 2){
+                    setPositionDefaultValue();
+                }
+            }
+        });
+
+        contentValLbl.setOnMouseClicked(mouseEvent -> {
+            if(mouseEvent.getButton().equals(MouseButton.PRIMARY)){
+                if(mouseEvent.getClickCount() == 2){
+                    setPitchDefaultValue();
+                }
+            }
         });
 
         webscoreInstructions.setLine1(EMPTY);
@@ -1200,24 +1241,43 @@ public class ScoreController {
 
         usePageRandomisationChb.setSelected(true);
         useContinousPageChb.setSelected(false);
-//        useDynamicsOverlayChb.setSelected(false);
-//        usePressureOverlayChb.setSelected(false);
-//        useSpeedOverlayChb.setSelected(false);
-//        usePositionOverlayChb.setSelected(false);
-//        useContentOverlayChb.setSelected(false);
-        dynamicsSldr.setValue(50.0);
-        pressureSldr.setValue(50.0);
-        speedSldr.setValue(50.0);
-        positionSldr.setValue(72.0);
-        contentSldr.setValue(50.0);
+
+        resetOverlays();
         tempoModifierSldr.setValue(1.0);
-        presetsChob.getSelectionModel().select(Consts.PRESET_ALL_OFF);
 
         if(mainApp != null) {
             mainApp.onScoreLoad(score);
         }
     }
 
+    public void resetOverlays() {
+        setDynamicsDefaultValue();
+        setPressureDefaultValue();
+        setSpeedDefaultValue();
+        setPositionDefaultValue();
+        setPitchDefaultValue();
+        presetsChob.getSelectionModel().select(Consts.PRESET_ALL_OFF);
+    }
+
+    public void setDynamicsDefaultValue() {
+        dynamicsSldr.setValue(50.0);
+    }
+
+    public void setPressureDefaultValue() {
+        pressureSldr.setValue(50.0);
+    }
+
+    public void setSpeedDefaultValue() {
+        speedSldr.setValue(50.0);
+    }
+
+    public void setPositionDefaultValue() {
+        positionSldr.setValue(72.0);
+    }
+
+    public void setPitchDefaultValue() {
+        contentSldr.setValue(50.0);
+    }
 
     private void updateBeatInfo(Id transportId, int pageNo, int barNo, int beatNo, int baseBeatNo) {
         if (this.score == null) {
@@ -1641,15 +1701,15 @@ public class ScoreController {
         return instrumentIds;
     }
 
-    private void sendUseDynamicsOverlay(Boolean newVal, List<Id> instrumentIds) {
+    public void sendUseDynamicsOverlay(Boolean newVal, List<Id> instrumentIds) {
         scoreService.onUseOverlay(OverlayType.DYNAMICS, newVal, instrumentIds);
     }
 
-    private void sendUseDynamicsLine(Boolean newVal, List<Id> instrumentIds) {
+    public void sendUseDynamicsLine(Boolean newVal, List<Id> instrumentIds) {
         scoreService.onUseOverlayLine(OverlayType.DYNAMICS, newVal, instrumentIds);
     }
 
-    private void sendDynamicsValueChange(long newVal, List<Id> instrumentIds) {
+    public void sendDynamicsValueChange(long newVal, List<Id> instrumentIds) {
         scoreService.setOverlayValue(OverlayType.DYNAMICS, newVal, instrumentIds);
     }
 
@@ -1689,19 +1749,31 @@ public class ScoreController {
         scoreService.setOverlayValue(OverlayType.POSITION, newVal, instrumentIds);
     }
 
-    private void sendUseContentOverlay(Boolean newVal, List<Id> instrumentIds) {
+    public void sendUseContentOverlay(Boolean newVal, List<Id> instrumentIds) {
         scoreService.onUseOverlay(OverlayType.PITCH, newVal, instrumentIds);
     }
 
-    private void sendUseContentLine(Boolean newVal, List<Id> instrumentIds) {
+    public void sendUseContentLine(Boolean newVal, List<Id> instrumentIds) {
         scoreService.onUseOverlayLine(OverlayType.PITCH, newVal, instrumentIds);
     }
 
-    private void sendContentValueChange(long newVal, List<Id> instrumentIds) {
+    public void sendContentValueChange(long newVal, List<Id> instrumentIds) {
         scoreService.setOverlayValue(OverlayType.PITCH, newVal, instrumentIds);
     }
 
-    private List<Id> getSelectedInstruments() {
+    public void sendTimbreValueChange(long value, List<Id> instrumentIds) {
+        scoreService.setOverlayValue(OverlayType.TIMBRE, value, instrumentIds);
+    }
+
+    public void sendUseTimbreOverlay(Boolean newValue, List<Id> instrumentIds) {
+        scoreService.onUseOverlay(OverlayType.TIMBRE, newValue, instrumentIds);
+    }
+
+    public void sendUseTimbreLine(Boolean newValue, List<Id> instrumentIds) {
+        scoreService.onUseOverlayLine(OverlayType.TIMBRE, newValue, instrumentIds);
+    }
+
+    public List<Id> getSelectedInstruments() {
         List<Id> instrumentIds = new ArrayList<>();
         ObservableList<Participant> participants = getSelectedParticipants();
         if(participants == null) {
@@ -1718,7 +1790,7 @@ public class ScoreController {
         return  instrumentIds;
     }
 
-    private List<Id> getAllInstruments() {
+    public List<Id> getAllInstruments() {
         List<Id> instrumentIds = new ArrayList<>();
         ObservableList<Participant> participants = getAllParticipants();
         if(participants == null) {

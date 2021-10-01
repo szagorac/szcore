@@ -45,6 +45,8 @@ import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.score.InscoreMapElement;
 import com.xenaksys.szcore.score.OverlayElementType;
 import com.xenaksys.szcore.score.OverlayType;
+import com.xenaksys.szcore.score.web.overlay.WebOverlayFactory;
+import com.xenaksys.szcore.score.web.overlay.WebOverlayProcessor;
 import com.xenaksys.szcore.score.web.strategy.WebBuilderStrategy;
 import com.xenaksys.szcore.score.web.strategy.WebStrategy;
 import com.xenaksys.szcore.util.ParseUtil;
@@ -75,18 +77,20 @@ public class WebScore {
     private final Map<String, List<WebClientInfo>> instrumentClients = new ConcurrentHashMap<>();
     private final Map<String, WebClientInfo> allClients = new ConcurrentHashMap<>();
     private final Map<String, WebClientInfo> playerClients = new ConcurrentHashMap<>();
-    private final Map<StaveId, OverlayProcessor> overlayProcessors = new ConcurrentHashMap<>();
+    private final Map<StaveId, WebOverlayProcessor> overlayProcessors = new ConcurrentHashMap<>();
     private final Properties props;
 
     private WebScoreInfo scoreInfo;
     private WebStrategyInfo webStrategyInfo;
+    private WebOverlayFactory webOverlayFactory;
 
-    public WebScore(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock, Properties props) {
+    public WebScore(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock, Properties props, WebOverlayFactory webOverlayFactory) {
         this.scoreProcessor = scoreProcessor;
         this.eventFactory = eventFactory;
         this.clock = clock;
         this.score = (BasicScore) scoreProcessor.getScore();
         this.props = props;
+        this.webOverlayFactory = webOverlayFactory;
     }
 
     public void init() {
@@ -257,13 +261,17 @@ public class WebScore {
     }
 
     private void processElementYPosition(String destination, StaveId staveId, OverlayType overlayType, long unscaledValue) throws Exception {
-        OverlayProcessor overlayProcessor = overlayProcessors.computeIfAbsent(staveId, s -> new OverlayProcessor());
-        Double y = overlayProcessor.calculateValue(staveId, overlayType, unscaledValue);
+        WebOverlayProcessor webOverlayProcessor = overlayProcessors.computeIfAbsent(staveId, s -> createWebProcessor());
+        Double y = webOverlayProcessor.calculateValue(staveId, overlayType, unscaledValue);
         if(y == null) {
             return;
         }
         String webStaveId = WebUtil.getWebStaveId(staveId);
         sendOverlayLinePosition(destination, overlayType, webStaveId, y);
+    }
+
+    private WebOverlayProcessor createWebProcessor() {
+        return webOverlayFactory.createOverlayProcessor();
     }
 
     private void processResetStaves(ResetStavesEvent event) throws Exception {

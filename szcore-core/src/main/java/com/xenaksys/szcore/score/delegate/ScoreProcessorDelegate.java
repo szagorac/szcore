@@ -3,7 +3,6 @@ package com.xenaksys.szcore.score.delegate;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
-import com.xenaksys.szcore.algo.ValueScaler;
 import com.xenaksys.szcore.algo.config.ScoreBuilderStrategyConfig;
 import com.xenaksys.szcore.algo.config.ScoreRandomisationStrategyConfig;
 import com.xenaksys.szcore.algo.config.StrategyConfigLoader;
@@ -29,10 +28,7 @@ import com.xenaksys.szcore.event.music.TransportEvent;
 import com.xenaksys.szcore.event.music.TransportPositionEvent;
 import com.xenaksys.szcore.event.osc.BeatScriptEvent;
 import com.xenaksys.szcore.event.osc.DateTickEvent;
-import com.xenaksys.szcore.event.osc.ElementAlphaEvent;
-import com.xenaksys.szcore.event.osc.ElementColorEvent;
 import com.xenaksys.szcore.event.osc.ElementSelectedAudienceEvent;
-import com.xenaksys.szcore.event.osc.ElementYPositionEvent;
 import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.event.osc.OscEventType;
 import com.xenaksys.szcore.event.osc.OscScriptEvent;
@@ -115,12 +111,12 @@ import com.xenaksys.szcore.score.InscorePageMap;
 import com.xenaksys.szcore.score.InstrumentBeatTracker;
 import com.xenaksys.szcore.score.MaxMspScoreConfig;
 import com.xenaksys.szcore.score.OscScript;
-import com.xenaksys.szcore.score.OverlayElementType;
 import com.xenaksys.szcore.score.OverlayType;
 import com.xenaksys.szcore.score.ScoreLoader;
 import com.xenaksys.szcore.score.ScoreProcessorDelegator;
 import com.xenaksys.szcore.score.StaveFactory;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
+import com.xenaksys.szcore.score.overlay.OverlayProcessor;
 import com.xenaksys.szcore.score.web.WebScore;
 import com.xenaksys.szcore.score.web.WebScoreState;
 import com.xenaksys.szcore.score.web.WebScoreTargetType;
@@ -129,6 +125,7 @@ import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
 import com.xenaksys.szcore.score.web.audience.delegate.UnionRoseWebAudienceProcessor;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
+import com.xenaksys.szcore.score.web.overlay.DefaultWebOverlayFactory;
 import com.xenaksys.szcore.scripting.ScoreScriptingEngine;
 import com.xenaksys.szcore.scripting.ScriptingEngineScript;
 import com.xenaksys.szcore.task.ScheduledEventTask;
@@ -161,15 +158,10 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static com.xenaksys.szcore.Consts.CONTENT_LINE_Y_MAX;
 import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NAME;
 import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NO;
-import static com.xenaksys.szcore.Consts.DYNAMICS_LINE_Y_MAX;
 import static com.xenaksys.szcore.Consts.MAX_BPM;
 import static com.xenaksys.szcore.Consts.MIN_BPM;
-import static com.xenaksys.szcore.Consts.POSITION_LINE_Y_MAX;
-import static com.xenaksys.szcore.Consts.PRESSURE_LINE_Y_MAX;
-import static com.xenaksys.szcore.Consts.SPEED_LINE_Y_MAX;
 import static com.xenaksys.szcore.Consts.UNDERSCORE;
 
 public class ScoreProcessorDelegate implements ScoreProcessor {
@@ -200,21 +192,11 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     private final Map<Id, TempoModifier> transportTempoModifiers = new ConcurrentHashMap<>();
     private final List<String> noScoreInstruments = new ArrayList<>();
 
-    private final ValueScaler dynamicsValueScaler = new ValueScaler(0.0, 100.0, 0.0, DYNAMICS_LINE_Y_MAX);
-    private final ValueScaler dynamicsForteColorValueScaler = new ValueScaler(50.0, 100.0, 255, 0);
-    private final ValueScaler dynamicsPianoColorValueScaler = new ValueScaler(0.0, 50.0, 0, 255);
-    private final ValueScaler pressureLineValueScaler = new ValueScaler(0.0, 100.0, PRESSURE_LINE_Y_MAX, 0.0);
-    private final ValueScaler pressureColorValueScaler = new ValueScaler(50.0, 100.0, 255, 0);
-    private final ValueScaler speedValueScaler = new ValueScaler(0.0, 100.0, 0.0, SPEED_LINE_Y_MAX);
-    private final ValueScaler speedFastColorValueScaler = new ValueScaler(50.0, 100.0, 255, 0);
-    private final ValueScaler speedSlowColorValueScaler = new ValueScaler(0.0, 50.0, 0, 255);
-    private final ValueScaler positionValueScaler = new ValueScaler(0.0, 100.0, POSITION_LINE_Y_MAX, 0.0);
-    private final ValueScaler contentValueScaler = new ValueScaler(0.0, 100.0, 0.0, CONTENT_LINE_Y_MAX);
-
     private WebAudienceScoreProcessor webAudienceScoreProcessor = null;
     private WebScore webScore = null;
     private MaxMspScoreConfig maxMspConfig = null;
     private ScoreScriptingEngine scriptingEngine;
+    private OverlayProcessor overlayProcessor;
 
     protected volatile boolean isUpdateWindowOpen = false;
     protected volatile int currentBeatNo = 0;
@@ -265,11 +247,16 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         initWebScore();
         initMax();
         initScriptingEngine(dir);
+        initOverlayProcessor();
         return szcore;
     }
 
     public void initWebScore() {
-        webScore = new WebScore(this, eventFactory, clock, props);
+        setWebScore(new WebScore(this, eventFactory, clock, props, new DefaultWebOverlayFactory()));
+    }
+
+    public void setWebScore(WebScore webScore) {
+        this.webScore = webScore;
     }
 
     public void initMax() {
@@ -280,6 +267,10 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     public void initScriptingEngine(String dir) {
         scriptingEngine = new ScoreScriptingEngine(this, eventFactory, clock);
         scriptingEngine.init(dir);
+    }
+
+    protected void initOverlayProcessor() {
+        this.overlayProcessor = new OverlayProcessor(this, eventFactory, clock);
     }
 
     public void loadStrategyConfig(String dir) throws Exception {
@@ -1436,387 +1427,6 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         szcore.addClockTickEvent(transportId, staveDyTickEvent);
     }
 
-    public void sendDynamicsYPositionEvent(Id instrumentId, Stave stave, double yDelta, long unscaledValue) {
-        StaveId staveId = (StaveId) stave.getId();
-        String destination = szcore.getOscDestination(staveId.getInstrumentId());
-
-        //dynamics y position
-        String address = stave.getOscAddressScoreDynamicsLine();
-
-        int staveNo = ((StaveId) stave.getId()).getStaveNo();
-        double y;
-        switch (staveNo) {
-            case 1:
-                y = Consts.DYNAMICS_LINE1_Y_MIN_POSITION - yDelta;
-                break;
-            case 2:
-                y = Consts.DYNAMICS_LINE2_Y_MIN_POSITION - yDelta;
-                break;
-            default:
-                LOG.error("Invalid stave dynamics Y position event");
-                return;
-        }
-
-        y = MathUtil.roundTo5DecimalPlaces(y);
-        double current = stave.getDynamicsValue();
-        double diff = Math.abs(y - current);
-        double threshold = Math.abs(2 * DYNAMICS_LINE_Y_MAX / 100.0);
-        if (diff < threshold) {
-            LOG.debug("addDynamicsYPositionEvent y position change: {} is less than threshold: {}, ignoring update ... ", diff, threshold);
-            return;
-        }
-
-        LOG.debug("addDynamicsYPositionEvent sending y position: {} to: {} addr: '{}' yDelta: {} ", y, address, instrumentId, yDelta);
-
-        ElementYPositionEvent dynYEvent = eventFactory.createElementYPositionEvent(address, destination, staveId, unscaledValue, OverlayType.DYNAMICS, clock.getSystemTimeMillis());
-        dynYEvent.setYPosition(y);
-        stave.setDynamicsValue(y);
-
-        process(dynYEvent);
-    }
-
-    public void sendSpeedYPositionEvent(Id instrumentId, Stave stave, double yDelta, long unscaledValue) {
-        StaveId staveId = (StaveId) stave.getId();
-        String destination = szcore.getOscDestination(staveId.getInstrumentId());
-
-        //speed y position
-        String address = stave.getOscAddressScoreSpeedLine();
-
-        int staveNo = ((StaveId) stave.getId()).getStaveNo();
-        double y;
-        switch (staveNo) {
-            case 1:
-                y = Consts.SPEED_LINE1_Y_MIN_POSITION - yDelta;
-                break;
-            case 2:
-                y = Consts.SPEED_LINE2_Y_MIN_POSITION - yDelta;
-                break;
-            default:
-                LOG.error("Invalid stave speed Y position event");
-                return;
-        }
-
-        y = MathUtil.roundTo5DecimalPlaces(y);
-        double current = stave.getSpeedValue();
-        double diff = Math.abs(y - current);
-        double threshold = Math.abs(2 * SPEED_LINE_Y_MAX / 100.0);
-        if (diff < threshold) {
-            LOG.debug("sendSpeedYPositionEvent y position change: {} is less than threshold: {}, ignoring update ... ", diff, threshold);
-            return;
-        }
-
-        LOG.debug("sendSpeedYPositionEvent sending y position: {} to: {} addr: '{}' yDelta: {} ", y, address, instrumentId, yDelta);
-
-        ElementYPositionEvent speedEvent = eventFactory.createElementYPositionEvent(address, destination, staveId,
-                unscaledValue, OverlayType.SPEED, clock.getSystemTimeMillis());
-        speedEvent.setYPosition(y);
-        stave.setSpeedValue(y);
-
-        process(speedEvent);
-    }
-
-    public void sendPositionLineYEvent(Id instrumentId, Stave stave, double yDelta, long unscaledValue) {
-        StaveId staveId = (StaveId) stave.getId();
-        String destination = szcore.getOscDestination(staveId.getInstrumentId());
-
-        //position line y position
-        String address = stave.getOscAddressScorePositionLine();
-
-        int staveNo = staveId.getStaveNo();
-        double y;
-        switch (staveNo) {
-            case 1:
-                y = Consts.POSITION_LINE1_Y_MIN_POSITION - yDelta;
-                break;
-            case 2:
-                y = Consts.POSITION_LINE2_Y_MIN_POSITION - yDelta;
-                break;
-            default:
-                LOG.error("Invalid stave position Y position event");
-                return;
-        }
-
-        y = MathUtil.roundTo5DecimalPlaces(y);
-        double current = stave.getPositionValue();
-        double diff = Math.abs(y - current);
-        double threshold = Math.abs(2 * POSITION_LINE_Y_MAX / 100.0);
-        if (diff < threshold) {
-            LOG.debug("sendPositionLineYEvent y position change: {} is less than threshold: {}, ignoring update ... ", diff, threshold);
-            return;
-        }
-
-        LOG.debug("sendPositionLineYEvent sending y position: {} to: {} addr: '{}' yDelta: {} ", y, address, instrumentId, yDelta);
-
-        ElementYPositionEvent positionEvent = eventFactory.createElementYPositionEvent(address, destination, staveId,
-                unscaledValue, OverlayType.POSITION, clock.getSystemTimeMillis());
-        positionEvent.setYPosition(y);
-        stave.setPositionValue(y);
-
-        process(positionEvent);
-    }
-
-    public void sendContentLineYEvent(Id instrumentId, Stave stave, double yDelta, long unscaledValue) {
-        StaveId staveId = (StaveId) stave.getId();
-        String destination = szcore.getOscDestination(staveId.getInstrumentId());
-
-        String address = stave.getOscAddressScoreContentLine();
-
-        int staveNo = ((StaveId) stave.getId()).getStaveNo();
-        double y;
-        switch (staveNo) {
-            case 1:
-                y = Consts.CONTENT_LINE1_Y_MIN_POSITION - yDelta;
-                break;
-            case 2:
-                y = Consts.CONTENT_LINE2_Y_MIN_POSITION - yDelta;
-                break;
-            default:
-                LOG.error("Invalid stave position Y position event");
-                return;
-        }
-
-        y = MathUtil.roundTo5DecimalPlaces(y);
-        double current = stave.getContentValue();
-        double diff = Math.abs(y - current);
-        double threshold = Math.abs(2 * CONTENT_LINE_Y_MAX / 100.0);
-        if (diff < threshold) {
-            LOG.debug("sendContentLineYEvent y position change: {} is less than threshold: {}, ignoring update ... ", diff, threshold);
-            return;
-        }
-
-        LOG.debug("sendContentLineYEvent sending y position: {} to: {} addr: '{}' yDelta: {} ", y, address, instrumentId, yDelta);
-
-        ElementYPositionEvent contentEvent = eventFactory.createElementYPositionEvent(address, destination, staveId,
-                unscaledValue, OverlayType.PITCH, clock.getSystemTimeMillis());
-        contentEvent.setYPosition(y);
-        stave.setContentValue(y);
-
-        process(contentEvent);
-    }
-
-    public void sendDynamicsBoxAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled) {
-        StaveId staveId = (StaveId) stave.getId();
-        String destination = szcore.getOscDestination(staveId.getInstrumentId());
-
-        int alpha = 0;
-        if (isEnabled) {
-            alpha = 255;
-        }
-
-        sendElementAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.DYNAMICS, OverlayElementType.DYNAMICS_BOX,
-                stave.getOscAddressScoreDynamicsBox(), destination, alpha);
-        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.DYNAMICS, OverlayElementType.DYNAMICS_MID_LINE,
-                stave.getOscAddressScoreDynamicsMidLine(), destination, alpha);
-    }
-
-    public void sendDynamicsLineAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled) {
-        StaveId staveId = (StaveId) stave.getId();
-        String destination = szcore.getOscDestination(staveId.getInstrumentId());
-
-        int alpha = 0;
-        if (isEnabled) {
-            alpha = 255;
-        }
-
-        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.DYNAMICS, OverlayElementType.DYNAMICS_LINE,
-                stave.getOscAddressScoreDynamicsLine(), destination, alpha);
-    }
-
-    public void sendElementPenAlphaEvent(Id instrumentId, StaveId staveId, boolean isEnabled, OverlayType overlayType,
-                                         OverlayElementType overlayElementType, String address, String destination, int alpha) {
-        ElementAlphaEvent dynYEvent = eventFactory.createElementPenAlphaEvent(staveId, isEnabled, overlayType,
-                overlayElementType, address, destination, clock.getSystemTimeMillis());
-        dynYEvent.setAlpha(alpha);
-        LOG.debug("sendElementPenAlphaEvent sending alpha: {} to: {} addr: '{}'", alpha, instrumentId, address);
-        process(dynYEvent);
-    }
-
-    public void sendElementAlphaEvent(Id instrumentId, StaveId staveId, boolean isEnabled, OverlayType overlayType,
-                                      OverlayElementType overlayElementType, String address, String destination, int alpha) {
-        ElementAlphaEvent aEvent = eventFactory.createElementAlphaEvent(staveId, isEnabled, overlayType, overlayElementType,
-                address, destination, clock.getSystemTimeMillis());
-        aEvent.setAlpha(alpha);
-        LOG.debug("sendElementAlphaEvent sending alpha: {} to: {} addr: '{}'", alpha, instrumentId, address);
-        process(aEvent);
-    }
-
-    public void sendPressureBoxAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled) {
-        StaveId staveId = (StaveId) stave.getId();
-        String destination = szcore.getOscDestination(staveId.getInstrumentId());
-
-        int alpha = 0;
-        if (isEnabled) {
-            alpha = 255;
-        }
-
-        sendElementAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.PRESSURE, OverlayElementType.PRESSURE_BOX,
-                stave.getOscAddressScorePressureBox(), destination, alpha);
-        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.PRESSURE, OverlayElementType.PRESSURE_MID_LINE,
-                stave.getOscAddressScorePressureMidLine(), destination, alpha);
-    }
-
-    public void sendPressureLineAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled) {
-        StaveId staveId = (StaveId) stave.getId();
-        String destination = szcore.getOscDestination(staveId.getInstrumentId());
-
-        int alpha = 0;
-        if (isEnabled) {
-            alpha = 255;
-        }
-
-        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.PRESSURE, OverlayElementType.PRESSURE_LINE,
-                stave.getOscAddressScorePressureLine(), destination, alpha);
-    }
-
-    public void sendSpeedBoxAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled) {
-        StaveId staveId = (StaveId) stave.getId();
-        String destination = szcore.getOscDestination(staveId.getInstrumentId());
-
-        int alpha = 0;
-        if (isEnabled) {
-            alpha = 255;
-        }
-
-        sendElementAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.SPEED, OverlayElementType.SPEED_BOX,
-                stave.getOscAddressScoreSpeedBox(), destination, alpha);
-        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.SPEED, OverlayElementType.SPEED_MID_LINE,
-                stave.getOscAddressScoreSpeedMidLine(), destination, alpha);
-    }
-
-    public void sendSpeedLineAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled) {
-        StaveId staveId = (StaveId) stave.getId();
-        String destination = szcore.getOscDestination(staveId.getInstrumentId());
-
-        int alpha = 0;
-        if (isEnabled) {
-            alpha = 255;
-        }
-        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.SPEED, OverlayElementType.SPEED_LINE,
-                stave.getOscAddressScoreSpeedLine(), destination, alpha);
-    }
-
-    public void sendPositionBoxAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled) {
-        StaveId staveId = (StaveId) stave.getId();
-        String destination = szcore.getOscDestination(staveId.getInstrumentId());
-
-        int alpha = 0;
-        if (isEnabled) {
-            alpha = 255;
-        }
-        sendElementAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.POSITION, OverlayElementType.POSITION_BOX,
-                stave.getOscAddressScorePositionBox(), destination, alpha);
-        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.POSITION, OverlayElementType.POSITION_ORD_LINE,
-                stave.getOscAddressScorePositionOrdLine(), destination, alpha);
-        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.POSITION, OverlayElementType.POSITION_BRIDGE_LINE,
-                stave.getOscAddressScorePositionBridgeLine(), destination, alpha);
-    }
-
-    public void sendPositionLineAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled) {
-        StaveId staveId = (StaveId) stave.getId();
-        String destination = szcore.getOscDestination(staveId.getInstrumentId());
-
-        int alpha = 0;
-        if (isEnabled) {
-            alpha = 255;
-        }
-        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.POSITION, OverlayElementType.POSITION_LINE,
-                stave.getOscAddressScorePositionLine(), destination, alpha);
-    }
-
-    public void sendContentBoxAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled) {
-        StaveId staveId = (StaveId) stave.getId();
-        String destination = szcore.getOscDestination(staveId.getInstrumentId());
-
-        int alpha = 0;
-        if (isEnabled) {
-            alpha = 255;
-        }
-        sendElementAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.PITCH, OverlayElementType.PITCH_BOX,
-                stave.getOscAddressScoreContentBox(), destination, alpha);
-    }
-
-    public void sendContentLineAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled) {
-        StaveId staveId = (StaveId) stave.getId();
-        String destination = szcore.getOscDestination(staveId.getInstrumentId());
-
-        int alpha = 0;
-        if (isEnabled) {
-            alpha = 255;
-        }
-        sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, OverlayType.PITCH, OverlayElementType.PITCH_LINE,
-                stave.getOscAddressScoreContentLine(), destination, alpha);
-    }
-
-    public void sendPressureColorEvent(Id instrumentId, Stave stave, int r, int g, int b) {
-        StaveId staveId = (StaveId) stave.getId();
-        String destination = szcore.getOscDestination(staveId.getInstrumentId());
-
-        String address = stave.getOscAddressScorePressureBox();
-        ElementColorEvent colorEvent = eventFactory.createElementColorEvent(staveId, OverlayType.PRESSURE, address, destination, clock.getSystemTimeMillis());
-        colorEvent.setColor(r, g, b);
-        LOG.debug("sendPressureColorEvent sending r: {}  g: {}  b: {} to: {} addr: '{}'", r, g, b, instrumentId, address);
-        process(colorEvent);
-    }
-
-    public void sendDynamicsColorEvent(Id instrumentId, Stave stave, int r, int g, int b) {
-        StaveId staveId = (StaveId) stave.getId();
-        String destination = szcore.getOscDestination(staveId.getInstrumentId());
-
-        String address = stave.getOscAddressScoreDynamicsBox();
-        ElementColorEvent colorEvent = eventFactory.createElementColorEvent(staveId, OverlayType.DYNAMICS, address, destination, clock.getSystemTimeMillis());
-        colorEvent.setColor(r, g, b);
-        LOG.debug("sendDynamicsColorEvent sending r: {}  g: {}  b: {} to: {} addr: '{}'", r, g, b, instrumentId, address);
-        process(colorEvent);
-    }
-
-    public void sendSpeedColorEvent(Id instrumentId, Stave stave, int r, int g, int b) {
-        StaveId staveId = (StaveId) stave.getId();
-        String destination = szcore.getOscDestination(staveId.getInstrumentId());
-
-        String address = stave.getOscAddressScoreSpeedBox();
-        ElementColorEvent colorEvent = eventFactory.createElementColorEvent(staveId, OverlayType.SPEED, address, destination, clock.getSystemTimeMillis());
-        colorEvent.setColor(r, g, b);
-        LOG.debug("sendSpeedColorEvent sending r: {}  g: {}  b: {} to: {} addr: '{}'", r, g, b, instrumentId, address);
-        process(colorEvent);
-    }
-
-    public void sendPressureChangeEvent(Id instrumentId, Stave stave, double yDelta, long unscaledValue) {
-        StaveId staveId = (StaveId) stave.getId();
-        String destination = szcore.getOscDestination(staveId.getInstrumentId());
-
-        int staveNo = ((StaveId) stave.getId()).getStaveNo();
-        double y;
-        switch (staveNo) {
-            case 1:
-                y = Consts.PRESSURE_LINE1_Y_MIN_POSITION - yDelta;
-                break;
-            case 2:
-                y = Consts.PRESSURE_LINE2_Y_MIN_POSITION - yDelta;
-                break;
-            default:
-                LOG.error("Invalid stave pressure Y position event");
-                return;
-        }
-
-        y = MathUtil.roundTo5DecimalPlaces(y);
-        double current = stave.getPressureValue();
-        double diff = Math.abs(y - current);
-        double threshold = Math.abs(2 * PRESSURE_LINE_Y_MAX / 100.0);
-        if (diff < threshold) {
-            LOG.debug("sendPressureChangeEvent y position change: {} is less than threshold: {}, ignoring update ... ", diff, threshold);
-            return;
-        }
-
-        String address = stave.getOscAddressScorePressureLine();
-        LOG.debug("sendPressureChangeEvent sending y position: {} to: {} addr: '{}' yDelta: {} ", y, address, instrumentId, yDelta);
-
-        ElementYPositionEvent pressureEvent = eventFactory.createElementYPositionEvent(address, destination, staveId, unscaledValue, OverlayType.PRESSURE, clock.getSystemTimeMillis());
-        pressureEvent.setYPosition(y);
-        stave.setPressureValue(y);
-
-        process(pressureEvent);
-    }
-
     public void addTempoChangeInitEvent(Tempo tempo, BeatId beatId, Id transportId, List<SzcoreEvent> initEvents) {
         long now = clock.getSystemTimeMillis();
         List<OscStaveTempoEvent> oscEvents = new ArrayList<>();
@@ -2319,7 +1929,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         }
         PageId startPageId = (PageId)startBeatId.getPageId();
         ScoreBuilderStrategy strategy = szcore.getScoreBuilderStrategy();
-        if(strategy == null) {
+        if(strategy == null || !strategy.isActive()) {
             return;
         }
         String currentSection = strategy.getCurrentSection();
@@ -2598,83 +2208,17 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
 
     @Override
     public void setOverlayValue(OverlayType type, long value, List<Id> instrumentIds) {
-        if(type == null) {
-            LOG.error("setOverlayValue: invalid type");
-            return;
-        }
-        switch (type) {
-            case DYNAMICS:
-                onDynamicsValueChange(value, instrumentIds);
-                break;
-            case SPEED:
-                onSpeedValueChange(value, instrumentIds);
-                break;
-            case POSITION:
-                onPositionValueChange(value, instrumentIds);
-                break;
-            case PRESSURE:
-                onPressureValueChange(value, instrumentIds);
-                break;
-            case PITCH:
-                onContentValueChange(value, instrumentIds);
-                break;
-            default:
-                LOG.error("setOverlayValue: invalid overlay type {}", type);
-        }
+        overlayProcessor.setOverlayValue(type, value, instrumentIds);
     }
 
     @Override
     public void onUseOverlayLine(OverlayType type, Boolean value, List<Id> instrumentIds) {
-        if(type == null) {
-            LOG.error("onUseOverlayLine: invalid type");
-            return;
-        }
-        switch (type) {
-            case DYNAMICS:
-                setDynamicsLine(value, instrumentIds);
-                break;
-            case SPEED:
-                setSpeedLine(value, instrumentIds);
-                break;
-            case POSITION:
-                setPositionLine(value, instrumentIds);
-                break;
-            case PRESSURE:
-                setPressureLine(value, instrumentIds);
-                break;
-            case PITCH:
-                setContentLine(value, instrumentIds);
-                break;
-            default:
-                LOG.error("onUseOverlayLine: invalid overlay type {}", type);
-        }
+        overlayProcessor.onUseOverlayLine(type, value, instrumentIds);
     }
 
     @Override
     public void onUseOverlay(OverlayType type, Boolean value, List<Id> instrumentIds) {
-        if(type == null) {
-            LOG.error("onUseOverlay: invalid type");
-            return;
-        }
-        switch (type) {
-            case DYNAMICS:
-                setDynamicsOverlay(value, instrumentIds);
-                break;
-            case SPEED:
-                setSpeedOverlay(value, instrumentIds);
-                break;
-            case POSITION:
-                setPositionOverlay(value, instrumentIds);
-                break;
-            case PRESSURE:
-                setPressureOverlay(value, instrumentIds);
-                break;
-            case PITCH:
-                setContentOverlay(value, instrumentIds);
-                break;
-            default:
-                LOG.error("onUseOverlay: invalid overlay type {}", type);
-        }
+        overlayProcessor.onUseOverlay(type, value, instrumentIds);
     }
 
     @Override
@@ -3614,286 +3158,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     }
 
 
-    private void onDynamicsValueChange(long value, List<Id> instrumentIds) {
-        if (instrumentIds == null) {
-            return;
-        }
-        int r = 255;
-        int g = 255;
-        int b = 255;
-        double scaled = dynamicsValueScaler.scaleValue(value);
-        LOG.debug("onDynamicsValueChange scaled value: {} to: {}, instruments: {}", value, scaled, Arrays.toString(instrumentIds.toArray()));
 
-        if (value > 50) {
-            g = (int) Math.round(dynamicsForteColorValueScaler.scaleValue(value));
-            b = g;
-        } else if (value < 50) {
-            r = (int) Math.round(dynamicsPianoColorValueScaler.scaleValue(value));
-            g = r;
-        }
-
-        for (Id instrumentId : instrumentIds) {
-            Instrument instrument = szcore.getInstrument(instrumentId);
-            if (inNotOverlayInstrument(instrument)) {
-                continue;
-            }
-            Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
-            for (Stave stave : staves) {
-                sendDynamicsColorEvent(instrumentId, stave, r, g, b);
-                sendDynamicsYPositionEvent(instrumentId, stave, scaled, value);
-            }
-        }
-    }
-
-    private void setDynamicsOverlay(Boolean value, List<Id> instrumentIds) {
-        LOG.debug("setDynamicsOverlay value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
-        for (Id instrumentId : instrumentIds) {
-            Instrument instrument = szcore.getInstrument(instrumentId);
-            if (inNotOverlayInstrument(instrument)) {
-                continue;
-            }
-            Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
-            for (Stave stave : staves) {
-                sendDynamicsBoxAlphaEvent(instrumentId, stave, value);
-            }
-        }
-    }
-
-    private void setDynamicsLine(Boolean value, List<Id> instrumentIds) {
-        LOG.debug("setDynamicsLine value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
-        for (Id instrumentId : instrumentIds) {
-            Instrument instrument = szcore.getInstrument(instrumentId);
-            if (inNotOverlayInstrument(instrument)) {
-                continue;
-            }
-            Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
-            for (Stave stave : staves) {
-                sendDynamicsLineAlphaEvent(instrumentId, stave, value);
-            }
-        }
-    }
-
-    private void onPressureValueChange(long value, List<Id> instrumentIds) {
-        if (instrumentIds == null) {
-            return;
-        }
-
-        for (Id instrumentId : instrumentIds) {
-            Instrument instrument = szcore.getInstrument(instrumentId);
-            if (inNotOverlayInstrument(instrument)) {
-                continue;
-            }
-            Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
-            for (Stave stave : staves) {
-
-                if (value > 50) {
-                    int scaled = (int) Math.round(pressureColorValueScaler.scaleValue(value));
-                    LOG.debug("onPressureValueChange scaled value: {} to: {}, instruments: {}", value, scaled, Arrays.toString(instrumentIds.toArray()));
-                    sendPressureColorEvent(instrumentId, stave, scaled, scaled, scaled);
-                }
-
-                double scaled = pressureLineValueScaler.scaleValue(value);
-                sendPressureChangeEvent(instrumentId, stave, scaled, value);
-            }
-        }
-    }
-
-    private void setPressureOverlay(Boolean value, List<Id> instrumentIds) {
-        if (instrumentIds == null) {
-            return;
-        }
-        LOG.debug("setPressureOverlay value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
-
-        for (Id instrumentId : instrumentIds) {
-            Instrument instrument = szcore.getInstrument(instrumentId);
-            if (inNotOverlayInstrument(instrument)) {
-                continue;
-            }
-            Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
-            for (Stave stave : staves) {
-                sendPressureBoxAlphaEvent(instrumentId, stave, value);
-            }
-        }
-    }
-
-    private void setPressureLine(Boolean value, List<Id> instrumentIds) {
-        LOG.debug("setPressureLine value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
-        for (Id instrumentId : instrumentIds) {
-            Instrument instrument = szcore.getInstrument(instrumentId);
-            if (inNotOverlayInstrument(instrument)) {
-                continue;
-            }
-            Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
-            for (Stave stave : staves) {
-                sendPressureLineAlphaEvent(instrumentId, stave, value);
-            }
-        }
-    }
-
-    private void onSpeedValueChange(long value, List<Id> instrumentIds) {
-        if (instrumentIds == null) {
-            return;
-        }
-
-        int r = 255;
-        int g = 255;
-        int b = 255;
-        double scaled = speedValueScaler.scaleValue(value);
-        LOG.debug("onSpeedValueChange scaled value: {} to: {}, instruments: {}", value, scaled, Arrays.toString(instrumentIds.toArray()));
-
-        if (value > 50) {
-            b = (int) Math.round(speedFastColorValueScaler.scaleValue(value));
-            r = b;
-        } else if (value < 50) {
-            g = (int) Math.round(speedSlowColorValueScaler.scaleValue(value));
-        }
-
-        for (Id instrumentId : instrumentIds) {
-            Instrument instrument = szcore.getInstrument(instrumentId);
-            if (inNotOverlayInstrument(instrument)) {
-                continue;
-            }
-            Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
-            for (Stave stave : staves) {
-                sendSpeedColorEvent(instrumentId, stave, r, g, b);
-                sendSpeedYPositionEvent(instrumentId, stave, scaled, value);
-            }
-        }
-    }
-
-    private void setSpeedOverlay(Boolean value, List<Id> instrumentIds) {
-        if (instrumentIds == null) {
-            return;
-        }
-        LOG.debug("setSpeedOverlay value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
-
-        for (Id instrumentId : instrumentIds) {
-            Instrument instrument = szcore.getInstrument(instrumentId);
-            if (inNotOverlayInstrument(instrument)) {
-                continue;
-            }
-            Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
-            for (Stave stave : staves) {
-                sendSpeedBoxAlphaEvent(instrumentId, stave, value);
-            }
-        }
-    }
-
-    private void setSpeedLine(Boolean value, List<Id> instrumentIds) {
-        LOG.debug("setSpeedLine value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
-        for (Id instrumentId : instrumentIds) {
-            Instrument instrument = szcore.getInstrument(instrumentId);
-            if (inNotOverlayInstrument(instrument)) {
-                continue;
-            }
-            Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
-            for (Stave stave : staves) {
-                sendSpeedLineAlphaEvent(instrumentId, stave, value);
-            }
-        }
-    }
-
-    private void onPositionValueChange(long value, List<Id> instrumentIds) {
-        if (instrumentIds == null) {
-            return;
-        }
-        double scaled = positionValueScaler.scaleValue(value);
-        LOG.debug("onPositionValueChange scaled value: {} to: {}, instruments: {}", value, scaled, Arrays.toString(instrumentIds.toArray()));
-
-        for (Id instrumentId : instrumentIds) {
-            Instrument instrument = szcore.getInstrument(instrumentId);
-            if (inNotOverlayInstrument(instrument)) {
-                continue;
-            }
-            Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
-            for (Stave stave : staves) {
-                sendPositionLineYEvent(instrumentId, stave, scaled, value);
-            }
-        }
-    }
-
-    private void setPositionOverlay(Boolean value, List<Id> instrumentIds) {
-        if (instrumentIds == null) {
-            return;
-        }
-        LOG.debug("setPositionOverlay value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
-
-        for (Id instrumentId : instrumentIds) {
-            Instrument instrument = szcore.getInstrument(instrumentId);
-            if (inNotOverlayInstrument(instrument)) {
-                continue;
-            }
-            Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
-            for (Stave stave : staves) {
-                sendPositionBoxAlphaEvent(instrumentId, stave, value);
-            }
-        }
-    }
-
-    private void setPositionLine(Boolean value, List<Id> instrumentIds) {
-        LOG.debug("setPositionLine value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
-        for (Id instrumentId : instrumentIds) {
-            Instrument instrument = szcore.getInstrument(instrumentId);
-            if (inNotOverlayInstrument(instrument)) {
-                continue;
-            }
-            Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
-            for (Stave stave : staves) {
-                sendPositionLineAlphaEvent(instrumentId, stave, value);
-            }
-        }
-    }
-
-    private void onContentValueChange(long value, List<Id> instrumentIds) {
-        if (instrumentIds == null) {
-            return;
-        }
-        double scaled = contentValueScaler.scaleValue(value);
-        LOG.debug("onContentValueChange scaled value: {} to: {}, instruments: {}", value, scaled, Arrays.toString(instrumentIds.toArray()));
-
-        for (Id instrumentId : instrumentIds) {
-            Instrument instrument = szcore.getInstrument(instrumentId);
-            if (inNotOverlayInstrument(instrument)) {
-                continue;
-            }
-            Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
-            for (Stave stave : staves) {
-                sendContentLineYEvent(instrumentId, stave, scaled, value);
-            }
-        }
-    }
-
-    private void setContentOverlay(Boolean value, List<Id> instrumentIds) {
-        LOG.debug("setContentOverlay value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
-        for (Id instrumentId : instrumentIds) {
-            Instrument instrument = szcore.getInstrument(instrumentId);
-            if (inNotOverlayInstrument(instrument)) {
-                continue;
-            }
-            Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
-            for (Stave stave : staves) {
-                sendContentBoxAlphaEvent(instrumentId, stave, value);
-            }
-        }
-    }
-
-    private void setContentLine(Boolean value, List<Id> instrumentIds) {
-        LOG.debug("setContentLine value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
-        for (Id instrumentId : instrumentIds) {
-            Instrument instrument = szcore.getInstrument(instrumentId);
-            if (inNotOverlayInstrument(instrument)) {
-                continue;
-            }
-            Collection<Stave> staves = szcore.getInstrumentStaves(instrumentId);
-            for (Stave stave : staves) {
-                sendContentLineAlphaEvent(instrumentId, stave, value);
-            }
-        }
-    }
-
-    private boolean inNotOverlayInstrument(Instrument instrument) {
-        return instrument.isAv() || Consts.NAME_FULL_SCORE.equalsIgnoreCase(instrument.getName());
-    }
 
     public void addNoScoreInstrument(String instrument) {
         if(!this.noScoreInstruments.contains(instrument)) {
@@ -3986,6 +3251,10 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
 
     public EventFactory getEventFactory() {
         return eventFactory;
+    }
+
+    public Properties getProps() {
+        return props;
     }
 
     public WebScore getWebScore() {

@@ -5,8 +5,8 @@ import com.xenaksys.szcore.util.MathUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static com.xenaksys.szcore.Consts.DYNAMICS_LINE_Y_MAX;
-import static com.xenaksys.szcore.Consts.DYNAMICS_LINE_Y_MIN;
+import static com.xenaksys.szcore.score.overlay.OverlayProcessor.DYNAMICS_LINE_Y_MAX;
+import static com.xenaksys.szcore.score.overlay.OverlayProcessor.DYNAMICS_LINE_Y_MIN;
 
 public class TestValueScaler {
 

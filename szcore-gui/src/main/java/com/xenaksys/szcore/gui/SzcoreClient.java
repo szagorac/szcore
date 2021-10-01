@@ -428,4 +428,81 @@ public class SzcoreClient extends Application {
         }
         scoreController.stopSection();
     }
+
+    public List<Id> getAllInstruments() {
+        if(scoreController == null) {
+            return null;
+        }
+        return scoreController.getAllInstruments();
+    }
+
+    public List<Id> getSelectedInstruments() {
+        if(scoreController == null) {
+            return null;
+        }
+        return scoreController.getSelectedInstruments();
+    }
+
+    public void sendDynamicsValueChange(long newVal, List<Id> instrumentIds) {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.sendDynamicsValueChange(newVal , instrumentIds);
+    }
+
+    public void sendUseDynamicsOverlay(Boolean newValue, List<Id> instrumentIds) {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.sendUseDynamicsOverlay(newValue , instrumentIds);
+    }
+
+    public void sendUseDynamicsLine(Boolean newValue, List<Id> instrumentIds) {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.sendUseDynamicsLine(newValue , instrumentIds);
+    }
+
+    public void sendPitchValueChange(long value, List<Id> instrumentIds) {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.sendContentValueChange(value , instrumentIds);
+    }
+
+    public void sendUsePitchOverlay(Boolean newValue, List<Id> instrumentIds) {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.sendUseContentOverlay(newValue , instrumentIds);
+    }
+
+    public void sendUsePitchLine(Boolean newValue, List<Id> instrumentIds) {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.sendUseContentLine(newValue , instrumentIds);
+    }
+
+    public void sendTimbreValueChange(long value, List<Id> instrumentIds) {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.sendTimbreValueChange(value , instrumentIds);
+    }
+
+    public void sendUseTimbreOverlay(Boolean newValue, List<Id> instrumentIds) {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.sendUseTimbreOverlay(newValue , instrumentIds);
+    }
+
+    public void sendUseTimbreLine(Boolean newValue, List<Id> instrumentIds) {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.sendUseTimbreLine(newValue , instrumentIds);
+    }
 }

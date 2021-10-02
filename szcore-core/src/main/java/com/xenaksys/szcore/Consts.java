@@ -122,6 +122,10 @@ public interface Consts {
     String OSC_ADDRESS_SCORE_TIMBRE_LINE2 = "/ITL/scene/timbreStaveValueLine2";
     String OSC_ADDRESS_SCORE_TIMBRE_ORD_LINE1 = "/ITL/scene/timbreStaveOrdLine";
     String OSC_ADDRESS_SCORE_TIMBRE_ORD_LINE2 = "/ITL/scene/timbreStaveOrdLine2";
+    String OSC_ADDRESS_SCORE_CONTENT_STAVE_BOX_STAVE1 = "/ITL/scene/contentStaveStaveBox";
+    String OSC_ADDRESS_SCORE_CONTENT_STAVE_BOX_STAVE2 = "/ITL/scene/contentStaveStaveBox2";
+    String OSC_ADDRESS_SCORE_CONTENT_STAVE_LINE1 = "/ITL/scene/contentStaveStaveValueLine";
+    String OSC_ADDRESS_SCORE_CONTENT_STAVE_LINE2 = "/ITL/scene/contentStaveStaveValueLine2";
 
     String OSC_ADDRESS_SCORE_JAVASCRIPT = "/ITL/scene/javascript";
     String OSC_ADDRESS_ZSCORE = "/zs/";

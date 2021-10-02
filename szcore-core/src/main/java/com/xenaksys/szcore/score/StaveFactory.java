@@ -75,6 +75,8 @@ public class StaveFactory {
         String oscAddressScoreTimbreBox = Consts.OSC_ADDRESS_SCORE_TIMBRE_BOX_STAVE1;
         String oscAddressScoreTimbreLine = Consts.OSC_ADDRESS_SCORE_TIMBRE_LINE1;
         String oscAddressScoreTimbreOrdLine = Consts.OSC_ADDRESS_SCORE_TIMBRE_ORD_LINE1;
+        String oscAddressScoreContentStaveBox = Consts.OSC_ADDRESS_SCORE_CONTENT_STAVE_BOX_STAVE1;
+        String oscAddressScoreContentStaveLine = Consts.OSC_ADDRESS_SCORE_CONTENT_STAVE_LINE1;
         double xPosition = Consts.OSC_STAVE1_X;
         double yPosition = Consts.OSC_STAVE1_Y;
         double zPosition = Consts.OSC_STAVE1_Z;
@@ -105,6 +107,8 @@ public class StaveFactory {
                 oscAddressScoreTimbreBox,
                 oscAddressScoreTimbreLine,
                 oscAddressScoreTimbreOrdLine,
+                oscAddressScoreContentStaveBox,
+                oscAddressScoreContentStaveLine,
                 xPosition,
                 yPosition,
                 zPosition,
@@ -139,6 +143,8 @@ public class StaveFactory {
         String oscAddressScoreTimbreBox = Consts.OSC_ADDRESS_SCORE_TIMBRE_BOX_STAVE2;
         String oscAddressScoreTimbreLine = Consts.OSC_ADDRESS_SCORE_TIMBRE_LINE2;
         String oscAddressScoreTimbreOrdLine = Consts.OSC_ADDRESS_SCORE_TIMBRE_ORD_LINE2;
+        String oscAddressScoreContentStaveBox = Consts.OSC_ADDRESS_SCORE_CONTENT_STAVE_BOX_STAVE2;
+        String oscAddressScoreContentStaveLine = Consts.OSC_ADDRESS_SCORE_CONTENT_STAVE_LINE2;
         double xPosition = Consts.OSC_STAVE2_X;
         double yPosition = Consts.OSC_STAVE2_Y;
         double zPosition = Consts.OSC_STAVE2_Z;
@@ -169,6 +175,8 @@ public class StaveFactory {
                 oscAddressScoreTimbreBox,
                 oscAddressScoreTimbreLine,
                 oscAddressScoreTimbreOrdLine,
+                oscAddressScoreContentStaveBox,
+                oscAddressScoreContentStaveLine,
                 xPosition,
                 yPosition,
                 zPosition,
@@ -215,6 +223,8 @@ public class StaveFactory {
                 null,
                 null,
                 null,
+                null,
+                null,
                 xPosition,
                 yPosition,
                 zPosition,
@@ -243,6 +253,8 @@ public class StaveFactory {
                 oscAddressScoreFollower,
                 oscAddressScoreBeater,
                 oscAddressScoreStartMark,
+                null,
+                null,
                 null,
                 null,
                 null,

@@ -478,6 +478,13 @@ public class SzcoreClient extends Application {
         scoreController.sendUseContentOverlay(newValue , instrumentIds);
     }
 
+    public void sendUsePitchStaveOverlay(Boolean newValue, List<Id> instrumentIds) {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.sendUsePitchStaveOverlay(newValue , instrumentIds);
+    }
+
     public void sendUsePitchLine(Boolean newValue, List<Id> instrumentIds) {
         if(scoreController == null) {
             return;

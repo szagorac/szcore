@@ -27,6 +27,8 @@ public class BasicStave implements Stave {
     private final String oscAddressScoreTimbreBox;
     private final String oscAddressScoreTimbreLine;
     private final String oscAddressScoreTimbreOrdLine;
+    private final String oscAddressScoreContentStaveBox;
+    private final String oscAddressScoreContentStaveOrdLine;
     private final double xPosition;
     private final double yPosition;
     private final double zPosition;
@@ -66,6 +68,8 @@ public class BasicStave implements Stave {
                       String oscAddressScoreTimbreBox,
                       String oscAddressScoreTimbreLine,
                       String oscAddressScoreTimbreOrdLine,
+                      String oscAddressScoreContentStaveBox,
+                      String oscAddressScoreContentStaveOrdLine,
                       double xPosition,
                       double yPosition,
                       double zPosition,
@@ -96,6 +100,8 @@ public class BasicStave implements Stave {
         this.oscAddressScoreTimbreBox = oscAddressScoreTimbreBox;
         this.oscAddressScoreTimbreLine = oscAddressScoreTimbreLine;
         this.oscAddressScoreTimbreOrdLine = oscAddressScoreTimbreOrdLine;
+        this.oscAddressScoreContentStaveBox = oscAddressScoreContentStaveBox;
+        this.oscAddressScoreContentStaveOrdLine = oscAddressScoreContentStaveOrdLine;
         this.xPosition = xPosition;
         this.yPosition = yPosition;
         this.zPosition = zPosition;
@@ -200,6 +206,14 @@ public class BasicStave implements Stave {
     @Override
     public String getOscAddressScoreTimbreOrdLine() {
         return oscAddressScoreTimbreOrdLine;
+    }
+
+    public String getOscAddressScoreContentStaveBox() {
+        return oscAddressScoreContentStaveBox;
+    }
+
+    public String getOscAddressScoreContentStaveOrdLine() {
+        return oscAddressScoreContentStaveOrdLine;
     }
 
     public double getxPosition() {

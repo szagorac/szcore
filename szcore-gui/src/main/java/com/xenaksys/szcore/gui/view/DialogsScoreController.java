@@ -106,6 +106,8 @@ public class DialogsScoreController {
     private ChoiceBox<String> presetsChob;
     @FXML
     private CheckBox sendToAllChb;
+    @FXML
+    private CheckBox usePitchStaveOverlayChb;
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -129,12 +131,14 @@ public class DialogsScoreController {
         useDynamicsOverlayChb.setSelected(false);
         useDynamicsLineChb.setSelected(false);
         usePitchOverlayChb.setSelected(false);
+        usePitchStaveOverlayChb.setSelected(false);
         usePitchLineChb.setSelected(false);
         useTimbreOverlayChb.setSelected(false);
         useTimbreLineChb.setSelected(false);
         sendToAllChb.setSelected(true);
 
         usePitchOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePitchOverlay(newValue));
+        usePitchStaveOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePitchStaveOverlay(newValue));
         usePitchLineChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUsePitchLine(newValue));
         useDynamicsOverlayChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseDynamicsOverlay(newValue));
         useDynamicsLineChb.selectedProperty().addListener((observable, oldValue, newValue) -> onUseDynamicsLine(newValue));
@@ -514,6 +518,14 @@ public class DialogsScoreController {
         mainApp.sendUsePitchOverlay(newValue, instrumentIds);
     }
 
+    private void onUsePitchStaveOverlay(Boolean newValue) {
+        List<Id> instrumentIds = getInstrumentsToSend();
+        if(instrumentIds.isEmpty()) {
+            return;
+        }
+        mainApp.sendUsePitchStaveOverlay(newValue, instrumentIds);
+    }
+
     private void onUsePitchLine(Boolean newValue) {
         List<Id> instrumentIds = getInstrumentsToSend();
         if(instrumentIds.isEmpty()) {
@@ -521,6 +533,7 @@ public class DialogsScoreController {
         }
         if(newValue && !usePitchOverlayChb.isSelected()) {
             usePitchOverlayChb.setSelected(true);
+            usePitchStaveOverlayChb.setSelected(true);
         }
         mainApp.sendPitchValueChange(Math.round(pitchSldr.getValue()), instrumentIds);
         mainApp.sendUsePitchLine(newValue, instrumentIds);
@@ -642,6 +655,7 @@ public class DialogsScoreController {
             useDynamicsOverlayChb.setSelected(newValue);
             useTimbreOverlayChb.setSelected(newValue);
             usePitchOverlayChb.setSelected(newValue);
+            usePitchStaveOverlayChb.setSelected(newValue);
         });
     }
 
@@ -655,6 +669,7 @@ public class DialogsScoreController {
                 useDynamicsOverlayChb.setSelected(false);
                 useTimbreOverlayChb.setSelected(false);
                 usePitchOverlayChb.setSelected(true);
+                usePitchStaveOverlayChb.setSelected(true);
             } else {
                 useDynamicsLineChb.setSelected(true);
                 useTimbreLineChb.setSelected(true);
@@ -663,6 +678,7 @@ public class DialogsScoreController {
                 useDynamicsOverlayChb.setSelected(true);
                 useTimbreOverlayChb.setSelected(true);
                 usePitchOverlayChb.setSelected(false);
+                usePitchStaveOverlayChb.setSelected(false);
             }
         });
     }

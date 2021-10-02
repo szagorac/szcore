@@ -63,6 +63,8 @@
                                 <CheckBox fx:id="usePitchLineChb" mnemonicParsing="false" text="Ln" />
                                 <Label fx:id="pitchValLbl" minWidth="40.0" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___" />
                                 <Slider fx:id="pitchSldr" showTickLabels="true" showTickMarks="true" />
+                        <Label layoutX="250.0" layoutY="21.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="stv" />
+                        <CheckBox fx:id="usePitchStaveOverlayChb" layoutX="288.0" layoutY="20.0" mnemonicParsing="false" text="Ovl" />
                             </children>
                         </HBox>
                         <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="407.0" spacing="6.0">

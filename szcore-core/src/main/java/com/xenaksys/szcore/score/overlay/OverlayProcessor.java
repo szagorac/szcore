@@ -177,6 +177,9 @@ public class OverlayProcessor {
             case PITCH:
                 setContentOverlay(value, instrumentIds);
                 break;
+            case PITCH_STAVE:
+                setPitchStaveOverlay(value, instrumentIds);
+                break;
             case TIMBRE:
                 setTimbreOverlay(value, instrumentIds);
                 break;
@@ -774,6 +777,21 @@ public class OverlayProcessor {
             Collection<Stave> staves = scoreProcessor.getScore().getInstrumentStaves(instrumentId);
             for (Stave stave : staves) {
                 sendOverlayLineAlphaEvent(instrumentId, stave, value, OverlayType.PITCH, OverlayElementType.PITCH_LINE);
+            }
+        }
+    }
+
+    private void setPitchStaveOverlay(Boolean value, List<Id> instrumentIds) {
+        LOG.debug("setPitchStaveOverlay value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
+        for (Id instrumentId : instrumentIds) {
+            Instrument instrument = scoreProcessor.getScore().getInstrument(instrumentId);
+            if (inNotOverlayInstrument(instrument)) {
+                continue;
+            }
+            Collection<Stave> staves = scoreProcessor.getScore().getInstrumentStaves(instrumentId);
+            for (Stave stave : staves) {
+                sendOverlayElementAlphaEvent(instrumentId, stave, value, OverlayType.PITCH_STAVE, OverlayElementType.PITCH_STAVE_BOX, stave.getOscAddressScoreContentBox());
+                sendOverlayElementPenAlphaEvent(instrumentId, stave, value, OverlayType.PITCH_STAVE, OverlayElementType.PITCH_STAVE_MID_LINE, stave.getOscAddressScoreContentStaveOrdLine());
             }
         }
     }

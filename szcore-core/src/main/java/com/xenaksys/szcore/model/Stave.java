@@ -48,6 +48,10 @@ public interface Stave extends Identifiable {
 
     String getOscAddressScoreTimbreOrdLine();
 
+    String getOscAddressScoreContentStaveBox();
+
+    String getOscAddressScoreContentStaveOrdLine();
+
     double getDynamicsValue();
 
     void setDynamicsValue(double value);

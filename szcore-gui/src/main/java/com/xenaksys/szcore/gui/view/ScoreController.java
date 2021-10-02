@@ -1753,6 +1753,10 @@ public class ScoreController {
         scoreService.onUseOverlay(OverlayType.PITCH, newVal, instrumentIds);
     }
 
+    public void sendUsePitchStaveOverlay(Boolean newValue, List<Id> instrumentIds) {
+        scoreService.onUseOverlay(OverlayType.PITCH_STAVE, newValue, instrumentIds);
+    }
+
     public void sendUseContentLine(Boolean newVal, List<Id> instrumentIds) {
         scoreService.onUseOverlayLine(OverlayType.PITCH, newVal, instrumentIds);
     }

@@ -336,7 +336,7 @@ public class DialogsScoreController {
         }
         BasicScore szcore = (BasicScore)score;
         ScoreBuilderStrategy builderStrategy = szcore.getScoreBuilderStrategy();
-        if(builderStrategy == null) {
+        if(builderStrategy == null || !builderStrategy.isActive()) {
             return;
         }
         List<String> sectionNames = builderStrategy.getSections();

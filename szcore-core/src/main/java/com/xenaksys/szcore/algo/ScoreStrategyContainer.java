@@ -3,6 +3,7 @@ package com.xenaksys.szcore.algo;
 import com.xenaksys.szcore.algo.config.ScoreBuilderStrategyConfig;
 import com.xenaksys.szcore.algo.config.ScoreRandomisationStrategyConfig;
 import com.xenaksys.szcore.algo.config.StrategyConfig;
+import com.xenaksys.szcore.algo.config.TranspositionStrategyConfig;
 import com.xenaksys.szcore.score.BasicScore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,9 +32,18 @@ public class ScoreStrategyContainer {
             case BUILDER:
                 initBuilderStrategy((ScoreBuilderStrategyConfig)config, szcore);
                 break;
+            case TRANSPOSITION:
+                initTranpositionStrategy((TranspositionStrategyConfig)config, szcore);
+                break;
             default:
                 LOG.error("initStrategy: unknown strategy type: {}", type);
         }
+    }
+
+    private void initTranpositionStrategy(TranspositionStrategyConfig config, BasicScore szcore) {
+        TranspositionStrategy transpositionStrategy = new TranspositionStrategy(szcore, config);
+        transpositionStrategy.init();
+        addStrategy(transpositionStrategy);
     }
 
     public void initRandomisation(ScoreRandomisationStrategyConfig config, BasicScore szcore) {
@@ -69,6 +79,13 @@ public class ScoreStrategyContainer {
             return null;
         }
         return (ScoreBuilderStrategy)strategies.get(StrategyType.BUILDER);
+    }
+
+    public TranspositionStrategy getTranspositionStrategy() {
+        if(!strategies.containsKey(StrategyType.TRANSPOSITION)) {
+            return null;
+        }
+        return (TranspositionStrategy) strategies.get(StrategyType.TRANSPOSITION);
     }
 
     public void addStrategyConfig(StrategyConfig strategyConfig) {

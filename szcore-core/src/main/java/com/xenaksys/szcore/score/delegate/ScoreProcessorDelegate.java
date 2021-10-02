@@ -6,6 +6,7 @@ import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.algo.config.ScoreBuilderStrategyConfig;
 import com.xenaksys.szcore.algo.config.ScoreRandomisationStrategyConfig;
 import com.xenaksys.szcore.algo.config.StrategyConfigLoader;
+import com.xenaksys.szcore.algo.config.TranspositionStrategyConfig;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.EventType;
 import com.xenaksys.szcore.event.gui.ClientEvent;
@@ -277,6 +278,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         Map<String, Object> strategyConfig = StrategyConfigLoader.loadConfig(dir);
         initRandomisationStrategyConfig(strategyConfig);
         initScoreBuilderStrategyConfig(strategyConfig);
+        initTranspositionStrategyConfig(strategyConfig);
     }
 
     public void initRandomisationStrategyConfig(Map<String, Object> strategyConfig) throws Exception {
@@ -286,6 +288,11 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
 
     public void initScoreBuilderStrategyConfig(Map<String, Object> strategyConfig) throws Exception {
         ScoreBuilderStrategyConfig builderStrategyConfig = StrategyConfigLoader.loadBuilderStrategyConfig(strategyConfig, szcore);
+        szcore.addStrategyConfig(builderStrategyConfig);
+    }
+
+    public void initTranspositionStrategyConfig(Map<String, Object> strategyConfig) throws Exception {
+        TranspositionStrategyConfig builderStrategyConfig = StrategyConfigLoader.loadTranspositionConfig(strategyConfig, szcore);
         szcore.addStrategyConfig(builderStrategyConfig);
     }
 

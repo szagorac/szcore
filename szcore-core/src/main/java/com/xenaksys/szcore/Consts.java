@@ -527,11 +527,13 @@ public interface Consts {
     String CONFIG_SCORE_NAME = "scoreName";
     String CONFIG_RND_STRATEGY = "rndStrategy";
     String CONFIG_BUILDER_STRATEGY = "builderStrategy";
+    String CONFIG_TRANSPOSITION_STRATEGY = "transpositionStrategy";
     String CONFIG_IS_ACTIVE = "isActive";
     String CONFIG_ACTIVE_RANGES = "activePageRanges";
     String CONFIG_PAGE_RANGE_MAPPING = "pageRangeMapping";
     String CONFIG_PAGE_RANGE = "pageRange";
     String CONFIG_PAGE_RANGES = "pageRanges";
+    String CONFIG_PAGES = "pages";
     String CONFIG_SECTIONS = "sections";
     String CONFIG_INSTRUMENTS = "instruments";
     String CONFIG_ACTIVE_RANGE = "activeRange";
@@ -550,6 +552,14 @@ public interface Consts {
     String CONFIG_TILE_COLS = "tileCols";
     String CONFIG_ASSIGNMENT_TYPE = "assignmentType";
     String CONFIG_STOP_ON_SECTION_END = "isStopOnSectionEnd";
+    String CONFIG_PAGE_NO = "pageNo";
+    String CONFIG_PART = "part";
+    String CONFIG_TEXT_ELEMENTS = "textElements";
+    String CONFIG_DX = "dx";
+    String CONFIG_DY = "dy";
+    String CONFIG_TXT = "txt";
+
+
 
     String MAXMSP_ID = "max";
     String MAXMSP_CMD_SET_FILE = "setFile";

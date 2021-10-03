@@ -5,6 +5,7 @@ public class WebPageInfo {
     private String staveId;
     private String pageId;
     private String rndPageId;
+    private WebTranspositionInfo transpositionInfo;
 
     public String getPageId() {
         return pageId;
@@ -36,5 +37,13 @@ public class WebPageInfo {
 
     public void setRndPageId(String rndPageId) {
         this.rndPageId = rndPageId;
+    }
+
+    public void setTranspositionInfo(WebTranspositionInfo transpositionInfo) {
+        this.transpositionInfo = transpositionInfo;
+    }
+
+    public WebTranspositionInfo getTranspositionInfo() {
+        return transpositionInfo;
     }
 }

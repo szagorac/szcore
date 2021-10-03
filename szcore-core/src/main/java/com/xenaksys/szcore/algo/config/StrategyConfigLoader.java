@@ -21,6 +21,8 @@ import java.util.Map;
 
 import static com.xenaksys.szcore.Consts.CONFIG_ALL;
 import static com.xenaksys.szcore.Consts.CONFIG_ASSIGNMENT_TYPE;
+import static com.xenaksys.szcore.Consts.CONFIG_BOTTOM_STAVE_X_REF;
+import static com.xenaksys.szcore.Consts.CONFIG_BOTTOM_STAVE_Y_REF;
 import static com.xenaksys.szcore.Consts.CONFIG_BUILDER_STRATEGY;
 import static com.xenaksys.szcore.Consts.CONFIG_DX;
 import static com.xenaksys.szcore.Consts.CONFIG_DY;
@@ -28,6 +30,8 @@ import static com.xenaksys.szcore.Consts.CONFIG_END;
 import static com.xenaksys.szcore.Consts.CONFIG_INSTRUMENTS;
 import static com.xenaksys.szcore.Consts.CONFIG_IS_ACTIVE;
 import static com.xenaksys.szcore.Consts.CONFIG_IS_RND_ACTIVE;
+import static com.xenaksys.szcore.Consts.CONFIG_MIN_X_DISTANCE;
+import static com.xenaksys.szcore.Consts.CONFIG_MIN_Y_DISTANCE;
 import static com.xenaksys.szcore.Consts.CONFIG_NAME;
 import static com.xenaksys.szcore.Consts.CONFIG_PAGES;
 import static com.xenaksys.szcore.Consts.CONFIG_PAGE_NO;
@@ -41,6 +45,8 @@ import static com.xenaksys.szcore.Consts.CONFIG_SELECTION_RANGE;
 import static com.xenaksys.szcore.Consts.CONFIG_START;
 import static com.xenaksys.szcore.Consts.CONFIG_STOP_ON_SECTION_END;
 import static com.xenaksys.szcore.Consts.CONFIG_TEXT_ELEMENTS;
+import static com.xenaksys.szcore.Consts.CONFIG_TOP_STAVE_X_REF;
+import static com.xenaksys.szcore.Consts.CONFIG_TOP_STAVE_Y_REF;
 import static com.xenaksys.szcore.Consts.CONFIG_TRANSPOSITION_STRATEGY;
 import static com.xenaksys.szcore.Consts.CONFIG_TXT;
 import static com.xenaksys.szcore.Consts.EMPTY;
@@ -86,7 +92,10 @@ public class StrategyConfigLoader extends YamlLoader {
     }
 
     public static TranspositionStrategyConfig loadTranspositionConfig(Map<String, Object> configMap, Score score) throws Exception {
-        //    {no: 1, part: present, textElements: [{ dx: 0, dy:115, txt: C }, { dx: 0, dy:123, txt: G }]}
+        if(!configMap.containsKey(CONFIG_TRANSPOSITION_STRATEGY)) {
+            return null;
+        }
+
         TranspositionStrategyConfig config = new TranspositionStrategyConfig();
         Object yamlScoreName = configMap.get(CONFIG_SCORE_NAME);
         if (yamlScoreName == null) {
@@ -114,6 +123,37 @@ public class StrategyConfigLoader extends YamlLoader {
             isActiveConfig = false;
         }
         config.setActive(isActiveConfig);
+
+
+        Double topStaveYRef = getDouble(CONFIG_TOP_STAVE_Y_REF, transpositionStrategyConfig);
+        if(topStaveYRef != null) {
+            config.setTopStaveYRef(topStaveYRef);
+        }
+
+        Double topStaveXRef = getDouble(CONFIG_TOP_STAVE_X_REF, transpositionStrategyConfig);
+        if(topStaveXRef != null) {
+            config.setTopStaveXRef(topStaveXRef);
+        }
+
+        Double botStaveYRef = getDouble(CONFIG_BOTTOM_STAVE_Y_REF, transpositionStrategyConfig);
+        if(botStaveYRef != null) {
+            config.setBotStaveYRef(botStaveYRef);
+        }
+
+        Double botStaveXRef = getDouble(CONFIG_BOTTOM_STAVE_X_REF, transpositionStrategyConfig);
+        if(botStaveXRef != null) {
+            config.setBotStaveXRef(botStaveXRef);
+        }
+
+        Double minYDistance = getDouble(CONFIG_MIN_Y_DISTANCE, transpositionStrategyConfig);
+        if(minYDistance != null) {
+            config.setMinYdistance(minYDistance);
+        }
+
+        Double minXDistance = getDouble(CONFIG_MIN_X_DISTANCE, transpositionStrategyConfig);
+        if(minXDistance != null) {
+            config.setMinXdistance(minXDistance);
+        }
 
         List<Map<String, Object>> pageConfigs = getListOfMaps(CONFIG_PAGES, transpositionStrategyConfig);
         for (Map<String, Object> pageConfig : pageConfigs) {
@@ -148,6 +188,9 @@ public class StrategyConfigLoader extends YamlLoader {
     }
 
     public static ScoreRandomisationStrategyConfig loadRndStrategyConfig(Map<String, Object> configMap, Score score) throws Exception {
+        if(!configMap.containsKey(CONFIG_RND_STRATEGY)) {
+            return null;
+        }
         ScoreRandomisationStrategyConfig config = new ScoreRandomisationStrategyConfig();
         Object yamlScoreName = configMap.get(CONFIG_SCORE_NAME);
         if (yamlScoreName == null) {
@@ -235,6 +278,9 @@ public class StrategyConfigLoader extends YamlLoader {
     }
 
     public static ScoreBuilderStrategyConfig loadBuilderStrategyConfig(Map<String, Object> configMap, Score score) throws Exception {
+        if(!configMap.containsKey(CONFIG_BUILDER_STRATEGY)) {
+            return null;
+        }
         ScoreBuilderStrategyConfig config = new ScoreBuilderStrategyConfig();
         Object yamlScoreName = configMap.get(CONFIG_SCORE_NAME);
         if (yamlScoreName == null) {

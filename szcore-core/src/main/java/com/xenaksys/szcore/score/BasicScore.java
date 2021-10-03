@@ -5,6 +5,7 @@ import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.algo.ScoreStrategy;
 import com.xenaksys.szcore.algo.ScoreStrategyContainer;
+import com.xenaksys.szcore.algo.TranspositionStrategy;
 import com.xenaksys.szcore.algo.config.StrategyConfig;
 import com.xenaksys.szcore.model.Bar;
 import com.xenaksys.szcore.model.Beat;
@@ -873,6 +874,10 @@ public class BasicScore implements Score {
 
     public ScoreBuilderStrategy getScoreBuilderStrategy() {
         return scoreStrategyContainer.getScoreBuilderStrategy();
+    }
+
+    public TranspositionStrategy getTranspositionStrategy() {
+        return scoreStrategyContainer.getTranspositionStrategy();
     }
 
     public void addStrategy(ScoreStrategy strategy) {

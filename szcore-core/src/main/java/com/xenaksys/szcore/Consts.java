@@ -558,7 +558,12 @@ public interface Consts {
     String CONFIG_DX = "dx";
     String CONFIG_DY = "dy";
     String CONFIG_TXT = "txt";
-
+    String CONFIG_TOP_STAVE_Y_REF = "topStaveYRef";
+    String CONFIG_TOP_STAVE_X_REF = "topStaveXRef";
+    String CONFIG_BOTTOM_STAVE_Y_REF = "botStaveYRef";
+    String CONFIG_BOTTOM_STAVE_X_REF = "botStaveXRef";
+    String CONFIG_MIN_Y_DISTANCE = "minYdistance";
+    String CONFIG_MIN_X_DISTANCE = "minXdistance";
 
 
     String MAXMSP_ID = "max";

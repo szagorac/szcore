@@ -5,6 +5,9 @@ public class TextElementConfig {
     private final double dy;
     private final String txt;
 
+    private double xAdj;
+    private double yAdj;
+
     public TextElementConfig(double dx, double dy, String txt) {
         this.dx = dx;
         this.dy = dy;
@@ -21,6 +24,22 @@ public class TextElementConfig {
 
     public String getTxt() {
         return txt;
+    }
+
+    public double getXAdj() {
+        return xAdj;
+    }
+
+    public void setXAdj(double xAdj) {
+        this.xAdj = xAdj;
+    }
+
+    public double getYAdj() {
+        return yAdj;
+    }
+
+    public void setYAdj(double yAdj) {
+        this.yAdj = yAdj;
     }
 
     @Override

@@ -10,6 +10,13 @@ public class TranspositionStrategyConfig implements StrategyConfig{
 
     private boolean isActive;
     private String scoreName;
+    private double topStaveYRef;
+    private double topStaveXRef;
+    private double botStaveYRef;
+    private double botStaveXRef;
+    private double minYdistance;
+    private double minXdistance;
+
     private List<TranspositionPageConfig> pageConfigs = new ArrayList<>();
     private HashMap<String, HashMap<Integer, TranspositionPageConfig>> instrumentPageConfigs = new HashMap<>();
 
@@ -35,6 +42,61 @@ public class TranspositionStrategyConfig implements StrategyConfig{
 
     public List<TranspositionPageConfig> getPageConfigs() {
         return pageConfigs;
+    }
+
+    public TranspositionPageConfig getPageConfig(String part, int pageNo) {
+        if(instrumentPageConfigs.containsKey(part)) {
+            return null;
+        }
+        return instrumentPageConfigs.get(part).get(pageNo);
+    }
+
+    public double getTopStaveYRef() {
+        return topStaveYRef;
+    }
+
+    public void setTopStaveYRef(double topStaveYRef) {
+        this.topStaveYRef = topStaveYRef;
+    }
+
+    public double getTopStaveXRef() {
+        return topStaveXRef;
+    }
+
+    public void setTopStaveXRef(double topStaveXRef) {
+        this.topStaveXRef = topStaveXRef;
+    }
+
+    public double getBotStaveYRef() {
+        return botStaveYRef;
+    }
+
+    public void setBotStaveYRef(double botStaveYRef) {
+        this.botStaveYRef = botStaveYRef;
+    }
+
+    public double getBotStaveXRef() {
+        return botStaveXRef;
+    }
+
+    public void setBotStaveXRef(double botStaveXRef) {
+        this.botStaveXRef = botStaveXRef;
+    }
+
+    public double getMinYdistance() {
+        return minYdistance;
+    }
+
+    public void setMinYdistance(double minYdistance) {
+        this.minYdistance = minYdistance;
+    }
+
+    public double getMinXdistance() {
+        return minXdistance;
+    }
+
+    public void setMinXdistance(double minXdistance) {
+        this.minXdistance = minXdistance;
     }
 
     @Override

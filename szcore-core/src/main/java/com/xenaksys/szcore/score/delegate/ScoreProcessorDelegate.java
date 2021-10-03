@@ -159,6 +159,9 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import static com.xenaksys.szcore.Consts.CONFIG_BUILDER_STRATEGY;
+import static com.xenaksys.szcore.Consts.CONFIG_RND_STRATEGY;
+import static com.xenaksys.szcore.Consts.CONFIG_TRANSPOSITION_STRATEGY;
 import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NAME;
 import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NO;
 import static com.xenaksys.szcore.Consts.MAX_BPM;
@@ -276,24 +279,40 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
 
     public void loadStrategyConfig(String dir) throws Exception {
         Map<String, Object> strategyConfig = StrategyConfigLoader.loadConfig(dir);
-        initRandomisationStrategyConfig(strategyConfig);
-        initScoreBuilderStrategyConfig(strategyConfig);
-        initTranspositionStrategyConfig(strategyConfig);
+        for(String key : strategyConfig.keySet()) {
+            switch (key) {
+                case CONFIG_RND_STRATEGY:
+                    initRandomisationStrategyConfig(strategyConfig);
+                    break;
+                case CONFIG_BUILDER_STRATEGY:
+                    initScoreBuilderStrategyConfig(strategyConfig);
+                    break;
+                case CONFIG_TRANSPOSITION_STRATEGY:
+                    initTranspositionStrategyConfig(strategyConfig);
+                    break;
+            }
+        }
     }
 
     public void initRandomisationStrategyConfig(Map<String, Object> strategyConfig) throws Exception {
         ScoreRandomisationStrategyConfig randomisationStrategyConfig = StrategyConfigLoader.loadRndStrategyConfig(strategyConfig, szcore);
-        szcore.addStrategyConfig(randomisationStrategyConfig);
+        if(randomisationStrategyConfig != null) {
+            szcore.addStrategyConfig(randomisationStrategyConfig);
+        }
     }
 
     public void initScoreBuilderStrategyConfig(Map<String, Object> strategyConfig) throws Exception {
         ScoreBuilderStrategyConfig builderStrategyConfig = StrategyConfigLoader.loadBuilderStrategyConfig(strategyConfig, szcore);
-        szcore.addStrategyConfig(builderStrategyConfig);
+        if(builderStrategyConfig != null) {
+            szcore.addStrategyConfig(builderStrategyConfig);
+        }
     }
 
     public void initTranspositionStrategyConfig(Map<String, Object> strategyConfig) throws Exception {
-        TranspositionStrategyConfig builderStrategyConfig = StrategyConfigLoader.loadTranspositionConfig(strategyConfig, szcore);
-        szcore.addStrategyConfig(builderStrategyConfig);
+        TranspositionStrategyConfig transpositionStrategyConfig = StrategyConfigLoader.loadTranspositionConfig(strategyConfig, szcore);
+        if(transpositionStrategyConfig != null) {
+            szcore.addStrategyConfig(transpositionStrategyConfig);
+        }
     }
 
     protected void createWebAudienceProcessor() {

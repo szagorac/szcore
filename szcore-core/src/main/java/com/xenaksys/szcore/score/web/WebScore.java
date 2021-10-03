@@ -6,6 +6,7 @@ import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.algo.SectionAssignmentType;
 import com.xenaksys.szcore.algo.SequentalIntRange;
 import com.xenaksys.szcore.algo.StrategyType;
+import com.xenaksys.szcore.algo.TranspositionStrategy;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.osc.DateTickEvent;
 import com.xenaksys.szcore.event.osc.ElementAlphaEvent;
@@ -359,7 +360,14 @@ public class WebScore {
         if(rndPageId != null) {
             webRndPageId = getWebPageId(rndPageId);
         }
-        sendPageInfo(destination, webPageId, webRndPageId, fileName, webStaveId);
+        WebTranspositionInfo transpositionInfo = null;
+        TranspositionStrategy transpositionStrategy = score.getTranspositionStrategy();
+        if(transpositionStrategy != null) {
+            PageId pageId = event.getPageId();
+            transpositionInfo = transpositionStrategy.getWebTranspositionInfo(pageId, staveId);
+        }
+
+        sendPageInfo(destination, webPageId, webRndPageId, fileName, webStaveId, transpositionInfo);
     }
 
     public String getWebPageId(PageId pageId) {
@@ -534,13 +542,16 @@ public class WebScore {
         return scoreState;
     }
 
-    public void sendPageInfo(String destination, String pageId, String webRndPageId, String filename, String staveId) throws Exception {
+    public void sendPageInfo(String destination, String pageId, String webRndPageId, String filename, String staveId, WebTranspositionInfo transpositionInfo) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         WebPageInfo webPageInfo = new WebPageInfo();
         webPageInfo.setFilename(filename);
         webPageInfo.setStaveId(staveId);
         webPageInfo.setPageId(pageId);
         webPageInfo.setRndPageId(webRndPageId);
+        if(transpositionInfo != null) {
+            webPageInfo.setTranspositionInfo(transpositionInfo);
+        }
         scoreState.setPageInfo(webPageInfo);
         sendToDestination(destination, scoreState);
     }

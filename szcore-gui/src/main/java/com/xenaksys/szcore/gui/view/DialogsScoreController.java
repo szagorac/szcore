@@ -131,7 +131,7 @@ public class DialogsScoreController {
         useDynamicsOverlayChb.setSelected(false);
         useDynamicsLineChb.setSelected(false);
         usePitchOverlayChb.setSelected(false);
-        usePitchStaveOverlayChb.setSelected(false);
+        usePitchStaveOverlayChb.setSelected(true);
         usePitchLineChb.setSelected(false);
         useTimbreOverlayChb.setSelected(false);
         useTimbreLineChb.setSelected(false);
@@ -533,7 +533,7 @@ public class DialogsScoreController {
         }
         if(newValue && !usePitchOverlayChb.isSelected()) {
             usePitchOverlayChb.setSelected(true);
-            usePitchStaveOverlayChb.setSelected(true);
+//            usePitchStaveOverlayChb.setSelected(true);
         }
         mainApp.sendPitchValueChange(Math.round(pitchSldr.getValue()), instrumentIds);
         mainApp.sendUsePitchLine(newValue, instrumentIds);
@@ -655,7 +655,7 @@ public class DialogsScoreController {
             useDynamicsOverlayChb.setSelected(newValue);
             useTimbreOverlayChb.setSelected(newValue);
             usePitchOverlayChb.setSelected(newValue);
-            usePitchStaveOverlayChb.setSelected(newValue);
+//            usePitchStaveOverlayChb.setSelected(newValue);
         });
     }
 
@@ -669,7 +669,7 @@ public class DialogsScoreController {
                 useDynamicsOverlayChb.setSelected(false);
                 useTimbreOverlayChb.setSelected(false);
                 usePitchOverlayChb.setSelected(true);
-                usePitchStaveOverlayChb.setSelected(true);
+//                usePitchStaveOverlayChb.setSelected(true);
             } else {
                 useDynamicsLineChb.setSelected(true);
                 useTimbreLineChb.setSelected(true);
@@ -678,7 +678,7 @@ public class DialogsScoreController {
                 useDynamicsOverlayChb.setSelected(true);
                 useTimbreOverlayChb.setSelected(true);
                 usePitchOverlayChb.setSelected(false);
-                usePitchStaveOverlayChb.setSelected(false);
+//                usePitchStaveOverlayChb.setSelected(false);
             }
         });
     }

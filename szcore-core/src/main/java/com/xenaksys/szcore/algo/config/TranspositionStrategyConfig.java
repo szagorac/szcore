@@ -45,10 +45,14 @@ public class TranspositionStrategyConfig implements StrategyConfig{
     }
 
     public TranspositionPageConfig getPageConfig(String part, int pageNo) {
-        if(instrumentPageConfigs.containsKey(part)) {
+        if(!instrumentPageConfigs.containsKey(part)) {
             return null;
         }
-        return instrumentPageConfigs.get(part).get(pageNo);
+        HashMap<Integer, TranspositionPageConfig> pageConfigs = instrumentPageConfigs.get(part);
+        if(pageConfigs == null) {
+            return null;
+        }
+        return pageConfigs.get(pageNo);
     }
 
     public double getTopStaveYRef() {

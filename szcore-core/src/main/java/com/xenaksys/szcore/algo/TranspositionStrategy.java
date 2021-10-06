@@ -66,7 +66,7 @@ public class TranspositionStrategy implements ScoreStrategy {
             webTranspositionInfo.addTxtInfo(txtInfo);
             if(idx > 0) {
                 WebTextinfo prev = webTranspositionInfo.getTxtInfo(idx - 1);
-                yDiff[idx] = Math.abs(prev.getY() - y);
+                yDiff[idx - 1] = Math.abs(prev.getY() - y);
             }
             idx++;
         }

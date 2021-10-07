@@ -30,6 +30,7 @@ public class TranspositionStrategy implements ScoreStrategy {
         if(config == null) {
             return;
         }
+        isReady = true;
     }
 
     public WebTranspositionInfo getWebTranspositionInfo(PageId pageId, StaveId staveId) {

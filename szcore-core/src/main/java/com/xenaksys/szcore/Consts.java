@@ -564,7 +564,12 @@ public interface Consts {
     String CONFIG_BOTTOM_STAVE_X_REF = "botStaveXRef";
     String CONFIG_MIN_Y_DISTANCE = "minYdistance";
     String CONFIG_MIN_X_DISTANCE = "minXdistance";
-
+    String CONFIG_TOP_STAVE_START_X = "topStaveStartX";
+    String CONFIG_BOTTOM_STAVE_START_X = "botStaveStartX";
+    String CONFIG_EXT_RECT_DX = "extRectDx";
+    String CONFIG_EXT_RECT_DY = "extRectDy";
+    String CONFIG_EXT_RECT_WIDTH = "extRectWidth";
+    String CONFIG_EXT_RECT_HEIGHT = "extRectHeight";
 
     String MAXMSP_ID = "max";
     String MAXMSP_CMD_SET_FILE = "setFile";

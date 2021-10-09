@@ -5,6 +5,7 @@ import java.util.List;
 
 public class WebTranspositionInfo {
     private List<WebTextinfo> txtInfos;
+    private List<WebRectInfo> rectInfos;
 
     public void addTxtInfo(WebTextinfo textinfo) {
         if (txtInfos == null) {
@@ -22,5 +23,16 @@ public class WebTranspositionInfo {
             return null;
         }
         return txtInfos.get(index);
+    }
+
+    public void addRectInfo(WebRectInfo rectInfo) {
+        if (this.rectInfos == null) {
+            this.rectInfos = new ArrayList<>();
+        }
+        this.rectInfos.add(rectInfo);
+    }
+
+    public List<WebRectInfo> getRectInfos() {
+        return rectInfos;
     }
 }

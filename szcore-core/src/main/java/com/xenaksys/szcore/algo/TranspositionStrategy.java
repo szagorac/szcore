@@ -7,6 +7,7 @@ import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.score.BasicScore;
+import com.xenaksys.szcore.score.web.WebRectInfo;
 import com.xenaksys.szcore.score.web.WebTextinfo;
 import com.xenaksys.szcore.score.web.WebTranspositionInfo;
 import org.slf4j.Logger;
@@ -49,30 +50,62 @@ public class TranspositionStrategy implements ScoreStrategy {
         double[] yDiff = new double[textConfigs.size() -1];
         int idx = 0;
         for(TextElementConfig textConfig : textConfigs) {
-            double y = 0.0;
-            double x = 0.0;
+            WebTextinfo txtInfo = null;
+            WebRectInfo rectInfo = null;
             switch (staveNo) {
                 case 1:
-                    y = config.getTopStaveYRef() + textConfig.getDy();
-                    x = config.getTopStaveXRef() + textConfig.getDx();
+                    txtInfo = createTextInfo(config.getTopStaveXRef(), config.getTopStaveYRef(), config.getTopStaveStartX(), textConfig);
+                    rectInfo = createRectInfo(config.getTopStaveXRef(), config.getTopStaveYRef(), config.getTopStaveStartX(),textConfig);
                     break;
                 case 2:
-                    y = config.getBotStaveYRef() + textConfig.getDy();
-                    x = config.getBotStaveXRef() + textConfig.getDx();
+                    txtInfo = createTextInfo(config.getBotStaveXRef(), config.getBotStaveYRef(), config.getBotStaveStartX(), textConfig);
+                    rectInfo = createRectInfo(config.getBotStaveXRef(), config.getBotStaveYRef(), config.getBotStaveStartX(), textConfig);
                     break;
                 default:
                     LOG.error("Invalid stave for transposition calc");
             }
-            WebTextinfo txtInfo = new WebTextinfo(x, y, textConfig.getTxt());
-            webTranspositionInfo.addTxtInfo(txtInfo);
-            if(idx > 0) {
-                WebTextinfo prev = webTranspositionInfo.getTxtInfo(idx - 1);
-                yDiff[idx - 1] = Math.abs(prev.getY() - y);
+            if(txtInfo != null) {
+                webTranspositionInfo.addTxtInfo(txtInfo);
+                if(idx > 0) {
+                    WebTextinfo prev = webTranspositionInfo.getTxtInfo(idx - 1);
+                    yDiff[idx - 1] = Math.abs(prev.getY() - txtInfo.getY());
+                }
+            }
+            if(rectInfo != null) {
+                webTranspositionInfo.addRectInfo(rectInfo);
             }
             idx++;
         }
         adjustSpacing(webTranspositionInfo, yDiff);
         return webTranspositionInfo;
+    }
+
+    private WebTextinfo createTextInfo(double xRef, double yRef, double startX, TextElementConfig textConfig) {
+        double dx = textConfig.getDx();
+        boolean isExtOverlay = isExtX(xRef, startX, dx);
+        double x;
+        double y = yRef + textConfig.getDy();
+        if(isExtOverlay) {
+            x = startX + dx;
+        } else {
+            x = xRef + dx;
+        }
+        return new WebTextinfo(x, y, textConfig.getTxt());
+    }
+
+    private WebRectInfo createRectInfo(double xRef, double yRef, double startX, TextElementConfig textConfig) {
+        double dx = textConfig.getDx();
+        boolean isExtOverlay = isExtX(xRef, startX, dx);
+        if(!isExtOverlay) {
+            return null;
+        }
+        double x = startX + dx + config.getExtRectDx();
+        double y = yRef + textConfig.getDy() + config.getExtRectDy();
+        return new WebRectInfo(x, y, config.getExtRectWidth(), config.getExtRectHeight());
+    }
+
+    private boolean isExtX(double xRef, double startX, double dx) {
+        return dx > (startX - xRef);
     }
 
     private void adjustSpacing(WebTranspositionInfo webTranspositionInfo, double[] yDiff) {

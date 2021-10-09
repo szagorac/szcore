@@ -21,12 +21,17 @@ import java.util.Map;
 
 import static com.xenaksys.szcore.Consts.CONFIG_ALL;
 import static com.xenaksys.szcore.Consts.CONFIG_ASSIGNMENT_TYPE;
+import static com.xenaksys.szcore.Consts.CONFIG_BOTTOM_STAVE_START_X;
 import static com.xenaksys.szcore.Consts.CONFIG_BOTTOM_STAVE_X_REF;
 import static com.xenaksys.szcore.Consts.CONFIG_BOTTOM_STAVE_Y_REF;
 import static com.xenaksys.szcore.Consts.CONFIG_BUILDER_STRATEGY;
 import static com.xenaksys.szcore.Consts.CONFIG_DX;
 import static com.xenaksys.szcore.Consts.CONFIG_DY;
 import static com.xenaksys.szcore.Consts.CONFIG_END;
+import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_DX;
+import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_DY;
+import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_HEIGHT;
+import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_WIDTH;
 import static com.xenaksys.szcore.Consts.CONFIG_INSTRUMENTS;
 import static com.xenaksys.szcore.Consts.CONFIG_IS_ACTIVE;
 import static com.xenaksys.szcore.Consts.CONFIG_IS_RND_ACTIVE;
@@ -45,6 +50,7 @@ import static com.xenaksys.szcore.Consts.CONFIG_SELECTION_RANGE;
 import static com.xenaksys.szcore.Consts.CONFIG_START;
 import static com.xenaksys.szcore.Consts.CONFIG_STOP_ON_SECTION_END;
 import static com.xenaksys.szcore.Consts.CONFIG_TEXT_ELEMENTS;
+import static com.xenaksys.szcore.Consts.CONFIG_TOP_STAVE_START_X;
 import static com.xenaksys.szcore.Consts.CONFIG_TOP_STAVE_X_REF;
 import static com.xenaksys.szcore.Consts.CONFIG_TOP_STAVE_Y_REF;
 import static com.xenaksys.szcore.Consts.CONFIG_TRANSPOSITION_STRATEGY;
@@ -153,6 +159,36 @@ public class StrategyConfigLoader extends YamlLoader {
         Double minXDistance = getDouble(CONFIG_MIN_X_DISTANCE, transpositionStrategyConfig);
         if(minXDistance != null) {
             config.setMinXdistance(minXDistance);
+        }
+
+        Double topStaveStartX = getDouble(CONFIG_TOP_STAVE_START_X, transpositionStrategyConfig);
+        if(topStaveStartX != null) {
+            config.setTopStaveStartX(topStaveStartX);
+        }
+
+        Double botStaveStarX = getDouble(CONFIG_BOTTOM_STAVE_START_X, transpositionStrategyConfig);
+        if(botStaveStarX != null) {
+            config.setBotStaveStartX(botStaveStarX);
+        }
+
+        Double extRectDx = getDouble(CONFIG_EXT_RECT_DX, transpositionStrategyConfig);
+        if(extRectDx != null) {
+            config.setExtRectDx(extRectDx);
+        }
+
+        Double extRectDy = getDouble(CONFIG_EXT_RECT_DY, transpositionStrategyConfig);
+        if(extRectDy != null) {
+            config.setExtRectDy(extRectDy);
+        }
+
+        Double extRectWidth = getDouble(CONFIG_EXT_RECT_WIDTH, transpositionStrategyConfig);
+        if(extRectWidth != null) {
+            config.setExtRectWidth(extRectWidth);
+        }
+
+        Double extRectHeight = getDouble(CONFIG_EXT_RECT_HEIGHT, transpositionStrategyConfig);
+        if(extRectHeight != null) {
+            config.setExtRectHeight(extRectHeight);
         }
 
         List<Map<String, Object>> pageConfigs = getListOfMaps(CONFIG_PAGES, transpositionStrategyConfig);

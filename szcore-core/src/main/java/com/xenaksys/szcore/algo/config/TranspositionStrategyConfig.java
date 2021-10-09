@@ -16,6 +16,12 @@ public class TranspositionStrategyConfig implements StrategyConfig{
     private double botStaveXRef;
     private double minYdistance;
     private double minXdistance;
+    private double topStaveStartX;
+    private double botStaveStartX;
+    private double extRectDx;
+    private double extRectDy;
+    private double extRectWidth;
+    private double extRectHeight;
 
     private List<TranspositionPageConfig> pageConfigs = new ArrayList<>();
     private HashMap<String, HashMap<Integer, TranspositionPageConfig>> instrumentPageConfigs = new HashMap<>();
@@ -101,6 +107,54 @@ public class TranspositionStrategyConfig implements StrategyConfig{
 
     public void setMinXdistance(double minXdistance) {
         this.minXdistance = minXdistance;
+    }
+
+    public void setTopStaveStartX(Double topStaveStartX) {
+        this.topStaveStartX = topStaveStartX;
+    }
+
+    public double getTopStaveStartX() {
+        return topStaveStartX;
+    }
+
+    public void setBotStaveStartX(Double botStaveStartX) {
+        this.botStaveStartX = botStaveStartX;
+    }
+
+    public double getBotStaveStartX() {
+        return botStaveStartX;
+    }
+
+    public double getExtRectDx() {
+        return extRectDx;
+    }
+
+    public void setExtRectDx(double extRectDx) {
+        this.extRectDx = extRectDx;
+    }
+
+    public double getExtRectDy() {
+        return extRectDy;
+    }
+
+    public void setExtRectDy(double extRectDy) {
+        this.extRectDy = extRectDy;
+    }
+
+    public double getExtRectWidth() {
+        return extRectWidth;
+    }
+
+    public void setExtRectWidth(double extRectWidth) {
+        this.extRectWidth = extRectWidth;
+    }
+
+    public double getExtRectHeight() {
+        return extRectHeight;
+    }
+
+    public void setExtRectHeight(double extRectHeight) {
+        this.extRectHeight = extRectHeight;
     }
 
     @Override

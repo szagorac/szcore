@@ -570,6 +570,8 @@ public interface Consts {
     String CONFIG_EXT_RECT_DY = "extRectDy";
     String CONFIG_EXT_RECT_WIDTH = "extRectWidth";
     String CONFIG_EXT_RECT_HEIGHT = "extRectHeight";
+    String CONFIG_EXT_RECT_MOD_WIDTH = "extRectModWidth";
+    String CONFIG_EXT_RECT_MOD_HEIGHT = "extRectModHeight";
 
     String MAXMSP_ID = "max";
     String MAXMSP_CMD_SET_FILE = "setFile";

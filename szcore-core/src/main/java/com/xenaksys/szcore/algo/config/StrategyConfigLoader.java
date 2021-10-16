@@ -31,6 +31,8 @@ import static com.xenaksys.szcore.Consts.CONFIG_END;
 import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_DX;
 import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_DY;
 import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_HEIGHT;
+import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_MOD_HEIGHT;
+import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_MOD_WIDTH;
 import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_WIDTH;
 import static com.xenaksys.szcore.Consts.CONFIG_INSTRUMENTS;
 import static com.xenaksys.szcore.Consts.CONFIG_IS_ACTIVE;
@@ -189,6 +191,16 @@ public class StrategyConfigLoader extends YamlLoader {
         Double extRectHeight = getDouble(CONFIG_EXT_RECT_HEIGHT, transpositionStrategyConfig);
         if(extRectHeight != null) {
             config.setExtRectHeight(extRectHeight);
+        }
+
+        Double extRectModWidth = getDouble(CONFIG_EXT_RECT_MOD_WIDTH, transpositionStrategyConfig);
+        if(extRectModWidth != null) {
+            config.setExtRectModWidth(extRectModWidth);
+        }
+
+        Double extRectModHeight = getDouble(CONFIG_EXT_RECT_MOD_HEIGHT, transpositionStrategyConfig);
+        if(extRectModHeight != null) {
+            config.setExtRectModHeight(extRectModHeight);
         }
 
         List<Map<String, Object>> pageConfigs = getListOfMaps(CONFIG_PAGES, transpositionStrategyConfig);

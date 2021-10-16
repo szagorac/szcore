@@ -47,19 +47,23 @@ public class TranspositionStrategy implements ScoreStrategy {
         }
         WebTranspositionInfo webTranspositionInfo = new WebTranspositionInfo();
         List<TextElementConfig> textConfigs = pageConfig.getTextConfigs();
-        double[] yDiff = new double[textConfigs.size() -1];
+        double[] yDiff = new double[0];
+        if(textConfigs.size() > 0) {
+            yDiff = new double[textConfigs.size() - 1];
+        }
         int idx = 0;
         for(TextElementConfig textConfig : textConfigs) {
             WebTextinfo txtInfo = null;
             WebRectInfo rectInfo = null;
+            boolean isMod = isTxtMod(textConfig);
             switch (staveNo) {
                 case 1:
                     txtInfo = createTextInfo(config.getTopStaveXRef(), config.getTopStaveYRef(), config.getTopStaveStartX(), textConfig);
-                    rectInfo = createRectInfo(config.getTopStaveXRef(), config.getTopStaveYRef(), config.getTopStaveStartX(),textConfig);
+                    rectInfo = createRectInfo(config.getTopStaveXRef(), config.getTopStaveYRef(), config.getTopStaveStartX(),textConfig, isMod);
                     break;
                 case 2:
                     txtInfo = createTextInfo(config.getBotStaveXRef(), config.getBotStaveYRef(), config.getBotStaveStartX(), textConfig);
-                    rectInfo = createRectInfo(config.getBotStaveXRef(), config.getBotStaveYRef(), config.getBotStaveStartX(), textConfig);
+                    rectInfo = createRectInfo(config.getBotStaveXRef(), config.getBotStaveYRef(), config.getBotStaveStartX(), textConfig, isMod);
                     break;
                 default:
                     LOG.error("Invalid stave for transposition calc");
@@ -68,7 +72,10 @@ public class TranspositionStrategy implements ScoreStrategy {
                 webTranspositionInfo.addTxtInfo(txtInfo);
                 if(idx > 0) {
                     WebTextinfo prev = webTranspositionInfo.getTxtInfo(idx - 1);
-                    yDiff[idx - 1] = Math.abs(prev.getY() - txtInfo.getY());
+                    int diffIdx = idx -1;
+                    if(diffIdx < yDiff.length) {
+                        yDiff[diffIdx] = Math.abs(prev.getY() - txtInfo.getY());
+                    }
                 }
             }
             if(rectInfo != null) {
@@ -78,6 +85,13 @@ public class TranspositionStrategy implements ScoreStrategy {
         }
         adjustSpacing(webTranspositionInfo, yDiff);
         return webTranspositionInfo;
+    }
+
+    private boolean isTxtMod(TextElementConfig textConfig) {
+        if(textConfig == null || textConfig.getTxt() == null) {
+            return false;
+        }
+        return textConfig.getTxt().length() > 1;
     }
 
     private WebTextinfo createTextInfo(double xRef, double yRef, double startX, TextElementConfig textConfig) {
@@ -93,7 +107,7 @@ public class TranspositionStrategy implements ScoreStrategy {
         return new WebTextinfo(x, y, textConfig.getTxt());
     }
 
-    private WebRectInfo createRectInfo(double xRef, double yRef, double startX, TextElementConfig textConfig) {
+    private WebRectInfo createRectInfo(double xRef, double yRef, double startX, TextElementConfig textConfig, boolean isMod) {
         double dx = textConfig.getDx();
         boolean isExtOverlay = isExtX(xRef, startX, dx);
         if(!isExtOverlay) {
@@ -101,7 +115,9 @@ public class TranspositionStrategy implements ScoreStrategy {
         }
         double x = startX + dx + config.getExtRectDx();
         double y = yRef + textConfig.getDy() + config.getExtRectDy();
-        return new WebRectInfo(x, y, config.getExtRectWidth(), config.getExtRectHeight());
+        double width = isMod ? config.getExtRectModWidth() : config.getExtRectWidth();
+        double height = isMod ? config.getExtRectModHeight() : config.getExtRectHeight();
+        return new WebRectInfo(x, y, width, height);
     }
 
     private boolean isExtX(double xRef, double startX, double dx) {

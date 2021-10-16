@@ -22,6 +22,8 @@ public class TranspositionStrategyConfig implements StrategyConfig{
     private double extRectDy;
     private double extRectWidth;
     private double extRectHeight;
+    private double extRectModWidth;
+    private double extRectModHeight;
 
     private List<TranspositionPageConfig> pageConfigs = new ArrayList<>();
     private HashMap<String, HashMap<Integer, TranspositionPageConfig>> instrumentPageConfigs = new HashMap<>();
@@ -155,6 +157,22 @@ public class TranspositionStrategyConfig implements StrategyConfig{
 
     public void setExtRectHeight(double extRectHeight) {
         this.extRectHeight = extRectHeight;
+    }
+
+    public double getExtRectModWidth() {
+        return extRectModWidth;
+    }
+
+    public void setExtRectModWidth(double extRectModWidth) {
+        this.extRectModWidth = extRectModWidth;
+    }
+
+    public double getExtRectModHeight() {
+        return extRectModHeight;
+    }
+
+    public void setExtRectModHeight(double extRectModHeight) {
+        this.extRectModHeight = extRectModHeight;
     }
 
     @Override

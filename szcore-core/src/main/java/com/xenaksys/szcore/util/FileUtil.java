@@ -81,7 +81,6 @@ public class FileUtil {
                 LOG.error("File does not exist for path: " + path);
                 return null;
             }
-
             return file;
         } catch (Exception e) {
             LOG.error("Failed to process file path: " + path);
@@ -93,6 +92,18 @@ public class FileUtil {
         Path path = Paths.get(filePath);
         try (BufferedWriter writer = Files.newBufferedWriter(path)) {
             writer.write(text);
+        } catch (IOException e) {
+            LOG.error("Failed to write to file {}", filePath, e);
+        }
+    }
+
+    public static void writeToFile(String[] lines, String filePath) {
+        Path path = Paths.get(filePath);
+        try (BufferedWriter writer = Files.newBufferedWriter(path)) {
+            for (String line : lines) {
+                writer.write(line);
+                writer.newLine();
+            }
         } catch (IOException e) {
             LOG.error("Failed to write to file {}", filePath, e);
         }
@@ -152,6 +163,30 @@ public class FileUtil {
             return buffer.toString();
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static boolean exists(String fileDir) {
+        Path path = Paths.get(fileDir);
+        return Files.exists(path);
+    }
+
+    public static File getOrCreateDir(String dir) {
+        File out = new File(dir);
+        out.mkdirs();
+        return out;
+    }
+
+    public static void copyFile(String from, String to) {
+        try {
+            File source = new File(from);
+            if(!source.exists()) {
+                return;
+            }
+            File dest = new File(to);
+            FileUtils.copyFile(source, dest);
+        } catch (IOException e) {
+            LOG.error("copyFile: failed to copy: {} to: {}", from, to);
         }
     }
 }

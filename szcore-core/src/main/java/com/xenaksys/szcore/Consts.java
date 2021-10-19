@@ -65,6 +65,7 @@ public interface Consts {
     String BLANK_PAGE_FILE = "blankStave";
     String DEFAULT_FILE_NAME = "part" + INSCORE_FILE_EXTENSION;
     String INDEX_HTML = "index.html";
+    String BEAT_INFO_FILE_SUFFIX = "_BeatInfo.csv";
     String CSV_EXT = ".csv";
     String MINUTES_SHORT = "m";
     String SECONDS_SHORT = "s";
@@ -74,6 +75,12 @@ public interface Consts {
     String SCORE_DELEGATE_PACKAGE = "com.xenaksys.szcore.score.delegate.";
     String WEBSCORE_DIR_CONFIG_PREFIX = "webscore.dir.";
     String WEBSCORE_PART_HTML_PREFIX = "webscore.part.html.";
+
+    String RESOURCE_JAVASCRIPT = "javascript";
+    String RESOURCE_WEB = "web";
+    String RESOURCE_MAXMSP = "max";
+    String RESOURCE_SCRIPT_ENGINE = "sce";
+    String RESOURCE_TRANSITION = "transition";
 
     char MINUS_CHAR = '-';
     char DOT_CHAR = '.';

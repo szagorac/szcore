@@ -1,7 +1,11 @@
 package com.xenaksys.szcore.score;
 
 
-public class ScoreElement {
+import java.util.Objects;
+
+import static com.xenaksys.szcore.Consts.COMMA;
+
+public class ScoreElement implements Comparable<ScoreElement>{
     private String scoreName;
     private String instrumentName;
     private String pageName;
@@ -211,11 +215,119 @@ public class ScoreElement {
         return isUpbeat;
     }
 
+    public boolean isUpbeat() {
+        return isUpbeat == 1;
+    }
+
     public void setIsUpbeat(int isUpbeat) {
         this.isUpbeat = isUpbeat;
     }
 
     public String getResource() {
         return resource;
+    }
+
+    public static ScoreElement clone(ScoreElement se) {
+        ScoreElement out = new ScoreElement();
+        out.setScoreName(se.getScoreName());
+        out.setInstrumentName(se.getInstrumentName());
+        out.setPageName(se.getPageName());
+        out.setPageNo(se.getPageNo());
+        out.setBarName(se.getBarName());
+        out.setBarNo(se.getBarNo());
+        out.setTimeSigNum(se.getTimeSigNum());
+        out.setTimeSigDenom(se.getTimeSigDenom());
+        out.setTempoBpm(se.getTempoBpm());
+        out.setTempoBeatValue(se.getTempoBeatValue());
+        out.setBeatNo(se.getBeatNo());
+        out.setStartTimeMillis(se.getStartTimeMillis());
+        out.setDurationTimeMillis(se.getDurationTimeMillis());
+        out.setEndTimeMillis(se.getEndTimeMillis());
+        out.setStartBaseBeatUnits(se.getStartBaseBeatUnits());
+        out.setDurationBeatUnits(se.getDurationBeatUnits());
+        out.setEndBaseBeatUnits(se.getEndBaseBeatUnits());
+        out.setxStartPxl(se.getxStartPxl());
+        out.setxEndPxl(se.getxEndPxl());
+        out.setyStartPxl(se.getyStartPxl());
+        out.setyEndPxl(se.getyEndPxl());
+        out.setUnitBeatNo(se.getUnitBeatNo());
+        out.setIsUpbeat(se.getIsUpbeat());
+        out.setResource(se.getResource());
+        return out;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ScoreElement that = (ScoreElement) o;
+        return pageNo == that.pageNo && barNo == that.barNo && timeSigNum == that.timeSigNum && timeSigDenom == that.timeSigDenom && tempoBpm == that.tempoBpm && tempoBeatValue == that.tempoBeatValue && beatNo == that.beatNo && startTimeMillis == that.startTimeMillis && durationTimeMillis == that.durationTimeMillis && endTimeMillis == that.endTimeMillis && startBaseBeatUnits == that.startBaseBeatUnits && durationBeatUnits == that.durationBeatUnits && endBaseBeatUnits == that.endBaseBeatUnits && xStartPxl == that.xStartPxl && xEndPxl == that.xEndPxl && yStartPxl == that.yStartPxl && yEndPxl == that.yEndPxl && unitBeatNo == that.unitBeatNo && isUpbeat == that.isUpbeat && Objects.equals(scoreName, that.scoreName) && Objects.equals(instrumentName, that.instrumentName) && Objects.equals(pageName, that.pageName) && Objects.equals(barName, that.barName) && Objects.equals(resource, that.resource);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(scoreName, instrumentName, pageName, pageNo, barName, barNo, timeSigNum, timeSigDenom, tempoBpm, tempoBeatValue, beatNo, startTimeMillis, durationTimeMillis, endTimeMillis, startBaseBeatUnits, durationBeatUnits, endBaseBeatUnits, xStartPxl, xEndPxl, yStartPxl, yEndPxl, unitBeatNo, isUpbeat, resource);
+    }
+
+    @Override
+    public int compareTo(ScoreElement o) {
+        return Integer.compare(getBeatNo(), o.getBeatNo());
+    }
+
+    @Override
+    public String toString() {
+        return "ScoreElement{" +
+                "scoreName='" + scoreName + '\'' +
+                ", instrumentName='" + instrumentName + '\'' +
+                ", pageName='" + pageName + '\'' +
+                ", pageNo=" + pageNo +
+                ", barName='" + barName + '\'' +
+                ", barNo=" + barNo +
+                ", timeSigNum=" + timeSigNum +
+                ", timeSigDenom=" + timeSigDenom +
+                ", tempoBpm=" + tempoBpm +
+                ", tempoBeatValue=" + tempoBeatValue +
+                ", beatNo=" + beatNo +
+                ", startTimeMillis=" + startTimeMillis +
+                ", durationTimeMillis=" + durationTimeMillis +
+                ", endTimeMillis=" + endTimeMillis +
+                ", startBaseBeatUnits=" + startBaseBeatUnits +
+                ", durationBeatUnits=" + durationBeatUnits +
+                ", endBaseBeatUnits=" + endBaseBeatUnits +
+                ", xStartPxl=" + xStartPxl +
+                ", xEndPxl=" + xEndPxl +
+                ", yStartPxl=" + yStartPxl +
+                ", yEndPxl=" + yEndPxl +
+                ", unitBeatNo=" + unitBeatNo +
+                ", isUpbeat=" + isUpbeat +
+                ", resource='" + resource + '\'' +
+                '}';
+    }
+
+    public String toCsvString() {
+        return scoreName + COMMA
+                + instrumentName + COMMA
+                + pageName + COMMA
+                + pageNo + COMMA
+                + barName + COMMA
+                + barNo + COMMA
+                + timeSigNum + COMMA
+                + timeSigDenom + COMMA
+                + tempoBpm  + COMMA
+                + tempoBeatValue + COMMA
+                + beatNo + COMMA
+                + startTimeMillis + COMMA
+                + durationTimeMillis + COMMA
+                + endTimeMillis + COMMA
+                + startBaseBeatUnits + COMMA
+                + durationBeatUnits + COMMA
+                + endBaseBeatUnits + COMMA
+                + xStartPxl + COMMA
+                + xEndPxl + COMMA
+                + yStartPxl + COMMA
+                + yEndPxl + COMMA
+                + isUpbeat + COMMA
+                + resource + COMMA
+                + unitBeatNo;
     }
 }

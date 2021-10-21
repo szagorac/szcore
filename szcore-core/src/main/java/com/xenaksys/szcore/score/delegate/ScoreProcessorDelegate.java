@@ -1603,8 +1603,14 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         long now = clock.getSystemTimeMillis();
         StopEvent stopEvent = eventFactory.createStopEvent(lastBeat, transportId, now);
         szcore.addScoreBaseBeatEvent(transportId, stopEvent);
-
         LOG.debug("Added stop event: " + stopEvent);
+    }
+
+    public void addOneOffStopEvent(BeatId lastBeat, Id transportId) {
+        long now = clock.getSystemTimeMillis();
+        StopEvent stopEvent = eventFactory.createStopEvent(lastBeat, transportId, now);
+        szcore.addOneOffBaseBeatEvent(transportId, stopEvent);
+        LOG.debug("Added one off stop event: " + stopEvent);
     }
 
     public void addPrepStaveChangeEvent(BeatId executeOnBaseBeat, BeatId activateOnBaseBeat, BeatId deactivateOnBaseBeat, BeatId pageChangeOnBaseBeat, PageId nextPageId, Id transportId) {
@@ -1981,6 +1987,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         }
         Collection<Instrument> instruments = szcore.getInstruments();
         List<Id> transportIds = new ArrayList<>();
+        Instrument lastInstrument = null;
         for (Instrument instrument : instruments) {
             InstrumentId instrumentId = (InstrumentId) instrument.getId();
             boolean isAudioOrVideo = instrument.isAv();
@@ -2115,12 +2122,20 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                 addInitWebAudienceEvent(transport, initEvents, startBeatId);
                 addInitScriptingEvent(transport, initEvents, startBeatId);
             }
+            if(isScoreInstrument) {
+                lastInstrument = instrument;
+            }
         }
 
         ScoreBuilderStrategy builderStrategy = szcore.getScoreBuilderStrategy();
-        ScoreSectionInfoEvent sectionInfoEvent = createSectionInfoEvent(builderStrategy);
-        if(sectionInfoEvent != null) {
-            initEvents.add(sectionInfoEvent);
+        if(builderStrategy.isActive()) {
+            ScoreSectionInfoEvent sectionInfoEvent = createSectionInfoEvent(builderStrategy);
+            if (sectionInfoEvent != null) {
+                initEvents.add(sectionInfoEvent);
+            }
+            if(lastInstrument != null) {
+                prepareSectionEvents(builderStrategy, lastInstrument, szcore.getInstrumentTransport(lastInstrument.getId()));
+            }
         }
 
         return initEvents;
@@ -3111,6 +3126,40 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         String nextSection = scoreBuilderStrategy.getNextSection();
         long creationTime = clock.getSystemTimeMillis();
         return eventFactory.createScoreSectionInfoEvent(scoreId, sectionInfos, sectionOrder, isReady, currentSection, nextSection, creationTime);
+    }
+
+
+    public void prepareSectionEvents(ScoreBuilderStrategy scoreBuilderStrategy, Instrument instrument, Transport transport) {
+        String section = scoreBuilderStrategy.getCurrentSection();
+        SectionInfo sectionInfo = scoreBuilderStrategy.getSectionInfo(section);
+        int startPageNo = sectionInfo.getStartPageNo();
+        Page sectionStartPage = null;
+        if(instrument != null) {
+            sectionStartPage = getBasicScore().getPageNo(startPageNo, (InstrumentId)instrument.getId());
+        }
+        if(sectionStartPage != null) {
+            Beat sectionFirstBeat = sectionStartPage.getFirstBeat();
+            addProcessSectionsEvent(sectionFirstBeat.getBeatId(), section, ScoreSectionEventType.START, transport.getId());
+        }
+
+        int endPageNo = sectionInfo.getEndPageNo();
+        Page sectionEndPage = null;
+        if(instrument != null) {
+            sectionEndPage = getBasicScore().getPageNo(endPageNo, (InstrumentId)instrument.getId());
+        }
+        if(sectionEndPage != null) {
+            Beat sectionLastBeat = sectionEndPage.getLastBeat();
+            if(scoreBuilderStrategy.isStopOnSectionEnd()) {
+                addOneOffStopEvent(sectionLastBeat.getBeatId(), transport.getId());
+            }
+            addProcessSectionsEvent(sectionLastBeat.getBeatId(), section, ScoreSectionEventType.STOP, transport.getId());
+        }
+    }
+
+    public void addProcessSectionsEvent(BeatId beatId, String section, ScoreSectionEventType eventType, Id transportId) {
+        long now = getClock().getSystemTimeMillis();
+        ScoreSectionEvent sectionEvent = getEventFactory().createScoreSectionEvent(beatId, section, eventType, transportId, now);
+        getBasicScore().addOneOffBaseBeatEvent(transportId, sectionEvent);
     }
 
     protected void onScoreBuilderStrategyReady() {

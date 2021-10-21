@@ -4,19 +4,14 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.music.ScoreSectionEvent;
-import com.xenaksys.szcore.event.music.ScoreSectionEventType;
 import com.xenaksys.szcore.model.Bar;
-import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.EventReceiver;
-import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.MutableClock;
 import com.xenaksys.szcore.model.OscPublisher;
 import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.Scheduler;
 import com.xenaksys.szcore.model.Score;
-import com.xenaksys.szcore.model.SectionInfo;
 import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.Transport;
 import com.xenaksys.szcore.model.WebPublisher;
@@ -37,9 +32,7 @@ import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.web.WebClientInfo;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Properties;
 
 import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NAME;
@@ -101,12 +94,10 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
 
         Collection<Instrument> instruments = szcore.getInstruments();
         BeatId lastBeat = null;
-        Instrument lastInstrument = null;
         for (Instrument instrument : instruments) {
             InstrumentId instrumentId = (InstrumentId)instrument.getId();
             getInstrumentBeatTrackers().put(instrumentId, new InstrumentBeatTracker(transport, instrumentId));
             lastBeat = prepareInstrument(instrument, transport);
-            lastInstrument = instrument;
             Page lastPage = szcore.getLastInstrumentPage(instrumentId);
 
             String contPageName = instrument.getName() + UNDERSCORE + CONTINUOUS_PAGE_NAME;
@@ -127,47 +118,18 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
             }
         }
 
-        List<Integer> stopEventBeats = new ArrayList<>();
         szcore.initScoreStrategies();
+        boolean isStopOnSectionEnd = false;
         ScoreBuilderStrategy scoreBuilderStrategy = szcore.getScoreBuilderStrategy();
-        scoreBuilderStrategy.setInstruments(INSTRUMENTS);
-        scoreBuilderStrategy.setDynamicInstruments(DYNAMIC_INSTRUMENTS);
-        scoreBuilderStrategy.setDefaultInstrument(INSTRUMENT_DEFAULT);
-        if(scoreBuilderStrategy.isStopOnSectionEnd()) {
-            List<String> sections = scoreBuilderStrategy.getSections();
-            for(String section : sections) {
-                SectionInfo sectionInfo = scoreBuilderStrategy.getSectionInfo(section);
-                int startPageNo = sectionInfo.getStartPageNo();
-                Page sectionStartPage = null;
-                if(lastInstrument != null) {
-                    sectionStartPage = szcore.getPageNo(startPageNo, (InstrumentId)lastInstrument.getId());
-                }
-                if(sectionStartPage != null) {
-                    Beat sectionFirstBeat = sectionStartPage.getFirstBeat();
-                    addProcessSectionsEvent(sectionFirstBeat.getBeatId(), section, ScoreSectionEventType.START, transport.getId());
-                }
-
-                int endPageNo = sectionInfo.getEndPageNo();
-                Page sectionEndPage = null;
-                if(lastInstrument != null) {
-                    sectionEndPage = szcore.getPageNo(endPageNo, (InstrumentId)lastInstrument.getId());
-                }
-                if(sectionEndPage != null) {
-                    Beat sectionLastBeat = sectionEndPage.getLastBeat();
-                    if(!stopEventBeats.contains(sectionLastBeat.getBeatNo())) {
-                        addStopEvent(sectionLastBeat.getBeatId(), transport.getId());
-                        addProcessSectionsEvent(sectionLastBeat.getBeatId(), section, ScoreSectionEventType.STOP, transport.getId());
-                        stopEventBeats.add(sectionLastBeat.getBeatNo());
-                    }
-                }
-            }
+        if(scoreBuilderStrategy != null && scoreBuilderStrategy.isActive()) {
+            scoreBuilderStrategy.setInstruments(INSTRUMENTS);
+            scoreBuilderStrategy.setDynamicInstruments(DYNAMIC_INSTRUMENTS);
+            scoreBuilderStrategy.setDefaultInstrument(INSTRUMENT_DEFAULT);
+            isStopOnSectionEnd = scoreBuilderStrategy.isStopOnSectionEnd();
         }
 
-        if (lastBeat != null && !szcore.isUseContinuousPage()) {
-            if(!stopEventBeats.contains(lastBeat.getBeatNo())) {
-                addStopEvent(lastBeat, transport.getId());
-                stopEventBeats.add(lastBeat.getBeatNo());
-            }
+        if (lastBeat != null && !szcore.isUseContinuousPage() && !isStopOnSectionEnd) {
+            addStopEvent(lastBeat, transport.getId());
         }
 
         int precountMillis = 5 * 1000;
@@ -179,12 +141,6 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
         setScoreLoaded(true);
 
         getWebScore().init();
-    }
-
-    public void addProcessSectionsEvent(BeatId beatId, String section, ScoreSectionEventType eventType, Id transportId) {
-        long now = getClock().getSystemTimeMillis();
-        ScoreSectionEvent sectionEvent = getEventFactory().createScoreSectionEvent(beatId, section, eventType, transportId, now);
-        getBasicScore().addScoreBaseBeatEvent(transportId, sectionEvent);
     }
 
     public void recalcRndStrategy(ScoreRandomisationStrategy strategy, Page page) {

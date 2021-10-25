@@ -32,7 +32,7 @@ public class ScoreMerger {
     static final Logger LOG = LoggerFactory.getLogger(ScoreMerger.class);
 
     static final String HEADER = "scoreName,instrumentName,pageName,pageNo,barName,barNo,timeSigNum,timeSigDenom,tempoBpm,tempoBeatValue,beatNo,startTimeMillis,durationTimeMillis,endTimeMillis,startBaseBeatUnits,durationBeatUnits,endBaseBeatUnits,xStartPxl,xEndPxl,yStartPxl,yEndPxl,isUpbeat,resource,unitBeatNo";
-    static final String IN_DIR = "/Users/slavko/MyHome/Music/scoreExport/Dialogs/test";
+    static final String IN_DIR = "/Users/slavko/MyHome/Music/scoreExport/Dialogs/export";
     static final String OUT_DIR = "/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged";
 
     static final String[] SCORES_ORDER = {"DialogsPitch","DialogsRhythm"};

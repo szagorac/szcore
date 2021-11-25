@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.score;
 
 
+import java.util.Comparator;
 import java.util.Objects;
 
 import static com.xenaksys.szcore.Consts.COMMA;
@@ -271,7 +272,9 @@ public class ScoreElement implements Comparable<ScoreElement>{
 
     @Override
     public int compareTo(ScoreElement o) {
-        return Integer.compare(getBeatNo(), o.getBeatNo());
+        return Comparator.comparingInt(ScoreElement::getBeatNo)
+                .thenComparing(ScoreElement::getResource)
+                .compare(this, o);
     }
 
     @Override

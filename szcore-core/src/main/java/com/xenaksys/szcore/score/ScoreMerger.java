@@ -9,6 +9,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -37,10 +38,11 @@ public class ScoreMerger {
 
     static final String[] SCORES_ORDER = {"DialogsPitch","DialogsRhythm"};
     static final String SCORE_NAME = "Dialogs";
+    static final String SCRIPTS = "ZScripts";
     static final String SCORE_PREFIX = "1_";
 
     private final List<ScoreElementsContainer> scoreElementsContainers = new ArrayList<>();
-    private final ScoreElementsContainer masterContainer = new ScoreElementsContainer(SCORE_NAME);
+    private final ScoreElementsContainer masterContainer = new ScoreElementsContainer(SCORE_NAME, true);
     private final HashMap<String, String> resourceMap = new HashMap<>();
     private final HashMap<String, ScoreElement> lastInstrumentElement = new HashMap<>();
     private final HashMap<String, InstrumentCounter> instrumentCounters = new HashMap<>();
@@ -222,7 +224,7 @@ public class ScoreMerger {
 
     private void load() throws Exception {
         for(String scoreName : SCORES_ORDER) {
-            ScoreElementsContainer scoreElementsContainer = new ScoreElementsContainer(scoreName);
+            ScoreElementsContainer scoreElementsContainer = new ScoreElementsContainer(scoreName, false);
             scoreElementsContainers.add(scoreElementsContainer);
 
             String fileName = IN_DIR + Consts.SLASH + scoreName + Consts.BEAT_INFO_FILE_SUFFIX;
@@ -397,10 +399,12 @@ public class ScoreMerger {
 
     static class ScoreElementsContainer {
         private final String scoreName;
+        private final boolean isMaster;
         private final HashMap<Integer, HashMap<String, Set<ScoreElement>>> pageElementsMap = new HashMap<>();
 
-        public ScoreElementsContainer(String scoreName) {
+        public ScoreElementsContainer(String scoreName, boolean isMaster) {
             this.scoreName = scoreName;
+            this.isMaster = isMaster;
         }
 
         public void addScoreElement(ScoreElement scoreElement) {
@@ -411,6 +415,13 @@ public class ScoreMerger {
             }
             int pageNo = scoreElement.getPageNo();
             String instr = scoreElement.getInstrumentName();
+            if(isMaster) {
+                String resource = scoreElement.getResource();
+                ResourceType resourceType = getResourceType(resource);
+                if (resourceType != FILE) {
+                    instr = instr + SCRIPTS;
+                }
+            }
             HashMap<String, Set<ScoreElement>> pageElements = pageElementsMap.computeIfAbsent(pageNo, k -> new HashMap<>());
             Set<ScoreElement> scoreElements = pageElements.computeIfAbsent(instr, k -> new TreeSet<>());
             scoreElements.add(scoreElement);
@@ -433,7 +444,11 @@ public class ScoreMerger {
             int sectionPageNo = getPageNo();
             for(int i = 1; i <= sectionPageNo; i++) {
                 HashMap<String, Set<ScoreElement>> pageElements = pageElementsMap.get(i);
-                for(String instr : pageElements.keySet()) {
+                Set<String> instSet = pageElements.keySet();
+                ArrayList<String> instList = new ArrayList<>(instSet);
+                Collections.sort(instList);
+
+                for(String instr : instList) {
                     Set<ScoreElement> elements = pageElements.get(instr);
                     for(ScoreElement element : elements) {
                         String line = element.toCsvString();

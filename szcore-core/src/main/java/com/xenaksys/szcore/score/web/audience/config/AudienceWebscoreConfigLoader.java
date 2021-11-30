@@ -1,50 +1,30 @@
 package com.xenaksys.szcore.score.web.audience.config;
 
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.algo.IntRange;
-import com.xenaksys.szcore.algo.MultiIntRange;
-import com.xenaksys.szcore.algo.SequentalIntRange;
 import com.xenaksys.szcore.model.ScriptPreset;
 import com.xenaksys.szcore.score.YamlLoader;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScorePageRangeAssignmentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.xenaksys.szcore.Consts.AUDIENCE_WEBSCORE_CONFIG_FILE_SUFFIX;
-import static com.xenaksys.szcore.Consts.CONFIG_ASSIGNMENT_TYPE;
-import static com.xenaksys.szcore.Consts.CONFIG_END;
-import static com.xenaksys.szcore.Consts.CONFIG_ID;
-import static com.xenaksys.szcore.Consts.CONFIG_PAGE_RANGES;
-import static com.xenaksys.szcore.Consts.CONFIG_PAGE_RANGE_MAPPING;
-import static com.xenaksys.szcore.Consts.CONFIG_PRESETS;
-import static com.xenaksys.szcore.Consts.CONFIG_SCORE_NAME;
-import static com.xenaksys.szcore.Consts.CONFIG_SCRIPTS;
-import static com.xenaksys.szcore.Consts.CONFIG_START;
-import static com.xenaksys.szcore.Consts.CONFIG_TILE_COLS;
-import static com.xenaksys.szcore.Consts.CONFIG_TILE_ROW;
-import static com.xenaksys.szcore.Consts.CONFIG_WEB_CONFIG;
-import static com.xenaksys.szcore.Consts.YAML_FILE_EXTENSION;
+import static com.xenaksys.szcore.Consts.*;
 
-public class AudienceWebscoreConfigLoader extends YamlLoader {
+public abstract class AudienceWebscoreConfigLoader extends YamlLoader {
     static final Logger LOG = LoggerFactory.getLogger(AudienceWebscoreConfigLoader.class);
 
-    public static AudienceWebscoreConfig load(String workingDir) throws Exception {
+    public void load(String workingDir, AudienceWebscoreConfig config) throws Exception {
         String path = workingDir + Consts.SLASH + AUDIENCE_WEBSCORE_CONFIG_FILE_SUFFIX + YAML_FILE_EXTENSION;
         File file = new File(path);
         if (!file.exists()) {
             throw new RuntimeException("loadStrategyConfig: Invalid Strategy Config File: " + path);
         }
-
-        return load(file);
+        load(file, config);
     }
 
-    public static AudienceWebscoreConfig load(File file) throws Exception {
-        AudienceWebscoreConfig config = new AudienceWebscoreConfig();
+    public void load(File file, AudienceWebscoreConfig config) throws Exception {
         Map<String, Object> configMap = loadYaml(file);
 
         Object yamlScoreName = configMap.get(CONFIG_SCORE_NAME);
@@ -76,47 +56,8 @@ public class AudienceWebscoreConfigLoader extends YamlLoader {
 
             config.addPreset(preset);
         }
-
-        List<Map<String, Object>> pageRangeMappings = getListOfMaps(CONFIG_PAGE_RANGE_MAPPING, configMap);
-        for (Map<String, Object> pageRangeMapping : pageRangeMappings) {
-            AudienceWebscorePageRangeConfig pageRangeConfig = new AudienceWebscorePageRangeConfig();
-
-            Integer tileRow = getInteger(CONFIG_TILE_ROW, pageRangeMapping);
-            if (tileRow == null) {
-                throw new RuntimeException("loadWebScore: Invalid Tile Row");
-            }
-            pageRangeConfig.setTileRow(tileRow);
-
-            Map<String, Object> tileColsConfig = getMap(CONFIG_TILE_COLS, pageRangeMapping);
-            int start = getInteger(CONFIG_START, tileColsConfig);
-            int end = getInteger(CONFIG_END, tileColsConfig);
-            IntRange tileCols = new SequentalIntRange(start, end);
-            pageRangeConfig.setTileCols(tileCols);
-
-            List<Map<String, Object>> pageRanges = getListOfMaps(CONFIG_PAGE_RANGES, pageRangeMapping);
-            List<IntRange> ranges = new ArrayList<>();
-            for (Map<String, Object> pageRange : pageRanges) {
-                int startTileCol = getInteger(CONFIG_START, pageRange);
-                int endTileCol = getInteger(CONFIG_END, pageRange);
-                IntRange pRange = new SequentalIntRange(startTileCol, endTileCol);
-                ranges.add(pRange);
-            }
-            MultiIntRange multiRange = new MultiIntRange(ranges);
-            pageRangeConfig.setPageRange(multiRange);
-
-            String assignmentTypeStr = getString(CONFIG_ASSIGNMENT_TYPE, pageRangeMapping);
-            WebAudienceScorePageRangeAssignmentType assignmentType = WebAudienceScorePageRangeAssignmentType.SEQ;
-            if (assignmentTypeStr != null) {
-                assignmentType = WebAudienceScorePageRangeAssignmentType.valueOf(assignmentTypeStr);
-            }
-            pageRangeConfig.setAssignmentType(assignmentType);
-
-            config.addPageRangeConfig(pageRangeConfig);
-        }
-
-        config.populateTileConfigs();
-
-        return config;
+        loadDelegate(config, configMap);
     }
 
+    public abstract void loadDelegate(AudienceWebscoreConfig config, Map<String, Object> configMap);
 }

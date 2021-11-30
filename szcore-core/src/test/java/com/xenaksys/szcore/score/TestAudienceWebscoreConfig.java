@@ -5,11 +5,11 @@ import com.xenaksys.szcore.algo.MultiIntRange;
 import com.xenaksys.szcore.algo.SequentalIntRange;
 import com.xenaksys.szcore.model.ScriptPreset;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScorePageRangeAssignmentType;
-import com.xenaksys.szcore.score.web.audience.config.AudienceWebscoreConfig;
-import com.xenaksys.szcore.score.web.audience.config.AudienceWebscoreConfigLoader;
 import com.xenaksys.szcore.score.web.audience.config.AudienceWebscorePageRangeConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
+import com.xenaksys.szcore.score.web.audience.delegate.UnionRoseAudienceConfigLoader;
+import com.xenaksys.szcore.score.web.audience.delegate.UnionRoseAudienceWebscoreConfig;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,17 +22,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.xenaksys.szcore.Consts.WEB_CONFIG_MASTER_GAIN_VAL;
-import static com.xenaksys.szcore.Consts.WEB_GRANULATOR;
-import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static com.xenaksys.szcore.Consts.*;
+import static org.junit.Assert.*;
 
 public class TestAudienceWebscoreConfig {
     static final Logger LOG = LoggerFactory.getLogger(TestAudienceWebscoreConfig.class);
     File file;
+    UnionRoseAudienceConfigLoader configLoader = new UnionRoseAudienceConfigLoader();
 
     @Before
     public void init() {
@@ -42,7 +38,8 @@ public class TestAudienceWebscoreConfig {
 
     @Test
     public void testConfigLoad() throws Exception {
-        AudienceWebscoreConfig config = AudienceWebscoreConfigLoader.load(file);
+        UnionRoseAudienceWebscoreConfig config = new UnionRoseAudienceWebscoreConfig();
+        configLoader.load(file, config);
         assertNotNull(config);
 
         assertEquals("Test Score", config.getScoreName());
@@ -142,8 +139,9 @@ public class TestAudienceWebscoreConfig {
     public void testGranulatorConfigLoad() throws Exception {
         PropertyChangeSupport pcs = new PropertyChangeSupport(this);
         WebGranulatorConfig granulatorConfig = new WebGranulatorConfig(pcs);
+        UnionRoseAudienceWebscoreConfig config = new UnionRoseAudienceWebscoreConfig();
+        configLoader.load(file, config);
 
-        AudienceWebscoreConfig config = AudienceWebscoreConfigLoader.load(file);
         ScriptPreset preset1 = config.getPreset(1);
         Map<String, Object> presetConfigs = preset1.getConfigs();
         assertFalse(presetConfigs.isEmpty());
@@ -166,7 +164,8 @@ public class TestAudienceWebscoreConfig {
         PropertyChangeSupport pcs = new PropertyChangeSupport(this);
         WebSpeechSynthConfig speechSynthConfig = new WebSpeechSynthConfig(pcs);
 
-        AudienceWebscoreConfig config = AudienceWebscoreConfigLoader.load(file);
+        UnionRoseAudienceWebscoreConfig config = new UnionRoseAudienceWebscoreConfig();
+        configLoader.load(file, config);
         ScriptPreset preset1 = config.getPreset(1);
         Map<String, Object> presetConfigs = preset1.getConfigs();
         assertFalse(presetConfigs.isEmpty());

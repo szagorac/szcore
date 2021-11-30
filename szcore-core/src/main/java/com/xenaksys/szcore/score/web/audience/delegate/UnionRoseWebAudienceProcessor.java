@@ -2,38 +2,16 @@ package com.xenaksys.szcore.score.web.audience.delegate;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceEventType;
-import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudiencePlayTilesEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudiencePrecountEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceSelectTilesEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceStateUpdateEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceStopEvent;
+import com.xenaksys.szcore.event.web.audience.*;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.ScriptPreset;
-import com.xenaksys.szcore.score.web.audience.WebAudienceChangeListener;
-import com.xenaksys.szcore.score.web.audience.WebAudienceElementState;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScoreProcessor;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
-import com.xenaksys.szcore.score.web.audience.WebAudienceServerState;
-import com.xenaksys.szcore.score.web.audience.WebAudienceStateDeltaTracker;
-import com.xenaksys.szcore.score.web.audience.WebTextState;
-import com.xenaksys.szcore.score.web.audience.config.AudienceWebscoreConfig;
-import com.xenaksys.szcore.score.web.audience.config.AudienceWebscoreConfigLoader;
+import com.xenaksys.szcore.score.web.audience.*;
 import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthState;
-import com.xenaksys.szcore.score.web.audience.export.TileExport;
-import com.xenaksys.szcore.score.web.audience.export.WebAudienceInstructionsExport;
-import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
-import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
-import com.xenaksys.szcore.score.web.audience.export.WebElementStateExport;
-import com.xenaksys.szcore.score.web.audience.export.WebGranulatorConfigExport;
-import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthConfigExport;
-import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthStateExport;
+import com.xenaksys.szcore.score.web.audience.export.*;
 import com.xenaksys.szcore.score.web.audience.export.delegate.UnionRoseWebAudienceExport;
 import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.ScoreUtil;
@@ -45,32 +23,9 @@ import gnu.trove.list.array.TIntArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import static com.xenaksys.szcore.Consts.EMPTY;
-import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_ALL;
-import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_DISPLAY;
-import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_START;
-import static com.xenaksys.szcore.Consts.WEB_CONFIG_DURATION;
-import static com.xenaksys.szcore.Consts.WEB_CONFIG_LOAD_PRESET;
-import static com.xenaksys.szcore.Consts.WEB_CONFIG_VALUE;
-import static com.xenaksys.szcore.Consts.WEB_GRANULATOR;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_CENTRE_SHAPE;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_INNER_CIRCLE;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_INSTRUCTIONS;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_OUTER_CIRCLE;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_TILE;
-import static com.xenaksys.szcore.Consts.WEB_OVERLAYS;
-import static com.xenaksys.szcore.Consts.WEB_SELECTED_TILES;
-import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
-import static com.xenaksys.szcore.Consts.WEB_TEXT_BACKGROUND_COLOUR;
-import static com.xenaksys.szcore.Consts.WEB_TILE_PLAY_PAGE_DURATION_FACTOR;
-import static com.xenaksys.szcore.Consts.WEB_ZOOM_DEFAULT;
+import static com.xenaksys.szcore.Consts.*;
 
 public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(UnionRoseWebAudienceProcessor.class);
@@ -78,7 +33,9 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
     public static final Comparator<WebTile> CLICK_COMPARATOR = (t, t1) -> t1.getState().getClickCount() - t.getState().getClickCount();
     private static final long INTERNAL_EVENT_TIME_LIMIT = 1000 * 3;
 
-    private WebAudienceStateDeltaTracker stateDeltaTracker;
+    private UnionRoseWebAudienceStateDeltaTracker stateDeltaTracker;
+    private final UnionRoseAudienceConfigLoader configLoader = new UnionRoseAudienceConfigLoader();
+
     private final List<WebTile> tilesAll = new ArrayList<>(64);
     private final List<WebTile> playingTiles = new ArrayList<>(4);
     private final List<WebTile> activeTiles = new ArrayList<>(8);
@@ -87,7 +44,7 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
     private final boolean[] activeRows = new boolean[8];
     private final Map<String, Integer> tileIdPageIdMap = new HashMap<>();
 
-    private AudienceWebscoreConfig audienceWebscoreConfig;
+    private UnionRoseAudienceWebscoreConfig audienceWebscoreConfig;
 
     private volatile long lastPlayTilesInternalEventTime = 0L;
     private volatile long lastSelectTilesInternalEventTime = 0L;
@@ -106,22 +63,23 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
         WebSpeechSynthConfig speechSynthConfig = createDefaultSpeechSynthConfig();
         WebSpeechSynthState speechSynthState = createDefaultSpeechSynthState();
 
-        WebAudienceServerState webAudienceServerState =  new WebAudienceServerState(tiles, currentActions, elementStates, WEB_ZOOM_DEFAULT, instructions, granulatorConfig,
+        UnionRoseWebAudienceServerState webAudienceServerState = new UnionRoseWebAudienceServerState(tiles, currentActions, elementStates, WEB_ZOOM_DEFAULT, instructions, granulatorConfig,
                 speechSynthConfig, speechSynthState, 1, getPcs());
 
         createWebAudienceStateDeltaTracker(webAudienceServerState);
         getPcs().addPropertyChangeListener(new WebAudienceChangeListener(stateDeltaTracker));
         return webAudienceServerState;
     }
-    private void createWebAudienceStateDeltaTracker(WebAudienceServerState webAudienceServerState) {
-        this.stateDeltaTracker = new WebAudienceStateDeltaTracker(webAudienceServerState);
+
+    private void createWebAudienceStateDeltaTracker(UnionRoseWebAudienceServerState webAudienceServerState) {
+        this.stateDeltaTracker = new UnionRoseWebAudienceStateDeltaTracker(webAudienceServerState);
     }
 
     public void resetState() {
-        getState().clearActions();
-        getState().clearElementStates();
-        getState().setTiles(new WebTile[8][8]);
-        getState().setZoomLevel(WEB_ZOOM_DEFAULT);
+        getDelegateState().clearActions();
+        getDelegateState().clearElementStates();
+        getDelegateState().setTiles(new WebTile[8][8]);
+        getDelegateState().setZoomLevel(WEB_ZOOM_DEFAULT);
 
         tilesAll.clear();
         playingTiles.clear();
@@ -147,16 +105,16 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
                 WebTileText txt = t.getTileText();
                 txt.setVisible(false);
                 txt.setValue(EMPTY);
-                getState().setTile(t, i, j);
+                getDelegateState().setTile(t, i, j);
                 tilesAll.add(t);
 
                 populateTilePageMap(row, col, id);
             }
         }
 
-        getState().addElementState(WEB_OBJ_CENTRE_SHAPE, new WebAudienceElementState(WEB_OBJ_CENTRE_SHAPE, getPcs()));
-        getState().addElementState(WEB_OBJ_INNER_CIRCLE, new WebAudienceElementState(WEB_OBJ_INNER_CIRCLE, getPcs()));
-        getState().addElementState(WEB_OBJ_OUTER_CIRCLE, new WebAudienceElementState(WEB_OBJ_OUTER_CIRCLE, getPcs()));
+        getDelegateState().addElementState(WEB_OBJ_CENTRE_SHAPE, new WebAudienceElementState(WEB_OBJ_CENTRE_SHAPE, getPcs()));
+        getDelegateState().addElementState(WEB_OBJ_INNER_CIRCLE, new WebAudienceElementState(WEB_OBJ_INNER_CIRCLE, getPcs()));
+        getDelegateState().addElementState(WEB_OBJ_OUTER_CIRCLE, new WebAudienceElementState(WEB_OBJ_OUTER_CIRCLE, getPcs()));
 
 
         getState().setInstructions("Welcome to", 1);
@@ -247,7 +205,7 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
             return;
         }
         try {
-            audienceWebscoreConfig = AudienceWebscoreConfigLoader.load(configDir);
+            audienceWebscoreConfig = configLoader.load(configDir);
         } catch (Exception e) {
             LOG.error("Failed to load WebAudienceScoreProcessor Presets", e);
         }
@@ -260,7 +218,7 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
     }
 
     public void deactivateRow(int row) {
-        WebTile[][] tiles = getState().getTiles();
+        WebTile[][] tiles = getDelegateState().getTiles();
         if (row < 1 || row > tiles.length) {
             LOG.warn("deactivateTiles: invalid row: " + row);
         }
@@ -401,7 +359,7 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
     }
 
     public void setVisibleRows(int[] rows) {
-        WebTile[][] tiles = getState().getTiles();
+        WebTile[][] tiles = getDelegateState().getTiles();
         TIntList tintRows = new TIntArrayList(rows);
         for (int i = 0; i < 8; i++) {
             int row = i + 1;
@@ -415,7 +373,7 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
     }
 
     public void setZoomLevel(String zoomLevel) {
-        getState().setZoomLevel(zoomLevel);
+        getDelegateState().setZoomLevel(zoomLevel);
     }
 
     public void setInstructions(String l1, String l2, String l3) {
@@ -441,7 +399,7 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
     public void setVisible(String[] elementIds, boolean isVisible) {
         LOG.debug("setVisible: {}", Arrays.toString(elementIds));
         for (String elementId : elementIds) {
-            WebAudienceElementState elementState = getState().getElementState(elementId);
+            WebAudienceElementState elementState = getDelegateState().getElementState(elementId);
             if (elementState != null) {
                 elementState.setVisible(isVisible);
             }
@@ -541,7 +499,7 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
     public WebTile getNextTileToPlay(WebTile tile) {
         int col = tile.getColumn() - 1;
         int row = tile.getRow() - 1;
-        WebTile[][] tiles = getState().getTiles();
+        WebTile[][] tiles = getDelegateState().getTiles();
         for (int j = col + 1; j < tiles[row].length; j++) {
             WebTile next = tiles[row][++col];
             if (!next.getState().isPlayed()) {
@@ -640,7 +598,7 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
     public void setActiveRows(int[] rows, boolean isSortByClickCount) {
         LOG.debug("setActiveRows: {}", Arrays.toString(rows));
         this.isSortByClickCount = isSortByClickCount;
-        WebTile[][] tiles = getState().getTiles();
+        WebTile[][] tiles = getDelegateState().getTiles();
         TIntList tintRows = new TIntArrayList(rows);
         for (int i = 0; i < 8; i++) {
             int row = i + 1;
@@ -652,11 +610,6 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
             }
         }
         recalcActiveTiles();
-    }
-
-    public void resetStateDelta() {
-        getState().resetDelta();
-        stateDeltaTracker.reset();
     }
 
     public void resetSelectedTiles() {
@@ -671,7 +624,7 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
 
     private WebTile getTile(String tileId) {
         try {
-            WebTile[][] tiles = getState().getTiles();
+            WebTile[][] tiles = getDelegateState().getTiles();
             int start = tileId.indexOf(Consts.WEB_TILE_PREFIX) + 1;
             int end = tileId.indexOf(Consts.WEB_ELEMENT_NAME_DELIMITER);
             String s = tileId.substring(start, end);
@@ -699,7 +652,7 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
     }
 
     public WebAudienceScoreStateExport exportState() {
-        WebAudienceServerState state = getState();
+        UnionRoseWebAudienceServerState state = getDelegateState();
         WebTile[][] tiles = state.getTiles();
         TileExport[][] tes = new TileExport[tiles.length][tiles[0].length];
         for (int i = 0; i < tiles.length; i++) {
@@ -742,16 +695,6 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
     public void updateServerState() {
         try {
             getScoreProcessor().onWebAudienceStateChange(exportState());
-        } catch (Exception e) {
-            LOG.error("Failed to process updateServerState", e);
-        }
-    }
-
-    public void updateServerStateDelta() {
-        try {
-            if (stateDeltaTracker.hasChanges()) {
-                getScoreProcessor().onWebAudienceStateDeltaChange(stateDeltaTracker.getDeltaExport());
-            }
         } catch (Exception e) {
             LOG.error("Failed to process updateServerState", e);
         }
@@ -809,7 +752,7 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
 
         switch (propType) {
             case STAGE_ALPHA:
-                getState().setStageAlpha((double) value);
+                getDelegateState().setStageAlpha((double) value);
                 return true;
             default:
                 LOG.error("updateState: unknown property type: {}", propType);
@@ -839,5 +782,14 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
 
     public WebAudienceScoreStateDeltaExport getStateDeltaExport() {
         return stateDeltaTracker.getDeltaExport();
+    }
+
+    public UnionRoseWebAudienceServerState getDelegateState() {
+        return (UnionRoseWebAudienceServerState) getState();
+    }
+
+    @Override
+    public WebAudienceStateDeltaTracker getStateDeltaTracker() {
+        return stateDeltaTracker;
     }
 }

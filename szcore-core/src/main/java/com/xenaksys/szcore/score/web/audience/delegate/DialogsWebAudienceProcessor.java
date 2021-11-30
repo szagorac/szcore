@@ -1,21 +1,11 @@
 package com.xenaksys.szcore.score.web.audience.delegate;
 
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceEventType;
-import com.xenaksys.szcore.event.web.audience.WebAudiencePrecountEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceStateUpdateEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceStopEvent;
+import com.xenaksys.szcore.event.web.audience.*;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.ScriptPreset;
-import com.xenaksys.szcore.score.web.audience.WebAudienceElementState;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScoreProcessor;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
-import com.xenaksys.szcore.score.web.audience.WebAudienceServerState;
-import com.xenaksys.szcore.score.web.audience.WebTextState;
-import com.xenaksys.szcore.score.web.audience.config.AudienceWebscoreConfig;
-import com.xenaksys.szcore.score.web.audience.config.AudienceWebscoreConfigLoader;
+import com.xenaksys.szcore.score.web.audience.*;
 import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthState;
@@ -28,39 +18,44 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.xenaksys.szcore.Consts.WEB_OBJ_INSTRUCTIONS;
-import static com.xenaksys.szcore.Consts.WEB_ZOOM_DEFAULT;
 
 public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(DialogsWebAudienceProcessor.class);
 
-    private AudienceWebscoreConfig audienceWebscoreConfig;
+    private DialogsAudienceWebscoreConfig audienceWebscoreConfig;
+    private final DialogsAudienceConfigLoader configLoader = new DialogsAudienceConfigLoader();
+    private DialogsWebAudienceStateDeltaTracker stateDeltaTracker;
 
     public DialogsWebAudienceProcessor(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock) {
         super(scoreProcessor, eventFactory, clock);
     }
 
     public WebAudienceServerState initState() {
-        WebTile[][] tiles = new WebTile[8][8];
         List<WebAudienceAction> currentActions = new ArrayList<>();
-        Map<String, WebAudienceElementState> elementStates = new HashMap<>();
         WebTextState instructions = new WebTextState(WEB_OBJ_INSTRUCTIONS, 3);
         WebGranulatorConfig granulatorConfig = createDefaultGranulatorConfig();
         WebSpeechSynthConfig speechSynthConfig = createDefaultSpeechSynthConfig();
         WebSpeechSynthState speechSynthState = createDefaultSpeechSynthState();
 
-        return  new WebAudienceServerState(tiles, currentActions, elementStates, WEB_ZOOM_DEFAULT, instructions, granulatorConfig,
-                speechSynthConfig, speechSynthState, 1, getPcs());
 
+        DialogsWebAudienceServerState webAudienceServerState = new DialogsWebAudienceServerState(currentActions, instructions, granulatorConfig,
+                speechSynthConfig, speechSynthState, getPcs());
+
+        createWebAudienceStateDeltaTracker(webAudienceServerState);
+        getPcs().addPropertyChangeListener(new WebAudienceChangeListener(stateDeltaTracker));
+        return webAudienceServerState;
+    }
+
+    private void createWebAudienceStateDeltaTracker(DialogsWebAudienceServerState webAudienceServerState) {
+        this.stateDeltaTracker = new DialogsWebAudienceStateDeltaTracker(webAudienceServerState);
     }
 
     public void resetState() {
         getState().clearActions();
-        getState().clearElementStates();
     }
 
     public void reset(int presetNo) {
@@ -99,16 +94,12 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
             return;
         }
         try {
-            audienceWebscoreConfig = AudienceWebscoreConfigLoader.load(configDir);
+            audienceWebscoreConfig = configLoader.load(configDir);
         } catch (Exception e) {
             LOG.error("Failed to load WebAudienceScoreProcessor Presets", e);
         }
     }
 
-
-    public void resetStateDelta() {
-        getState().resetDelta();
-    }
 
     public WebAudienceScoreStateExport exportState() {
         WebAudienceServerState state = getState();
@@ -125,7 +116,13 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
     }
 
     public void updateServerStateDelta() {
-
+        try {
+            if (stateDeltaTracker.hasChanges()) {
+                getScoreProcessor().onWebAudienceStateDeltaChange(stateDeltaTracker.getDeltaExport());
+            }
+        } catch (Exception e) {
+            LOG.error("Failed to process updateServerStateDelta", e);
+        }
     }
 
     public void processWebAudienceEvent(WebAudienceEvent event) {
@@ -177,5 +174,14 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
 
     public WebAudienceScoreStateDeltaExport getStateDeltaExport() {
         return null;
+    }
+
+    public DialogsWebAudienceServerState getDelegateState() {
+        return (DialogsWebAudienceServerState) getState();
+    }
+
+    @Override
+    public WebAudienceStateDeltaTracker getStateDeltaTracker() {
+        return stateDeltaTracker;
     }
 }

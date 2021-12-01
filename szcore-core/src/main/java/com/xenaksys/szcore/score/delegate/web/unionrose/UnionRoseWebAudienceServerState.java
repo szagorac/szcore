@@ -1,8 +1,9 @@
-package com.xenaksys.szcore.score.web.audience.delegate;
+package com.xenaksys.szcore.score.delegate.web.unionrose;
 
 import com.xenaksys.szcore.score.web.audience.WebAudienceElementState;
 import com.xenaksys.szcore.score.web.audience.WebAudienceServerState;
 import com.xenaksys.szcore.score.web.audience.WebTextState;
+import com.xenaksys.szcore.score.web.audience.WebTile;
 import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthState;

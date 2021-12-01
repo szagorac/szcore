@@ -1,13 +1,9 @@
-package com.xenaksys.szcore.score.web.audience.delegate;
-
-import com.xenaksys.szcore.score.web.audience.WebAudienceElementState;
+package com.xenaksys.szcore.score.web.audience;
 
 import java.beans.PropertyChangeSupport;
 import java.util.Objects;
 
-import static com.xenaksys.szcore.Consts.EMPTY;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_ELEMENT_STATE;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_TILE_TEXT;
+import static com.xenaksys.szcore.Consts.*;
 
 public class WebTile {
 

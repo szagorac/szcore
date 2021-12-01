@@ -1,6 +1,7 @@
-package com.xenaksys.szcore.score.web.audience.delegate;
+package com.xenaksys.szcore.score.delegate.web.dialogs;
 
 import com.xenaksys.szcore.score.web.audience.WebAudienceServerState;
+import com.xenaksys.szcore.score.web.audience.WebCounter;
 import com.xenaksys.szcore.score.web.audience.WebTextState;
 import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
@@ -15,10 +16,17 @@ import java.util.List;
 public class DialogsWebAudienceServerState extends WebAudienceServerState {
     static final Logger LOG = LoggerFactory.getLogger(DialogsWebAudienceServerState.class);
 
+    private final WebCounter counter;
+
     public DialogsWebAudienceServerState(List<WebAudienceAction> currentActions, WebTextState instructions,
                                          WebGranulatorConfig granulatorConfig, WebSpeechSynthConfig speechSynthConfig,
-                                         WebSpeechSynthState speechSynthState, PropertyChangeSupport pcs) {
+                                         WebSpeechSynthState speechSynthState, WebCounter counter,
+                                         PropertyChangeSupport pcs) {
         super(currentActions, instructions, granulatorConfig, speechSynthConfig, speechSynthState, pcs);
+        this.counter = counter;
     }
 
+    public WebCounter getCounter() {
+        return counter;
+    }
 }

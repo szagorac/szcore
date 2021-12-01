@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.score.web.audience.delegate;
+package com.xenaksys.szcore.score.delegate.web.unionrose;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
@@ -12,7 +12,6 @@ import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthState;
 import com.xenaksys.szcore.score.web.audience.export.*;
-import com.xenaksys.szcore.score.web.audience.export.delegate.UnionRoseWebAudienceExport;
 import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.ScoreUtil;
 import com.xenaksys.szcore.web.WebAudienceAction;
@@ -119,7 +118,7 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
 
         getState().setInstructions("Welcome to", 1);
         getState().setInstructions("<span style='color:blueviolet;'>ZScore</span>", 2);
-        getState().setInstructions("awaiting performance start ...", 3);
+        getState().setInstructions("awaiting Union Rose performance start ...", 3);
         getState().setInstructionsVisible(true);
 
         getState().setGranulatorConfig(createDefaultGranulatorConfig());
@@ -654,13 +653,13 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
     public WebAudienceScoreStateExport exportState() {
         UnionRoseWebAudienceServerState state = getDelegateState();
         WebTile[][] tiles = state.getTiles();
-        TileExport[][] tes = new TileExport[tiles.length][tiles[0].length];
+        TileExport[][] tex = new TileExport[tiles.length][tiles[0].length];
         for (int i = 0; i < tiles.length; i++) {
             for (int j = 0; j < tiles[0].length; j++) {
                 WebTile t = tiles[i][j];
                 TileExport te = new TileExport();
                 te.populate(t);
-                tes[i][j] = te;
+                tex[i][j] = te;
             }
         }
 
@@ -686,10 +685,20 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
         speechSynthStateExport.populate(state.getSpeechSynthState());
 
         List<WebAudienceAction> actions = state.getActions();
-        LOG.debug("WebAudienceScoreStateExport sending actions: {}", actions);
 
-        return new UnionRoseWebAudienceExport(tes, actions, centreShape, innerCircle, outerCircle, state.getZoomLevel(),
-                instructions, granulatorConfig, speechSynthConfigExport, speechSynthStateExport, state.getStageAlpha());
+        WebAudienceScoreStateExport export = new WebAudienceScoreStateExport();
+        export.addState(WEB_OBJ_TILES, tex);
+        export.addState(WEB_OBJ_ACTIONS, actions);
+        export.addState(WEB_OBJ_CENTRE_SHAPE, centreShape);
+        export.addState(WEB_OBJ_INNER_CIRCLE, innerCircle);
+        export.addState(WEB_OBJ_OUTER_CIRCLE, outerCircle);
+        export.addState(WEB_OBJ_ZOOM_LEVEL, state.getZoomLevel());
+        export.addState(WEB_OBJ_INSTRUCTIONS, instructions);
+        export.addState(WEB_OBJ_CONFIG_GRANULATOR, granulatorConfig);
+        export.addState(WEB_OBJ_CONFIG_SPEECH_SYNTH, speechSynthConfigExport);
+        export.addState(WEB_OBJ_STATE_SPEECH_SYNTH, speechSynthStateExport);
+        export.addState(WEB_OBJ_STAGE_ALPHA, state.getStageAlpha());
+        return export;
     }
 
     public void updateServerState() {

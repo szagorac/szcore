@@ -4,29 +4,14 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.model.Bar;
-import com.xenaksys.szcore.model.EventReceiver;
-import com.xenaksys.szcore.model.Instrument;
-import com.xenaksys.szcore.model.MutableClock;
-import com.xenaksys.szcore.model.OscPublisher;
-import com.xenaksys.szcore.model.Page;
-import com.xenaksys.szcore.model.Scheduler;
-import com.xenaksys.szcore.model.Score;
-import com.xenaksys.szcore.model.TempoModifier;
-import com.xenaksys.szcore.model.Transport;
-import com.xenaksys.szcore.model.WebPublisher;
+import com.xenaksys.szcore.model.*;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StrId;
-import com.xenaksys.szcore.score.BasicPage;
-import com.xenaksys.szcore.score.BasicScore;
-import com.xenaksys.szcore.score.InscorePageMap;
-import com.xenaksys.szcore.score.InstrumentBeatTracker;
-import com.xenaksys.szcore.score.ScoreLoader;
-import com.xenaksys.szcore.score.ScoreProcessorDelegator;
+import com.xenaksys.szcore.score.*;
+import com.xenaksys.szcore.score.delegate.web.dialogs.DialogsWebAudienceProcessor;
 import com.xenaksys.szcore.score.web.WebScore;
-import com.xenaksys.szcore.score.web.audience.delegate.DialogsWebAudienceProcessor;
 import com.xenaksys.szcore.score.web.overlay.DialogsWebOverlayFactory;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
@@ -35,9 +20,7 @@ import com.xenaksys.szcore.web.WebClientInfo;
 import java.util.Collection;
 import java.util.Properties;
 
-import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NAME;
-import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NO;
-import static com.xenaksys.szcore.Consts.UNDERSCORE;
+import static com.xenaksys.szcore.Consts.*;
 
 public class DialogsScoreProcessor extends ScoreProcessorDelegate {
 

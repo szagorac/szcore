@@ -24,13 +24,13 @@ import com.xenaksys.szcore.model.id.*;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.process.OscDestinationEventListener;
 import com.xenaksys.szcore.score.*;
+import com.xenaksys.szcore.score.delegate.web.unionrose.UnionRoseWebAudienceProcessor;
 import com.xenaksys.szcore.score.overlay.OverlayProcessor;
 import com.xenaksys.szcore.score.web.WebScore;
 import com.xenaksys.szcore.score.web.WebScoreState;
 import com.xenaksys.szcore.score.web.WebScoreTargetType;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreProcessor;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
-import com.xenaksys.szcore.score.web.audience.delegate.UnionRoseWebAudienceProcessor;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
 import com.xenaksys.szcore.score.web.overlay.DefaultWebOverlayFactory;
@@ -1854,7 +1854,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         }
         PageId startPageId = (PageId)startBeatId.getPageId();
         ScoreBuilderStrategy strategy = szcore.getScoreBuilderStrategy();
-        if(strategy == null || !strategy.isActive()) {
+        if (strategy == null || !strategy.isActive() || !strategy.isReady()) {
             return;
         }
         String currentSection = strategy.getCurrentSection();

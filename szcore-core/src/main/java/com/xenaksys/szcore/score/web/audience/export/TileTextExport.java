@@ -1,6 +1,6 @@
 package com.xenaksys.szcore.score.web.audience.export;
 
-import com.xenaksys.szcore.score.web.audience.delegate.WebTileText;
+import com.xenaksys.szcore.score.web.audience.WebTileText;
 
 public class TileTextExport {
     private String value;

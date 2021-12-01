@@ -2,15 +2,10 @@ package com.xenaksys.szcore.score.delegate;
 
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.model.EventReceiver;
-import com.xenaksys.szcore.model.MutableClock;
-import com.xenaksys.szcore.model.OscPublisher;
-import com.xenaksys.szcore.model.Page;
-import com.xenaksys.szcore.model.Scheduler;
-import com.xenaksys.szcore.model.WebPublisher;
+import com.xenaksys.szcore.model.*;
 import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.score.ScoreProcessorDelegator;
-import com.xenaksys.szcore.score.web.audience.delegate.UnionRoseWebAudienceProcessor;
+import com.xenaksys.szcore.score.delegate.web.unionrose.UnionRoseWebAudienceProcessor;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
 

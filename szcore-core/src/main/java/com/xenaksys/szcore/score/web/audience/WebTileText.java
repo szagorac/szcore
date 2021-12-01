@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.score.web.audience.delegate;
+package com.xenaksys.szcore.score.web.audience;
 
 import java.beans.PropertyChangeSupport;
 import java.util.Objects;

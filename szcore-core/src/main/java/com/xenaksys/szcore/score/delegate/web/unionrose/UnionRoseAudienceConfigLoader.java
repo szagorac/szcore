@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.score.web.audience.delegate;
+package com.xenaksys.szcore.score.delegate.web.unionrose;
 
 import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.algo.MultiIntRange;

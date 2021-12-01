@@ -1,8 +1,6 @@
-package com.xenaksys.szcore.score.web.audience.delegate;
+package com.xenaksys.szcore.score.delegate.web.unionrose;
 
-import com.xenaksys.szcore.score.web.audience.WebAudienceElementState;
-import com.xenaksys.szcore.score.web.audience.WebAudienceServerState;
-import com.xenaksys.szcore.score.web.audience.WebAudienceStateDeltaTracker;
+import com.xenaksys.szcore.score.web.audience.*;
 import com.xenaksys.szcore.score.web.audience.export.TileExport;
 import com.xenaksys.szcore.score.web.audience.export.WebElementStateExport;
 import com.xenaksys.szcore.util.ScoreUtil;
@@ -111,14 +109,14 @@ public class UnionRoseWebAudienceStateDeltaTracker extends WebAudienceStateDelta
         if (stageAlpha == null) {
             return;
         }
-        getDelta().put(WEB_OBJ_STAGE_ALPHA, stageAlpha);
+        addDelta(WEB_OBJ_STAGE_ALPHA, stageAlpha);
     }
 
     private void addZoomLevel(String zoomLevel) {
         if (zoomLevel == null) {
             return;
         }
-        getDelta().put(WEB_OBJ_ZOOM_LEVEL, zoomLevel);
+        addDelta(WEB_OBJ_ZOOM_LEVEL, zoomLevel);
     }
 
     private void processTileText(String id, Object newValue) {
@@ -163,7 +161,7 @@ public class UnionRoseWebAudienceStateDeltaTracker extends WebAudienceStateDelta
         }
         WebElementStateExport export = new WebElementStateExport();
         export.populate(elementState);
-        getDelta().put(id, export);
+        addDelta(id, export);
     }
 
     public void addElementState(Object newValue) {

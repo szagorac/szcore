@@ -379,6 +379,7 @@ public interface Consts {
     String WEB_OBJ_CONFIG_GRANULATOR = "granulatorConfig";
     String WEB_OBJ_CONFIG_SPEECH_SYNTH = "speechSynthConfig";
     String WEB_OBJ_STATE_SPEECH_SYNTH = "speechSynthState";
+    String WEB_OBJ_COUNTER = "counter";
     String WEB_OBJ_CONFIG_GRAIN = "grain";
     String WEB_OBJ_CONFIG_GRAIN_ENVELOPE = "envelope";
     String WEB_OBJ_CONFIG_GRAIN_PANNER = "panner";
@@ -459,6 +460,7 @@ public interface Consts {
     String WEB_CONFIG_MIN_VALUE = "minValue";
     String WEB_CONFIG_MAX_VALUE = "maxValue";
     String WEB_CONFIG_TYPE = "type";
+    String WEB_CONFIG_COUNTER = "counter";
     double WEB_CONFIG_DOUBLE_CHANGE_THRESHOLD = 10E-3;
 
     String WEB_DATA_SCORE_INFO = "SCORE_INFO";

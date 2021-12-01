@@ -44,7 +44,7 @@ public abstract class WebAudienceStateDeltaTracker {
         WebGranulatorConfig config = getState().getGranulatorConfig();
         WebGranulatorConfigExport export = new WebGranulatorConfigExport();
         export.populate(config);
-        delta.put(WEB_OBJ_CONFIG_GRANULATOR, export);
+        addDelta(WEB_OBJ_CONFIG_GRANULATOR, export);
     }
 
     protected void processSpeechSynthConfig(String id, Object newValue) {
@@ -55,7 +55,7 @@ public abstract class WebAudienceStateDeltaTracker {
         WebSpeechSynthConfig config = getState().getSpeechSynthConfig();
         WebSpeechSynthConfigExport export = new WebSpeechSynthConfigExport();
         export.populate(config);
-        delta.put(WEB_OBJ_CONFIG_SPEECH_SYNTH, export);
+        addDelta(WEB_OBJ_CONFIG_SPEECH_SYNTH, export);
     }
 
     protected void processSpeechSynthState(String id, Object newValue) {
@@ -66,7 +66,7 @@ public abstract class WebAudienceStateDeltaTracker {
         WebSpeechSynthState config = getState().getSpeechSynthState();
         WebSpeechSynthStateExport export = new WebSpeechSynthStateExport();
         export.populate(config);
-        delta.put(WEB_OBJ_STATE_SPEECH_SYNTH, export);
+        addDelta(WEB_OBJ_STATE_SPEECH_SYNTH, export);
     }
 
     protected void processAction(String id, Object newValue) {
@@ -113,7 +113,7 @@ public abstract class WebAudienceStateDeltaTracker {
         }
         WebAudienceInstructionsExport textExport = new WebAudienceInstructionsExport();
         textExport.populate(instructions);
-        delta.put(WEB_OBJ_INSTRUCTIONS, textExport);
+        addDelta(WEB_OBJ_INSTRUCTIONS, textExport);
     }
 
     public abstract WebAudienceServerState getState();

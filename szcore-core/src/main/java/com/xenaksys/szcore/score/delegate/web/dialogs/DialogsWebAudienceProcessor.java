@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.score.web.audience.delegate;
+package com.xenaksys.szcore.score.delegate.web.dialogs;
 
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.web.audience.*;
@@ -9,9 +9,7 @@ import com.xenaksys.szcore.score.web.audience.*;
 import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthState;
-import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
-import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
-import com.xenaksys.szcore.score.web.audience.export.delegate.DialogsWebAudienceExport;
+import com.xenaksys.szcore.score.web.audience.export.*;
 import com.xenaksys.szcore.web.WebAudienceAction;
 import com.xenaksys.szcore.web.WebScoreStateType;
 import org.slf4j.Logger;
@@ -21,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.xenaksys.szcore.Consts.WEB_OBJ_INSTRUCTIONS;
+import static com.xenaksys.szcore.Consts.*;
 
 public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(DialogsWebAudienceProcessor.class);
@@ -40,10 +38,10 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         WebGranulatorConfig granulatorConfig = createDefaultGranulatorConfig();
         WebSpeechSynthConfig speechSynthConfig = createDefaultSpeechSynthConfig();
         WebSpeechSynthState speechSynthState = createDefaultSpeechSynthState();
+        WebCounter counter = createDefaultWebCounter();
 
-
-        DialogsWebAudienceServerState webAudienceServerState = new DialogsWebAudienceServerState(currentActions, instructions, granulatorConfig,
-                speechSynthConfig, speechSynthState, getPcs());
+        DialogsWebAudienceServerState webAudienceServerState = new DialogsWebAudienceServerState(currentActions,
+                instructions, granulatorConfig, speechSynthConfig, speechSynthState, counter, getPcs());
 
         createWebAudienceStateDeltaTracker(webAudienceServerState);
         getPcs().addPropertyChangeListener(new WebAudienceChangeListener(stateDeltaTracker));
@@ -56,6 +54,18 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
 
     public void resetState() {
         getState().clearActions();
+        getState().setInstructions("Welcome to ZScore", 1);
+        getState().setInstructions("<span style='color:blueviolet;'>Dialogs</span>", 2);
+        getState().setInstructions("awaiting performance start ...", 3);
+        getState().setInstructionsVisible(true);
+
+        getState().setGranulatorConfig(createDefaultGranulatorConfig());
+        getState().setSpeechSynthConfig(createDefaultSpeechSynthConfig());
+        getState().setSpeechSynthState(createDefaultSpeechSynthState());
+
+        reset(WEB_CONFIG_LOAD_PRESET);
+        updateServerState();
+        pushServerState();
     }
 
     public void reset(int presetNo) {
@@ -100,11 +110,32 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         }
     }
 
-
     public WebAudienceScoreStateExport exportState() {
-        WebAudienceServerState state = getState();
+        DialogsWebAudienceServerState state = getDelegateState();
         List<WebAudienceAction> actions = state.getActions();
-        return new DialogsWebAudienceExport(actions);
+        WebAudienceInstructionsExport instructions = new WebAudienceInstructionsExport();
+        instructions.populate(state.getInstructions());
+
+        WebGranulatorConfigExport granulatorConfig = new WebGranulatorConfigExport();
+        granulatorConfig.populate(state.getGranulatorConfig());
+
+        WebSpeechSynthConfigExport speechSynthConfigExport = new WebSpeechSynthConfigExport();
+        speechSynthConfigExport.populate(state.getSpeechSynthConfig());
+
+        WebSpeechSynthStateExport speechSynthStateExport = new WebSpeechSynthStateExport();
+        speechSynthStateExport.populate(state.getSpeechSynthState());
+
+        WebCounterExport counterExport = new WebCounterExport();
+        counterExport.populate(state.getCounter());
+
+        WebAudienceScoreStateExport export = new WebAudienceScoreStateExport();
+        export.addState(WEB_OBJ_ACTIONS, actions);
+        export.addState(WEB_OBJ_INSTRUCTIONS, instructions);
+        export.addState(WEB_OBJ_CONFIG_GRANULATOR, granulatorConfig);
+        export.addState(WEB_OBJ_CONFIG_SPEECH_SYNTH, speechSynthConfigExport);
+        export.addState(WEB_OBJ_STATE_SPEECH_SYNTH, speechSynthStateExport);
+        export.addState(WEB_OBJ_COUNTER, counterExport);
+        return export;
     }
 
     public void updateServerState() {

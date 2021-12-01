@@ -1,4 +1,4 @@
-package com.xenaksys.szcore.score.web.audience.delegate;
+package com.xenaksys.szcore.score.delegate.web.dialogs;
 
 import com.xenaksys.szcore.score.web.audience.config.AudienceWebscoreConfig;
 

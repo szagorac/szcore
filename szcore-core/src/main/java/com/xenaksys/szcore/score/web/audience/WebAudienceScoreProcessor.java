@@ -819,6 +819,10 @@ public abstract class WebAudienceScoreProcessor {
         return new WebSpeechSynthState(pcs);
     }
 
+    public WebCounter createDefaultWebCounter() {
+        return new WebCounter(WEB_CONFIG_COUNTER, 0);
+    }
+
     public WebGranulatorConfig createDefaultGranulatorConfig() {
         return new WebGranulatorConfig(pcs);
     }

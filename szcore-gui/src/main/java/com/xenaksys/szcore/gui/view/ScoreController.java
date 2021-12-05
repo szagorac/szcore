@@ -24,9 +24,12 @@ import com.xenaksys.szcore.model.id.BarId;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.score.OverlayType;
+import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.Util;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -192,6 +195,10 @@ public class ScoreController {
     private Button sendWebscoreInstructionsBtn;
     @FXML
     private Button clearWebscoreInstructionsBtn;
+    @FXML
+    private TextField webDelayTxt;
+    @FXML
+    private Button sendWebDelayBtn;
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -543,6 +550,17 @@ public class ScoreController {
         webscoreInstructions.setLine1(EMPTY);
         webscoreInstructions.setLine2(EMPTY);
         webscoreInstructions.setLine3(EMPTY);
+
+        webDelayTxt.setEditable(true);
+        webDelayTxt.setText("0");
+        webDelayTxt.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if (!newValue.matches("\\d*")) {
+                    webDelayTxt.setText(newValue.replaceAll("[^\\d]", ""));
+                }
+            }
+        });
     }
 
     public void setScoreService(ScoreService scoreService) {
@@ -671,6 +689,20 @@ public class ScoreController {
         if (file != null) {
             openFile(file);
 //            openWebScore(file);
+        }
+    }
+
+    @FXML
+    private void sendWebDelay(ActionEvent event) {
+        try {
+            String webDelayStr = webDelayTxt.getText();
+            Integer out = MathUtil.toInt(webDelayStr);
+            if(out == null || out < 0) {
+                return;
+            }
+            scoreService.setWebDelayMs(out);
+        } catch (Exception e) {
+            LOG.error("Failed to play score", e);
         }
     }
 

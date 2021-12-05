@@ -329,6 +329,22 @@ public class ScoreProcessorDelegator implements ScoreProcessor {
     }
 
     @Override
+    public void publishWebEvent(OutgoingWebEvent webEvent)  {
+        if(scoreDelegate == null) {
+            return;
+        }
+        scoreDelegate.publishWebEvent(webEvent);
+    }
+
+    @Override
+    public void setWebDelayMs(long delayMs) {
+        if(scoreDelegate == null) {
+            return;
+        }
+        scoreDelegate.setWebDelayMs(delayMs);
+    }
+
+    @Override
     public void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst, WebClientInfo clientInfo) {
         if(scoreDelegate == null) {
             return;

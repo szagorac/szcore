@@ -108,6 +108,14 @@ public class MathUtil {
         return minSorted(values);
     }
 
+    public static Integer toInt(String str) {
+        try {
+            return Integer.parseInt(str);
+        } catch( Exception e ){
+            return null;
+        }
+    }
+
     public static long minSorted(long[] sortedValues) {
         return sortedValues[0];
     }

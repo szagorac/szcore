@@ -74,6 +74,7 @@ import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreSelectInstrumentSlotEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreSelectSectionEvent;
+import com.xenaksys.szcore.event.web.out.DelayedOutgoingWebEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import com.xenaksys.szcore.model.HistoBucketView;
@@ -439,6 +440,10 @@ public class EventFactory {
 
     public OutgoingWebEvent createWebScoreOutEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, long creationTime) {
         return new OutgoingWebEvent(eventId, beatId, EventType.WEB_SCORE_OUT, eventType, creationTime);
+    }
+
+    public DelayedOutgoingWebEvent createDelayedWebScoreOutEvent(OutgoingWebEvent outgoingWebEvent, long creationTime) {
+        return new DelayedOutgoingWebEvent(outgoingWebEvent, creationTime);
     }
 
     public UpdateWebScoreConnectionsEvent createUpdateWebScoreConnectionsEvent(Set<WebConnection> clientConnections, long creationTime) {

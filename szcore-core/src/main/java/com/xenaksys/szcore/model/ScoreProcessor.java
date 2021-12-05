@@ -67,6 +67,8 @@ public interface ScoreProcessor extends Processor {
 
     void onOutgoingWebEvent(OutgoingWebEvent webEvent) throws Exception;
 
+    void publishWebEvent(OutgoingWebEvent event);
+
     void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst, WebClientInfo clientInfo);
 
     void onOpenModWindow(InstrumentId instId, Stave nextStave, Page nextPage, PageId currentPageId);
@@ -112,4 +114,6 @@ public interface ScoreProcessor extends Processor {
     void onSectionStart(String section);
 
     void onSectionStop(String section);
+
+    void setWebDelayMs(long delayMs);
 }

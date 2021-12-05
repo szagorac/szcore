@@ -118,6 +118,7 @@ public class ClientEventProcessor implements Processor {
                 break;
             case ADMIN_IN:
             case SCRIPTING_ENGINE:
+            case DELAYED_WEB_OUT:
                 //TODO
                 break;
             default:

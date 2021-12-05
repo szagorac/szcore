@@ -612,6 +612,16 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         return scoreProcessor.getWebScoreInstrumentClients(instrument);
     }
 
+    @Override
+    public void setWebDelayMs(long delayMs) {
+        try {
+            scoreProcessor.setWebDelayMs(delayMs);
+        } catch (Exception e) {
+            LOG.error("Failed to set web delay: {}", delayMs, e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to set Web Delay", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
     public WebProcessor getWebProcessor() {
         return webProcessor;
     }

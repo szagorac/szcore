@@ -105,4 +105,5 @@ public interface ScoreService {
 
     List<WebClientInfo> getWebScoreInstrumentClients(String instrument);
 
+    void setWebDelayMs(long delayMs);
 }

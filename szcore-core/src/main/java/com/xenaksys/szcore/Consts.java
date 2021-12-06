@@ -338,6 +338,7 @@ public interface Consts {
     String WEB_EVENT_SERVER_TIME = "serverTime";
     String WEB_EVENT_SLOT_NO = "slotNo";
     String WEB_EVENT_SLOT_INSTRUMENT = "slotInstrument";
+    String WEB_EVENT_ID_PING = "PING";
 
     String WEB_RESPONSE_TYPE = "type";
     String WEB_RESPONSE_MESSAGE = "msg";

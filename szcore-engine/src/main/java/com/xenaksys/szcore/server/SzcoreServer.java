@@ -15,6 +15,7 @@ import com.xenaksys.szcore.event.osc.ServerHelloEvent;
 import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
+import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import com.xenaksys.szcore.model.BeatTimeStrategy;
 import com.xenaksys.szcore.model.ClientInfo;
 import com.xenaksys.szcore.model.Clock;
@@ -226,7 +227,10 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         outOscDisruptor = DisruptorFactory.createOscOutDisruptor();
         oscEventPublisher = new OscDisruptorPublishProcessorWebWrapper(outOscDisruptor, webProcessor);
 
-        scoreProcessor = new ScoreProcessorDelegator(transportFactory, clock, oscEventPublisher, webEventPublisher, scheduler, eventFactory, taskFactory, eventProcessor, props);
+        List<OutgoingWebEventType> latencyCompensatorEventTypeFilter = new ArrayList<>();
+        latencyCompensatorEventTypeFilter.add(OutgoingWebEventType.PING);
+
+        scoreProcessor = new ScoreProcessorDelegator(transportFactory, clock, oscEventPublisher, webEventPublisher, scheduler, eventFactory, taskFactory, eventProcessor, latencyCompensatorEventTypeFilter, props);
         subscribe(webProcessor);
 
         String webRootScore = props.getProperty(WEB_ROOT_SCORE);

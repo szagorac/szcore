@@ -6,6 +6,7 @@ import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
+import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import com.xenaksys.szcore.model.EventReceiver;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.MusicTask;
@@ -59,6 +60,7 @@ public class ScoreProcessorDelegator implements ScoreProcessor {
     private final TaskFactory taskFactory;
     private final Properties props;
     private final EventReceiver eventReceiver;
+    private final List<OutgoingWebEventType> latencyCompensatorEventTypeFilter;
 
     private ScoreProcessor scoreDelegate;
     private final List<SzcoreEngineEventListener> scoreEventListeners = new CopyOnWriteArrayList<>();
@@ -73,6 +75,7 @@ public class ScoreProcessorDelegator implements ScoreProcessor {
                                    EventFactory eventFactory,
                                    TaskFactory taskFactory,
                                    EventReceiver eventReceiver,
+                                   List<OutgoingWebEventType> latencyCompensatorEventTypeFilter,
                                    Properties props) {
         this.transportFactory = transportFactory;
         this.clock = clock;
@@ -83,6 +86,7 @@ public class ScoreProcessorDelegator implements ScoreProcessor {
         this.taskFactory = taskFactory;
         this.props = props;
         this.eventReceiver = eventReceiver;
+        this.latencyCompensatorEventTypeFilter = latencyCompensatorEventTypeFilter;
     }
 
     @Override
@@ -130,13 +134,15 @@ public class ScoreProcessorDelegator implements ScoreProcessor {
                 className = Consts.SCORE_DELEGATE_PACKAGE + className;
             }
             Class<?> clazz = Class.forName(className);
-            Constructor<?> constructor = clazz.getConstructor(TransportFactory.class, MutableClock.class, OscPublisher.class,
-                    WebPublisher.class, Scheduler.class, EventFactory.class, TaskFactory.class, BasicScore.class, ScoreProcessorDelegator.class, EventReceiver.class, Properties.class);
-            Object instance = constructor.newInstance(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, score, this, eventReceiver, props);
+            Constructor<?> constructor = clazz.getConstructor(TransportFactory.class, MutableClock.class, OscPublisher.class, WebPublisher.class, Scheduler.class,
+                    EventFactory.class, TaskFactory.class, BasicScore.class, ScoreProcessorDelegator.class, EventReceiver.class, List.class, Properties.class);
+            Object instance = constructor.newInstance(transportFactory, clock, oscPublisher, webPublisher, scheduler,
+                    eventFactory, taskFactory, score, this, eventReceiver, latencyCompensatorEventTypeFilter, props);
             return (ScoreProcessor) instance;
         } catch (Exception e) {
             LOG.warn("initScoreHandler: Failed to initialise score handler for score {}, using ScoreProcessorDelegate", scoreName);
-            return new ScoreProcessorDelegate(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, score, this, eventReceiver, props);
+            return new ScoreProcessorDelegate(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory,
+                    score, this, eventReceiver, latencyCompensatorEventTypeFilter, props);
         }
     }
 

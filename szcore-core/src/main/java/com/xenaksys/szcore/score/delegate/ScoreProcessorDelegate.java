@@ -218,6 +218,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                                   BasicScore szcore,
                                   ScoreProcessorDelegator parent,
                                   EventReceiver eventReceiver,
+                                  List<OutgoingWebEventType> latencyCompensatorEventTypeFilter,
                                   Properties props) {
         this.transportFactory = transportFactory;
         this.clock = clock;
@@ -231,7 +232,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         this.oscDestinationEventListener = new OscDestinationEventListener(parent, eventFactory, clock);
         this.eventReceiver = eventReceiver;
         this.props = props;
-        this.latencyCompensator = new LatencyCompensator(this, eventFactory, clock);
+        this.latencyCompensator = new LatencyCompensator(this, eventFactory, latencyCompensatorEventTypeFilter, clock);
     }
 
     @Override
@@ -2880,7 +2881,15 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     }
 
     public void sendWebScoreState(String target, WebScoreTargetType targetType, WebScoreState scoreState) {
-        OutgoingWebEvent outEvent = eventFactory.createWebScoreOutEvent(null, null, OutgoingWebEventType.PUSH_SCORE_STATE, clock.getSystemTimeMillis());
+        sendWebScoreState(target, targetType, scoreState, OutgoingWebEventType.PUSH_SCORE_STATE);
+    }
+
+    public void sendWebScorePing(String target, WebScoreTargetType targetType, WebScoreState scoreState) {
+        sendWebScoreState(target, targetType, scoreState, OutgoingWebEventType.PING);
+    }
+
+    public void sendWebScoreState(String target, WebScoreTargetType targetType, WebScoreState scoreState, OutgoingWebEventType eventType) {
+        OutgoingWebEvent outEvent = eventFactory.createWebScoreOutEvent(null, null, eventType, clock.getSystemTimeMillis());
         outEvent.addData(Consts.WEB_DATA_SCORE_STATE, scoreState);
         outEvent.addData(Consts.WEB_DATA_TARGET, target);
         outEvent.addData(Consts.WEB_DATA_TARGET_TYPE, targetType);
@@ -2901,7 +2910,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         params.put(Consts.WEB_ACTION_PARAM_SEND_TIME_MS, sendTime);
         WebScoreAction action = getOrCreateWebScoreAction(WebScoreActionType.PING, null, params);
         scoreState.addAction(action);
-        sendWebScoreState(WebScoreTargetType.ALL.name(), WebScoreTargetType.ALL, scoreState);
+        sendWebScorePing(WebScoreTargetType.ALL.name(), WebScoreTargetType.ALL, scoreState);
     }
 
     public OutgoingWebEvent createWebScoreStartEvent(BeatId beatId, String staveId, String instrument) {

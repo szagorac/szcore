@@ -2,7 +2,13 @@ package com.xenaksys.szcore.score.delegate;
 
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
+import com.xenaksys.szcore.model.EventReceiver;
+import com.xenaksys.szcore.model.MutableClock;
+import com.xenaksys.szcore.model.OscPublisher;
+import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.Scheduler;
+import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.score.ScoreProcessorDelegator;
 import com.xenaksys.szcore.score.delegate.web.unionrose.UnionRoseWebAudienceProcessor;
@@ -24,9 +30,10 @@ public class UnionRoseScoreProcessor extends ScoreProcessorDelegate {
                                    BasicScore szcore,
                                    ScoreProcessorDelegator parent,
                                    EventReceiver eventReceiver,
+                                   List<OutgoingWebEventType> latencyCompensatorEventTypeFilter,
                                    Properties props
                                    ) {
-        super(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, szcore, parent, eventReceiver, props);
+        super(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, szcore, parent, eventReceiver, latencyCompensatorEventTypeFilter, props);
     }
 
     protected void createWebAudienceProcessor() {

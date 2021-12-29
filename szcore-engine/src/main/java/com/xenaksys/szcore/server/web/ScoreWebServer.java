@@ -132,8 +132,13 @@ public class ScoreWebServer extends BaseZsWebServer {
             Path indexPath = Paths.get(path.toAbsolutePath().toString(), INDEX_HTML);
 
             if (Files.exists(path) && Files.exists(indexPath)) {
+                LOG.info("Score web server using root: {}", path.toAbsolutePath());
                 staticDataHandler = createStaticDataHandler(path);
+            } else {
+                LOG.error("Could not initialise Score web root: {}", getStaticDataPath());
             }
+        } else {
+            LOG.error("Failed to initialise staticDataHandler for Score root: {}, using default", getStaticDataPath());
         }
 
         udtowScoreServer = Undertow.builder()

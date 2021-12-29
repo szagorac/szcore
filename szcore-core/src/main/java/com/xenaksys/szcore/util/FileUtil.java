@@ -61,7 +61,6 @@ public class FileUtil {
                 LOG.error("File does not exist for path: " + path);
                 return null;
             }
-
             return file;
         } catch (Exception e) {
             LOG.error("Failed to process file path: " + path);

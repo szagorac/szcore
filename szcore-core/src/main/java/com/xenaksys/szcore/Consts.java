@@ -466,6 +466,7 @@ public interface Consts {
 
     String WEB_DATA_SCORE_INFO = "SCORE_INFO";
     String WEB_DATA_SCORE_STATE = "SCORE_STATE";
+    String WEB_DATA_SCORE_STATE_DELTA = "SCORE_STATE_DELTA";
     String WEB_DATA_TARGET = "TARGET";
     String WEB_DATA_TARGET_TYPE = "TARGET_TYPE";
     String WEB_DATA_TARGET_ALL = "ALL";

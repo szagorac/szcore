@@ -60,6 +60,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import static com.xenaksys.szcore.Consts.COMMA;
 import static com.xenaksys.szcore.Consts.EMPTY;
 import static com.xenaksys.szcore.Consts.SPACE;
+import static com.xenaksys.szcore.Consts.WEB_DATA_SCORE_STATE_DELTA;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_CLIENT_ID;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_ELEMENT_ID;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_IS_POLL_NAME;
@@ -96,7 +97,6 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
     private final Map<String, WebClientInfo> scoreClientInfos = new ConcurrentHashMap<>();
 
     private volatile String currentWebAudienceScoreState;
-    private volatile String currentWebAudienceScoreStateDelta;
     private volatile long stateUpdateTime = 0;
     private volatile long stateDeltaUpdateTime = 0;
 
@@ -718,18 +718,21 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
 
     @Override
     public void onWebAudienceScoreStateDeltaChange(WebAudienceScoreStateDeltaExport webAudienceScoreStateDeltaExport) {
+         LOG.error("onWebAudienceScoreStateDeltaChange: Unexpected call");
+    }
+
+    public static String createDeltaOut(WebAudienceScoreStateDeltaExport webAudienceScoreStateDeltaExport) {
         if (webAudienceScoreStateDeltaExport == null) {
-            return;
+            return null;
         }
         String out = GSON.toJson(webAudienceScoreStateDeltaExport);
         int stringLenBytes = Util.getStringLengthUtf8(out);
         long stringLenKb = stringLenBytes / 1024;
-        LOG.debug("onWebScoreStateDeltaChange: WebState size: {}Kb json: {}", stringLenKb, out);
+        LOG.debug("createDeltaOut: WebState size: {}Kb json: {}", stringLenKb, out);
         if (stringLenKb > 64) {
-            LOG.error("onWebScoreStateDeltaChange: ### WARNING ### WebState size {}Kb larger than 64Kb", stringLenKb);
+            LOG.error("createDeltaOut: ### WARNING ### WebState size {}Kb larger than 64Kb", stringLenKb);
         }
-        this.currentWebAudienceScoreStateDelta = out;
-        this.stateDeltaUpdateTime = getClock().getSystemTimeMillis();
+        return out;
     }
 
     public void onOutgoingWebEvent(OutgoingWebEvent webEvent) {
@@ -834,27 +837,33 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
                 pushWebAudienceScoreState();
                 break;
             case PUSH_SERVER_STATE_DELTA:
-                pushWebAudienceScoreStateDelta();
+                pushWebAudienceScoreStateDelta(webEvent);
                 break;
         }
     }
 
     private void pushWebAudienceScoreState() {
-        if (currentWebAudienceScoreState == null) {
+        //crete volatile copy in case currentState updated on separate thread.
+        String state = currentWebAudienceScoreState;
+        if (state == null || state.isEmpty()) {
             return;
         }
-        String out = createStateWebString(currentWebAudienceScoreState);
+        String out = createStateWebString(state);
         scoreService.pushToWebAudience(out);
     }
 
-    private void pushWebAudienceScoreStateDelta() {
-        if (currentWebAudienceScoreStateDelta == null) {
+    private void pushWebAudienceScoreStateDelta(OutgoingWebEvent webEvent) {
+        Object stateDelta = webEvent.getDataMap().get(WEB_DATA_SCORE_STATE_DELTA);
+        if(!(stateDelta instanceof String)) {
+            LOG.error("pushWebAudienceScoreStateDelta: invalid stateDelta: {}", stateDelta);
             return;
         }
-        String delta = createAudienceStateDeltaWebString(currentWebAudienceScoreStateDelta);
+        String state = (String)stateDelta;
+        if(state.isEmpty()) {
+            return;
+        }
+        String delta = createAudienceStateDeltaWebString(state);
         scoreService.pushToWebAudience(delta);
-        //reset delta - is that smart?
-        currentWebAudienceScoreStateDelta = null;
     }
 
     public Clock getClock() {

@@ -16,11 +16,17 @@ import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.MutablePageId;
 import com.xenaksys.szcore.score.PannerDistanceModel;
 import com.xenaksys.szcore.score.PanningModel;
-import com.xenaksys.szcore.score.web.audience.config.*;
+import com.xenaksys.szcore.score.web.audience.config.WebEnvelopeConfig;
+import com.xenaksys.szcore.score.web.audience.config.WebGrainConfig;
+import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
+import com.xenaksys.szcore.score.web.audience.config.WebPannerConfig;
+import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
+import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthState;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
 import com.xenaksys.szcore.web.WebAudienceAction;
 import com.xenaksys.szcore.web.WebAudienceActionType;
+import com.xenaksys.szcore.web.WebProcessor;
 import com.xenaksys.szcore.web.WebScoreStateType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,9 +35,75 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.beans.PropertyChangeSupport;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static com.xenaksys.szcore.Consts.*;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_CONFIG;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_PLAY;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_RAMP_LINEAR;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_RAMP_SIN;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_START;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_STATE;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_STOP;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_PARAM_LEVEL;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_PARAM_TIME_MS;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_VOLUME;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_AMPLITUDE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_ATTACK_TIME;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_AUDIO_STOP_TOLERANCE_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_BUFFER_POSITION_PLAY_RATE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_COUNTER;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_DECAY_TIME;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_DISTANCE_MODEL;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_DURATION;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_END_VALUE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_ENVELOPE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_FREQUENCY;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_GO_PRESET;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_GRAIN;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_INTERRUPT_TIMEOUT_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_IS_INTERRUPT;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_IS_PLAY_SPEECH_ON_CLICK;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_IS_USE_PANNER;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_LANG;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MASTER_GAIN_VAL;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_GRAINS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_PAN_ANGLE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_PITCH_RATE_RANGE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_POSITION_OFFSET_RANGE_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_UTTERANCES;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_VOICE_LOAD_ATTEMPTS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PANNER;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PANNING_MODEL;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PARAM_NAME;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PITCH;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PITCH_RATE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PLAY_DURATION_SEC;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_PLAY_START_OFFSET_SEC;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_RATE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_READY_PRESET;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_RELEASE_TIME;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_SIZE_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_SPEECH_IS_INTERRUPT;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_SPEECH_TEXT;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_SPEECH_VOICE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_SUSTAIN_LEVEL;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_SUSTAIN_TIME;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_TIME_OFFSET_STEPS_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_UTTERANCE_TIMEOUT_SEC;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_VALUE;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_VOLUME;
+import static com.xenaksys.szcore.Consts.WEB_DATA_SCORE_STATE_DELTA;
+import static com.xenaksys.szcore.Consts.WEB_GRANULATOR;
+import static com.xenaksys.szcore.Consts.WEB_SCORE_ID;
+import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
+import static com.xenaksys.szcore.Consts.WEB_STAGE;
+import static com.xenaksys.szcore.Consts.WEB_TARGET_ALL;
 
 public abstract class WebAudienceScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(WebAudienceScoreProcessor.class);
@@ -173,7 +245,7 @@ public abstract class WebAudienceScoreProcessor {
 
     public void updateServerStateAndPush() {
         updateServerState();
-        updateServerStateDelta();
+//        updateServerStateDelta();
         pushServerStateDelta();
     }
 
@@ -727,23 +799,25 @@ public abstract class WebAudienceScoreProcessor {
 
     public abstract void updateServerState();
 
-    public void updateServerStateDelta() {
-        try {
-            WebAudienceStateDeltaTracker deltaTracker = getStateDeltaTracker();
-            if (deltaTracker.hasChanges()) {
-                getScoreProcessor().onWebAudienceStateDeltaChange(deltaTracker.getDeltaExport());
-            }
-        } catch (Exception e) {
-            LOG.error("Failed to process updateServerStateDelta", e);
-        }
-    }
-
     public void pushServerState() {
         sendOutgoingWebEvent(OutgoingWebEventType.PUSH_SERVER_STATE);
     }
 
     public void pushServerStateDelta() {
-        sendOutgoingWebEvent(OutgoingWebEventType.PUSH_SERVER_STATE_DELTA);
+        try {
+            WebAudienceStateDeltaTracker deltaTracker = getStateDeltaTracker();
+            if (!deltaTracker.hasChanges()) {
+                return;
+            }
+            WebAudienceScoreStateDeltaExport deltaExport = deltaTracker.getDeltaExport();
+            String deltaOut = WebProcessor.createDeltaOut(deltaExport);
+            long creationTime = clock.getSystemTimeMillis();
+            OutgoingWebEvent outgoingAudienceDeltaEvent = eventFactory.createOutgoingWebAudienceEvent(null, null, OutgoingWebEventType.PUSH_SERVER_STATE_DELTA, creationTime);
+            outgoingAudienceDeltaEvent.addData(WEB_DATA_SCORE_STATE_DELTA, deltaOut);
+            scoreProcessor.onOutgoingWebEvent(outgoingAudienceDeltaEvent);
+        } catch (Exception e) {
+            LOG.error("Failed to process pushServerStateDelta", e);
+        }
     }
 
     public void sendOutgoingWebEvent(OutgoingWebEventType eventType) {

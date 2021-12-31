@@ -3309,6 +3309,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         if(delayMs < 0L) {
             return;
         }
+        LOG.info("setWebDelayMs: wetting web event delay set to {}ms", delayMs);
         latencyCompensator.setWebPublishDelayMs(delayMs);
     }
 

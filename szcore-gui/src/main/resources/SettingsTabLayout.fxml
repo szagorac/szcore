@@ -96,6 +96,9 @@
                         <Button fx:id="getServerStatusBtn" mnemonicParsing="false"
                                 onAction="#detectAudienceWebServerStatus" stylesheets="@css/szcoreStyle.css"
                                 text="Get Status"/>
+                        <Label text="Web Event Delay Ms" />
+                        <TextField fx:id="webDelayTxt" prefHeight="27.0" prefWidth="66.0" text="0" />
+                        <Button fx:id="sendWebDelayBtn" mnemonicParsing="false" onAction="#sendWebDelay" text="Send" />
                      </children>
                   </HBox>
                   <Separator/>

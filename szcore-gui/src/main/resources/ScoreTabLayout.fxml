@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
@@ -80,9 +90,6 @@
                                 <CheckBox fx:id="usePageRandomisationChb" mnemonicParsing="false" text="Use Page Randomisation" />
                                 <Label text="Randomisation Strategy:" />
                                 <ChoiceBox fx:id="randomStrategyChob" />
-                                <Label text="WebDelayMs" />
-                                <TextField fx:id="webDelayTxt" prefHeight="27.0" prefWidth="66.0" text="0" />
-                                <Button fx:id="sendWebDelayBtn" mnemonicParsing="false" onAction="#sendWebDelay" text="Send" />
                             </children>
                         </HBox>
                         <Separator />

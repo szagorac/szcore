@@ -2,16 +2,39 @@ package com.xenaksys.szcore.score.delegate.web.unionrose;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.web.audience.*;
+import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceEventType;
+import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudiencePlayTilesEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudiencePrecountEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceSelectTilesEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceStateUpdateEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceStopEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.ScriptPreset;
-import com.xenaksys.szcore.score.web.audience.*;
+import com.xenaksys.szcore.score.web.audience.WebAudienceChangeListener;
+import com.xenaksys.szcore.score.web.audience.WebAudienceElementState;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScoreProcessor;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
+import com.xenaksys.szcore.score.web.audience.WebAudienceServerState;
+import com.xenaksys.szcore.score.web.audience.WebAudienceStateDeltaTracker;
+import com.xenaksys.szcore.score.web.audience.WebTextState;
+import com.xenaksys.szcore.score.web.audience.WebTile;
+import com.xenaksys.szcore.score.web.audience.WebTileText;
 import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthState;
-import com.xenaksys.szcore.score.web.audience.export.*;
+import com.xenaksys.szcore.score.web.audience.export.TileExport;
+import com.xenaksys.szcore.score.web.audience.export.WebAudienceInstructionsExport;
+import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
+import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
+import com.xenaksys.szcore.score.web.audience.export.WebElementStateExport;
+import com.xenaksys.szcore.score.web.audience.export.WebGranulatorConfigExport;
+import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthConfigExport;
+import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthStateExport;
 import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.ScoreUtil;
 import com.xenaksys.szcore.web.WebAudienceAction;
@@ -22,9 +45,39 @@ import gnu.trove.list.array.TIntArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static com.xenaksys.szcore.Consts.*;
+import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_ALL;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_DISPLAY;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_START;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_DURATION;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_LOAD_PRESET;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_VALUE;
+import static com.xenaksys.szcore.Consts.WEB_GRANULATOR;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_ACTIONS;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CENTRE_SHAPE;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRANULATOR;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_SPEECH_SYNTH;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_INNER_CIRCLE;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_INSTRUCTIONS;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_OUTER_CIRCLE;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_STAGE_ALPHA;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_STATE_SPEECH_SYNTH;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_TILE;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_TILES;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_ZOOM_LEVEL;
+import static com.xenaksys.szcore.Consts.WEB_OVERLAYS;
+import static com.xenaksys.szcore.Consts.WEB_SELECTED_TILES;
+import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
+import static com.xenaksys.szcore.Consts.WEB_TEXT_BACKGROUND_COLOUR;
+import static com.xenaksys.szcore.Consts.WEB_TILE_PLAY_PAGE_DURATION_FACTOR;
+import static com.xenaksys.szcore.Consts.WEB_ZOOM_DEFAULT;
 
 public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(UnionRoseWebAudienceProcessor.class);
@@ -718,6 +771,9 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
             switch (type) {
                 case INSTRUCTIONS:
                     isSendStateUpdate = processInstructionsEvent((WebAudienceInstructionsEvent) event);
+                    break;
+                case AUDIO:
+                    isSendStateUpdate = processAudioEvent((WebAudienceAudioEvent) event);
                     break;
                 case PRECOUNT:
                     isSendStateUpdate = processPrecountEvent((WebAudiencePrecountEvent) event);

@@ -26,6 +26,16 @@ public class MathUtil {
         return interpolator.interpolate(x, y);
     }
 
+    public static double convertToRange(double value, double min, double max, double newMin, double newMax) {
+        double range = (max - min);
+        double out = newMin;
+        if (range != 0.0) {
+            double newRange = (newMax - newMin);
+            out = (((value - min) * newRange) / range) + newMin;
+        }
+        return out;
+    }
+
     public static double roundTo5DecimalPlaces(double value) {
         return (double) Math.round(value * 100000d) / 100000d;
     }

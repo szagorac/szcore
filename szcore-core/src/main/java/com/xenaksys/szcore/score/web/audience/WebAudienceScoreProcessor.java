@@ -2,6 +2,8 @@ package com.xenaksys.szcore.score.web.audience;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
+import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEventType;
 import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudiencePrecountEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceStateUpdateEvent;
@@ -100,6 +102,7 @@ import static com.xenaksys.szcore.Consts.WEB_CONFIG_VALUE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_VOLUME;
 import static com.xenaksys.szcore.Consts.WEB_DATA_SCORE_STATE_DELTA;
 import static com.xenaksys.szcore.Consts.WEB_GRANULATOR;
+import static com.xenaksys.szcore.Consts.WEB_PLAYER;
 import static com.xenaksys.szcore.Consts.WEB_SCORE_ID;
 import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_STAGE;
@@ -317,6 +320,42 @@ public abstract class WebAudienceScoreProcessor {
         WebAudienceStateUpdateEvent stateUpdateEvent = eventFactory.createWebAudienceStateUpdateEvent(WebScoreStateType.STAGE_ALPHA, endValue, clock.getSystemTimeMillis());
         scoreProcessor.scheduleEvent(stateUpdateEvent, (long) durationSec * Consts.THOUSAND);
 //        state.setStageAlpha(endValue);
+    }
+
+    protected boolean processAudioEvent(WebAudienceAudioEvent event) {
+        WebAudienceAudioEventType eventType = event.getAudioEventType();
+        boolean out = true;
+        switch (eventType) {
+            case VOLUME:
+                out = processVolumeAudioEvent(event);
+            default:
+        }
+        return out;
+    }
+
+    private boolean processVolumeAudioEvent(WebAudienceAudioEvent event) {
+        AudioComponentType componentType = event.getComponentType();
+        String target = WEB_TARGET_ALL;
+        switch (componentType) {
+            case GRANULATOR:
+                target = WEB_GRANULATOR;
+                break;
+            case PLAYER:
+                target = WEB_PLAYER;
+                break;
+            case SPEECH:
+                target = WEB_SPEECH_SYNTH;
+                break;
+        }
+        String[] targets = {target};
+
+        double level = event.getValue();
+        int millis = event.getDurationMs();
+        Map<String, Object> params = new HashMap<>();
+        params.put(WEB_ACTION_PARAM_LEVEL, level);
+        params.put(WEB_ACTION_PARAM_TIME_MS, millis);
+        setAction(WEB_ACTION_VOLUME, WebAudienceActionType.AUDIO.name(), targets, params);
+        return true;
     }
 
     public void granulatorRampLinear(String paramName, Object endValue, int durationMs) {

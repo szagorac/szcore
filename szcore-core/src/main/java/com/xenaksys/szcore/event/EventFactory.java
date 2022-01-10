@@ -55,6 +55,8 @@ import com.xenaksys.szcore.event.osc.TransitionScriptEvent;
 import com.xenaksys.szcore.event.script.ScriptingEngineEvent;
 import com.xenaksys.szcore.event.script.ScriptingEngineResetEvent;
 import com.xenaksys.szcore.event.web.audience.UpdateWebAudienceConnectionsEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEventType;
 import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudiencePlayTilesEvent;
@@ -91,6 +93,7 @@ import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.score.InscoreMapElement;
 import com.xenaksys.szcore.score.OverlayElementType;
 import com.xenaksys.szcore.score.OverlayType;
+import com.xenaksys.szcore.score.web.audience.AudioComponentType;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
 import com.xenaksys.szcore.scripting.ScriptingEngineScript;
 import com.xenaksys.szcore.web.WebClientInfo;
@@ -408,6 +411,10 @@ public class EventFactory {
 
     public WebAudienceInstructionsEvent createWebAudienceInstructionsEvent(String l1, String l2, String l3, boolean isVisible, long creationTime) {
         return new WebAudienceInstructionsEvent(l1, l2, l3, isVisible, creationTime);
+    }
+
+    public WebAudienceAudioEvent createWebAudienceAudioEvent(AudioComponentType componentType, WebAudienceAudioEventType eventType, double value, int durationMs, long creationTime) {
+        return new WebAudienceAudioEvent(componentType, eventType, value, durationMs, creationTime);
     }
 
     public WebAudienceStateUpdateEvent createWebAudienceStateUpdateEvent(WebScoreStateType propertyName, Object propertyValue, long creationTime) {

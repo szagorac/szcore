@@ -5,6 +5,8 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.osc.AddPartsEvent;
 import com.xenaksys.szcore.event.osc.SendServerIpBroadcastEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEventType;
 import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Participant;
@@ -24,6 +26,8 @@ import com.xenaksys.szcore.model.id.BarId;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.score.OverlayType;
+import com.xenaksys.szcore.score.web.audience.AudioComponentType;
+import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.Util;
 import javafx.application.Platform;
@@ -64,6 +68,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.Consts.WEB_AUDIO_ACTION_DURATION_MS;
 
 public class ScoreController {
     static final Logger LOG = LoggerFactory.getLogger(ScoreController.class);
@@ -192,6 +197,14 @@ public class ScoreController {
     private Button sendWebscoreInstructionsBtn;
     @FXML
     private Button clearWebscoreInstructionsBtn;
+    @FXML
+    private Slider adncVolMasterSldr;
+    @FXML
+    private Slider adncVolPlayerSldr;
+    @FXML
+    private Slider adncVolGranulatorSldr;
+    @FXML
+    private Slider adncVolSpeechSldr;
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -543,6 +556,27 @@ public class ScoreController {
         webscoreInstructions.setLine1(EMPTY);
         webscoreInstructions.setLine2(EMPTY);
         webscoreInstructions.setLine3(EMPTY);
+
+        adncVolMasterSldr.valueProperty().addListener((ov, old_val, new_val) -> {
+            long newVal = Math.round(new_val.doubleValue());
+            long oldVal = Math.round(old_val.doubleValue());
+            onAudienceMasterVolumeChange(newVal, oldVal);
+        });
+        adncVolPlayerSldr.valueProperty().addListener((ov, old_val, new_val) -> {
+            long newVal = Math.round(new_val.doubleValue());
+            long oldVal = Math.round(old_val.doubleValue());
+            onAudiencePlayerVolumeChange(newVal, oldVal);
+        });
+        adncVolGranulatorSldr.valueProperty().addListener((ov, old_val, new_val) -> {
+            long newVal = Math.round(new_val.doubleValue());
+            long oldVal = Math.round(old_val.doubleValue());
+            onAudienceGranulatorVolumeChange(newVal, oldVal);
+        });
+        adncVolSpeechSldr.valueProperty().addListener((ov, old_val, new_val) -> {
+            long newVal = Math.round(new_val.doubleValue());
+            long oldVal = Math.round(old_val.doubleValue());
+            onAudienceSpeechVolumeChange(newVal, oldVal);
+        });
     }
 
     public void setScoreService(ScoreService scoreService) {
@@ -661,6 +695,11 @@ public class ScoreController {
         instL1Txt.textProperty().bindBidirectional(webscoreInstructions.line1Property());
         instL2Txt.textProperty().bindBidirectional(webscoreInstructions.line2Property());
         instL3Txt.textProperty().bindBidirectional(webscoreInstructions.line3Property());
+
+        adncVolMasterSldr.setValue(100.0);
+        adncVolPlayerSldr.setValue(100.0);
+        adncVolGranulatorSldr.setValue(100.0);
+        adncVolSpeechSldr.setValue(100.0);
     }
 
     @FXML
@@ -1689,6 +1728,27 @@ public class ScoreController {
             return;
         }
         sendContentValueChange(newVal, instrumentIds);
+    }
+
+    private void onAudienceMasterVolumeChange(long newVal, long oldVal) {
+        publishAudienceAudioVolumeChange(AudioComponentType.MASTER, convertAudioVolumeToWeb(newVal));
+    }
+    private void onAudiencePlayerVolumeChange(long newVal, long oldVal) {
+        publishAudienceAudioVolumeChange(AudioComponentType.PLAYER, convertAudioVolumeToWeb(newVal));
+    }
+    private void onAudienceGranulatorVolumeChange(long newVal, long oldVal) {
+        publishAudienceAudioVolumeChange(AudioComponentType.GRANULATOR, convertAudioVolumeToWeb(newVal));
+    }
+    private void onAudienceSpeechVolumeChange(long newVal, long oldVal) {
+        publishAudienceAudioVolumeChange(AudioComponentType.SPEECH, convertAudioVolumeToWeb(newVal));
+    }
+    private double convertAudioVolumeToWeb(long value) {
+        return MathUtil.convertToRange(1.0*value, Consts.WEB_SLIDER_MIN, Consts.WEB_SLIDER_MAX, Consts.WEB_AUDIO_MIN, Consts.WEB_AUDIO_MAX);
+    }
+    private void publishAudienceAudioVolumeChange(AudioComponentType componentType, double value) {
+        EventFactory eventFactory = publisher.getEventFactory();
+        WebAudienceAudioEvent instructionsEvent = eventFactory.createWebAudienceAudioEvent(componentType, WebAudienceAudioEventType.VOLUME, value, WEB_AUDIO_ACTION_DURATION_MS, clock.getSystemTimeMillis());
+        publisher.receive(instructionsEvent);
     }
 
     private List<Id> getInstrumentsToSend() {

@@ -314,6 +314,11 @@ public interface Consts {
     int WEB_BUFFER_SLICE_SIZE = 1000;
     int WEB_SLICES_PER_PAGE = 10;
     int WEB_MAX_MEMORY_SIZE = 1024 * 1024 * 100;
+    double WEB_SLIDER_MAX = 100.0;
+    double WEB_SLIDER_MIN = 0.0;
+    double WEB_AUDIO_MAX = 1.0;
+    double WEB_AUDIO_MIN = 0.0;
+    int WEB_AUDIO_ACTION_DURATION_MS = 200;
 
     double WEB_TILE_PLAY_PAGE_DURATION_FACTOR = 0.8;
 
@@ -359,6 +364,7 @@ public interface Consts {
     String WEB_GRANULATOR = "granulator";
     String WEB_STAGE = "stage";
     String WEB_SPEECH_SYNTH = "speechSynth";
+    String WEB_PLAYER = "player";
     String WEB_SPEECH_VOICE_RANDOM = "random";
     String WEB_SPEECH_VOICE_DEFAULT = "default";
     String WEB_TARGET_ALL = "all";

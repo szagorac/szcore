@@ -2562,6 +2562,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             case PLAY_TILES:
             case SELECT_TILES:
             case INSTRUCTIONS:
+            case AUDIO:
             case STATE_UPDATE:
                 webAudienceScoreProcessor.processWebAudienceEvent(event);
                 break;

@@ -58,8 +58,10 @@ public class ScoreLoader {
     static final String SCRIPT_COMMA_REPLACE_CHAR = "|";
     static final String COMMA = ",";
     static final String COMMA_TOKEN = "@C@";
+    static final String SINGLE_QUOTE_TOKEN = "@Q@";
     static final String CURLY_QUOTE = "�";
     static final String SINGLE_QUOTE = "'";
+    static final String SINGLE_QUOTE_HTML = "&#39;";
     static final String AV = "AV";
 
     public static volatile String workingDir;
@@ -456,6 +458,7 @@ public class ScoreLoader {
         if (sargs.length > 2) {
             for (int i = 2; i < sargs.length; i++) {
                 String arg = ParseUtil.parseToken(sargs[i], COMMA_TOKEN, COMMA);
+                arg = ParseUtil.parseToken(arg, SINGLE_QUOTE_TOKEN, SINGLE_QUOTE_HTML);
                 args.add(ParseUtil.convertToType(arg));
             }
         }
@@ -556,6 +559,7 @@ public class ScoreLoader {
         }
 
         script = ParseUtil.parseToken(script, COMMA_TOKEN, COMMA);
+        script = ParseUtil.parseToken(script, SINGLE_QUOTE_TOKEN, SINGLE_QUOTE_HTML);
 
         Script scriptObj = new WebAudienceScoreScript(id, beatId, script, isResetPoint, isResetOnly);
         LOG.info("Created script: {}", scriptObj);

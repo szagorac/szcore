@@ -353,6 +353,7 @@ public interface Consts {
     String WEB_RESPONSE_SUBMITTED = "Submitted";
 
     String WEB_TILE_PREFIX = "t";
+    String WEB_TILE_PLAYLINE_PREFIX = "lopl";
     String WEB_ELEMENT_NAME_DELIMITER = "-";
     String WEB_ELEMENT_GRID = "grid";
     String WEB_ZOOM_DEFAULT = "default";
@@ -413,6 +414,7 @@ public interface Consts {
     int WEB_CONFIG_LOAD_PRESET = -2;
 
     String WEB_CONFIG_DURATION = "duration";
+    String WEB_CONFIG_ANGLE = "angle";
     String WEB_CONFIG_VALUE = "value";
     String WEB_CONFIG_GRAIN = "grain";
     String WEB_CONFIG_ENVELOPE = "envelope";

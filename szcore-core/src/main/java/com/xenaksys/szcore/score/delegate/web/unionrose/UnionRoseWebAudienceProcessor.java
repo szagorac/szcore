@@ -56,6 +56,7 @@ import static com.xenaksys.szcore.Consts.EMPTY;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_ALL;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_DISPLAY;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_START;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_ANGLE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_DURATION;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_LOAD_PRESET;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_VALUE;
@@ -76,6 +77,7 @@ import static com.xenaksys.szcore.Consts.WEB_OVERLAYS;
 import static com.xenaksys.szcore.Consts.WEB_SELECTED_TILES;
 import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_TEXT_BACKGROUND_COLOUR;
+import static com.xenaksys.szcore.Consts.WEB_TILE_PLAYLINE_PREFIX;
 import static com.xenaksys.szcore.Consts.WEB_TILE_PLAY_PAGE_DURATION_FACTOR;
 import static com.xenaksys.szcore.Consts.WEB_ZOOM_DEFAULT;
 
@@ -577,18 +579,37 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
         getTempPageId().setPageNo(pageNo);
         Page page = getScoreProcessor().getScore().getPage(getTempPageId());
 
-        double duration = 0.0;
+        double alphaDuration = 0.0;
+        double pageDuration = 0.0;
+        double beatDuration = 0;
         if (page != null) {
             long durationMs = page.getDurationMs();
-            duration = MathUtil.roundTo2DecimalPlaces(durationMs / 1000.0);
-            LOG.debug("setPlayTileActions: calculated duration: {} for page: {}", duration, page.getId());
-            duration = MathUtil.roundTo2DecimalPlaces(duration * WEB_TILE_PLAY_PAGE_DURATION_FACTOR);
+            long beatDurationMs = page.getLastBeat().getDurationMillis();
+            beatDuration = MathUtil.roundTo2DecimalPlaces( beatDurationMs / 1000.0);
+            pageDuration = MathUtil.roundTo2DecimalPlaces(durationMs / 1000.0);
+            LOG.debug("setPlayTileActions: calculated duration: {} for page: {}", pageDuration, page.getId());
+            alphaDuration = MathUtil.roundTo2DecimalPlaces(pageDuration * WEB_TILE_PLAY_PAGE_DURATION_FACTOR);
         }
 
         Map<String, Object> params = new HashMap<>(2);
-        params.put(WEB_CONFIG_DURATION, duration);
+        params.put(WEB_CONFIG_DURATION, alphaDuration);
         params.put(WEB_CONFIG_VALUE, 0);
         setAction(WEB_ACTION_ID_START, WebAudienceActionType.ALPHA.name(), tileIds, params);
+
+        String[] playLineIds = new String[tileIds.length];
+        for (int i = 0; i < tileIds.length; i++) {
+            playLineIds[i] = WEB_TILE_PLAYLINE_PREFIX +tileIds[i];
+        }
+
+        double playlineDuration = pageDuration - beatDuration;
+        if(playlineDuration < 0.0) {
+            playlineDuration = 0.0;
+        }
+        Map<String, Object> paramsRotate = new HashMap<>(2);
+        paramsRotate.put(WEB_CONFIG_DURATION, playlineDuration);
+        paramsRotate.put(WEB_CONFIG_ANGLE, 45);
+        setAction(WEB_ACTION_ID_START, WebAudienceActionType.ROTATE.name(), playLineIds, paramsRotate);
+
     }
 
     public void setPlayingTiles(String[] tileIds) {

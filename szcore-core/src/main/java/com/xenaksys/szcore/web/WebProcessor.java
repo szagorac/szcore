@@ -8,32 +8,12 @@ import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.osc.ElementSelectedAudienceEvent;
 import com.xenaksys.szcore.event.osc.OscEvent;
-import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
-import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEventType;
-import com.xenaksys.szcore.event.web.audience.UpdateWebAudienceConnectionsEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceRequestLogEvent;
-import com.xenaksys.szcore.event.web.audience.WebPollAudienceEvent;
-import com.xenaksys.szcore.event.web.audience.WebStartAudienceEvent;
-import com.xenaksys.szcore.event.web.in.UpdateWebScoreConnectionsEvent;
-import com.xenaksys.szcore.event.web.in.WebScoreClientHelloEvent;
-import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
-import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
-import com.xenaksys.szcore.event.web.in.WebScoreInEventType;
-import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
-import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
-import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
-import com.xenaksys.szcore.event.web.in.WebScoreSelectInstrumentSlotEvent;
-import com.xenaksys.szcore.event.web.in.WebScoreSelectSectionEvent;
+import com.xenaksys.szcore.event.osc.VoteAudienceEvent;
+import com.xenaksys.szcore.event.web.audience.*;
+import com.xenaksys.szcore.event.web.in.*;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
-import com.xenaksys.szcore.model.Clock;
-import com.xenaksys.szcore.model.EventReceiver;
-import com.xenaksys.szcore.model.EventService;
-import com.xenaksys.szcore.model.HistoBucketView;
-import com.xenaksys.szcore.model.Processor;
-import com.xenaksys.szcore.model.ScoreService;
-import com.xenaksys.szcore.model.SzcoreEvent;
-import com.xenaksys.szcore.model.ZsResponseType;
+import com.xenaksys.szcore.model.*;
 import com.xenaksys.szcore.net.browser.BrowserOS;
 import com.xenaksys.szcore.net.browser.BrowserType;
 import com.xenaksys.szcore.net.browser.UAgentInfo;
@@ -49,36 +29,11 @@ import com.xenaksys.szcore.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static com.xenaksys.szcore.Consts.COMMA;
-import static com.xenaksys.szcore.Consts.EMPTY;
-import static com.xenaksys.szcore.Consts.SPACE;
-import static com.xenaksys.szcore.Consts.WEB_DATA_SCORE_STATE_DELTA;
-import static com.xenaksys.szcore.Consts.WEB_EVENT_CLIENT_ID;
-import static com.xenaksys.szcore.Consts.WEB_EVENT_ELEMENT_ID;
-import static com.xenaksys.szcore.Consts.WEB_EVENT_IS_POLL_NAME;
-import static com.xenaksys.szcore.Consts.WEB_EVENT_IS_SELECTED;
-import static com.xenaksys.szcore.Consts.WEB_EVENT_LAST_STATE_UPDATE_TIME;
-import static com.xenaksys.szcore.Consts.WEB_EVENT_NAME;
-import static com.xenaksys.szcore.Consts.WEB_EVENT_PART;
-import static com.xenaksys.szcore.Consts.WEB_EVENT_SECTION;
-import static com.xenaksys.szcore.Consts.WEB_EVENT_SENT_TIME_NAME;
-import static com.xenaksys.szcore.Consts.WEB_EVENT_SERVER_TIME;
-import static com.xenaksys.szcore.Consts.WEB_EVENT_SLOT_INSTRUMENT;
-import static com.xenaksys.szcore.Consts.WEB_EVENT_SLOT_NO;
-import static com.xenaksys.szcore.Consts.WEB_EVENT_TIME_NAME;
-import static com.xenaksys.szcore.Consts.WEB_RESPONSE_MESSAGE;
-import static com.xenaksys.szcore.Consts.WEB_RESPONSE_STATE;
-import static com.xenaksys.szcore.Consts.WEB_RESPONSE_SUBMITTED;
-import static com.xenaksys.szcore.Consts.WEB_RESPONSE_TIME;
-import static com.xenaksys.szcore.Consts.WEB_RESPONSE_TYPE;
+import static com.xenaksys.szcore.Consts.*;
 import static com.xenaksys.szcore.event.EventType.WEB_AUDIENCE_IN;
 import static com.xenaksys.szcore.event.EventType.WEB_SCORE_IN;
 
@@ -119,6 +74,7 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
 
             switch (type) {
                 case ELEMENT_SELECTED:
+                case VOTE:
                 case WEB_START:
                     processWebScoreEvent(webEvent);
                     break;
@@ -673,6 +629,12 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
                         sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
 
                 eventService.receive(selectedEvent);
+                return createOkWebString(WEB_RESPONSE_SUBMITTED);
+            case VOTE:
+                String value = zsRequest.getParam(WEB_EVENT_VALUE);
+                VoteAudienceEvent voteEvent = eventFactory.createVoteEvent(value, eventId,
+                        sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+                eventService.receive(voteEvent);
                 return createOkWebString(WEB_RESPONSE_SUBMITTED);
             case WEB_START:
                 WebStartAudienceEvent webStartEvent = eventFactory.createWebAudienceStartEvent(eventId,

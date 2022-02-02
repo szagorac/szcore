@@ -7,4 +7,5 @@ public enum IncomingWebAudienceEventType {
     POLL,
     REQUEST_LOG,
     CONNECTIONS_UPDATE,
+    VOTE,
 }

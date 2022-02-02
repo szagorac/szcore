@@ -162,6 +162,9 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
                 case STATE_UPDATE:
                     isSendStateUpdate = updateState((WebAudienceStateUpdateEvent) event);
                     break;
+                case VOTE:
+                    isSendStateUpdate = processVote((WebAudienceVoteEvent) event);
+                    break;
                 case RESET:
                 case SCRIPT:
                     List<WebAudienceScoreScript> jsScripts = event.getScripts();
@@ -199,6 +202,34 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         getState().setInstructions(l3, 3);
         getState().setInstructionsColour(colour);
         getState().setInstructionsVisible(isVisible);
+    }
+
+    private boolean processVote(WebAudienceVoteEvent event) {
+        String value = event.getValue();
+        if (value == null) {
+            return false;
+        }
+        try {
+            int voteVal = Integer.parseInt(value);
+            LOG.info("Received vote: {}", voteVal);
+            DialogsWebAudienceServerState state = getDelegateState();
+            WebCounter voteCounter = state.getCounter();
+            if (voteVal > 0) {
+                voteCounter.increment();
+            } else {
+                voteCounter.decrement();
+            }
+        } catch (NumberFormatException e) {
+            LOG.error("Invalid vote value: {}", value);
+            return false;
+        }
+        return true;
+    }
+
+    public void setVote(String value) {
+        WebAudienceVoteEvent voteEvent = getEventFactory().createWebAudienceVoteEvent(value, getClock().getSystemTimeMillis());
+        processWebAudienceEvent(voteEvent);
+
     }
 
     public boolean updateState(WebAudienceStateUpdateEvent event) {

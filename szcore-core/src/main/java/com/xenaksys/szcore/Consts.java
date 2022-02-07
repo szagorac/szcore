@@ -389,6 +389,7 @@ public interface Consts {
     String WEB_OBJ_CONFIG_SPEECH_SYNTH = "speechSynthConfig";
     String WEB_OBJ_STATE_SPEECH_SYNTH = "speechSynthState";
     String WEB_OBJ_COUNTER = "counter";
+    String WEB_OBJ_VOTE = "vote";
     String WEB_OBJ_CONFIG_GRAIN = "grain";
     String WEB_OBJ_CONFIG_GRAIN_ENVELOPE = "envelope";
     String WEB_OBJ_CONFIG_GRAIN_PANNER = "panner";

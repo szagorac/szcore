@@ -1,15 +1,32 @@
 package com.xenaksys.szcore.score.delegate.web.dialogs;
 
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.web.audience.*;
+import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceEventType;
+import com.xenaksys.szcore.event.web.audience.WebAudiencePrecountEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceStateUpdateEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceStopEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceVoteEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.ScriptPreset;
-import com.xenaksys.szcore.score.web.audience.*;
+import com.xenaksys.szcore.score.web.audience.WebAudienceChangeListener;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScoreProcessor;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
+import com.xenaksys.szcore.score.web.audience.WebAudienceServerState;
+import com.xenaksys.szcore.score.web.audience.WebAudienceStateDeltaTracker;
+import com.xenaksys.szcore.score.web.audience.WebCounter;
+import com.xenaksys.szcore.score.web.audience.WebTextState;
 import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthState;
-import com.xenaksys.szcore.score.web.audience.export.*;
+import com.xenaksys.szcore.score.web.audience.export.WebAudienceInstructionsExport;
+import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
+import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
+import com.xenaksys.szcore.score.web.audience.export.WebCounterExport;
+import com.xenaksys.szcore.score.web.audience.export.WebGranulatorConfigExport;
+import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthConfigExport;
+import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthStateExport;
 import com.xenaksys.szcore.web.WebAudienceAction;
 import com.xenaksys.szcore.web.WebScoreStateType;
 import org.slf4j.Logger;
@@ -19,7 +36,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.xenaksys.szcore.Consts.*;
+import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_LOAD_PRESET;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_ACTIONS;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRANULATOR;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_SPEECH_SYNTH;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_COUNTER;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_INSTRUCTIONS;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_STATE_SPEECH_SYNTH;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_VOTE;
+import static com.xenaksys.szcore.Consts.WEB_TEXT_BACKGROUND_COLOUR;
 
 public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(DialogsWebAudienceProcessor.class);
@@ -219,17 +245,12 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
             } else {
                 voteCounter.decrement();
             }
+            getPcs().firePropertyChange(WEB_OBJ_COUNTER, WEB_OBJ_VOTE, voteCounter);
         } catch (NumberFormatException e) {
             LOG.error("Invalid vote value: {}", value);
             return false;
         }
         return true;
-    }
-
-    public void setVote(String value) {
-        WebAudienceVoteEvent voteEvent = getEventFactory().createWebAudienceVoteEvent(value, getClock().getSystemTimeMillis());
-        processWebAudienceEvent(voteEvent);
-
     }
 
     public boolean updateState(WebAudienceStateUpdateEvent event) {

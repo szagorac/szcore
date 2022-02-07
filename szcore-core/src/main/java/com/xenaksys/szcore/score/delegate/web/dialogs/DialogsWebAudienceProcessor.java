@@ -245,6 +245,7 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
             } else {
                 voteCounter.decrement();
             }
+            voteCounter.setMaxCount(event.getUsersNo());
             getPcs().firePropertyChange(WEB_OBJ_COUNTER, WEB_OBJ_VOTE, voteCounter);
         } catch (NumberFormatException e) {
             LOG.error("Invalid vote value: {}", value);

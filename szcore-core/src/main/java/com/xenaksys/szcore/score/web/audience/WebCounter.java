@@ -14,10 +14,12 @@ public class WebCounter {
     private boolean isVisible = false;
     private String colour = WEB_TEXT_BACKGROUND_COLOUR;
     private AtomicInteger counter;
+    private volatile int maxCount;
 
-    public WebCounter(String id, int startVal) {
+    public WebCounter(String id, int startVal, int maxCount) {
         this.id = id;
         this.counter = new AtomicInteger(startVal);
+        this.maxCount = maxCount;
     }
 
     public String getId() {
@@ -55,6 +57,14 @@ public class WebCounter {
 
     public int decrement() {
         return counter.decrementAndGet();
+    }
+
+    public void setMaxCount(int maxCount) {
+        this.maxCount = maxCount;
+    }
+
+    public int getMaxCount() {
+        return maxCount;
     }
 
     public void copyTo(WebCounter other) {

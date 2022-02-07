@@ -8,14 +8,20 @@ import java.util.List;
 
 public class WebAudienceVoteEvent extends WebAudienceEvent {
     private final String value;
+    private final int usersNo;
 
-    public WebAudienceVoteEvent(BeatId beatId, List<WebAudienceScoreScript> scripts, String value, long creationTime) {
+    public WebAudienceVoteEvent(BeatId beatId, List<WebAudienceScoreScript> scripts, String value, int usersNo, long creationTime) {
         super(beatId, scripts, creationTime);
         this.value = value;
+        this.usersNo = usersNo;
     }
 
     public String getValue() {
         return value;
+    }
+
+    public int getUsersNo() {
+        return usersNo;
     }
 
     public WebAudienceEventType getWebAudienceEventType() {
@@ -24,8 +30,9 @@ public class WebAudienceVoteEvent extends WebAudienceEvent {
 
     @Override
     public String toString() {
-        return "WebAudienceVoteEvent{ " +
-                super.toString() +
+        return "WebAudienceVoteEvent{" +
+                "value='" + value + '\'' +
+                ", usersNo=" + usersNo +
                 '}';
     }
 }

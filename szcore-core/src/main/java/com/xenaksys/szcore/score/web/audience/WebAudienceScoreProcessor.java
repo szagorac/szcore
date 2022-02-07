@@ -80,6 +80,7 @@ import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_PITCH_RATE_RANGE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_POSITION_OFFSET_RANGE_MS;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_UTTERANCES;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_VOICE_LOAD_ATTEMPTS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MAX_VOTE_COUNT;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_PANNER;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_PANNING_MODEL;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_PARAM_NAME;
@@ -933,7 +934,7 @@ public abstract class WebAudienceScoreProcessor {
     }
 
     public WebCounter createDefaultWebCounter() {
-        return new WebCounter(WEB_CONFIG_COUNTER, 0);
+        return new WebCounter(WEB_CONFIG_COUNTER, 0, WEB_CONFIG_MAX_VOTE_COUNT);
     }
 
     public WebGranulatorConfig createDefaultGranulatorConfig() {

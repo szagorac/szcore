@@ -202,7 +202,7 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
         if (audienceProcessor == null) {
             return;
         }
-        WebAudienceVoteEvent voteEvent = getEventFactory().createWebAudienceVoteEvent(webEvent.getValue(), getClock().getSystemTimeMillis());
+        WebAudienceVoteEvent voteEvent = getEventFactory().createWebAudienceVoteEvent(webEvent.getValue(), webEvent.getUsersNo(), getClock().getSystemTimeMillis());
         audienceProcessor.processWebAudienceEvent(voteEvent);
     }
 }

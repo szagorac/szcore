@@ -472,6 +472,7 @@ public interface Consts {
     String WEB_CONFIG_MAX_VALUE = "maxValue";
     String WEB_CONFIG_TYPE = "type";
     String WEB_CONFIG_COUNTER = "counter";
+    int WEB_CONFIG_MAX_VOTE_COUNT = 5;
     double WEB_CONFIG_DOUBLE_CHANGE_THRESHOLD = 10E-3;
 
     String WEB_DATA_SCORE_INFO = "SCORE_INFO";

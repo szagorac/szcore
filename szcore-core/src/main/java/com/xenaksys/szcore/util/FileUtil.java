@@ -188,4 +188,17 @@ public class FileUtil {
             LOG.error("copyFile: failed to copy: {} to: {}", from, to);
         }
     }
+
+    public static void copyDirectory(String from, String to) {
+        try {
+            File source = new File(from);
+            if(!source.exists()) {
+                return;
+            }
+            File dest = new File(to);
+            FileUtils.copyDirectory(source, dest);
+        } catch (IOException e) {
+            LOG.error("copyDirectory: failed to copy: {} to: {}", from, to);
+        }
+    }
 }

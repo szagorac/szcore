@@ -35,6 +35,7 @@ public class ScoreMerger {
     static final String HEADER = "scoreName,instrumentName,pageName,pageNo,barName,barNo,timeSigNum,timeSigDenom,tempoBpm,tempoBeatValue,beatNo,startTimeMillis,durationTimeMillis,endTimeMillis,startBaseBeatUnits,durationBeatUnits,endBaseBeatUnits,xStartPxl,xEndPxl,yStartPxl,yEndPxl,isUpbeat,resource,unitBeatNo";
     static final String IN_DIR = "/Users/slavko/MyHome/Music/scoreExport/Dialogs/export";
     static final String OUT_DIR = "/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged";
+    static final String RSRC_DIR = "/Users/slavko/MyHome/Music/scoreExport/Dialogs/rsrc";
 
     static final String[] SCORES_ORDER = {"DialogsPitch","DialogsRhythm"};
     static final String SCORE_NAME = "Dialogs";
@@ -68,6 +69,7 @@ public class ScoreMerger {
             FileUtil.copyFile(fromResource + Consts.PNG_FILE_EXTENSION, toResource + Consts.PNG_FILE_EXTENSION);
             FileUtil.copyFile(fromResource + Consts.INSCORE_FILE_SUFFIX + TXT_FILE_EXTENSION, toResource + Consts.INSCORE_FILE_SUFFIX + TXT_FILE_EXTENSION);
         }
+        FileUtil.copyDirectory(OUT_DIR, RSRC_DIR);
     }
 
     private String[] createOutBeatInfoLines() {

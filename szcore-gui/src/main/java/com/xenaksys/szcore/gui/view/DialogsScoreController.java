@@ -708,12 +708,26 @@ public class DialogsScoreController {
         return instrumentIds;
     }
 
+    public void reset() {
+        resetOverlays();
+        resetSections();
+    }
+
+    public void resetSections() {
+        sections.clear();
+        sectionOrder.clear();
+        nextSectionProp.setValue(Consts.NAME_NA);
+        playingSectionProp.setValue(Consts.NAME_NA);
+        setSectionStatusStyle(Consts.READY, LABEL_GREEN, LABEL_RED);
+    }
+
     public void resetOverlays() {
         setTimbreDefaultValue();
         setDynamicsDefaultValue();
         setPitchDefaultValue();
         presetsChob.getSelectionModel().select(Consts.PRESET_ALL_OFF);
     }
+
     public void setTimbreDefaultValue() {
         timbreSldr.setValue(50.0);
     }
@@ -725,4 +739,5 @@ public class DialogsScoreController {
     public void setPitchDefaultValue() {
         pitchSldr.setValue(50.0);
     }
+
 }

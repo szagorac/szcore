@@ -1191,7 +1191,7 @@ public class ScoreController {
 
     private void openFile(File file) {
         try {
-            reset();
+            resetScoreViewOnLoad();
             this.score = scoreService.loadScore(file);
             viewScore();
         } catch (Exception e) {
@@ -1199,11 +1199,15 @@ public class ScoreController {
         }
     }
 
-    private void reset() {
+    public void resetScoreViewOnLoad() {
         if (!scoreService.reset()) {
             LOG.warn("Sever failed to reset");
             return;
         }
+        mainApp.resetScore();
+    }
+
+    public void reset() {
         this.score = null;
         instrumentsList.clear();
         pagesList.clear();
@@ -1217,7 +1221,6 @@ public class ScoreController {
         for (Participant participant : participants) {
             participant.setInstrument(Consts.NAME_NA);
         }
-
     }
 
     public void viewScore() {

@@ -402,6 +402,15 @@ public class SzcoreClient extends Application {
         scoreController.setPage(startPage);
     }
 
+    public void resetScore() {
+        if(scoreController != null) {
+            scoreController.reset();
+        }
+        if(dialogsScoreController != null) {
+            dialogsScoreController.reset();
+        }
+    }
+
     public void onScoreLoad(Score score) {
         if(dialogsScoreController != null) {
             dialogsScoreController.onScoreLoad(score);

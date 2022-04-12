@@ -2,6 +2,7 @@ package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.util.FileUtil;
+import com.xenaksys.szcore.util.ParseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static com.xenaksys.szcore.Consts.COMMA;
 import static com.xenaksys.szcore.Consts.RESOURCE_JAVASCRIPT;
 import static com.xenaksys.szcore.Consts.RESOURCE_MAXMSP;
 import static com.xenaksys.szcore.Consts.RESOURCE_SCRIPT_ENGINE;
@@ -41,6 +43,7 @@ public class ScoreMerger {
     static final String SCORE_NAME = "Dialogs";
     static final String SCRIPTS = "ZScripts";
     static final String SCORE_PREFIX = "1_";
+    static final String PAGE_NO_HEADER = "pageNo: ";
 
     private final List<ScoreElementsContainer> scoreElementsContainers = new ArrayList<>();
     private final ScoreElementsContainer masterContainer = new ScoreElementsContainer(SCORE_NAME, true);
@@ -48,6 +51,8 @@ public class ScoreMerger {
     private final HashMap<String, ScoreElement> lastInstrumentElement = new HashMap<>();
     private final HashMap<String, InstrumentCounter> instrumentCounters = new HashMap<>();
     private final HashMap<String, InstrumentTracker> instrumentTrackers = new HashMap<>();
+    private final HashMap<String, HashMap<Integer, Integer>> pageMapper = new HashMap<>();
+    private final HashMap<String, List<String>> noteInfos = new HashMap<>();
 
     private int pageNo;
 
@@ -62,6 +67,7 @@ public class ScoreMerger {
         String outBeatLineFile = OUT_DIR +  Consts.SLASH + SCORE_PREFIX + SCORE_NAME + Consts.BEAT_INFO_FILE_SUFFIX;
         String[] lines = createOutBeatInfoLines();
         FileUtil.writeToFile(lines, outBeatLineFile);
+        exportNoteInfos();
 
         for(String fromResource : resourceMap.keySet()) {
             String toResource = resourceMap.get(fromResource);
@@ -70,12 +76,60 @@ public class ScoreMerger {
             FileUtil.copyFile(fromResource + Consts.INSCORE_FILE_SUFFIX + TXT_FILE_EXTENSION, toResource + Consts.INSCORE_FILE_SUFFIX + TXT_FILE_EXTENSION);
         }
         FileUtil.copyDirectory(OUT_DIR, RSRC_DIR);
+
+    }
+
+    private void exportNoteInfos() {
+        String outNoteInfoFile = OUT_DIR +  Consts.SLASH + SCORE_NAME + Consts.NOTE_INFO_FILE_SUFFIX;
+        String[] lines = createOutNoteInfoLines();
+        FileUtil.writeToFile(lines, outNoteInfoFile);
     }
 
     private String[] createOutBeatInfoLines() {
         List<String> lines  = masterContainer.export();
         lines.add(0, HEADER);
         return lines.toArray(new String[0]);
+    }
+
+    private String[] createOutNoteInfoLines() {
+        List<String> noteInfoOut = new ArrayList<>();
+        for(String scoreName : SCORES_ORDER) {
+            List<String> noteInfoLines = noteInfos.get(scoreName);
+            HashMap<Integer, Integer> pageMap = pageMapper.get(scoreName);
+            for(String niLine : noteInfoLines) {
+                String out = replaceNoteInfoPageNo(niLine, pageMap);
+                if(out != null) {
+                    noteInfoOut.add(out);
+                }
+            }
+        }
+        return noteInfoOut.toArray(new String[0]);
+    }
+
+    private String replaceNoteInfoPageNo(String noteInfoLine, HashMap<Integer, Integer> pageMap) {
+        int start = noteInfoLine.indexOf(PAGE_NO_HEADER);
+        if(start < 0) {
+            return null;
+        }
+        start += PAGE_NO_HEADER.length();
+        int end = noteInfoLine.indexOf(COMMA, start);
+        String pNoStr = noteInfoLine.substring(start, end);
+        Object pNo = ParseUtil.parseWholeNumber(pNoStr);
+        if(!(pNo instanceof Integer)) {
+            return null;
+        }
+        Integer fromNo = (Integer)pNo;
+        Integer toNo = pageMap.get(fromNo);
+        if(toNo == null) {
+            LOG.error("Could not find mapping for pageNo: {} in line: {}", fromNo, noteInfoLine);
+            return null;
+        }
+        if(fromNo.equals(toNo)) {
+            return noteInfoLine;
+        }
+        String from = PAGE_NO_HEADER + pNoStr;
+        String to  = PAGE_NO_HEADER + toNo;
+        return noteInfoLine.replace(from, to);
     }
 
     private void recalc() throws Exception {
@@ -146,6 +200,7 @@ public class ScoreMerger {
                         LOG.info("Processing page: {}, bar: {}, beat: {}, unit: {}, startMilli: {}", counter.getPageNo(), counter.getBarNo(), counter.getBeatNo(), counter.getUnitBeatNo(), counter.getStartTimeMillis());
 
                         replaceScoreName(masterElement);
+                        addPageMapping(sn, pNo, counter.getPageNo());
                         if(counter.getPageNo() == pNo) {
                             replaceResource(masterElement, sn, pn, pn);
                         } else {
@@ -197,6 +252,11 @@ public class ScoreMerger {
         masterElement.setBarName(masterBarName);
     }
 
+    private void addPageMapping(String scoreName, int fromPageNo, int toPageNo) {
+        HashMap<Integer, Integer> pMap = pageMapper.computeIfAbsent(scoreName, s -> new HashMap<>());
+        pMap.put(fromPageNo, toPageNo);
+    }
+
     private void replacePage(ScoreElement masterElement, int pNo, String pn, int currentPage) {
         masterElement.setPageNo(currentPage);
         String masterPageName = pn.replace(""+pNo, ""+currentPage);
@@ -242,8 +302,19 @@ public class ScoreMerger {
 //                LOG.info("load: element: {}", scoreElement);
                 scoreElementsContainer.addScoreElement(scoreElement);
             }
+            loadNoteInfo(scoreName);
             pageNo += scoreElementsContainer.getPageNo();
         }
+    }
+
+    private void loadNoteInfo(String scoreName) throws Exception {
+        String fileName = IN_DIR + Consts.SLASH + scoreName + Consts.NOTE_INFO_FILE_SUFFIX;
+        if(!FileUtil.exists(fileName)) {
+            return;
+        }
+        File noteInfoFile = new File(fileName);
+        List<String> lines = FileUtil.loadFile(noteInfoFile);
+        noteInfos.put(scoreName, lines);
     }
 
     private void validate() throws Exception {

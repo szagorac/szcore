@@ -3271,7 +3271,7 @@ var ZSCORE = function (Window) {
         createNoteInfoString: function (noteInfos) {
             var xPos = Math.round(noteInfos.xPos  * 100) / 100;
             var yPos = Math.round(noteInfos.yPos  * 100) / 100;
-            var mapString = "{ dx: " + xPos + ", dy: " + yPos + ", txt: " + noteInfos.noteName + "}";
+            var mapString = "{ dx: " + xPos + ", dy: " + yPos + ", txt: " + noteInfos.noteName + " }";
             return mapString;
         },
         createBeatInfoString: function (infoProps, beatInfo) {
@@ -3429,7 +3429,7 @@ var ZSCORE = function (Window) {
                 out += delimiter + noteInfoString;
                 var delimiter = COMMA + " ";
             }
-            out += "] }";
+            out += " ] }";
             noteInfoStrings.push(out);
             this.exportNoteNameStrings(noteInfoStrings);
         },
@@ -5189,7 +5189,6 @@ var ZSVIEW = function (zscorelib) {
         if (winRefExportTools) {
             winRefExportTools.close(2);
         }
-
     };
 
     var browseLayers = function (activeDocTxt, activeLayerTxt) {
@@ -5202,7 +5201,6 @@ var ZSVIEW = function (zscorelib) {
         populateOpenDocs();
 
         winRefLayerBrowser.show();
-
     };
 
     // Dialog window  resources;
@@ -5927,7 +5925,9 @@ var ZSVIEW = function (zscorelib) {
         exportDirTxt.text = getActiveDocDir();
         var activeDoc = getActiveDoc();
         if (activeDoc) {
-            exportScoreNameTxt.text = activeDoc.name;
+            var dName = activeDoc.name;
+            var sName = dName.substr(0, dName.lastIndexOf('.')) || dName;
+            exportScoreNameTxt.text = sName;
         }
 
         btns.cancelBtn.onClick = function () {

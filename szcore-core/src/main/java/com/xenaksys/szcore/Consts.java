@@ -66,6 +66,7 @@ public interface Consts {
     String DEFAULT_FILE_NAME = "part" + INSCORE_FILE_EXTENSION;
     String INDEX_HTML = "index.html";
     String BEAT_INFO_FILE_SUFFIX = "_BeatInfo.csv";
+    String NOTE_INFO_FILE_SUFFIX = "_NoteInfo.txt";
     String CSV_EXT = ".csv";
     String MINUTES_SHORT = "m";
     String SECONDS_SHORT = "s";

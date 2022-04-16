@@ -205,4 +205,14 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
         WebAudienceVoteEvent voteEvent = getEventFactory().createWebAudienceVoteEvent(webEvent.getValue(), webEvent.getUsersNo(), getClock().getSystemTimeMillis());
         audienceProcessor.processWebAudienceEvent(voteEvent);
     }
+
+    @Override
+    public void onSectionStart(String section) {
+        super.onSectionStart(section);
+        DialogsWebAudienceProcessor audienceProcessor = (DialogsWebAudienceProcessor) getWebAudienceProcessor();
+        if (audienceProcessor == null) {
+            return;
+        }
+        audienceProcessor.setCurrentSection(section);
+    }
 }

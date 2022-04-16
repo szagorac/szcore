@@ -60,6 +60,8 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
     private DialogsAudienceWebscoreConfig audienceWebscoreConfig;
     private final DialogsAudienceConfigLoader configLoader = new DialogsAudienceConfigLoader();
     private DialogsWebAudienceStateDeltaTracker stateDeltaTracker;
+    private String currentSection;
+    private long sectionStartTime;
 
     public DialogsWebAudienceProcessor(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock) {
         super(scoreProcessor, eventFactory, clock);
@@ -245,8 +247,11 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
 
     private void processWebCounterOnStop() {
         try {
-            ScoreBuilderStrategy scoreBuilderStrategy = ((BasicScore)getScore()).getScoreBuilderStrategy();
-            String currentSection = scoreBuilderStrategy.getCurrentSection();
+            String section = this.currentSection;
+            if(section == null) {
+                ScoreBuilderStrategy scoreBuilderStrategy = ((BasicScore) getScore()).getScoreBuilderStrategy();
+                section = scoreBuilderStrategy.getCurrentSection();
+            }
             DialogsWebAudienceServerState state = getDelegateState();
             WebCounter voteCounter = state.getCounter();
             TLongIntHashMap counterTimeline = voteCounter.getCounterTimeline();
@@ -256,16 +261,21 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
             Arrays.sort(times);
             String delimiter = "";
             for(long time : times) {
-                out.append(delimiter).append(time).append(EQUALS).append(counterTimeline.get(time));
+                out.append(delimiter).append(time - sectionStartTime).append(EQUALS).append(counterTimeline.get(time));
                 if(!delimiter.equals(COMMA)) {
                     delimiter = COMMA;
                 }
             }
-            LOG.info("WebCounter time series for {}::{}", currentSection, out);
+            LOG.info("WebCounter time series for {}::{}", section, out);
             voteCounter.resetCounterTimeline();
         } catch (Exception e) {
             LOG.error("Failed to process web counter", e);
         }
+    }
+
+    public void setCurrentSection(String section) {
+        currentSection = section;
+        sectionStartTime = getClock().getElapsedTimeMillis();
     }
 
     private boolean processVote(WebAudienceVoteEvent event) {

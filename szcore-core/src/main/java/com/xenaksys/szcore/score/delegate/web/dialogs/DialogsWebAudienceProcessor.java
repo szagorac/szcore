@@ -1,5 +1,6 @@
 package com.xenaksys.szcore.score.delegate.web.dialogs;
 
+import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceEventType;
@@ -10,6 +11,7 @@ import com.xenaksys.szcore.event.web.audience.WebAudienceVoteEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.ScriptPreset;
+import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.score.web.audience.WebAudienceChangeListener;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreProcessor;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
@@ -29,14 +31,19 @@ import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthStateExport;
 import com.xenaksys.szcore.web.WebAudienceAction;
 import com.xenaksys.szcore.web.WebScoreStateType;
+import gnu.trove.map.hash.TLongIntHashMap;
+import gnu.trove.set.TLongSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static com.xenaksys.szcore.Consts.COMMA;
 import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.Consts.EQUALS;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_LOAD_PRESET;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_ACTIONS;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRANULATOR;
@@ -183,7 +190,7 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
                     isSendStateUpdate = processPrecountEvent((WebAudiencePrecountEvent) event);
                     break;
                 case STOP:
-                    isSendStateUpdate = processStopAll((WebAudienceStopEvent) event);
+                    isSendStateUpdate = processStop((WebAudienceStopEvent) event);
                     break;
                 case STATE_UPDATE:
                     isSendStateUpdate = updateState((WebAudienceStateUpdateEvent) event);
@@ -230,6 +237,37 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         getState().setInstructionsVisible(isVisible);
     }
 
+    public boolean processStop(WebAudienceStopEvent event) {
+        sendStopAll();
+        processWebCounterOnStop();
+        return true;
+    }
+
+    private void processWebCounterOnStop() {
+        try {
+            ScoreBuilderStrategy scoreBuilderStrategy = ((BasicScore)getScore()).getScoreBuilderStrategy();
+            String currentSection = scoreBuilderStrategy.getCurrentSection();
+            DialogsWebAudienceServerState state = getDelegateState();
+            WebCounter voteCounter = state.getCounter();
+            TLongIntHashMap counterTimeline = voteCounter.getCounterTimeline();
+            StringBuilder out = new StringBuilder();
+            TLongSet keys = counterTimeline.keySet();
+            long[] times = keys.toArray();
+            Arrays.sort(times);
+            String delimiter = "";
+            for(long time : times) {
+                out.append(delimiter).append(time).append(EQUALS).append(counterTimeline.get(time));
+                if(!delimiter.equals(COMMA)) {
+                    delimiter = COMMA;
+                }
+            }
+            LOG.info("WebCounter time series for {}::{}", currentSection, out);
+            voteCounter.resetCounterTimeline();
+        } catch (Exception e) {
+            LOG.error("Failed to process web counter", e);
+        }
+    }
+
     private boolean processVote(WebAudienceVoteEvent event) {
         String value = event.getValue();
         if (value == null) {
@@ -246,6 +284,7 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
                 voteCounter.decrement();
             }
             voteCounter.setMaxCount(event.getUsersNo());
+            voteCounter.processTime(getClock().getElapsedTimeMillis());
             getPcs().firePropertyChange(WEB_OBJ_COUNTER, WEB_OBJ_VOTE, voteCounter);
         } catch (NumberFormatException e) {
             LOG.error("Invalid vote value: {}", value);

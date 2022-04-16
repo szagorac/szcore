@@ -934,7 +934,7 @@ public abstract class WebAudienceScoreProcessor {
     }
 
     public WebCounter createDefaultWebCounter() {
-        return new WebCounter(WEB_CONFIG_COUNTER, 0, WEB_CONFIG_MAX_VOTE_COUNT);
+        return new WebCounter(WEB_CONFIG_COUNTER, 0, WEB_CONFIG_MAX_VOTE_COUNT, Consts.WEB_COUNTER_PERIOD_MS);
     }
 
     public WebGranulatorConfig createDefaultGranulatorConfig() {

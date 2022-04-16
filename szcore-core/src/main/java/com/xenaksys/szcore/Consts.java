@@ -21,6 +21,7 @@ public interface Consts {
     String WAITING = "WAITING";
     String COMMA = ",";
     String DOT = ".";
+    String EQUALS = "=";
     String QUOTE = "'";
     String PLUS = "+";
     String PLUS_REGEX = "\\+";
@@ -173,6 +174,7 @@ public interface Consts {
     int MAX_ALLOWED_HIT_COUNT_10S = 50;
     int HISTOGRAM_MAX_BUCKETS_NO = 10;
     long HISTOGRAM_BUCKET_PERIOD_MS = 1000L;
+    long WEB_COUNTER_PERIOD_MS = 1000L;
 
     int MAX_WEB_REQ_CHART_SIZE_SEC = 60 * 10;
 

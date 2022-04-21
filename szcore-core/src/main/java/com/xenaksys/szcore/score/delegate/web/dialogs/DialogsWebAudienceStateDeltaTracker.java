@@ -3,7 +3,9 @@ package com.xenaksys.szcore.score.delegate.web.dialogs;
 import com.xenaksys.szcore.score.web.audience.WebAudienceServerState;
 import com.xenaksys.szcore.score.web.audience.WebAudienceStateDeltaTracker;
 import com.xenaksys.szcore.score.web.audience.WebCounter;
+import com.xenaksys.szcore.score.web.audience.config.WebPlayerConfig;
 import com.xenaksys.szcore.score.web.audience.export.WebCounterExport;
+import com.xenaksys.szcore.score.web.audience.export.WebPlayerConfigExport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +14,7 @@ import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRAIN;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRAIN_ENVELOPE;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRAIN_PANNER;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRANULATOR;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_PLAYER;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_COUNTER;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_INSTRUCTIONS;
@@ -58,6 +61,9 @@ public class DialogsWebAudienceStateDeltaTracker extends WebAudienceStateDeltaTr
             case WEB_OBJ_COUNTER:
                 processCounter(id, newValue);
                 break;
+            case WEB_OBJ_CONFIG_PLAYER:
+                processPlayerConfig(id, newValue);
+                break;
             default:
                 LOG.error("processUpdate: Unknown propertyName: {}", propertyName);
         }
@@ -71,6 +77,13 @@ public class DialogsWebAudienceStateDeltaTracker extends WebAudienceStateDeltaTr
         WebCounterExport counterExport = new WebCounterExport();
         counterExport.populate(counter);
         addDelta(WEB_OBJ_COUNTER, counterExport);
+    }
+
+    protected void processPlayerConfig(String id, Object newValue) {
+        WebPlayerConfig config = getDelegateState().getPlayerConfig();
+        WebPlayerConfigExport export = new WebPlayerConfigExport();
+        export.populate(config);
+        addDelta(WEB_OBJ_CONFIG_PLAYER, export);
     }
 
     @Override

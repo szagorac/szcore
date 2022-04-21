@@ -20,6 +20,7 @@ import com.xenaksys.szcore.score.web.audience.WebAudienceStateDeltaTracker;
 import com.xenaksys.szcore.score.web.audience.WebCounter;
 import com.xenaksys.szcore.score.web.audience.WebTextState;
 import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
+import com.xenaksys.szcore.score.web.audience.config.WebPlayerConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthState;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceInstructionsExport;
@@ -73,10 +74,11 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         WebGranulatorConfig granulatorConfig = createDefaultGranulatorConfig();
         WebSpeechSynthConfig speechSynthConfig = createDefaultSpeechSynthConfig();
         WebSpeechSynthState speechSynthState = createDefaultSpeechSynthState();
+        WebPlayerConfig playerConfig = createDefaultWebPlayerConfig();
         WebCounter counter = createDefaultWebCounter();
 
         DialogsWebAudienceServerState webAudienceServerState = new DialogsWebAudienceServerState(currentActions,
-                instructions, granulatorConfig, speechSynthConfig, speechSynthState, counter, getPcs());
+                instructions, granulatorConfig, speechSynthConfig, speechSynthState, playerConfig, counter, getPcs());
 
         createWebAudienceStateDeltaTracker(webAudienceServerState);
         getPcs().addPropertyChangeListener(new WebAudienceChangeListener(stateDeltaTracker));

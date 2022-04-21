@@ -390,6 +390,7 @@ public interface Consts {
     String WEB_OBJ_ZOOM_LEVEL = "zoomLevel";
     String WEB_OBJ_CONFIG_GRANULATOR = "granulatorConfig";
     String WEB_OBJ_CONFIG_SPEECH_SYNTH = "speechSynthConfig";
+    String WEB_OBJ_CONFIG_PLAYER = "playerConfig";
     String WEB_OBJ_STATE_SPEECH_SYNTH = "speechSynthState";
     String WEB_OBJ_COUNTER = "counter";
     String WEB_OBJ_VOTE = "vote";
@@ -475,6 +476,8 @@ public interface Consts {
     String WEB_CONFIG_MAX_VALUE = "maxValue";
     String WEB_CONFIG_TYPE = "type";
     String WEB_CONFIG_COUNTER = "counter";
+    String WEB_CONFIG_AUDIO_FILES = "audioFiles";
+    String WEB_CONFIG_AUDIO_FILE_INDEX_MAP = "audioFilesIndexMap";
     int WEB_CONFIG_MAX_VOTE_COUNT = 5;
     double WEB_CONFIG_DOUBLE_CHANGE_THRESHOLD = 10E-3;
 

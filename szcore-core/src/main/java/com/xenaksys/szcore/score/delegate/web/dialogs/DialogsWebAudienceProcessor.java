@@ -2,34 +2,17 @@ package com.xenaksys.szcore.score.delegate.web.dialogs;
 
 import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceEventType;
-import com.xenaksys.szcore.event.web.audience.WebAudiencePrecountEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceStateUpdateEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceStopEvent;
-import com.xenaksys.szcore.event.web.audience.WebAudienceVoteEvent;
+import com.xenaksys.szcore.event.web.audience.*;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.ScriptPreset;
 import com.xenaksys.szcore.score.BasicScore;
-import com.xenaksys.szcore.score.web.audience.WebAudienceChangeListener;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScoreProcessor;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
-import com.xenaksys.szcore.score.web.audience.WebAudienceServerState;
-import com.xenaksys.szcore.score.web.audience.WebAudienceStateDeltaTracker;
-import com.xenaksys.szcore.score.web.audience.WebCounter;
-import com.xenaksys.szcore.score.web.audience.WebTextState;
+import com.xenaksys.szcore.score.web.audience.*;
 import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebPlayerConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthState;
-import com.xenaksys.szcore.score.web.audience.export.WebAudienceInstructionsExport;
-import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
-import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
-import com.xenaksys.szcore.score.web.audience.export.WebCounterExport;
-import com.xenaksys.szcore.score.web.audience.export.WebGranulatorConfigExport;
-import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthConfigExport;
-import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthStateExport;
+import com.xenaksys.szcore.score.web.audience.export.*;
 import com.xenaksys.szcore.web.WebAudienceAction;
 import com.xenaksys.szcore.web.WebScoreStateType;
 import gnu.trove.map.hash.TLongIntHashMap;
@@ -42,18 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static com.xenaksys.szcore.Consts.COMMA;
-import static com.xenaksys.szcore.Consts.EMPTY;
-import static com.xenaksys.szcore.Consts.EQUALS;
-import static com.xenaksys.szcore.Consts.WEB_CONFIG_LOAD_PRESET;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_ACTIONS;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRANULATOR;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_SPEECH_SYNTH;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_COUNTER;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_INSTRUCTIONS;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_STATE_SPEECH_SYNTH;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_VOTE;
-import static com.xenaksys.szcore.Consts.WEB_TEXT_BACKGROUND_COLOUR;
+import static com.xenaksys.szcore.Consts.*;
 
 public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(DialogsWebAudienceProcessor.class);
@@ -130,10 +102,22 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
     public void processPresetConfigs(Map<String, Object> configs) {
         for (String key : configs.keySet()) {
             switch (key) {
+                case WEB_PLAYER:
+                    updatePlayerConfig((Map<String, Object>) configs.get(key));
+                    break;
                 default:
                     LOG.info("processPresetConfigs: unknown key: {}", key);
             }
         }
+
+    }
+
+    private void updatePlayerConfig(Map<String, Object> conf) {
+        getPlayerConfig().update(conf);
+    }
+
+    public WebPlayerConfig getPlayerConfig() {
+        return getDelegateState().getPlayerConfig();
     }
 
     public void loadConfig(String configDir) {
@@ -323,8 +307,42 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         return (DialogsWebAudienceServerState) getState();
     }
 
+    public void setPlayerConfigParam(String name, Object value) {
+        try {
+            LOG.debug("setPlayerConfigParam: setting config param: {} value: {}", name, value);
+            String[] names = name.split("\\.");
+            if (names.length == 1) {
+                setGranulatorBaseConfig(names[0], value);
+                return;
+            }
+            if (names.length != 2) {
+                LOG.error("setGranulatorConfig: invalid param names {}, will not use", Arrays.toString(names));
+                return;
+            }
+            String l1 = names[0];
+            String l2 = names[1];
+            switch (l1) {
+                case WEB_CONFIG_GRAIN:
+                    setGrainConfig(l2, value);
+                    break;
+                case WEB_CONFIG_ENVELOPE:
+                    setGranulatorEnvelopeConfig(l2, value);
+                    break;
+                case WEB_CONFIG_PANNER:
+                    setGranulatorPannerConfig(l2, value);
+                    break;
+            }
+        } catch (Exception e) {
+            LOG.error("setGranulatorConfigParam: failed to set granulator config for name: {}, value: {}", name, value, e);
+        }
+    }
+
     @Override
     public WebAudienceStateDeltaTracker getStateDeltaTracker() {
         return stateDeltaTracker;
+    }
+
+    public DialogsWebAudienceStateDeltaTracker getDelegateStateDeltaTracker() {
+        return (DialogsWebAudienceStateDeltaTracker) getStateDeltaTracker();
     }
 }

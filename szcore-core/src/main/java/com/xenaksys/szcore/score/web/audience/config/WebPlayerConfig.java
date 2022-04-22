@@ -4,10 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.beans.PropertyChangeSupport;
+import java.util.Map;
 
-import static com.xenaksys.szcore.Consts.WEB_CONFIG_AUDIO_FILES;
-import static com.xenaksys.szcore.Consts.WEB_CONFIG_AUDIO_FILE_INDEX_MAP;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_PLAYER;
+import static com.xenaksys.szcore.Consts.*;
 
 public class WebPlayerConfig {
     static final Logger LOG = LoggerFactory.getLogger(WebPlayerConfig.class);
@@ -55,5 +54,17 @@ public class WebPlayerConfig {
     public void setAudioFileIndexMap(int[][] audioFileIndexMap) {
         this.audioFileIndexMap = audioFileIndexMap;
         pcs.firePropertyChange(WEB_OBJ_CONFIG_PLAYER, WEB_CONFIG_AUDIO_FILE_INDEX_MAP, audioFileIndexMap);
+    }
+
+    public void update(Map<String, Object> config) {
+        if (config == null || config.isEmpty()) {
+            return;
+        }
+        if (config.containsKey(WEB_CONFIG_AUDIO_FILES)) {
+            setAudioFiles((String[]) config.get(WEB_CONFIG_AUDIO_FILES));
+        }
+        if (config.containsKey(WEB_CONFIG_AUDIO_FILE_INDEX_MAP)) {
+            setAudioFileIndexMap((int[][]) config.get(WEB_CONFIG_AUDIO_FILE_INDEX_MAP));
+        }
     }
 }

@@ -4,6 +4,7 @@ import com.xenaksys.szcore.score.web.audience.config.WebPlayerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,15 +14,15 @@ import static com.xenaksys.szcore.Consts.WEB_CONFIG_AUDIO_FILE_INDEX_MAP;
 public class WebPlayerConfigExport {
     static final Logger LOG = LoggerFactory.getLogger(WebPlayerConfigExport.class);
 
-    private String[] audioFiles;
-    private int[][] audioFileIndexMap;
+    private ArrayList<String> audioFiles;
+    private ArrayList<ArrayList<Integer>> audioFilesIndexMap;
 
-    public String[] getAudioFiles() {
+    public ArrayList<String> getAudioFiles() {
         return audioFiles;
     }
 
-    public int[][] getAudioFileIndexMap() {
-        return audioFileIndexMap;
+    public ArrayList<ArrayList<Integer>> getAudioFilesIndexMap() {
+        return audioFilesIndexMap;
     }
 
     public void populate(WebPlayerConfig from) {
@@ -29,13 +30,13 @@ public class WebPlayerConfigExport {
             return;
         }
         this.audioFiles = from.getAudioFiles();
-        this.audioFileIndexMap = from.getAudioFileIndexMap();
+        this.audioFilesIndexMap = from.getAudioFilesIndexMap();
     }
 
     public Map<String, Object> toJsMap() {
         Map<String, Object> config = new HashMap<>();
         config.put(WEB_CONFIG_AUDIO_FILES, getAudioFiles());
-        config.put(WEB_CONFIG_AUDIO_FILE_INDEX_MAP, getAudioFileIndexMap());
+        config.put(WEB_CONFIG_AUDIO_FILE_INDEX_MAP, getAudioFilesIndexMap());
         return config;
     }
 }

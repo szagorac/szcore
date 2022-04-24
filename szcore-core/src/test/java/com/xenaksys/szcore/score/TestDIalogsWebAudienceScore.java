@@ -18,6 +18,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,42 +62,42 @@ public class TestDIalogsWebAudienceScore {
     public void testPlayerConfigUpdate() {
         Map<String, Object> params = new HashMap<>();
         WebPlayerConfig playerConfig = webAudienceScore.getDelegateState().getPlayerConfig();
-        String[] configFiles = playerConfig.getAudioFiles();
-        assertEquals(9, configFiles.length);
-        assertEquals("/audio/DialogsPitch1-1.mp3", configFiles[0]);
-        int[][] configFileMap = playerConfig.getAudioFileIndexMap();
-        assertEquals(4, configFileMap.length);
-        assertEquals(0, configFileMap[0].length);
-        assertEquals(3, configFileMap[1].length);
-        assertEquals(5, configFileMap[2][2]);
+        ArrayList<String> configFiles = playerConfig.getAudioFiles();
+        assertEquals(9, configFiles.size());
+        assertEquals("/audio/DialogsPitch1-1.mp3", configFiles.get(0));
+        ArrayList<ArrayList<Integer>> configFileMap = playerConfig.getAudioFilesIndexMap();
+        assertEquals(4, configFileMap.size());
+        assertEquals(0, configFileMap.get(0).size());
+        assertEquals(3, configFileMap.get(1).size());
+        assertEquals(5, configFileMap.get(2).get(2).intValue());
 
-        String[] audioFiles = {
+        ArrayList<String> audioFiles = new ArrayList<>(Arrays.asList(
                 "/audio/DialogsRhythm2-1.wav",
                 "/audio/DialogsRhythm2-2.wav",
                 "/audio/DialogsRhythm3-1.wav",
                 "/audio/DialogsRhythm3-2.wav",
                 "/audio/DialogsRhythm4-1.wav",
-                "/audio/DialogsRhythm4-2.wav",
-        };
+                "/audio/DialogsRhythm4-2.wav"
+        ));
         params.put("audioFiles", audioFiles);
-        int[][] fileIndexMap = {
-                {},
-                {0, 1},
-                {2, 3},
-                {4, 5}
-        };
+
+        ArrayList<ArrayList<Integer>> fileIndexMap = new ArrayList<>();
+        fileIndexMap.add( new ArrayList<>());
+        fileIndexMap.add( new ArrayList<>(Arrays.asList(0, 1)));
+        fileIndexMap.add( new ArrayList<>(Arrays.asList(2, 3)));
+        fileIndexMap.add( new ArrayList<>(Arrays.asList(4, 5)));
         params.put("audioFilesIndexMap", fileIndexMap);
 
         playerConfig.update(params);
 
         configFiles = playerConfig.getAudioFiles();
-        assertEquals(6, configFiles.length);
-        assertEquals("/audio/DialogsRhythm2-1.wav", configFiles[0]);
-        configFileMap = playerConfig.getAudioFileIndexMap();
-        assertEquals(4, configFileMap.length);
-        assertEquals(0, configFileMap[0].length);
-        assertEquals(2, configFileMap[1].length);
-        assertEquals(3, configFileMap[2][1]);
+        assertEquals(6, configFiles.size());
+        assertEquals("/audio/DialogsRhythm2-1.wav", configFiles.get(0));
+        configFileMap = playerConfig.getAudioFilesIndexMap();
+        assertEquals(4, configFileMap.size());
+        assertEquals(0, configFileMap.get(0).size());
+        assertEquals(2, configFileMap.get(1).size());
+        assertEquals(3, configFileMap.get(2).get(1).intValue());
 
         DialogsWebAudienceStateDeltaTracker deltaTracker = webAudienceScore.getDelegateStateDeltaTracker();
         WebAudienceScoreStateDeltaExport deltaExport = deltaTracker.getDeltaExport();
@@ -105,13 +106,13 @@ public class TestDIalogsWebAudienceScore {
         WebPlayerConfigExport configExport = (WebPlayerConfigExport) delta.get(WEB_OBJ_CONFIG_PLAYER);
 
         configFiles = configExport.getAudioFiles();
-        assertEquals(6, configFiles.length);
-        assertEquals("/audio/DialogsRhythm2-1.wav", configFiles[0]);
-        configFileMap = configExport.getAudioFileIndexMap();
-        assertEquals(4, configFileMap.length);
-        assertEquals(0, configFileMap[0].length);
-        assertEquals(2, configFileMap[1].length);
-        assertEquals(3, configFileMap[2][1]);
+        assertEquals(6, configFiles.size());
+        assertEquals("/audio/DialogsRhythm2-1.wav", configFiles.get(0));
+        configFileMap = configExport.getAudioFilesIndexMap();
+        assertEquals(4, configFileMap.size());
+        assertEquals(0, configFileMap.get(0).size());
+        assertEquals(2, configFileMap.get(1).size());
+        assertEquals(3, configFileMap.get(2).get(1).intValue());
 
     }
 }

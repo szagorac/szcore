@@ -18,7 +18,7 @@ public class DialogsWebAudienceServerState extends WebAudienceServerState {
     static final Logger LOG = LoggerFactory.getLogger(DialogsWebAudienceServerState.class);
 
     private final WebCounter counter;
-    private final WebPlayerConfig playerConfig;
+    private volatile WebPlayerConfig playerConfig;
 
     public DialogsWebAudienceServerState(List<WebAudienceAction> currentActions, WebTextState instructions,
                                          WebGranulatorConfig granulatorConfig, WebSpeechSynthConfig speechSynthConfig,
@@ -35,5 +35,9 @@ public class DialogsWebAudienceServerState extends WebAudienceServerState {
 
     public WebPlayerConfig getPlayerConfig() {
         return playerConfig;
+    }
+
+    public void setPlayerConfig(WebPlayerConfig playerConfig) {
+        this.playerConfig = playerConfig;
     }
 }

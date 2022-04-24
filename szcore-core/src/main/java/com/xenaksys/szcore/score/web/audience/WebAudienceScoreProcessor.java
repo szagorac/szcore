@@ -463,6 +463,10 @@ public abstract class WebAudienceScoreProcessor {
         setAction(WEB_ACTION_ID_RAMP_LINEAR, WebAudienceActionType.AUDIO.name(), target, params);
     }
 
+    public void sendAudioFileConfig() {
+        LOG.error("sendAudioFileConfig: Unsupported call");
+    }
+
     public void setSpeechSynthConfigParam(String name, Object value) {
         try {
             LOG.debug("setSpeechSynthConfigParam: setting config param: {} value: {}", name, value);

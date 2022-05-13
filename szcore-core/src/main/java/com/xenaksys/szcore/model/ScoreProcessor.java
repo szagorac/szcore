@@ -55,6 +55,8 @@ public interface ScoreProcessor extends Processor {
 
     void setOverlayValue(OverlayType type, long value, List<Id> instrumentIds);
 
+    void setOverlayText(OverlayType type, String txt, boolean isVisible, List<Id> instrumentIds);
+
     void onUseOverlayLine(OverlayType type, Boolean value, List<Id> instrumentIds);
 
     void onUseOverlay(OverlayType type, Boolean value, List<Id> instrumentIds);

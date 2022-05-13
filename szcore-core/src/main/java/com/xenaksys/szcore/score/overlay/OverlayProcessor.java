@@ -6,6 +6,7 @@ import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.osc.ElementAlphaEvent;
 import com.xenaksys.szcore.event.osc.ElementColorEvent;
 import com.xenaksys.szcore.event.osc.ElementYPositionEvent;
+import com.xenaksys.szcore.event.osc.OverlayTextEvent;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.MutableClock;
@@ -98,8 +99,49 @@ public class OverlayProcessor {
         this.clock = clock;
     }
 
+    public void setOverlayText(OverlayType type, String txt, boolean isVisible, List<Id> instrumentIds) {
+        if (type == null) {
+            LOG.error("setOverlayValue: invalid type");
+            return;
+        }
+        switch (type) {
+            case PITCH:
+                onPitchTextChange(txt, isVisible, instrumentIds);
+                break;
+            default:
+                LOG.error("setOverlayValue: invalid overlay type {}", type);
+        }
+    }
+
+    private void onPitchTextChange(String txt, boolean isVisible, List<Id> instrumentIds) {
+        if (instrumentIds == null) {
+            return;
+        }
+
+        for (Id instrumentId : instrumentIds) {
+            Instrument instrument = scoreProcessor.getScore().getInstrument(instrumentId);
+            if (inNotOverlayInstrument(instrument)) {
+                continue;
+            }
+            Collection<Stave> staves = scoreProcessor.getScore().getInstrumentStaves(instrumentId);
+            for (Stave stave : staves) {
+                sendTextEvent(instrumentId, stave, scaled, value);
+            }
+        }
+    }
+
+    public void sendTextEvent(Id instrumentId, Stave stave, String txt, boolean isVisible) {
+        LOG.debug("sendContentLineYEvent sending y position: {} to: {} addr: '{}' yDelta: {} ", y, address, instrumentId, yDelta);
+        StaveId staveId = stave.getStaveId();
+        String destination = scoreProcessor.getScore().getOscDestination(staveId.getInstrumentId());
+        OverlayTextEvent contentEvent = eventFactory.createOverlayTextEvent(staveId, txt, isVisible,
+                OverlayType.PITCH, destination, clock.getSystemTimeMillis());
+        contentEvent.setVisible(isVisible);
+        scoreProcessor.process(contentEvent);
+    }
+
     public void setOverlayValue(OverlayType type, long value, List<Id> instrumentIds) {
-        if(type == null) {
+        if (type == null) {
             LOG.error("setOverlayValue: invalid type");
             return;
         }

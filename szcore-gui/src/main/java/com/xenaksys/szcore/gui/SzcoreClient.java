@@ -11,18 +11,8 @@ import com.xenaksys.szcore.gui.event.ClientScoreEngineEventReceiver;
 import com.xenaksys.szcore.gui.model.Participant;
 import com.xenaksys.szcore.gui.processor.ClientEventProcessor;
 import com.xenaksys.szcore.gui.processor.GuiLoggerProcessor;
-import com.xenaksys.szcore.gui.view.DialogsScoreController;
-import com.xenaksys.szcore.gui.view.LoggerController;
-import com.xenaksys.szcore.gui.view.RootLayoutController;
-import com.xenaksys.szcore.gui.view.ScoreController;
-import com.xenaksys.szcore.gui.view.SettingsController;
-import com.xenaksys.szcore.model.EventService;
-import com.xenaksys.szcore.model.Id;
-import com.xenaksys.szcore.model.Score;
-import com.xenaksys.szcore.model.ScoreService;
-import com.xenaksys.szcore.model.SectionInfo;
-import com.xenaksys.szcore.model.SzcoreEvent;
-import com.xenaksys.szcore.model.Tempo;
+import com.xenaksys.szcore.gui.view.*;
+import com.xenaksys.szcore.model.*;
 import com.xenaksys.szcore.model.id.OscListenerId;
 import com.xenaksys.szcore.model.id.StrId;
 import com.xenaksys.szcore.server.SzcoreServer;
@@ -470,25 +460,32 @@ public class SzcoreClient extends Application {
         if(scoreController == null) {
             return;
         }
-        scoreController.sendUseDynamicsLine(newValue , instrumentIds);
+        scoreController.sendUseDynamicsLine(newValue, instrumentIds);
     }
 
     public void sendPitchValueChange(long value, List<Id> instrumentIds) {
-        if(scoreController == null) {
+        if (scoreController == null) {
             return;
         }
-        scoreController.sendContentValueChange(value , instrumentIds);
+        scoreController.sendContentValueChange(value, instrumentIds);
+    }
+
+    public void sendPitchText(String txt, boolean isVisible, List<Id> instrumentIds) {
+        if (scoreController == null) {
+            return;
+        }
+        scoreController.sendContentValueChange(value, instrumentIds);
     }
 
     public void sendUsePitchOverlay(Boolean newValue, List<Id> instrumentIds) {
-        if(scoreController == null) {
+        if (scoreController == null) {
             return;
         }
-        scoreController.sendUseContentOverlay(newValue , instrumentIds);
+        scoreController.sendUseContentOverlay(newValue, instrumentIds);
     }
 
     public void sendUsePitchStaveOverlay(Boolean newValue, List<Id> instrumentIds) {
-        if(scoreController == null) {
+        if (scoreController == null) {
             return;
         }
         scoreController.sendUsePitchStaveOverlay(newValue , instrumentIds);

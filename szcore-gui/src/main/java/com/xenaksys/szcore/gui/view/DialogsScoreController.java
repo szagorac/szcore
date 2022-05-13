@@ -6,14 +6,11 @@ import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.gui.StrategyEvent;
 import com.xenaksys.szcore.event.gui.StrategyEventType;
+import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Section;
-import com.xenaksys.szcore.model.Clock;
-import com.xenaksys.szcore.model.EventService;
-import com.xenaksys.szcore.model.Id;
-import com.xenaksys.szcore.model.Score;
-import com.xenaksys.szcore.model.ScoreService;
-import com.xenaksys.szcore.model.SectionInfo;
+import com.xenaksys.szcore.gui.model.WebscoreInstructions;
+import com.xenaksys.szcore.model.*;
 import com.xenaksys.szcore.score.BasicScore;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -22,15 +19,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.Slider;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
@@ -39,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.xenaksys.szcore.Consts.EMPTY;
 import static com.xenaksys.szcore.gui.view.ScoreController.fixedLengthString;
 
 public class DialogsScoreController {
@@ -108,11 +98,19 @@ public class DialogsScoreController {
     private CheckBox sendToAllChb;
     @FXML
     private CheckBox usePitchStaveOverlayChb;
+    @FXML
+    private TextField instPitchLn1Txt;
+    @FXML
+    private Button sendPitchTextInstructionsBtn;
+    @FXML
+    private Button clearPitchTextInstructionsBtn;
 
     private SzcoreClient mainApp;
     private EventService publisher;
     private ScoreService scoreService;
     private Clock clock;
+    private WebscoreInstructions webscoreInstructions;
+
     private ObservableList<Section> sections = FXCollections.observableArrayList();
     private ObservableList<String> sectionOrder = FXCollections.observableArrayList();
     private StringProperty nextSectionProp = new SimpleStringProperty("N/A");
@@ -233,12 +231,16 @@ public class DialogsScoreController {
         overlayPresets.addAll(getOverlayPresetValues());
         presetsChob.getSelectionModel().select(Consts.PRESET_ALL_OFF);
         presetsChob.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            String out  = newSelection;
+            String out = newSelection;
             if (newSelection == null) {
                 out = oldSelection;
             }
             onPresetsChobChange(out);
         });
+
+        webscoreInstructions.setLine1(EMPTY);
+        webscoreInstructions.setLine2(EMPTY);
+        webscoreInstructions.setLine3(EMPTY);
     }
 
     @FXML
@@ -263,11 +265,46 @@ public class DialogsScoreController {
 
         nextSectionLbl.textProperty().bind(nextSectionProp);
         playingSectionLbl.textProperty().bind(playingSectionProp);
+
+        webscoreInstructions = new WebscoreInstructions();
+        instPitchLn1Txt.textProperty().bindBidirectional(webscoreInstructions.line1Property());
+    }
+
+    @FXML
+    private void sendPitchTextInstructions(ActionEvent event) {
+        webscoreInstructions.setVisible(true);
+        publishWebscoreInstructions();
+    }
+
+    @FXML
+    private void clearPitchTextInstructions(ActionEvent event) {
+        webscoreInstructions.setLine1(EMPTY);
+        webscoreInstructions.setLine2(EMPTY);
+        webscoreInstructions.setLine3(EMPTY);
+        webscoreInstructions.setVisible(false);
+        publishWebscoreInstructions();
+    }
+
+    private void publishWebscoreInstructions() {
+        String l1 = validateWebInstruction(webscoreInstructions.getLine1());
+        boolean isVisible = webscoreInstructions.getVisible();
+        EventFactory eventFactory = publisher.getEventFactory();
+        mainApp.sendPitchValueChange();
+
+        WebAudienceInstructionsEvent instructionsEvent = eventFactory.createWebAudienceInstructionsEvent(l1, EMPTY, EMPTY, isVisible, clock.getSystemTimeMillis());
+        publisher.receive(instructionsEvent);
+    }
+
+    private String validateWebInstruction(String instruction) {
+        if (instruction == null) {
+            return EMPTY;
+        }
+        return instruction;
     }
 
     private void onSectionSelect(String sectionName) {
         Section section = getSection(sectionName);
-        if(section == null) {
+        if (section == null) {
             return;
         }
         onSectionSelect(section);

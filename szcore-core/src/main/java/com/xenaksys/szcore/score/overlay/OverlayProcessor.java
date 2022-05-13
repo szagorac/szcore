@@ -106,14 +106,14 @@ public class OverlayProcessor {
         }
         switch (type) {
             case PITCH:
-                onPitchTextChange(txt, isVisible, instrumentIds);
+                onPitchInstructionsTextChange(txt, isVisible, instrumentIds);
                 break;
             default:
                 LOG.error("setOverlayValue: invalid overlay type {}", type);
         }
     }
 
-    private void onPitchTextChange(String txt, boolean isVisible, List<Id> instrumentIds) {
+    private void onPitchInstructionsTextChange(String txt, boolean isVisible, List<Id> instrumentIds) {
         if (instrumentIds == null) {
             return;
         }
@@ -125,13 +125,13 @@ public class OverlayProcessor {
             }
             Collection<Stave> staves = scoreProcessor.getScore().getInstrumentStaves(instrumentId);
             for (Stave stave : staves) {
-                sendTextEvent(instrumentId, stave, scaled, value);
+                sendTextEvent(instrumentId, stave, txt, isVisible);
             }
         }
     }
 
     public void sendTextEvent(Id instrumentId, Stave stave, String txt, boolean isVisible) {
-        LOG.debug("sendContentLineYEvent sending y position: {} to: {} addr: '{}' yDelta: {} ", y, address, instrumentId, yDelta);
+        LOG.debug("sendTextEvent sending text: {} isVisible: {} to: {} ", txt, isVisible, instrumentId);
         StaveId staveId = stave.getStaveId();
         String destination = scoreProcessor.getScore().getOscDestination(staveId.getInstrumentId());
         OverlayTextEvent contentEvent = eventFactory.createOverlayTextEvent(staveId, txt, isVisible,

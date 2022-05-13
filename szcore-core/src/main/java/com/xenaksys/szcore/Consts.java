@@ -500,6 +500,7 @@ public interface Consts {
     String WEB_PARAM_IS_ENABLED = "isEnabled";
     String WEB_PARAM_COLOUR = "colour";
     String WEB_PARAM_OPACITY = "opacity";
+    String WEB_PARAM_TEXT = "text";
 
     String WEB_SCORE_ROOT_DIR = "/score/";
     String WEB_SCORE_STAVE_TOP = "topStave";

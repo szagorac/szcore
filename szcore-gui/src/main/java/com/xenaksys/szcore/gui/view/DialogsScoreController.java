@@ -6,11 +6,15 @@ import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.gui.StrategyEvent;
 import com.xenaksys.szcore.event.gui.StrategyEventType;
-import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Section;
 import com.xenaksys.szcore.gui.model.WebscoreInstructions;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.model.Clock;
+import com.xenaksys.szcore.model.EventService;
+import com.xenaksys.szcore.model.Id;
+import com.xenaksys.szcore.model.Score;
+import com.xenaksys.szcore.model.ScoreService;
+import com.xenaksys.szcore.model.SectionInfo;
 import com.xenaksys.szcore.score.BasicScore;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -19,7 +23,16 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.Slider;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
@@ -288,11 +301,8 @@ public class DialogsScoreController {
     private void publishWebscoreInstructions() {
         String l1 = validateWebInstruction(webscoreInstructions.getLine1());
         boolean isVisible = webscoreInstructions.getVisible();
-        EventFactory eventFactory = publisher.getEventFactory();
-        mainApp.sendPitchValueChange();
-
-        WebAudienceInstructionsEvent instructionsEvent = eventFactory.createWebAudienceInstructionsEvent(l1, EMPTY, EMPTY, isVisible, clock.getSystemTimeMillis());
-        publisher.receive(instructionsEvent);
+        List<Id> instrumentIds = getInstrumentsToSend();
+        mainApp.sendPitchText(l1, isVisible, instrumentIds);
     }
 
     private String validateWebInstruction(String instruction) {

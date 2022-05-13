@@ -38,6 +38,18 @@ public class OverlayTextEvent extends OscEvent {
         args.add(2, isVisible);
     }
 
+    public StaveId getStaveId() {
+        return staveId;
+    }
+
+    public String getTxt() {
+        return txt;
+    }
+
+    public boolean isVisible() {
+        return isVisible;
+    }
+
     public OverlayType getOverlayType() {
         return overlayType;
     }

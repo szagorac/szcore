@@ -16,8 +16,21 @@ import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
+import com.xenaksys.szcore.model.BeatTimeStrategy;
+import com.xenaksys.szcore.model.ClientInfo;
+import com.xenaksys.szcore.model.Clock;
+import com.xenaksys.szcore.model.EventService;
+import com.xenaksys.szcore.model.Id;
+import com.xenaksys.szcore.model.OscPublisher;
+import com.xenaksys.szcore.model.Scheduler;
+import com.xenaksys.szcore.model.Score;
+import com.xenaksys.szcore.model.ScoreProcessor;
+import com.xenaksys.szcore.model.ScoreService;
+import com.xenaksys.szcore.model.SzcoreEvent;
+import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.Timer;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.model.WaitStrategy;
+import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.model.id.OscListenerId;
 import com.xenaksys.szcore.net.ParticipantStats;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
@@ -47,20 +60,32 @@ import com.xenaksys.szcore.time.clock.MutableNanoClock;
 import com.xenaksys.szcore.time.waitstrategy.BlockingWaitStrategy;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
-import com.xenaksys.szcore.web.*;
+import com.xenaksys.szcore.web.WebAudienceStateListener;
+import com.xenaksys.szcore.web.WebClientInfo;
+import com.xenaksys.szcore.web.WebConnection;
+import com.xenaksys.szcore.web.WebProcessor;
+import com.xenaksys.szcore.web.ZsWebRequest;
+import com.xenaksys.szcore.web.ZsWebResponse;
 import org.apache.commons.net.util.SubnetUtils;
 
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.xenaksys.szcore.Consts.*;
+import static com.xenaksys.szcore.Consts.PING_EXPIRY_MILLIS;
+import static com.xenaksys.szcore.Consts.WEB_ROOT_AUDIENCE;
+import static com.xenaksys.szcore.Consts.WEB_ROOT_SCORE;
 
 public class SzcoreServer extends Server implements EventService, ScoreService {
     private static final String PROP_APP_NAME = "appName";
@@ -778,7 +803,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         try {
             scoreProcessor.setOverlayText(type, txt, isVisible, instrumentIds);
         } catch (Exception e) {
-            LOG.error("Failed to set Dynamics Value: {}", value, e);
+            LOG.error("Failed to set Overlay Text: {}", txt, e);
             eventProcessor.notifyListeners(new ErrorEvent("Failed to set Dynamics Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
         }
     }

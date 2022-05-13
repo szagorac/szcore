@@ -19,6 +19,7 @@ import com.xenaksys.szcore.event.osc.OscEventType;
 import com.xenaksys.szcore.event.osc.OscStaveActivateEvent;
 import com.xenaksys.szcore.event.osc.OscStaveTempoEvent;
 import com.xenaksys.szcore.event.osc.OscStopEvent;
+import com.xenaksys.szcore.event.osc.OverlayTextEvent;
 import com.xenaksys.szcore.event.osc.PageDisplayEvent;
 import com.xenaksys.szcore.event.osc.PageMapDisplayEvent;
 import com.xenaksys.szcore.event.osc.PrecountBeatOffEvent;
@@ -212,6 +213,10 @@ public class WebScore {
                     break;
                 case RESET_SCORE:
                     processResetScore((ResetScoreEvent)event);
+                    break;
+                case OVERLAY_TEXT:
+                    processOverlayText((OverlayTextEvent)event);
+                    break;
                 case STAVE_TICK_DY:
                 case HELLO:
                 case SERVER_HELLO:
@@ -228,6 +233,16 @@ public class WebScore {
 
     private void processResetScore(ResetScoreEvent event) {
         instrumentClients.clear();
+    }
+
+    private void processOverlayText(OverlayTextEvent event) throws Exception {
+        String destination = event.getDestination();
+        OverlayType overlayType = event.getOverlayType();
+        String txt = event.getTxt();
+        StaveId staveId = event.getStaveId();
+        boolean isVisible = event.isVisible();
+        String webStaveId = WebUtil.getWebStaveId(staveId);
+        sendOverlayText(destination, txt, overlayType, isVisible, webStaveId);
     }
 
     private void processElementColour(ElementColorEvent event) throws Exception {
@@ -678,6 +693,19 @@ public class WebScore {
         params.put(Consts.WEB_PARAM_IS_ENABLED, isEnabled);
         params.put(Consts.WEB_PARAM_OPACITY, opacity);
         WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.OVERLAY_ELEMENT, targets, params);
+        scoreState.addAction(action);
+        sendToDestination(destination, scoreState);
+    }
+
+    private void sendOverlayText(String destination, String text, OverlayType overlayType, boolean isVisible, String webStaveId) throws Exception {
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
+        List<String> targets = Collections.singletonList(webStaveId);
+        Map<String, Object> params = new HashMap<>(4);
+        params.put(Consts.WEB_PARAM_OVERLAY_TYPE, overlayType.name());
+        params.put(Consts.WEB_PARAM_OVERLAY_ELEMENT, OverlayElementType.PITCH_TEXT.name());
+        params.put(Consts.WEB_PARAM_IS_ENABLED, isVisible);
+        params.put(Consts.WEB_PARAM_TEXT, text);
+        WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.OVERLAY_TEXT, targets, params);
         scoreState.addAction(action);
         sendToDestination(destination, scoreState);
     }

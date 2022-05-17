@@ -25,6 +25,7 @@ import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.id.OscListenerId;
 import com.xenaksys.szcore.model.id.StrId;
+import com.xenaksys.szcore.score.OverlayType;
 import com.xenaksys.szcore.server.SzcoreServer;
 import com.xenaksys.szcore.time.clock.SimpleClock;
 import com.xenaksys.szcore.web.WebClientInfo;
@@ -480,11 +481,11 @@ public class SzcoreClient extends Application {
         scoreController.sendContentValueChange(value, instrumentIds);
     }
 
-    public void sendPitchText(String txt, boolean isVisible, List<Id> instrumentIds) {
+    public void sendPitchText(String l1, String l2, String l3, boolean isVisible, List<Id> instrumentIds) {
         if (scoreController == null) {
             return;
         }
-        scoreController.sendPitchText(txt, isVisible, instrumentIds);
+        scoreController.sendOverlayText(OverlayType.PITCH, l1, l2, l3, isVisible, instrumentIds);
     }
 
     public void sendUsePitchOverlay(Boolean newValue, List<Id> instrumentIds) {

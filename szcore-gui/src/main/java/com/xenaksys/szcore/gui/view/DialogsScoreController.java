@@ -114,6 +114,10 @@ public class DialogsScoreController {
     @FXML
     private TextField instPitchLn1Txt;
     @FXML
+    private TextField instPitchLn2Txt;
+    @FXML
+    private TextField instPitchLn3Txt;
+    @FXML
     private Button sendPitchTextInstructionsBtn;
     @FXML
     private Button clearPitchTextInstructionsBtn;
@@ -281,6 +285,8 @@ public class DialogsScoreController {
 
         webscoreInstructions = new WebscoreInstructions();
         instPitchLn1Txt.textProperty().bindBidirectional(webscoreInstructions.line1Property());
+        instPitchLn2Txt.textProperty().bindBidirectional(webscoreInstructions.line2Property());
+        instPitchLn3Txt.textProperty().bindBidirectional(webscoreInstructions.line3Property());
     }
 
     @FXML
@@ -300,9 +306,11 @@ public class DialogsScoreController {
 
     private void publishWebscoreInstructions() {
         String l1 = validateWebInstruction(webscoreInstructions.getLine1());
+        String l2 = validateWebInstruction(webscoreInstructions.getLine2());
+        String l3 = validateWebInstruction(webscoreInstructions.getLine3());
         boolean isVisible = webscoreInstructions.getVisible();
         List<Id> instrumentIds = getInstrumentsToSend();
-        mainApp.sendPitchText(l1, isVisible, instrumentIds);
+        mainApp.sendPitchText(l1, l2, l3, isVisible, instrumentIds);
     }
 
     private String validateWebInstruction(String instruction) {

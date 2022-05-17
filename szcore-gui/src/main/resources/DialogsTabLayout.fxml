@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 <BorderPane prefHeight="729.0" prefWidth="870.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.xenaksys.szcore.gui.view.DialogsScoreController">
     <center>
         <AnchorPane prefHeight="455.0" prefWidth="568.0" BorderPane.alignment="CENTER">
@@ -51,47 +63,43 @@
                         <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="407.0" spacing="6.0">
                             <children>
                                 <Label prefHeight="20.0" prefWidth="69.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Dynamics" />
-                                <CheckBox fx:id="useDynamicsOverlayChb" mnemonicParsing="false" text="Ovl"/>
-                                <CheckBox fx:id="useDynamicsLineChb" layoutX="74.0" layoutY="21.0"
-                                          mnemonicParsing="false" text="Ln"/>
-                                <Label fx:id="dynamicsValLbl" minWidth="40.0" styleClass="label-big-black"
-                                       stylesheets="@css/szcoreStyle.css" text="___"/>
-                                <Slider fx:id="dynamicsSldr" showTickLabels="true" showTickMarks="true"/>
-                                <Separator orientation="VERTICAL"/>
-                                <Label layoutX="36.0" layoutY="21.0" styleClass="label-ord-bold"
-                                       stylesheets="@css/szcoreStyle.css" text="Timbre "/>
-                                <CheckBox fx:id="useTimbreOverlayChb" layoutX="10.0" layoutY="21.0"
-                                          mnemonicParsing="false" text="Ovl"/>
-                                <CheckBox fx:id="useTimbreLineChb" layoutX="396.0" layoutY="21.0"
-                                          mnemonicParsing="false" text="Ln"/>
-                                <Label fx:id="timbreValLbl" layoutX="100.0" layoutY="12.0" minWidth="40.0"
-                                       styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___"/>
-                                <Slider fx:id="timbreSldr" showTickLabels="true" showTickMarks="true"/>
+                                <CheckBox fx:id="useDynamicsOverlayChb" mnemonicParsing="false" text="Ovl" />
+                                <CheckBox fx:id="useDynamicsLineChb" layoutX="74.0" layoutY="21.0" mnemonicParsing="false" text="Ln" />
+                                <Label fx:id="dynamicsValLbl" minWidth="40.0" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___" />
+                                <Slider fx:id="dynamicsSldr" showTickLabels="true" showTickMarks="true" />
+                                <Separator orientation="VERTICAL" />
+                                <Label layoutX="36.0" layoutY="21.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Timbre " />
+                                <CheckBox fx:id="useTimbreOverlayChb" layoutX="10.0" layoutY="21.0" mnemonicParsing="false" text="Ovl" />
+                                <CheckBox fx:id="useTimbreLineChb" layoutX="396.0" layoutY="21.0" mnemonicParsing="false" text="Ln" />
+                                <Label fx:id="timbreValLbl" layoutX="100.0" layoutY="12.0" minWidth="40.0" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___" />
+                                <Slider fx:id="timbreSldr" showTickLabels="true" showTickMarks="true" />
                             </children>
                         </HBox>
                         <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="372.0" spacing="6.0">
                             <children>
-                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Pitch"/>
-                                <CheckBox fx:id="usePitchOverlayChb" mnemonicParsing="false" text="Ovl"/>
-                                <CheckBox fx:id="usePitchLineChb" mnemonicParsing="false" text="Ln"/>
-                                <Label fx:id="pitchValLbl" minWidth="40.0" styleClass="label-big-black"
-                                       stylesheets="@css/szcoreStyle.css" text="___"/>
-                                <Slider fx:id="pitchSldr" showTickLabels="true" showTickMarks="true"/>
-                                <Label layoutX="250.0" layoutY="21.0" styleClass="label-ord-bold"
-                                       stylesheets="@css/szcoreStyle.css" text="stv"/>
-                                <CheckBox fx:id="usePitchStaveOverlayChb" layoutX="288.0" layoutY="20.0"
-                                          mnemonicParsing="false" text="Ovl"/>
-                                <Separator orientation="VERTICAL"/>
-                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Text"/>
-                                <TextField fx:id="instPitchLn1Txt"/>
-                                <Button fx:id="sendPitchTextInstructionsBtn" mnemonicParsing="false"
-                                        onAction="#sendPitchTextInstructions" styleClass="css/szcoreStyle.css"
-                                        text="Send"/>
-                                <Button fx:id="clearPitchTextInstructionsBtn" mnemonicParsing="false"
-                                        onAction="#clearPitchTextInstructions" text="Clear"/>
+                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Pitch" />
+                                <CheckBox fx:id="usePitchOverlayChb" mnemonicParsing="false" text="Ovl" />
+                                <CheckBox fx:id="usePitchLineChb" mnemonicParsing="false" text="Ln" />
+                                <Label fx:id="pitchValLbl" minWidth="40.0" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___" />
+                                <Slider fx:id="pitchSldr" showTickLabels="true" showTickMarks="true" />
+                                <Label layoutX="250.0" layoutY="21.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="stv" />
+                                <CheckBox fx:id="usePitchStaveOverlayChb" layoutX="288.0" layoutY="20.0" mnemonicParsing="false" text="Ovl" />
+                                <Separator orientation="VERTICAL" />
                             </children>
                         </HBox>
-                        <Separator/>
+                  <HBox alignment="CENTER_LEFT" spacing="5.0">
+                     <children>
+                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Text L1:" />
+                                <TextField fx:id="instPitchLn1Txt" />
+                        <Label layoutX="10.0" layoutY="15.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="L2:" />
+                        <TextField fx:id="instPitchLn2Txt" layoutX="58.0" layoutY="10.0" />
+                        <Label layoutX="219.0" layoutY="15.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="L3:" />
+                        <TextField fx:id="instPitchLn3Txt" layoutX="235.0" layoutY="10.0" />
+                                <Button fx:id="sendPitchTextInstructionsBtn" mnemonicParsing="false" onAction="#sendPitchTextInstructions" styleClass="css/szcoreStyle.css" text="Send" />
+                                <Button fx:id="clearPitchTextInstructionsBtn" mnemonicParsing="false" onAction="#clearPitchTextInstructions" text="Clear" />
+                     </children>
+                  </HBox>
+                        <Separator />
                     </children>
                 </VBox>
             </children>

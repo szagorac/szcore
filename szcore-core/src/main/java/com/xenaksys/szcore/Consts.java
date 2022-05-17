@@ -501,6 +501,9 @@ public interface Consts {
     String WEB_PARAM_COLOUR = "colour";
     String WEB_PARAM_OPACITY = "opacity";
     String WEB_PARAM_TEXT = "text";
+    String WEB_PARAM_TEXT_L1 = "l1";
+    String WEB_PARAM_TEXT_L2 = "l2";
+    String WEB_PARAM_TEXT_L3 = "l3";
 
     String WEB_SCORE_ROOT_DIR = "/score/";
     String WEB_SCORE_STAVE_TOP = "topStave";

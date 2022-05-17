@@ -799,11 +799,11 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
-    public void setOverlayText(OverlayType type, String txt, boolean isVisible, List<Id> instrumentIds) {
+    public void setOverlayText(OverlayType type, String l1, String l2, String l3, boolean isVisible, List<Id> instrumentIds) {
         try {
-            scoreProcessor.setOverlayText(type, txt, isVisible, instrumentIds);
+            scoreProcessor.setOverlayText(type, l1, l2, l3, isVisible, instrumentIds);
         } catch (Exception e) {
-            LOG.error("Failed to set Overlay Text: {}", txt, e);
+            LOG.error("Failed to set Overlay Text: {}; {}; {}", l1, l2, l3 , e);
             eventProcessor.notifyListeners(new ErrorEvent("Failed to set Dynamics Value", "SzcoreServer", e, clock.getSystemTimeMillis()));
         }
     }

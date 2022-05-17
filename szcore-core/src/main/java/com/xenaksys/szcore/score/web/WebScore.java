@@ -238,11 +238,13 @@ public class WebScore {
     private void processOverlayText(OverlayTextEvent event) throws Exception {
         String destination = event.getDestination();
         OverlayType overlayType = event.getOverlayType();
-        String txt = event.getTxt();
+        String l1 = event.getL1();
+        String l2 = event.getL2();
+        String l3 = event.getL3();
         StaveId staveId = event.getStaveId();
         boolean isVisible = event.isVisible();
         String webStaveId = WebUtil.getWebStaveId(staveId);
-        sendOverlayText(destination, txt, overlayType, isVisible, webStaveId);
+        sendOverlayText(destination, l1, l2, l3, overlayType, isVisible, webStaveId);
     }
 
     private void processElementColour(ElementColorEvent event) throws Exception {
@@ -697,14 +699,16 @@ public class WebScore {
         sendToDestination(destination, scoreState);
     }
 
-    private void sendOverlayText(String destination, String text, OverlayType overlayType, boolean isVisible, String webStaveId) throws Exception {
+    private void sendOverlayText(String destination, String l1, String l2, String l3, OverlayType overlayType, boolean isVisible, String webStaveId) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         List<String> targets = Collections.singletonList(webStaveId);
         Map<String, Object> params = new HashMap<>(4);
         params.put(Consts.WEB_PARAM_OVERLAY_TYPE, overlayType.name());
         params.put(Consts.WEB_PARAM_OVERLAY_ELEMENT, OverlayElementType.PITCH_TEXT.name());
         params.put(Consts.WEB_PARAM_IS_ENABLED, isVisible);
-        params.put(Consts.WEB_PARAM_TEXT, text);
+        params.put(Consts.WEB_PARAM_TEXT_L1, l1);
+        params.put(Consts.WEB_PARAM_TEXT_L2, l2);
+        params.put(Consts.WEB_PARAM_TEXT_L3, l3);
         WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.OVERLAY_TEXT, targets, params);
         scoreState.addAction(action);
         sendToDestination(destination, scoreState);

@@ -6,7 +6,11 @@ import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
 import com.xenaksys.szcore.score.OverlayType;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.score.web.WebScoreTargetType;
-import com.xenaksys.szcore.web.*;
+import com.xenaksys.szcore.web.WebAudienceStateListener;
+import com.xenaksys.szcore.web.WebClientInfo;
+import com.xenaksys.szcore.web.WebConnection;
+import com.xenaksys.szcore.web.ZsWebRequest;
+import com.xenaksys.szcore.web.ZsWebResponse;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -39,7 +43,7 @@ public interface ScoreService {
 
     void setOverlayValue(OverlayType type, long value, List<Id> instrumentIds);
 
-    void setOverlayText(OverlayType type, String txt, boolean isVisible, List<Id> instrumentIds);
+    void setOverlayText(OverlayType type, String l1, String l2, String l3, boolean isVisible, List<Id> instrumentIds);
 
     void onUseOverlayLine(OverlayType type, Boolean value, List<Id> instrumentIds);
 

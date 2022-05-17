@@ -2259,8 +2259,8 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     }
 
     @Override
-    public void setOverlayText(OverlayType type, String txt, boolean isVisible, List<Id> instrumentIds) {
-        overlayProcessor.setOverlayText(type, txt, isVisible, instrumentIds);
+    public void setOverlayText(OverlayType type, String l1, String l2, String l3, boolean isVisible, List<Id> instrumentIds) {
+        overlayProcessor.setOverlayText(type, l1, l2, l3, isVisible, instrumentIds);
     }
 
     @Override

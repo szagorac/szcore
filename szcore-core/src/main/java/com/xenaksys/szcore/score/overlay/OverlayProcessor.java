@@ -99,21 +99,21 @@ public class OverlayProcessor {
         this.clock = clock;
     }
 
-    public void setOverlayText(OverlayType type, String txt, boolean isVisible, List<Id> instrumentIds) {
+    public void setOverlayText(OverlayType type, String l1, String l2, String l3, boolean isVisible, List<Id> instrumentIds) {
         if (type == null) {
             LOG.error("setOverlayValue: invalid type");
             return;
         }
         switch (type) {
             case PITCH:
-                onPitchInstructionsTextChange(txt, isVisible, instrumentIds);
+                onPitchInstructionsTextChange(l1, l2, l3, isVisible, instrumentIds);
                 break;
             default:
                 LOG.error("setOverlayValue: invalid overlay type {}", type);
         }
     }
 
-    private void onPitchInstructionsTextChange(String txt, boolean isVisible, List<Id> instrumentIds) {
+    private void onPitchInstructionsTextChange(String l1, String l2, String l3, boolean isVisible, List<Id> instrumentIds) {
         if (instrumentIds == null) {
             return;
         }
@@ -125,18 +125,17 @@ public class OverlayProcessor {
             }
             Collection<Stave> staves = scoreProcessor.getScore().getInstrumentStaves(instrumentId);
             for (Stave stave : staves) {
-                sendTextEvent(instrumentId, stave, txt, isVisible);
+                sendTextEvent(instrumentId, stave, l1, l2, l3, isVisible);
             }
         }
     }
 
-    public void sendTextEvent(Id instrumentId, Stave stave, String txt, boolean isVisible) {
-        LOG.debug("sendTextEvent sending text: {} isVisible: {} to: {} ", txt, isVisible, instrumentId);
+    public void sendTextEvent(Id instrumentId, Stave stave, String l1, String l2, String l3, boolean isVisible) {
+        LOG.debug("sendTextEvent sending text: {} isVisible: {} to: {} ", l1, isVisible, instrumentId);
         StaveId staveId = stave.getStaveId();
         String destination = scoreProcessor.getScore().getOscDestination(staveId.getInstrumentId());
-        OverlayTextEvent contentEvent = eventFactory.createOverlayTextEvent(staveId, txt, isVisible,
+        OverlayTextEvent contentEvent = eventFactory.createOverlayTextEvent(staveId, l1, l2, l3, isVisible,
                 OverlayType.PITCH, destination, clock.getSystemTimeMillis());
-        contentEvent.setVisible(isVisible);
         scoreProcessor.process(contentEvent);
     }
 

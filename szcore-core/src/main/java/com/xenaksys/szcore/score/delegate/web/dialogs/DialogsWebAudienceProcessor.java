@@ -4,6 +4,7 @@ import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceEventType;
+import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudiencePrecountEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceStateUpdateEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceStopEvent;
@@ -215,6 +216,9 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
             resetStateDelta();
             boolean isSendStateUpdate = true;
             switch (type) {
+                case INSTRUCTIONS:
+                    isSendStateUpdate = processInstructionsEvent((WebAudienceInstructionsEvent) event);
+                    break;
                 case PRECOUNT:
                     isSendStateUpdate = processPrecountEvent((WebAudiencePrecountEvent) event);
                     break;
@@ -395,5 +399,10 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         String[] target = {WEB_PLAYER};
         Map<String, Object> params = getDelegateState().getPlayerConfig().toJsMap();
         setAction(WEB_ACTION_ID_CONFIG, WebAudienceActionType.AUDIO.name(), target, params);
+    }
+
+    private boolean processInstructionsEvent(WebAudienceInstructionsEvent event) {
+        setInstructions(event.getL1(), event.getL2(), event.getL3(), event.isVisible());
+        return true;
     }
 }

@@ -303,11 +303,11 @@ public class ScoreProcessorDelegator implements ScoreProcessor {
     }
 
     @Override
-    public void onUseOverlay(OverlayType type, Boolean value, List<Id> instrumentIds) {
+    public void onUseOverlay(OverlayType type, Boolean value, int alpha, List<Id> instrumentIds) {
         if(scoreDelegate == null) {
             return;
         }
-        scoreDelegate.onUseOverlay(type, value, instrumentIds);
+        scoreDelegate.onUseOverlay(type, value, alpha, instrumentIds);
     }
 
     @Override

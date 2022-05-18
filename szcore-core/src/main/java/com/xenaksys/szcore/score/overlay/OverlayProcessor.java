@@ -197,32 +197,32 @@ public class OverlayProcessor {
         }
     }
 
-    public void onUseOverlay(OverlayType type, Boolean value, List<Id> instrumentIds) {
+    public void onUseOverlay(OverlayType type, Boolean value, int alpha, List<Id> instrumentIds) {
         if(type == null) {
             LOG.error("onUseOverlay: invalid type");
             return;
         }
         switch (type) {
             case DYNAMICS:
-                setDynamicsOverlay(value, instrumentIds);
+                setDynamicsOverlay(value, alpha, instrumentIds);
                 break;
             case SPEED:
-                setSpeedOverlay(value, instrumentIds);
+                setSpeedOverlay(value, alpha, instrumentIds);
                 break;
             case POSITION:
-                setPositionOverlay(value, instrumentIds);
+                setPositionOverlay(value, alpha, instrumentIds);
                 break;
             case PRESSURE:
-                setPressureOverlay(value, instrumentIds);
+                setPressureOverlay(value, alpha, instrumentIds);
                 break;
             case PITCH:
-                setContentOverlay(value, instrumentIds);
+                setContentOverlay(value, alpha, instrumentIds);
                 break;
             case PITCH_STAVE:
-                setPitchStaveOverlay(value, instrumentIds);
+                setPitchStaveOverlay(value, alpha, instrumentIds);
                 break;
             case TIMBRE:
-                setTimbreOverlay(value, instrumentIds);
+                setTimbreOverlay(value, alpha, instrumentIds);
                 break;
             default:
                 LOG.error("onUseOverlay: invalid overlay type {}", type);
@@ -496,8 +496,8 @@ public class OverlayProcessor {
         }
     }
 
-    private void setDynamicsOverlay(Boolean value, List<Id> instrumentIds) {
-        LOG.debug("setDynamicsOverlay value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
+    private void setDynamicsOverlay(Boolean isEnabled, int alpha, List<Id> instrumentIds) {
+        LOG.debug("setDynamicsOverlay value: {}, instruments: {}", isEnabled, Arrays.toString(instrumentIds.toArray()));
         for (Id instrumentId : instrumentIds) {
             Instrument instrument = scoreProcessor.getScore().getInstrument(instrumentId);
             if (inNotOverlayInstrument(instrument)) {
@@ -505,9 +505,9 @@ public class OverlayProcessor {
             }
             Collection<Stave> staves = scoreProcessor.getScore().getInstrumentStaves(instrumentId);
             for (Stave stave : staves) {
-                sendOverlayElementAlphaEvent(instrumentId, stave, value, OverlayType.DYNAMICS, OverlayElementType.DYNAMICS_BOX,
+                sendOverlayElementAlphaEvent(instrumentId, stave, isEnabled, alpha, OverlayType.DYNAMICS, OverlayElementType.DYNAMICS_BOX,
                         stave.getOscAddressScoreDynamicsBox());
-                sendOverlayElementPenAlphaEvent(instrumentId, stave, value, OverlayType.DYNAMICS, OverlayElementType.DYNAMICS_MID_LINE,
+                sendOverlayElementPenAlphaEvent(instrumentId, stave, isEnabled, OverlayType.DYNAMICS, OverlayElementType.DYNAMICS_MID_LINE,
                         stave.getOscAddressScoreDynamicsMidLine());
             }
         }
@@ -552,7 +552,7 @@ public class OverlayProcessor {
         }
     }
 
-    private void setPressureOverlay(Boolean value, List<Id> instrumentIds) {
+    private void setPressureOverlay(Boolean value, int alpha, List<Id> instrumentIds) {
         if (instrumentIds == null) {
             return;
         }
@@ -565,7 +565,7 @@ public class OverlayProcessor {
             }
             Collection<Stave> staves = scoreProcessor.getScore().getInstrumentStaves(instrumentId);
             for (Stave stave : staves) {
-                sendOverlayElementAlphaEvent(instrumentId, stave, value, OverlayType.PRESSURE, OverlayElementType.PRESSURE_BOX,
+                sendOverlayElementAlphaEvent(instrumentId, stave, value, alpha, OverlayType.PRESSURE, OverlayElementType.PRESSURE_BOX,
                         stave.getOscAddressScorePressureBox());
                 sendOverlayElementPenAlphaEvent(instrumentId, stave, value, OverlayType.PRESSURE, OverlayElementType.PRESSURE_MID_LINE,
                         stave.getOscAddressScorePressureMidLine());
@@ -618,7 +618,7 @@ public class OverlayProcessor {
         }
     }
 
-    private void setSpeedOverlay(Boolean value, List<Id> instrumentIds) {
+    private void setSpeedOverlay(Boolean value, int alpha, List<Id> instrumentIds) {
         if (instrumentIds == null) {
             return;
         }
@@ -631,7 +631,7 @@ public class OverlayProcessor {
             }
             Collection<Stave> staves = scoreProcessor.getScore().getInstrumentStaves(instrumentId);
             for (Stave stave : staves) {
-                sendOverlayElementAlphaEvent(instrumentId, stave, value, OverlayType.SPEED, OverlayElementType.SPEED_BOX,
+                sendOverlayElementAlphaEvent(instrumentId, stave, value, alpha, OverlayType.SPEED, OverlayElementType.SPEED_BOX,
                         stave.getOscAddressScoreSpeedBox());
                 sendOverlayElementPenAlphaEvent(instrumentId, stave, value, OverlayType.SPEED, OverlayElementType.SPEED_MID_LINE,
                         stave.getOscAddressScoreSpeedMidLine());
@@ -672,12 +672,11 @@ public class OverlayProcessor {
         }
     }
 
-    private void setPositionOverlay(Boolean value, List<Id> instrumentIds) {
+    private void setPositionOverlay(Boolean value, int alpha, List<Id> instrumentIds) {
         if (instrumentIds == null) {
             return;
         }
         LOG.debug("setPositionOverlay value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
-
         for (Id instrumentId : instrumentIds) {
             Instrument instrument = scoreProcessor.getScore().getInstrument(instrumentId);
             if (inNotOverlayInstrument(instrument)) {
@@ -685,7 +684,7 @@ public class OverlayProcessor {
             }
             Collection<Stave> staves = scoreProcessor.getScore().getInstrumentStaves(instrumentId);
             for (Stave stave : staves) {
-                sendOverlayElementAlphaEvent(instrumentId, stave, value, OverlayType.POSITION, OverlayElementType.POSITION_BOX,
+                sendOverlayElementAlphaEvent(instrumentId, stave, value, alpha, OverlayType.POSITION, OverlayElementType.POSITION_BOX,
                         stave.getOscAddressScorePositionBox());
                 sendOverlayElementPenAlphaEvent(instrumentId, stave, value, OverlayType.POSITION, OverlayElementType.POSITION_ORD_LINE,
                         stave.getOscAddressScorePositionOrdLine());
@@ -740,12 +739,11 @@ public class OverlayProcessor {
         }
     }
 
-    private void setTimbreOverlay(Boolean value, List<Id> instrumentIds) {
+    private void setTimbreOverlay(Boolean value, int alpha, List<Id> instrumentIds) {
         if (instrumentIds == null) {
             return;
         }
         LOG.debug("setTimbreOverlay value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
-
         for (Id instrumentId : instrumentIds) {
             Instrument instrument = scoreProcessor.getScore().getInstrument(instrumentId);
             if (inNotOverlayInstrument(instrument)) {
@@ -753,7 +751,7 @@ public class OverlayProcessor {
             }
             Collection<Stave> staves = scoreProcessor.getScore().getInstrumentStaves(instrumentId);
             for (Stave stave : staves) {
-                sendOverlayElementAlphaEvent(instrumentId, stave, value, OverlayType.TIMBRE, OverlayElementType.TIMBRE_BOX,
+                sendOverlayElementAlphaEvent(instrumentId, stave, value, alpha, OverlayType.TIMBRE, OverlayElementType.TIMBRE_BOX,
                         stave.getOscAddressScoreTimbreBox());
                 sendOverlayElementPenAlphaEvent(instrumentId, stave, value, OverlayType.TIMBRE, OverlayElementType.TIMBRE_ORD_LINE,
                         stave.getOscAddressScoreTimbreOrdLine());
@@ -794,7 +792,7 @@ public class OverlayProcessor {
         }
     }
 
-    private void setContentOverlay(Boolean value, List<Id> instrumentIds) {
+    private void setContentOverlay(Boolean value, int alpha, List<Id> instrumentIds) {
         LOG.debug("setContentOverlay value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
         for (Id instrumentId : instrumentIds) {
             Instrument instrument = scoreProcessor.getScore().getInstrument(instrumentId);
@@ -803,7 +801,7 @@ public class OverlayProcessor {
             }
             Collection<Stave> staves = scoreProcessor.getScore().getInstrumentStaves(instrumentId);
             for (Stave stave : staves) {
-                sendOverlayElementAlphaEvent(instrumentId, stave, value, OverlayType.PITCH, OverlayElementType.PITCH_BOX, stave.getOscAddressScoreContentBox());
+                sendOverlayElementAlphaEvent(instrumentId, stave, value, alpha, OverlayType.PITCH, OverlayElementType.PITCH_BOX, stave.getOscAddressScoreContentBox());
             }
         }
     }
@@ -822,7 +820,7 @@ public class OverlayProcessor {
         }
     }
 
-    private void setPitchStaveOverlay(Boolean value, List<Id> instrumentIds) {
+    private void setPitchStaveOverlay(Boolean value, int alpha, List<Id> instrumentIds) {
         LOG.debug("setPitchStaveOverlay value: {}, instruments: {}", value, Arrays.toString(instrumentIds.toArray()));
         for (Id instrumentId : instrumentIds) {
             Instrument instrument = scoreProcessor.getScore().getInstrument(instrumentId);
@@ -831,7 +829,7 @@ public class OverlayProcessor {
             }
             Collection<Stave> staves = scoreProcessor.getScore().getInstrumentStaves(instrumentId);
             for (Stave stave : staves) {
-                sendOverlayElementAlphaEvent(instrumentId, stave, value, OverlayType.PITCH_STAVE, OverlayElementType.PITCH_STAVE_BOX, stave.getOscAddressScoreContentBox());
+                sendOverlayElementAlphaEvent(instrumentId, stave, value, alpha, OverlayType.PITCH_STAVE, OverlayElementType.PITCH_STAVE_BOX, stave.getOscAddressScoreContentBox());
                 sendOverlayElementPenAlphaEvent(instrumentId, stave, value, OverlayType.PITCH_STAVE, OverlayElementType.PITCH_STAVE_MID_LINE, stave.getOscAddressScoreContentStaveOrdLine());
             }
         }
@@ -851,13 +849,9 @@ public class OverlayProcessor {
         sendElementPenAlphaEvent(instrumentId, staveId, isEnabled, overlayType, overlayElementType, stave.getOscAddressScoreDynamicsLine(), destination, alpha);
     }
 
-    public void sendOverlayElementAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled, OverlayType overlayType, OverlayElementType overlayElementType, String address) {
+    public void sendOverlayElementAlphaEvent(Id instrumentId, Stave stave, boolean isEnabled, int alpha, OverlayType overlayType, OverlayElementType overlayElementType, String address) {
         StaveId staveId = (StaveId) stave.getId();
         String destination = scoreProcessor.getScore().getOscDestination(staveId.getInstrumentId());
-        int alpha = 0;
-        if (isEnabled) {
-            alpha = 255;
-        }
         ElementAlphaEvent aEvent = eventFactory.createElementAlphaEvent(staveId, isEnabled, overlayType, overlayElementType,
                 address, destination, clock.getSystemTimeMillis());
         aEvent.setAlpha(alpha);

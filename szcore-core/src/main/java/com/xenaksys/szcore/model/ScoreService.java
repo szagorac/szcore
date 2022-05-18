@@ -47,7 +47,7 @@ public interface ScoreService {
 
     void onUseOverlayLine(OverlayType type, Boolean value, List<Id> instrumentIds);
 
-    void onUseOverlay(OverlayType type, Boolean value, List<Id> instrumentIds);
+    void onUseOverlay(OverlayType type, Boolean value, int alpha, List<Id> instrumentIds);
 
     void addBroadcastPort(InetAddress addr, int port);
 

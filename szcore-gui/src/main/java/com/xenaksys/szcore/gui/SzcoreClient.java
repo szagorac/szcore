@@ -460,11 +460,11 @@ public class SzcoreClient extends Application {
         scoreController.sendDynamicsValueChange(newVal , instrumentIds);
     }
 
-    public void sendUseDynamicsOverlay(Boolean newValue, List<Id> instrumentIds) {
+    public void sendUseDynamicsOverlay(Boolean newValue, int alpha, List<Id> instrumentIds) {
         if(scoreController == null) {
             return;
         }
-        scoreController.sendUseDynamicsOverlay(newValue , instrumentIds);
+        scoreController.sendUseDynamicsOverlay(newValue, alpha, instrumentIds);
     }
 
     public void sendUseDynamicsLine(Boolean newValue, List<Id> instrumentIds) {
@@ -488,18 +488,18 @@ public class SzcoreClient extends Application {
         scoreController.sendOverlayText(OverlayType.PITCH, l1, l2, l3, isVisible, instrumentIds);
     }
 
-    public void sendUsePitchOverlay(Boolean newValue, List<Id> instrumentIds) {
+    public void sendUsePitchOverlay(Boolean newValue, int alpha, List<Id> instrumentIds) {
         if (scoreController == null) {
             return;
         }
-        scoreController.sendUseContentOverlay(newValue, instrumentIds);
+        scoreController.sendUseContentOverlay(newValue, alpha, instrumentIds);
     }
 
-    public void sendUsePitchStaveOverlay(Boolean newValue, List<Id> instrumentIds) {
+    public void sendUsePitchStaveOverlay(Boolean newValue, int alpha, List<Id> instrumentIds) {
         if (scoreController == null) {
             return;
         }
-        scoreController.sendUsePitchStaveOverlay(newValue , instrumentIds);
+        scoreController.sendUsePitchStaveOverlay(newValue, alpha, instrumentIds);
     }
 
     public void sendUsePitchLine(Boolean newValue, List<Id> instrumentIds) {
@@ -516,11 +516,11 @@ public class SzcoreClient extends Application {
         scoreController.sendTimbreValueChange(value , instrumentIds);
     }
 
-    public void sendUseTimbreOverlay(Boolean newValue, List<Id> instrumentIds) {
+    public void sendUseTimbreOverlay(Boolean newValue, int alpha, List<Id> instrumentIds) {
         if(scoreController == null) {
             return;
         }
-        scoreController.sendUseTimbreOverlay(newValue , instrumentIds);
+        scoreController.sendUseTimbreOverlay(newValue, alpha, instrumentIds);
     }
 
     public void sendUseTimbreLine(Boolean newValue, List<Id> instrumentIds) {

@@ -809,9 +809,9 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
-    public void onUseOverlay(OverlayType type, Boolean value, List<Id> instrumentIds) {
+    public void onUseOverlay(OverlayType type, Boolean value, int alpha, List<Id> instrumentIds) {
         try {
-            scoreProcessor.onUseOverlay(type, value, instrumentIds);
+            scoreProcessor.onUseOverlay(type, value, alpha, instrumentIds);
         } catch (Exception e) {
             LOG.error("Failed to set Dynamics Value: {}", value, e);
             eventProcessor.notifyListeners(new ErrorEvent("Failed to set Dynamics Value", "SzcoreServer", e, clock.getSystemTimeMillis()));

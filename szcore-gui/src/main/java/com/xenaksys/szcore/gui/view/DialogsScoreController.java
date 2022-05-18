@@ -3,9 +3,11 @@ package com.xenaksys.szcore.gui.view;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
+import com.xenaksys.szcore.algo.ValueScaler;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.gui.StrategyEvent;
 import com.xenaksys.szcore.event.gui.StrategyEventType;
+import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Section;
 import com.xenaksys.szcore.gui.model.WebscoreInstructions;
@@ -15,6 +17,7 @@ import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Score;
 import com.xenaksys.szcore.model.ScoreService;
 import com.xenaksys.szcore.model.SectionInfo;
+import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.score.BasicScore;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -50,6 +53,12 @@ public class DialogsScoreController {
     public static final String SCORE_NAME = "Dialogs";
     public static final String LABEL_GREEN = "label-green";
     public static final String LABEL_RED = "label-red";
+
+    public static final String PRESENT = "Present";
+    public static final String CONCUR = "Concur";
+    public static final String DISSENT = "Dissent";
+    public static final String ABSTAIN = "Abstain";
+    private final ValueScaler transparencyValueScaler = new ValueScaler(0.0, 100.0, 255.0, 0.0);
 
     @FXML
     private TableView<Section> sectionsTableView;
@@ -121,23 +130,79 @@ public class DialogsScoreController {
     private Button sendPitchTextInstructionsBtn;
     @FXML
     private Button clearPitchTextInstructionsBtn;
+    @FXML
+    private CheckBox sendTxtToAllInstrumentsChb;
+    @FXML
+    private CheckBox sendTxtToAllChb;
+    @FXML
+    private CheckBox sendTxtToPresentChb;
+    @FXML
+    private Label presentL1Lbl;
+    @FXML
+    private Label presentL2Lbl;
+    @FXML
+    private Label presentL3Lbl;
+    @FXML
+    private CheckBox sendTxtToConcurChb;
+    @FXML
+    private Label concurL1Lbl;
+    @FXML
+    private Label concurL2Lbl;
+    @FXML
+    private Label concurL3Lbl;
+    @FXML
+    private CheckBox sendTxtToDissentChb;
+    @FXML
+    private Label dissentL1Lbl;
+    @FXML
+    private Label dissentL2Lbl;
+    @FXML
+    private Label dissentL3Lbl;
+    @FXML
+    private CheckBox sendTxtToAbstainChb;
+    @FXML
+    private Label abstainL1Lbl;
+    @FXML
+    private Label abstainL2Lbl;
+    @FXML
+    private Label abstainL3Lbl;
+    @FXML
+    private CheckBox sendTxtToAudienceChb;
+    @FXML
+    private Label audienceL1Lbl;
+    @FXML
+    private Label audienceL2Lbl;
+    @FXML
+    private Label audienceL3Lbl;
+    @FXML
+    private Slider pitchOverlayTransparencySldr;
 
     private SzcoreClient mainApp;
     private EventService publisher;
     private ScoreService scoreService;
     private Clock clock;
-    private WebscoreInstructions webscoreInstructions;
 
-    private ObservableList<Section> sections = FXCollections.observableArrayList();
-    private ObservableList<String> sectionOrder = FXCollections.observableArrayList();
-    private StringProperty nextSectionProp = new SimpleStringProperty("N/A");
-    private StringProperty playingSectionProp = new SimpleStringProperty("N/A");
-    private ObservableList<String> overlayPresets = FXCollections.observableArrayList();
+    private WebscoreInstructions txtInstructions;
+    private WebscoreInstructions presentInstructions;
+    private WebscoreInstructions concurInstructions;
+    private WebscoreInstructions dissentInstructions;
+    private WebscoreInstructions abstainInstructions;
+    private WebscoreInstructions audienceInstructions;
+
+    final private InstrumentId presentInstId = new InstrumentId(PRESENT);
+    final private InstrumentId concurInstId = new InstrumentId(CONCUR);
+    final private InstrumentId dissentInstId = new InstrumentId(DISSENT);
+    final private InstrumentId abstainInstId = new InstrumentId(ABSTAIN);
+
+    final private ObservableList<Section> sections = FXCollections.observableArrayList();
+    final private ObservableList<String> sectionOrder = FXCollections.observableArrayList();
+    final private StringProperty nextSectionProp = new SimpleStringProperty("N/A");
+    final private StringProperty playingSectionProp = new SimpleStringProperty("N/A");
+    final private ObservableList<String> overlayPresets = FXCollections.observableArrayList();
 
     public void setMainApp(SzcoreClient mainApp) {
         this.mainApp = mainApp;
     }
-
 
     public void populate() {
         sectionsTableView.setItems(sections);
@@ -255,9 +320,17 @@ public class DialogsScoreController {
             onPresetsChobChange(out);
         });
 
-        webscoreInstructions.setLine1(EMPTY);
-        webscoreInstructions.setLine2(EMPTY);
-        webscoreInstructions.setLine3(EMPTY);
+        txtInstructions.setLine1(EMPTY);
+        txtInstructions.setLine2(EMPTY);
+        txtInstructions.setLine3(EMPTY);
+
+        sendTxtToAllInstrumentsChb.setSelected(true);
+        pitchOverlayTransparencySldr.setValue(100.0);
+        pitchOverlayTransparencySldr.valueProperty().addListener((ov, old_val, new_val) -> {
+//            LOG.debug("old_val: {}, new_val: {}", old_val, new_val);
+            long newVal = Math.round(new_val.doubleValue());
+            onPitchOvrlTransparencyChange(newVal);
+        });
     }
 
     @FXML
@@ -283,34 +356,87 @@ public class DialogsScoreController {
         nextSectionLbl.textProperty().bind(nextSectionProp);
         playingSectionLbl.textProperty().bind(playingSectionProp);
 
-        webscoreInstructions = new WebscoreInstructions();
-        instPitchLn1Txt.textProperty().bindBidirectional(webscoreInstructions.line1Property());
-        instPitchLn2Txt.textProperty().bindBidirectional(webscoreInstructions.line2Property());
-        instPitchLn3Txt.textProperty().bindBidirectional(webscoreInstructions.line3Property());
+        txtInstructions = new WebscoreInstructions();
+        instPitchLn1Txt.textProperty().bindBidirectional(txtInstructions.line1Property());
+        instPitchLn2Txt.textProperty().bindBidirectional(txtInstructions.line2Property());
+        instPitchLn3Txt.textProperty().bindBidirectional(txtInstructions.line3Property());
+
+        presentInstructions = new WebscoreInstructions();
+        presentL1Lbl.textProperty().bindBidirectional(presentInstructions.line1Property());
+        presentL2Lbl.textProperty().bindBidirectional(presentInstructions.line2Property());
+        presentL3Lbl.textProperty().bindBidirectional(presentInstructions.line3Property());
+
+        concurInstructions = new WebscoreInstructions();
+        concurL1Lbl.textProperty().bindBidirectional(concurInstructions.line1Property());
+        concurL2Lbl.textProperty().bindBidirectional(concurInstructions.line2Property());
+        concurL3Lbl.textProperty().bindBidirectional(concurInstructions.line3Property());
+
+        dissentInstructions = new WebscoreInstructions();
+        dissentL1Lbl.textProperty().bindBidirectional(dissentInstructions.line1Property());
+        dissentL2Lbl.textProperty().bindBidirectional(dissentInstructions.line2Property());
+        dissentL3Lbl.textProperty().bindBidirectional(dissentInstructions.line3Property());
+
+        abstainInstructions = new WebscoreInstructions();
+        abstainL1Lbl.textProperty().bindBidirectional(abstainInstructions.line1Property());
+        abstainL2Lbl.textProperty().bindBidirectional(abstainInstructions.line2Property());
+        abstainL3Lbl.textProperty().bindBidirectional(abstainInstructions.line3Property());
+
+        audienceInstructions = new WebscoreInstructions();
+        audienceL1Lbl.textProperty().bindBidirectional(audienceInstructions.line1Property());
+        audienceL2Lbl.textProperty().bindBidirectional(audienceInstructions.line2Property());
+        audienceL3Lbl.textProperty().bindBidirectional(audienceInstructions.line3Property());
+
+        sendTxtToAllInstrumentsChb.selectedProperty().addListener((observable, oldValue, newValue) -> setTxtToAllInstruments(newValue));
+        sendTxtToAllChb.selectedProperty().addListener((observable, oldValue, newValue) -> setTxtToAll(newValue));
     }
 
     @FXML
     private void sendPitchTextInstructions(ActionEvent event) {
-        webscoreInstructions.setVisible(true);
+        txtInstructions.setVisible(true);
         publishWebscoreInstructions();
     }
 
     @FXML
     private void clearPitchTextInstructions(ActionEvent event) {
-        webscoreInstructions.setLine1(EMPTY);
-        webscoreInstructions.setLine2(EMPTY);
-        webscoreInstructions.setLine3(EMPTY);
-        webscoreInstructions.setVisible(false);
+        txtInstructions.setLine1(EMPTY);
+        txtInstructions.setLine2(EMPTY);
+        txtInstructions.setLine3(EMPTY);
+        txtInstructions.setVisible(false);
         publishWebscoreInstructions();
     }
 
     private void publishWebscoreInstructions() {
-        String l1 = validateWebInstruction(webscoreInstructions.getLine1());
-        String l2 = validateWebInstruction(webscoreInstructions.getLine2());
-        String l3 = validateWebInstruction(webscoreInstructions.getLine3());
-        boolean isVisible = webscoreInstructions.getVisible();
-        List<Id> instrumentIds = getInstrumentsToSend();
-        mainApp.sendPitchText(l1, l2, l3, isVisible, instrumentIds);
+        String l1 = validateWebInstruction(txtInstructions.getLine1());
+        String l2 = validateWebInstruction(txtInstructions.getLine2());
+        String l3 = validateWebInstruction(txtInstructions.getLine3());
+        boolean isVisible = txtInstructions.getVisible();
+        List<Id> instrumentIds = getInstrumentsToSendTxt();
+
+        if(isVisible) {
+            pitchOverlayTransparencySldr.setValue(30);
+            if (!usePitchOverlayChb.isSelected()) {
+                usePitchOverlayChb.setSelected(true);
+            }
+        } else {
+            if (usePitchOverlayChb.isSelected()) {
+                usePitchOverlayChb.setSelected(false);
+            }
+            pitchOverlayTransparencySldr.setValue(100);
+        }
+
+        if(!instrumentIds.isEmpty()) {
+            mainApp.sendPitchText(l1, l2, l3, isVisible, instrumentIds);
+        }
+
+        boolean isAudienceSet = false;
+        if(sendTxtToAudienceChb.isSelected()) {
+            EventFactory eventFactory = publisher.getEventFactory();
+            WebAudienceInstructionsEvent instructionsEvent = eventFactory.createWebAudienceInstructionsEvent(l1, l2, l3, isVisible, clock.getSystemTimeMillis());
+            publisher.receive(instructionsEvent);
+            isAudienceSet = true;
+        }
+
+        setTxtGuiVals(isAudienceSet, instrumentIds, l1, l2, l3);
     }
 
     private String validateWebInstruction(String instruction) {
@@ -561,16 +687,33 @@ public class DialogsScoreController {
         publisher.receive(strategyEvent);
     }
 
+    private void setTxtToAllInstruments(Boolean newValue) {
+        sendTxtToPresentChb.setSelected(newValue);
+        sendTxtToDissentChb.setSelected(newValue);
+        sendTxtToConcurChb.setSelected(newValue);
+        sendTxtToAbstainChb.setSelected(newValue);
+    }
+
+    private void setTxtToAll(Boolean newValue) {
+        sendTxtToAudienceChb.setSelected(newValue);
+        setTxtToAllInstruments(newValue);
+    }
+
     private void onUsePitchOverlay(Boolean newValue) {
         List<Id> instrumentIds = getInstrumentsToSend();
         if(instrumentIds.isEmpty()) {
             return;
         }
-        if(!newValue) {
+        int alpha = 0;
+        if(newValue) {
+            long transparency = Math.round(pitchOverlayTransparencySldr.getValue());
+            alpha = (int)Math.round(transparencyValueScaler.scaleValue(1.0*transparency));
+        } else {
             usePitchLineChb.setSelected(false);
         }
+
         mainApp.sendPitchValueChange(Math.round(pitchSldr.getValue()), instrumentIds);
-        mainApp.sendUsePitchOverlay(newValue, instrumentIds);
+        mainApp.sendUsePitchOverlay(newValue, alpha, instrumentIds);
     }
 
     private void onUsePitchStaveOverlay(Boolean newValue) {
@@ -578,7 +721,8 @@ public class DialogsScoreController {
         if(instrumentIds.isEmpty()) {
             return;
         }
-        mainApp.sendUsePitchStaveOverlay(newValue, instrumentIds);
+        int alpha = calcOverlayAlpha(newValue);
+        mainApp.sendUsePitchStaveOverlay(newValue, alpha, instrumentIds);
     }
 
     private void onUsePitchLine(Boolean newValue) {
@@ -605,6 +749,13 @@ public class DialogsScoreController {
         mainApp.sendPitchValueChange(newVal, instrumentIds);
     }
 
+    private void onPitchOvrlTransparencyChange(long newVal) {
+        if(!usePitchOverlayChb.isSelected()) {
+            return;
+        }
+        onUsePitchOverlay(usePitchOverlayChb.isSelected());
+    }
+
     private void onUseDynamicsOverlay(Boolean newValue) {
         List<Id> instrumentIds = getInstrumentsToSend();
         if(instrumentIds.isEmpty()) {
@@ -613,8 +764,13 @@ public class DialogsScoreController {
         if(!newValue) {
             useDynamicsLineChb.setSelected(false);
         }
+        int alpha = calcOverlayAlpha(newValue);
         mainApp.sendDynamicsValueChange(Math.round(dynamicsSldr.getValue()), instrumentIds);
-        mainApp.sendUseDynamicsOverlay(newValue, instrumentIds);
+        mainApp.sendUseDynamicsOverlay(newValue, alpha, instrumentIds);
+    }
+
+    private int calcOverlayAlpha(Boolean isEnabled) {
+        return isEnabled ? 255 : 0;
     }
 
     private void onUseDynamicsLine(Boolean newValue) {
@@ -648,8 +804,9 @@ public class DialogsScoreController {
         if(!newValue) {
             useTimbreLineChb.setSelected(false);
         }
+        int alpha = calcOverlayAlpha(newValue);
         mainApp.sendTimbreValueChange(Math.round(timbreSldr.getValue()), instrumentIds);
-        mainApp.sendUseTimbreOverlay(newValue, instrumentIds);
+        mainApp.sendUseTimbreOverlay(newValue, alpha, instrumentIds);
     }
 
     private void onUseTimbreLine(Boolean newValue) {
@@ -753,6 +910,56 @@ public class DialogsScoreController {
         mainApp.sendDynamicsValueChange(newVal, instrumentIds);
     }
 
+    private List<Id> getInstrumentsToSendTxt() {
+        List<Id> instruments = mainApp.getAllInstruments();
+        addRemoveInstrument(instruments, presentInstId, sendTxtToPresentChb.isSelected());
+        addRemoveInstrument(instruments, concurInstId, sendTxtToConcurChb.isSelected());
+        addRemoveInstrument(instruments, dissentInstId, sendTxtToDissentChb.isSelected());
+        addRemoveInstrument(instruments, abstainInstId, sendTxtToAbstainChb.isSelected());
+        return instruments;
+    }
+
+    private void addRemoveInstrument(List<Id> instrumentIds, InstrumentId instId, boolean isSelected) {
+        if(isSelected) {
+            if(!instrumentIds.contains(instId)) {
+                instrumentIds.add(instId);
+            }
+        } else {
+            instrumentIds.remove(instId);
+        }
+    }
+
+    private void setTxtGuiVals(boolean isAudienceSet, List<Id> instrumentIds, String l1, String l2, String l3) {
+        for(Id instrumentId : instrumentIds) {
+            WebscoreInstructions instructions = getInstrumentInstructions((InstrumentId)instrumentId);
+            if(instructions == null) {
+                continue;
+            }
+            instructions.setLine1(l1);
+            instructions.setLine2(l2);
+            instructions.setLine3(l3);
+        }
+        if(isAudienceSet) {
+            audienceInstructions.setLine1(l1);
+            audienceInstructions.setLine2(l2);
+            audienceInstructions.setLine3(l3);
+        }
+    }
+
+    private WebscoreInstructions getInstrumentInstructions(InstrumentId instrumentId) {
+        switch(instrumentId.getName()) {
+            case PRESENT:
+                return presentInstructions;
+            case CONCUR:
+                return concurInstructions;
+            case DISSENT:
+                return dissentInstructions;
+            case ABSTAIN:
+                return abstainInstructions;
+        }
+        return null;
+    }
+
     private List<Id> getInstrumentsToSend() {
         List<Id> instrumentIds;
         if(sendToAllChb.isSelected()) {
@@ -781,6 +988,7 @@ public class DialogsScoreController {
         setDynamicsDefaultValue();
         setPitchDefaultValue();
         presetsChob.getSelectionModel().select(Consts.PRESET_ALL_OFF);
+        sendTxtToAllChb.setSelected(false);
     }
 
     public void setTimbreDefaultValue() {

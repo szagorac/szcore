@@ -59,7 +59,7 @@ public interface ScoreProcessor extends Processor {
 
     void onUseOverlayLine(OverlayType type, Boolean value, List<Id> instrumentIds);
 
-    void onUseOverlay(OverlayType type, Boolean value, List<Id> instrumentIds);
+    void onUseOverlay(OverlayType type, Boolean value, int alpha, List<Id> instrumentIds);
 
     void onIncomingWebAudienceEvent(IncomingWebAudienceEvent webEvent) throws Exception;
 

@@ -1566,8 +1566,13 @@ public class ScoreController {
         if(!newValue) {
             useDynamicsLineChb.setSelected(false);
         }
+        int alpha = calcOverlayAlpha(newValue);
         sendDynamicsValueChange(Math.round(dynamicsSldr.getValue()), instrumentIds);
-        sendUseDynamicsOverlay(newValue, instrumentIds);
+        sendUseDynamicsOverlay(newValue, alpha, instrumentIds);
+    }
+
+    private int calcOverlayAlpha(Boolean isEnabled) {
+        return isEnabled ? 255 : 0;
     }
 
     private void onUseDynamicsLine(Boolean newValue) {
@@ -1601,8 +1606,9 @@ public class ScoreController {
         if(!newValue) {
             usePressureLineChb.setSelected(false);
         }
+        int alpha = calcOverlayAlpha(newValue);
         sendPressureValueChange(Math.round(pressureSldr.getValue()), instrumentIds);
-        sendUsePressureOverlay(newValue, instrumentIds);
+        sendUsePressureOverlay(newValue, alpha, instrumentIds);
     }
 
     private void onUsePressureLine(Boolean newValue) {
@@ -1636,8 +1642,9 @@ public class ScoreController {
         if(!newValue) {
             useSpeedLineChb.setSelected(false);
         }
+        int alpha = calcOverlayAlpha(newValue);
         sendSpeedValueChange(Math.round(speedSldr.getValue()), instrumentIds);
-        sendUseSpeedOverlay(newValue, instrumentIds);
+        sendUseSpeedOverlay(newValue, alpha, instrumentIds);
     }
 
     private void onUseSpeedLine(Boolean newValue) {
@@ -1671,8 +1678,9 @@ public class ScoreController {
         if(!newValue) {
             usePositionLineChb.setSelected(false);
         }
+        int alpha = calcOverlayAlpha(newValue);
         sendPositionValueChange(Math.round(positionSldr.getValue()), instrumentIds);
-        sendUsePositionOverlay(newValue, instrumentIds);
+        sendUsePositionOverlay(newValue, alpha, instrumentIds);
     }
 
     private void onUsePositionLine(Boolean newValue) {
@@ -1706,8 +1714,9 @@ public class ScoreController {
         if(!newValue) {
             useContentLineChb.setSelected(false);
         }
+        int alpha = calcOverlayAlpha(newValue);
         sendContentValueChange(Math.round(contentSldr.getValue()), instrumentIds);
-        sendUseContentOverlay(newValue, instrumentIds);
+        sendUseContentOverlay(newValue, alpha, instrumentIds);
     }
 
     private void onUseContentLine(Boolean newValue) {
@@ -1764,8 +1773,8 @@ public class ScoreController {
         return instrumentIds;
     }
 
-    public void sendUseDynamicsOverlay(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUseOverlay(OverlayType.DYNAMICS, newVal, instrumentIds);
+    public void sendUseDynamicsOverlay(Boolean newVal, int alpha, List<Id> instrumentIds) {
+        scoreService.onUseOverlay(OverlayType.DYNAMICS, newVal, alpha, instrumentIds);
     }
 
     public void sendUseDynamicsLine(Boolean newVal, List<Id> instrumentIds) {
@@ -1776,8 +1785,8 @@ public class ScoreController {
         scoreService.setOverlayValue(OverlayType.DYNAMICS, newVal, instrumentIds);
     }
 
-    private void sendUsePressureOverlay(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUseOverlay(OverlayType.PRESSURE, newVal, instrumentIds);
+    private void sendUsePressureOverlay(Boolean newVal, int alpha, List<Id> instrumentIds) {
+        scoreService.onUseOverlay(OverlayType.PRESSURE, newVal, alpha, instrumentIds);
     }
 
     private void sendUsePressureLine(Boolean newVal, List<Id> instrumentIds) {
@@ -1788,8 +1797,8 @@ public class ScoreController {
         scoreService.setOverlayValue(OverlayType.PRESSURE, newVal, instrumentIds);
     }
 
-    private void sendUseSpeedOverlay(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUseOverlay(OverlayType.SPEED, newVal, instrumentIds);
+    private void sendUseSpeedOverlay(Boolean newVal, int alpha, List<Id> instrumentIds) {
+        scoreService.onUseOverlay(OverlayType.SPEED, newVal, alpha, instrumentIds);
     }
 
     private void sendUseSpeedLine(Boolean newVal, List<Id> instrumentIds) {
@@ -1800,8 +1809,8 @@ public class ScoreController {
         scoreService.setOverlayValue(OverlayType.SPEED, newVal, instrumentIds);
     }
 
-    private void sendUsePositionOverlay(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUseOverlay(OverlayType.POSITION, newVal, instrumentIds);
+    private void sendUsePositionOverlay(Boolean newVal, int alpha, List<Id> instrumentIds) {
+        scoreService.onUseOverlay(OverlayType.POSITION, newVal, alpha, instrumentIds);
     }
 
     private void sendUsePositionLine(Boolean newVal, List<Id> instrumentIds) {
@@ -1812,12 +1821,12 @@ public class ScoreController {
         scoreService.setOverlayValue(OverlayType.POSITION, newVal, instrumentIds);
     }
 
-    public void sendUseContentOverlay(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUseOverlay(OverlayType.PITCH, newVal, instrumentIds);
+    public void sendUseContentOverlay(Boolean newVal, int alpha, List<Id> instrumentIds) {
+        scoreService.onUseOverlay(OverlayType.PITCH, newVal, alpha, instrumentIds);
     }
 
-    public void sendUsePitchStaveOverlay(Boolean newValue, List<Id> instrumentIds) {
-        scoreService.onUseOverlay(OverlayType.PITCH_STAVE, newValue, instrumentIds);
+    public void sendUsePitchStaveOverlay(Boolean newValue, int alpha, List<Id> instrumentIds) {
+        scoreService.onUseOverlay(OverlayType.PITCH_STAVE, newValue, alpha, instrumentIds);
     }
 
     public void sendUseContentLine(Boolean newVal, List<Id> instrumentIds) {
@@ -1836,8 +1845,8 @@ public class ScoreController {
         scoreService.setOverlayValue(OverlayType.TIMBRE, value, instrumentIds);
     }
 
-    public void sendUseTimbreOverlay(Boolean newValue, List<Id> instrumentIds) {
-        scoreService.onUseOverlay(OverlayType.TIMBRE, newValue, instrumentIds);
+    public void sendUseTimbreOverlay(Boolean newValue, int alpha, List<Id> instrumentIds) {
+        scoreService.onUseOverlay(OverlayType.TIMBRE, newValue, alpha, instrumentIds);
     }
 
     public void sendUseTimbreLine(Boolean newValue, List<Id> instrumentIds) {

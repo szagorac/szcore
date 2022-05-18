@@ -35,6 +35,13 @@
     -fx-border-insets: -5;
 }
 
+.borders-red{
+    -fx-border-color: red;
+    -fx-border-style: dotted;
+    -fx-border-width: 1.5;
+    -fx-border-insets: -5;
+}
+
 .label-title {
     -fx-font-size: 16pt;
     -fx-font-family: "Segoe UI Semibold";
@@ -59,6 +66,13 @@
 .label-big-black {
     -fx-font-size: 18pt;
     -fx-font-family: "Segoe UI Semibold";
+    -fx-text-fill: black;
+    -fx-opacity: 1;
+}
+
+.label-ord {
+    -fx-font-size: 10pt;
+    -fx-font-family: "Verdana";
     -fx-text-fill: black;
     -fx-opacity: 1;
 }

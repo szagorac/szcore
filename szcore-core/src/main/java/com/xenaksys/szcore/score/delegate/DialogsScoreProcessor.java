@@ -45,11 +45,11 @@ import static com.xenaksys.szcore.Consts.UNDERSCORE;
 
 public class DialogsScoreProcessor extends ScoreProcessorDelegate {
 
-    private final static String INSTRUMENT_DEFAULT = "Abstain";
     private final static String INSTRUMENT_PRESENTER = "Present";
     private final static String INSTRUMENT_AGREE = "Concur";
     private final static String INSTRUMENT_DISAGREE = "Dissent";
-    private final static String INSTRUMENT_ABSTAIN = INSTRUMENT_DEFAULT;
+    private final static String INSTRUMENT_ABSTAIN = "Abstain";
+    private final static String INSTRUMENT_DEFAULT = INSTRUMENT_AGREE;
     private final static String INSTRUMENT_OWNER = INSTRUMENT_PRESENTER;
     private final static String[] INSTRUMENTS = {INSTRUMENT_PRESENTER, INSTRUMENT_AGREE, INSTRUMENT_DISAGREE, INSTRUMENT_ABSTAIN};
     private final static String[] DYNAMIC_INSTRUMENTS = {INSTRUMENT_AGREE, INSTRUMENT_DISAGREE, INSTRUMENT_ABSTAIN};
@@ -124,18 +124,18 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
         }
 
         szcore.initScoreStrategies();
-        boolean isStopOnSectionEnd = false;
+//        boolean isStopOnSectionEnd = false;
         ScoreBuilderStrategy scoreBuilderStrategy = szcore.getScoreBuilderStrategy();
         if(scoreBuilderStrategy != null && scoreBuilderStrategy.isActive()) {
             scoreBuilderStrategy.setInstruments(INSTRUMENTS);
             scoreBuilderStrategy.setDynamicInstruments(DYNAMIC_INSTRUMENTS);
             scoreBuilderStrategy.setDefaultInstrument(INSTRUMENT_DEFAULT);
-            isStopOnSectionEnd = scoreBuilderStrategy.isStopOnSectionEnd();
+//            isStopOnSectionEnd = scoreBuilderStrategy.isStopOnSectionEnd();
         }
 
-        if (lastBeat != null && !szcore.isUseContinuousPage() && !isStopOnSectionEnd) {
-            addStopEvent(lastBeat, transport.getId());
-        }
+//        if (lastBeat != null && !szcore.isUseContinuousPage() && !isStopOnSectionEnd) {
+//            addStopEvent(lastBeat, transport.getId());
+//        }
 
         int precountMillis = 5 * 1000;
         int precountBeatNo = 4;

@@ -146,6 +146,11 @@ public class TranspositionStrategy implements ScoreStrategy {
     }
 
     @Override
+    public void reset() {
+
+    }
+
+    @Override
     public StrategyType getType() {
         return StrategyType.TRANSPOSITION;
     }

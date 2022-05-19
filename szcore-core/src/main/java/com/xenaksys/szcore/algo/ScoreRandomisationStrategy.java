@@ -59,7 +59,7 @@ public class ScoreRandomisationStrategy implements ScoreStrategy{
         isReady = true;
     }
 
-    private void reset() {
+    public void reset() {
         instrumentPage.replaceAll((i, v) -> 0);
         optOutInstruments.clear();
     }

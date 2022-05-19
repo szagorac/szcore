@@ -342,4 +342,11 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
             setCurrentSection(sectionOrder.get(0));
         }
     }
+
+    public void reset() {
+        isReady = false;
+        sectionInfos.clear();
+        sectionOrder.clear();
+        pageOrder.clear();
+    }
 }

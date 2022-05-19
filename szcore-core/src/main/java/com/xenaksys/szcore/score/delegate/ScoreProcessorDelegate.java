@@ -1337,6 +1337,27 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                 } else {
                     filteredEvents.add(mev);
                 }
+            } else {
+                filteredEvents.add(bev);
+            }
+        }
+        if (isReplace) {
+            szcore.replaceOneOffBaseBeatEvents(transportId, baseBeatNo, filteredEvents);
+        }
+    }
+
+    private void removeOneOffStopEvents(Id transportId, int baseBeatNo) {
+        List<SzcoreEvent> oneOffBeatEvents = szcore.getOneOffBaseBeatEvents(transportId, baseBeatNo);
+        if (oneOffBeatEvents == null || oneOffBeatEvents.isEmpty()) {
+            return;
+        }
+        List<SzcoreEvent> filteredEvents = new ArrayList<>(5);
+        boolean isReplace = false;
+        for (SzcoreEvent bev : oneOffBeatEvents) {
+            if (bev instanceof StopEvent) {
+                isReplace = true;
+            } else {
+                filteredEvents.add(bev);
             }
         }
         if (isReplace) {
@@ -1614,6 +1635,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
 
     public void addOneOffStopEvent(BeatId lastBeat, Id transportId) {
         long now = clock.getSystemTimeMillis();
+        removeOneOffStopEvents(transportId, lastBeat.getBaseBeatNo());
         StopEvent stopEvent = eventFactory.createStopEvent(lastBeat, transportId, now);
         szcore.addOneOffBaseBeatEvent(transportId, stopEvent);
         LOG.debug("Added one off stop event: " + stopEvent);
@@ -1725,13 +1747,13 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
 
         sendStopToClients();
 
-        resetScoreOnStop();
+        resetScore();
 
         LOG.info("Stopped play");
     }
 
-    private void resetScoreOnStop() {
-        szcore.resetOnStop();
+    private void resetScore() {
+        szcore.reset();
         scheduler.resetScheduledTasks();
     }
 
@@ -1920,6 +1942,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         LOG.debug("setPosition time: " + millis);
         if (isInitDone) {
             resetTasks();
+            resetScore();
         }
 
         isInitDone = false;
@@ -2479,8 +2502,8 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             case ASSIGN_OWNERS_RND:
                 assignStrategyOwnersRandom();
                 break;
-            case RESET_OWNERS:
-                resetStrategyOwners();
+            case RESET:
+                resetStrategy();
                 break;
             case SET_SECTION:
                 setSectionName(event.getSectionName());
@@ -2513,26 +2536,13 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         strategy.setCurrentSection(sectionName);
     }
 
-    protected void resetStrategyOwners() throws Exception {
+    protected void resetStrategy() throws Exception {
         ScoreBuilderStrategy strategy = szcore.getScoreBuilderStrategy();
         if(strategy == null) {
             return;
         }
-        List<WebClientInfo> scoreClients = webScore.getScoreClients();
-        if(scoreClients == null || scoreClients.isEmpty()) {
-            return;
-        }
-        List<String> sectionOrder = strategy.getSectionOrder();
-        List<String> orphanSections = new ArrayList<>(sectionOrder);
-        sectionOrder.clear();
-        for(String section : orphanSections) {
-            int index = MathUtil.getRandomInRange(0, scoreClients.size() - 1);
-            WebClientInfo clientInfo = scoreClients.get(index);
-            processSelectSection(section, clientInfo);
-            if(strategy.isReady()) {
-                break;
-            }
-        }
+        strategy.reset();
+        strategy.init();
         webScore.createOrUpdateWebBuilderStrategy(strategy);
         webScore.sendStrategyInfo();
     }

@@ -45,6 +45,12 @@ public class WebBuilderStrategy extends WebStrategy {
         this.sectionOwners.put(section, owner);
     }
 
+    public void clearSectionOwners() {
+        if(sectionOwners != null) {
+            sectionOwners.clear();
+        }
+    }
+
     public Map<String, String> getSectionOwners() {
         return sectionOwners;
     }

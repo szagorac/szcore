@@ -801,11 +801,11 @@ public class BasicScore implements Score {
     }
 
     @Override
-    public void resetOnStop() {
-        LOG.info("Reset Score on stop");
+    public void reset() {
+        LOG.info("Reset Score");
         Collection<TransportContext> transportContexts = transportSpecificData.values();
         for (TransportContext tc : transportContexts) {
-            tc.resetOnStop();
+            tc.reset();
         }
     }
 

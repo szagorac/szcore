@@ -764,6 +764,7 @@ public class WebScore {
         for(String connId : toRemove) {
             WebClientInfo removed = allClients.remove(connId);
             if(removed != null) {
+                playerClients.remove(connId);
                 for(String instrument : instrumentClients.keySet()) {
                     List<WebClientInfo> instClients = instrumentClients.get(instrument);
                     instClients.remove(removed);
@@ -886,6 +887,7 @@ public class WebScore {
             webBuilderStrategy.setAssignmentType(assignmentType.name());
         }
         List<String> sections = scoreBuilderStrategy.getSections();
+        webBuilderStrategy.clearSectionOwners();
         if(sections != null) {
             webBuilderStrategy.setSections(sections);
             for(String section : sections) {

@@ -413,7 +413,7 @@ public class DialogsScoreController {
         List<Id> instrumentIds = getInstrumentsToSendTxt();
 
         if(isVisible) {
-            pitchOverlayTransparencySldr.setValue(30);
+            pitchOverlayTransparencySldr.setValue(10);
             if (!usePitchOverlayChb.isSelected()) {
                 usePitchOverlayChb.setSelected(true);
             }
@@ -670,7 +670,7 @@ public class DialogsScoreController {
 
     public void resetSectionOwners(ActionEvent actionEvent) {
         EventFactory eventFactory = publisher.getEventFactory();
-        StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.RESET_OWNERS, clock.getSystemTimeMillis());
+        StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.RESET, clock.getSystemTimeMillis());
         publisher.receive(strategyEvent);
     }
 

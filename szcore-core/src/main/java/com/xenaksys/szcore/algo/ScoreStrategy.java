@@ -7,4 +7,6 @@ public interface ScoreStrategy {
     boolean isReady();
 
     boolean isActive();
+
+    void reset();
 }

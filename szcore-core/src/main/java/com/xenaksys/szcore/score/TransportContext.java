@@ -123,12 +123,10 @@ public class TransportContext {
     }
 
     public void removeOneOffBaseBeatEvents(int baseBeatNo) {
-//        LOG.info("########## REMOVING ############# baseBeatNo: " + baseBeatNo);
-
         oneOffBaseBeatEvents.remove(baseBeatNo);
     }
 
-    public void resetOnStop() {
+    public void reset() {
         oneOffBaseBeatEvents.clear();
         oneOffClockTickEvents.clear();
     }

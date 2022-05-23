@@ -9,32 +9,32 @@ import java.util.Map;
 public class WebPositionOscillatorConfigExport extends WebOscillatorConfigExport {
     static final Logger LOG = LoggerFactory.getLogger(WebPositionOscillatorConfigExport.class);
 
-    private WebPositionFrequencyLfoConfigExport frequencyLfoConfig = new WebPositionFrequencyLfoConfigExport();
-    private WebPositionStartLfoConfigExport startLfoConfig = new WebPositionStartLfoConfigExport();
-    private WebPositionEndLfoConfigExport endLfoConfig = new WebPositionEndLfoConfigExport();
+    private WebPositionFrequencyLfoConfigExport frequencyLFO = new WebPositionFrequencyLfoConfigExport();
+    private WebPositionStartLfoConfigExport startLFO = new WebPositionStartLfoConfigExport();
+    private WebPositionEndLfoConfigExport endLFO = new WebPositionEndLfoConfigExport();
 
-    public WebPositionFrequencyLfoConfigExport getFrequencyLfoConfig() {
-        return frequencyLfoConfig;
+    public WebPositionFrequencyLfoConfigExport getFrequencyLFO() {
+        return frequencyLFO;
     }
 
-    public void setFrequencyLfoConfig(WebPositionFrequencyLfoConfigExport frequencyLfoConfig) {
-        this.frequencyLfoConfig = frequencyLfoConfig;
+    public void setFrequencyLFO(WebPositionFrequencyLfoConfigExport frequencyLFO) {
+        this.frequencyLFO = frequencyLFO;
     }
 
-    public WebPositionStartLfoConfigExport getStartLfoConfig() {
-        return startLfoConfig;
+    public WebPositionStartLfoConfigExport getStartLFO() {
+        return startLFO;
     }
 
-    public void setStartLfoConfig(WebPositionStartLfoConfigExport startLfoConfig) {
-        this.startLfoConfig = startLfoConfig;
+    public void setStartLFO(WebPositionStartLfoConfigExport startLFO) {
+        this.startLFO = startLFO;
     }
 
-    public WebPositionEndLfoConfigExport getEndLfoConfig() {
-        return endLfoConfig;
+    public WebPositionEndLfoConfigExport getEndLFO() {
+        return endLFO;
     }
 
-    public void setEndLfoConfig(WebPositionEndLfoConfigExport endLfoConfig) {
-        this.endLfoConfig = endLfoConfig;
+    public void setEndLFO(WebPositionEndLfoConfigExport endLFO) {
+        this.endLFO = endLFO;
     }
 
     public void populate(WebPositionOscillatorConfig from) {
@@ -42,16 +42,16 @@ public class WebPositionOscillatorConfigExport extends WebOscillatorConfigExport
             return;
         }
         super.populate(from);
-        this.frequencyLfoConfig.populate(from.getFrequencyLfoConfig());
-        this.startLfoConfig.populate(from.getStartLfoConfig());
-        this.endLfoConfig.populate(from.getEndLfoConfig());
+        this.frequencyLFO.populate(from.getFrequencyLfoConfig());
+        this.startLFO.populate(from.getStartLfoConfig());
+        this.endLFO.populate(from.getEndLfoConfig());
     }
 
     public Map<String, Object> toJsMap() {
         Map<String, Object> config = super.toJsMap();
-        config.putAll(this.frequencyLfoConfig.toJsMap());
-        config.putAll(this.startLfoConfig.toJsMap());
-        config.putAll(this.endLfoConfig.toJsMap());
+        config.putAll(this.frequencyLFO.toJsMap());
+        config.putAll(this.startLFO.toJsMap());
+        config.putAll(this.endLFO.toJsMap());
         return config;
     }
 
@@ -60,9 +60,9 @@ public class WebPositionOscillatorConfigExport extends WebOscillatorConfigExport
     public String toString() {
         return "WebPositionOscillatorConfigExport{" +
                 " {" + super.toString() + "} " +
-                ", frequencyLfoConfig=" + frequencyLfoConfig +
-                ", startLfoConfig=" + startLfoConfig +
-                ", endLfoConfig=" + endLfoConfig +
+                ", frequencyLFO=" + frequencyLFO +
+                ", startLFO=" + startLFO +
+                ", endLFO=" + endLFO +
                 '}';
     }
 }

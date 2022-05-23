@@ -53,6 +53,7 @@ import static com.xenaksys.szcore.Consts.WEB_CONFIG_ENVELOPE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_GRAIN;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_LOAD_PRESET;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_PANNER;
+import static com.xenaksys.szcore.Consts.WEB_GRANULATOR;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_ACTIONS;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRANULATOR;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_PLAYER;
@@ -62,6 +63,7 @@ import static com.xenaksys.szcore.Consts.WEB_OBJ_INSTRUCTIONS;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_STATE_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_VOTE;
 import static com.xenaksys.szcore.Consts.WEB_PLAYER;
+import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_TEXT_BACKGROUND_COLOUR;
 
 public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
@@ -143,6 +145,12 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
                 case WEB_PLAYER:
                     updatePlayerConfig((Map<String, Object>) configs.get(key));
                     break;
+                case WEB_GRANULATOR:
+                    updateGranulatorConfig((Map<String, Object>) configs.get(key));
+                    break;
+                case WEB_SPEECH_SYNTH:
+                    updateSpeechSynthConfig((Map<String, Object>) configs.get(key));
+                    break;
                 default:
                     LOG.info("processPresetConfigs: unknown key: {}", key);
             }
@@ -152,6 +160,14 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
 
     private void updatePlayerConfig(Map<String, Object> conf) {
         getPlayerConfig().update(conf);
+    }
+
+    private void updateGranulatorConfig(Map<String, Object> conf) {
+        getGranulatorConfig().update(conf);
+    }
+
+    private void updateSpeechSynthConfig(Map<String, Object> conf) {
+        getSpeechSynthConfig().update(conf);
     }
 
     public WebPlayerConfig getPlayerConfig() {

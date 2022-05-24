@@ -467,6 +467,10 @@ public abstract class WebAudienceScoreProcessor {
         LOG.error("sendAudioFileConfig: Unsupported call");
     }
 
+    public void setSection() {
+        LOG.error("setSection: Unsupported call");
+    }
+
     public void setSpeechSynthConfigParam(String name, Object value) {
         try {
             LOG.debug("setSpeechSynthConfigParam: setting config param: {} value: {}", name, value);

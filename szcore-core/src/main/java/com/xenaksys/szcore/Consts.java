@@ -370,6 +370,7 @@ public interface Consts {
     String WEB_STAGE = "stage";
     String WEB_SPEECH_SYNTH = "speechSynth";
     String WEB_PLAYER = "player";
+    String WEB_VIEW = "view";
     String WEB_SPEECH_VOICE_RANDOM = "random";
     String WEB_SPEECH_VOICE_DEFAULT = "default";
     String WEB_TARGET_ALL = "all";
@@ -409,11 +410,13 @@ public interface Consts {
     String WEB_ACTION_ID_RAMP_LINEAR = "rampLinear";
     String WEB_ACTION_ID_RAMP_SIN = "rampSin";
     String WEB_ACTION_VOLUME = "volume";
+    String WEB_ACTION_SECTION = "section";
 
     String WEB_ACTION_PARAM_LEVEL = "level";
     String WEB_ACTION_PARAM_TIME_MS = "timeMs";
     String WEB_ACTION_PARAM_SEND_TIME_MS = "sendTimeMs";
     String WEB_ACTION_PARAM_STAVE_ID = "staveId";
+    String WEB_ACTION_PARAM_ID = "id";
 
     int WEB_CONFIG_READY_PRESET = 0;
     int WEB_CONFIG_GO_PRESET = -1;

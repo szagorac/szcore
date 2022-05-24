@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -49,6 +50,8 @@ import static com.xenaksys.szcore.Consts.COMMA;
 import static com.xenaksys.szcore.Consts.EMPTY;
 import static com.xenaksys.szcore.Consts.EQUALS;
 import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_CONFIG;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_PARAM_ID;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_SECTION;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_ENVELOPE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_GRAIN;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_LOAD_PRESET;
@@ -65,6 +68,7 @@ import static com.xenaksys.szcore.Consts.WEB_OBJ_VOTE;
 import static com.xenaksys.szcore.Consts.WEB_PLAYER;
 import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_TEXT_BACKGROUND_COLOUR;
+import static com.xenaksys.szcore.Consts.WEB_VIEW;
 
 public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(DialogsWebAudienceProcessor.class);
@@ -411,10 +415,21 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         sendPlayerConfig();
     }
 
+    public void setSection(String id) {
+        sendSetSection(id);
+    }
+
     public void sendPlayerConfig() {
         String[] target = {WEB_PLAYER};
         Map<String, Object> params = getDelegateState().getPlayerConfig().toJsMap();
         setAction(WEB_ACTION_ID_CONFIG, WebAudienceActionType.AUDIO.name(), target, params);
+    }
+
+    public void sendSetSection(String id) {
+        String[] target = {WEB_VIEW};
+        Map<String, Object> params = new HashMap<>();
+        params.put(WEB_ACTION_PARAM_ID, id);
+        setAction(WEB_ACTION_SECTION, WebAudienceActionType.ACTIVATE.name(), target, params);
     }
 
     private boolean processInstructionsEvent(WebAudienceInstructionsEvent event) {

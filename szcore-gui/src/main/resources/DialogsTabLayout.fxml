@@ -14,180 +14,205 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<BorderPane prefHeight="729.0" prefWidth="870.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.xenaksys.szcore.gui.view.DialogsScoreController">
+<BorderPane prefHeight="729.0" prefWidth="870.0" xmlns="http://javafx.com/javafx/8.0.171"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.xenaksys.szcore.gui.view.DialogsScoreController">
     <center>
         <AnchorPane BorderPane.alignment="CENTER">
             <children>
-                <VBox layoutX="10.0" layoutY="10.0" spacing="10.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+                <VBox layoutX="10.0" layoutY="10.0" spacing="10.0" AnchorPane.bottomAnchor="10.0"
+                      AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
                     <children>
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                             <children>
-                                <Label text="Sections:" />
-                        <Label fx:id="sectionsStatusLbl" styleClass="label-red" stylesheets="@css/szcoreStyle.css" text="WAITING" />
-                        <Button fx:id="resetOwnersBtn" layoutX="147.0" layoutY="11.0" mnemonicParsing="false" onAction="#resetSectionOwners" text="Reset" />
-                        <Button fx:id="assignOwnersBtn" mnemonicParsing="false" onAction="#assignSectionOwnersRnd" text="Assign" />
-                        <Button fx:id="shuffleOrderBtn" layoutX="269.0" layoutY="11.0" mnemonicParsing="false" onAction="#shuffleSectionOrder" text="Shuffle" />
-                        <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Current" />
-                        <Label fx:id="playingSectionLbl" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="N/A" />
-                        <Button fx:id="setNextSectionBtn" minWidth="30.0" mnemonicParsing="false" onAction="#setSection" prefWidth="55.0" styleClass="button-orange" stylesheets="@css/szcoreStyle.css" text="Set" />
-                        <Button fx:id="playNextSectionBtn" layoutX="539.0" layoutY="11.0" minWidth="30.0" mnemonicParsing="false" onAction="#playSection" prefWidth="55.0" styleClass="button-green" stylesheets="@css/szcoreStyle.css" text="Play" />
-                        <Button fx:id="stopNextSectionBtn" layoutX="586.0" layoutY="11.0" minWidth="30.0" mnemonicParsing="false" onAction="#stopSection" prefWidth="55.0" styleClass="button-red" stylesheets="@css/szcoreStyle.css" text="Stop" />
-                        <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Next :" />
-                        <Label fx:id="nextSectionLbl" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="N/A" />
+                                <Label text="Sections:"/>
+                                <Label fx:id="sectionsStatusLbl" styleClass="label-red" stylesheets="@css/szcoreStyle.css" text="WAITING"/>
+                                <Button fx:id="resetOwnersBtn" layoutX="147.0" layoutY="11.0" mnemonicParsing="false" onAction="#resetSectionOwners" text="Reset"/>
+                                <Button fx:id="assignOwnersBtn" mnemonicParsing="false" onAction="#assignSectionOwnersRnd" text="Assign"/>
+                                <Button fx:id="shuffleOrderBtn" layoutX="269.0" layoutY="11.0" mnemonicParsing="false" onAction="#shuffleSectionOrder" text="Shuffle"/>
+                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Current"/>
+                                <Label fx:id="playingSectionLbl" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="N/A"/>
+                                <Button fx:id="setNextSectionBtn" minWidth="30.0" mnemonicParsing="false" onAction="#setSection" prefWidth="55.0" styleClass="button-orange" stylesheets="@css/szcoreStyle.css" text="Set"/>
+                                <Button fx:id="playNextSectionBtn" layoutX="539.0" layoutY="11.0" minWidth="30.0" mnemonicParsing="false" onAction="#playSection" prefWidth="55.0" styleClass="button-green" stylesheets="@css/szcoreStyle.css" text="Play"/>
+                                <Button fx:id="stopNextSectionBtn" layoutX="586.0" layoutY="11.0" minWidth="30.0" mnemonicParsing="false" onAction="#stopSection" prefWidth="55.0" styleClass="button-red" stylesheets="@css/szcoreStyle.css" text="Stop"/>
+                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Next :"/>
+                                <Label fx:id="nextSectionLbl" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="N/A"/>
                             </children>
                         </HBox>
                         <HBox spacing="10.0">
                             <children>
                                 <TableView fx:id="sectionsTableView" prefHeight="150.0" prefWidth="285.0">
                                     <columns>
-                                        <TableColumn fx:id="sectionColumn" maxWidth="200.0" minWidth="50.0" prefWidth="70.0" text="Section" />
-                                        <TableColumn fx:id="voteNoColumn" maxWidth="200.0" minWidth="30.0" prefWidth="40.0" text="Vote" />
-                                        <TableColumn fx:id="startPageColumn" maxWidth="120.0" minWidth="30.0" prefWidth="45.0" text="StartP" />
-                                        <TableColumn fx:id="endPageColumn" maxWidth="120.0" minWidth="29.0" prefWidth="45.0" text="EndP" />
-                                        <TableColumn fx:id="ownerColumn" maxWidth="150.0" minWidth="45.0" text="Owner" />
+                                        <TableColumn fx:id="sectionColumn" maxWidth="200.0" minWidth="50.0" prefWidth="70.0" text="Section"/>
+                                        <TableColumn fx:id="voteNoColumn" maxWidth="200.0" minWidth="30.0" prefWidth="40.0" text="Vote"/>
+                                        <TableColumn fx:id="startPageColumn" maxWidth="120.0" minWidth="30.0" prefWidth="45.0" text="StartP"/>
+                                        <TableColumn fx:id="endPageColumn" maxWidth="120.0" minWidth="29.0" prefWidth="45.0" text="EndP"/>
+                                        <TableColumn fx:id="ownerColumn" maxWidth="150.0" minWidth="45.0" text="Owner"/>
                                     </columns>
                                 </TableView>
-                        <VBox alignment="TOP_CENTER">
-                           <children>
-                              <Label text="Vote" />
-                              <VBox fx:id="voteVbox" alignment="CENTER" prefHeight="130.0" styleClass="vbox-black" stylesheets="@css/szcoreStyle.css">
-                                 <children>
-                                    <VBox alignment="BOTTOM_CENTER" prefHeight="65.0">
-                                       <children>
-                                          <VBox fx:id="voteUpVbox" prefHeight="0.0" styleClass="vbox-green" stylesheets="@css/szcoreStyle.css" />
-                                       </children>
-                                    </VBox>
-                                    <VBox alignment="TOP_CENTER" prefHeight="65.0">
-                                       <children>
-                                          <VBox fx:id="voteDownVbox" alignment="TOP_CENTER" prefHeight="0.0" styleClass="vbox-red" stylesheets="@css/szcoreStyle.css" />
-                                       </children>
-                                    </VBox>
-                                 </children>
-                              </VBox>
-                           </children>
-                        </VBox>
-                        <VBox alignment="TOP_CENTER" stylesheets="@css/szcoreStyle.css">
-                           <children>
-                              <ListView fx:id="sectionOrderLvw" orientation="HORIZONTAL" prefHeight="100.0" prefWidth="370.0" />
-                              <HBox alignment="CENTER" spacing="10.0" VBox.vgrow="ALWAYS">
-                                 <children>
-                                    <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Vote current" />
-                                    <Label fx:id="voteCurrentLbl" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="0" />
-                                    <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Max" />
-                                    <Label fx:id="voteMaxLbl" styleClass="label-green-txt" stylesheets="@css/szcoreStyle.css" text="0" />
-                                    <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Min" />
-                                    <Label fx:id="voteMinLbl" styleClass="label-red-txt" stylesheets="@css/szcoreStyle.css" text="0" />
-                                    <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Avg" />
-                                    <Label fx:id="voteAvgLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="0" />
-                                 </children>
-                              </HBox>
-                           </children>
-                        </VBox>
+                                <VBox alignment="TOP_CENTER">
+                                    <children>
+                                        <Label text="Vote"/>
+                                        <VBox fx:id="voteVbox" alignment="CENTER" prefHeight="130.0" styleClass="vbox-black" stylesheets="@css/szcoreStyle.css">
+                                            <children>
+                                                <VBox alignment="BOTTOM_CENTER" prefHeight="65.0">
+                                                    <children>
+                                                        <VBox fx:id="voteUpVbox" prefHeight="0.0" styleClass="vbox-green" stylesheets="@css/szcoreStyle.css"/>
+                                                    </children>
+                                                </VBox>
+                                                <VBox alignment="TOP_CENTER" prefHeight="65.0">
+                                                    <children>
+                                                        <VBox fx:id="voteDownVbox" alignment="TOP_CENTER" prefHeight="0.0" styleClass="vbox-red" stylesheets="@css/szcoreStyle.css"/>
+                                                    </children>
+                                                </VBox>
+                                            </children>
+                                        </VBox>
+                                    </children>
+                                </VBox>
+                                <VBox alignment="TOP_CENTER" stylesheets="@css/szcoreStyle.css">
+                                    <children>
+                                        <ListView fx:id="sectionOrderLvw" orientation="HORIZONTAL" prefHeight="100.0" prefWidth="370.0"/>
+                                        <HBox alignment="CENTER" spacing="10.0" VBox.vgrow="ALWAYS">
+                                            <children>
+                                                <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Vote current"/>
+                                                <Label fx:id="voteCurrentLbl" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="0"/>
+                                                <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Max"/>
+                                                <Label fx:id="voteMaxLbl" styleClass="label-green-txt" stylesheets="@css/szcoreStyle.css" text="0"/>
+                                                <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Min"/>
+                                                <Label fx:id="voteMinLbl" styleClass="label-red-txt" stylesheets="@css/szcoreStyle.css" text="0"/>
+                                                <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Avg"/>
+                                                <Label fx:id="voteAvgLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="0"/>
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </VBox>
                             </children>
                         </HBox>
-                        <Separator />
+                        <Separator/>
                         <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="372.0" spacing="6.0">
                             <children>
-                                <Label styleClass="label-subtitle" stylesheets="@css/szcoreStyle.css" text="Overlays " />
-                                <ChoiceBox fx:id="presetsChob" />
-                                <CheckBox fx:id="sendToAllChb" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" />
-                                <Label layoutX="36.0" layoutY="10.0" text="Send To All" />
+                                <Label styleClass="label-subtitle" stylesheets="@css/szcoreStyle.css" text="Overlays "/>
+                                <ChoiceBox fx:id="presetsChob"/>
+                                <CheckBox fx:id="sendToAllChb" layoutX="10.0" layoutY="10.0" mnemonicParsing="false"/>
+                                <Label layoutX="36.0" layoutY="10.0" text="Send To All"/>
                             </children>
                         </HBox>
-                        <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="407.0" spacing="6.0">
+                        <HBox>
                             <children>
-                                <Label prefHeight="20.0" prefWidth="69.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Dynamics" />
-                                <CheckBox fx:id="useDynamicsOverlayChb" mnemonicParsing="false" text="Ovl" />
-                                <CheckBox fx:id="useDynamicsLineChb" layoutX="74.0" layoutY="21.0" mnemonicParsing="false" text="Ln" />
-                                <Label fx:id="dynamicsValLbl" minWidth="40.0" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___" />
-                                <Slider fx:id="dynamicsSldr" showTickLabels="true" showTickMarks="true" />
-                                <Separator orientation="VERTICAL" />
-                                <Label layoutX="36.0" layoutY="21.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Timbre " />
-                                <CheckBox fx:id="useTimbreOverlayChb" layoutX="10.0" layoutY="21.0" mnemonicParsing="false" text="Ovl" />
-                                <CheckBox fx:id="useTimbreLineChb" layoutX="396.0" layoutY="21.0" mnemonicParsing="false" text="Ln" />
-                                <Label fx:id="timbreValLbl" layoutX="100.0" layoutY="12.0" minWidth="40.0" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___" />
-                                <Slider fx:id="timbreSldr" showTickLabels="true" showTickMarks="true" />
+                                <VBox>
+                                    <children>
+                                        <HBox alignment="CENTER_LEFT" spacing="6.0">
+                                            <children>
+                                                <Label prefHeight="20.0" prefWidth="69.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Dynamics"/>
+                                                <CheckBox fx:id="useDynamicsOverlayChb" mnemonicParsing="false" text="Ovl"/>
+                                                <CheckBox fx:id="useDynamicsLineChb" mnemonicParsing="false" text="Ln"/>
+                                                <Label fx:id="dynamicsValLbl" minWidth="40.0" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___"/>
+                                                <Slider fx:id="dynamicsSldr" showTickLabels="true" showTickMarks="true"/>
+                                                <Separator orientation="VERTICAL"/>
+                                            </children>
+                                        </HBox>
+                                        <HBox alignment="CENTER_LEFT" spacing="6.0">
+                                            <children>
+                                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Pitch            "/>
+                                                <CheckBox fx:id="usePitchOverlayChb" mnemonicParsing="false" text="Ovl"/>
+                                                <CheckBox fx:id="usePitchLineChb" mnemonicParsing="false" text="Ln"/>
+                                                <Label fx:id="pitchValLbl" minWidth="40.0" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___"/>
+                                                <Slider fx:id="pitchSldr" showTickLabels="true" showTickMarks="true"/>
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </VBox>
+                                <VBox>
+                                    <children>
+                                        <HBox alignment="CENTER_LEFT" spacing="6.0">
+                                            <children>
+                                                <Label layoutX="36.0" layoutY="21.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Timbre  "/>
+                                                <CheckBox fx:id="useTimbreOverlayChb" layoutX="10.0" layoutY="21.0" mnemonicParsing="false" text="Ovl"/>
+                                                <CheckBox fx:id="useTimbreLineChb" layoutX="396.0" layoutY="21.0" mnemonicParsing="false" text="Ln"/>
+                                                <Label fx:id="timbreValLbl" layoutX="100.0" layoutY="12.0" minWidth="40.0" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___"/>
+                                                <Slider fx:id="timbreSldr" showTickLabels="true" showTickMarks="true"/>
+                                            </children>
+                                        </HBox>
+                                        <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="10.0" spacing="6.0">
+                                            <children>
+                                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="noteInfo"/>
+                                                <CheckBox fx:id="usePitchStaveOverlayChb" mnemonicParsing="false" text="Ovl"/>
+                                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Transparency"/>
+                                                <Slider fx:id="pitchOverlayTransparencySldr" showTickLabels="true" showTickMarks="true"/>
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </VBox>
                             </children>
                         </HBox>
-                        <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="372.0" spacing="6.0">
-                            <children>
-                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Pitch" />
-                                <CheckBox fx:id="usePitchOverlayChb" mnemonicParsing="false" text="Ovl" />
-                                <CheckBox fx:id="usePitchLineChb" mnemonicParsing="false" text="Ln" />
-                                <Label fx:id="pitchValLbl" minWidth="40.0" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___" />
-                                <Slider fx:id="pitchSldr" showTickLabels="true" showTickMarks="true" />
-                                <Label layoutX="250.0" layoutY="21.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="noteInfo" />
-                                <CheckBox fx:id="usePitchStaveOverlayChb" layoutX="288.0" layoutY="20.0" mnemonicParsing="false" text="Ovl" />
-                                <Label layoutX="250.0" layoutY="21.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Transp" />
-                                <Slider fx:id="pitchOverlayTransparencySldr" showTickLabels="true" showTickMarks="true" />
-                            </children>
-                        </HBox>
-                  <Separator layoutX="10.0" layoutY="533.0" />
+                        <Separator layoutX="10.0" layoutY="533.0"/>
                         <HBox alignment="CENTER_LEFT" spacing="5.0">
-                             <children>
-                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Text L1:" />
-                                <TextField fx:id="instPitchLn1Txt" />
-                                <Label layoutX="10.0" layoutY="15.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="L2:" />
-                                <TextField fx:id="instPitchLn2Txt" layoutX="58.0" layoutY="10.0" />
-                                <Label layoutX="219.0" layoutY="15.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="L3:" />
-                                <TextField fx:id="instPitchLn3Txt" layoutX="235.0" layoutY="10.0" />
-                                <Button fx:id="sendPitchTextInstructionsBtn" mnemonicParsing="false" onAction="#sendPitchTextInstructions" styleClass="css/szcoreStyle.css" text="Send" />
-                                <Button fx:id="clearPitchTextInstructionsBtn" mnemonicParsing="false" onAction="#clearPitchTextInstructions" text="Clear" />
-                             </children>
+                            <children>
+                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Text L1:"/>
+                                <TextField fx:id="instPitchLn1Txt"/>
+                                <Label layoutX="10.0" layoutY="15.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="L2:"/>
+                                <TextField fx:id="instPitchLn2Txt" layoutX="58.0" layoutY="10.0"/>
+                                <Label layoutX="219.0" layoutY="15.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="L3:"/>
+                                <TextField fx:id="instPitchLn3Txt" layoutX="235.0" layoutY="10.0"/>
+                                <Button fx:id="sendPitchTextInstructionsBtn" mnemonicParsing="false" onAction="#sendPitchTextInstructions" styleClass="css/szcoreStyle.css" text="Send"/>
+                                <Button fx:id="clearPitchTextInstructionsBtn" mnemonicParsing="false" onAction="#clearPitchTextInstructions" text="Clear"/>
+                            </children>
                         </HBox>
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                             <children>
 
                                 <VBox spacing="3.0" styleClass="borders" stylesheets="@css/szcoreStyle.css">
                                     <children>
-                                        <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Send To:" />
-                                        <CheckBox fx:id="sendTxtToAllInstrumentsChb" mnemonicParsing="false" text="Instruments" />
-                                        <CheckBox fx:id="sendTxtToAllChb" mnemonicParsing="false" text="All" />
+                                        <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Send To:"/>
+                                        <CheckBox fx:id="sendTxtToAllInstrumentsChb" mnemonicParsing="false" text="Instruments"/>
+                                        <CheckBox fx:id="sendTxtToAllChb" mnemonicParsing="false" text="All"/>
                                     </children>
                                 </VBox>
-                                <VBox id="borders" prefWidth="130.0" spacing="3.0" styleClass="borders" stylesheets="@css/szcoreStyle.css" HBox.hgrow="ALWAYS">
+                                <VBox id="borders" prefWidth="130.0" spacing="3.0" styleClass="borders"
+                                      stylesheets="@css/szcoreStyle.css" HBox.hgrow="ALWAYS">
                                     <children>
-                                        <CheckBox fx:id="sendTxtToPresentChb" mnemonicParsing="false" text="Present" />
-                                        <Label fx:id="presentL1Lbl" layoutX="10.0" layoutY="10.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
-                                        <Label fx:id="presentL2Lbl" layoutX="10.0" layoutY="27.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
-                                        <Label fx:id="presentL3Lbl" layoutX="10.0" layoutY="44.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
-                                    </children>
-                                </VBox>
-                                <VBox prefWidth="130.0" spacing="3.0" styleClass="borders" stylesheets="@css/szcoreStyle.css" HBox.hgrow="ALWAYS">
-                                    <children>
-                                        <CheckBox fx:id="sendTxtToConcurChb" mnemonicParsing="false" text="Concur" />
-                                        <Label fx:id="concurL1Lbl" layoutX="10.0" layoutY="10.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
-                                        <Label fx:id="concurL2Lbl" layoutX="10.0" layoutY="27.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
-                                        <Label fx:id="concurL3Lbl" layoutX="10.0" layoutY="44.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
+                                        <CheckBox fx:id="sendTxtToPresentChb" mnemonicParsing="false" text="Present"/>
+                                        <Label fx:id="presentL1Lbl" layoutX="10.0" layoutY="10.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css"/>
+                                        <Label fx:id="presentL2Lbl" layoutX="10.0" layoutY="27.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css"/>
+                                        <Label fx:id="presentL3Lbl" layoutX="10.0" layoutY="44.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css"/>
                                     </children>
                                 </VBox>
                                 <VBox prefWidth="130.0" spacing="3.0" styleClass="borders" stylesheets="@css/szcoreStyle.css" HBox.hgrow="ALWAYS">
                                     <children>
-                                        <CheckBox fx:id="sendTxtToDissentChb" mnemonicParsing="false" text="Dissent" />
-                                        <Label fx:id="dissentL1Lbl" layoutX="10.0" layoutY="10.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
-                                        <Label fx:id="dissentL2Lbl" layoutX="10.0" layoutY="27.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
-                                        <Label fx:id="dissentL3Lbl" layoutX="10.0" layoutY="44.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
+                                        <CheckBox fx:id="sendTxtToConcurChb" mnemonicParsing="false" text="Concur"/>
+                                        <Label fx:id="concurL1Lbl" layoutX="10.0" layoutY="10.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css"/>
+                                        <Label fx:id="concurL2Lbl" layoutX="10.0" layoutY="27.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css"/>
+                                        <Label fx:id="concurL3Lbl" layoutX="10.0" layoutY="44.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css"/>
                                     </children>
                                 </VBox>
                                 <VBox prefWidth="130.0" spacing="3.0" styleClass="borders" stylesheets="@css/szcoreStyle.css" HBox.hgrow="ALWAYS">
                                     <children>
-                                        <CheckBox fx:id="sendTxtToAbstainChb" mnemonicParsing="false" text="Abstain" />
-                                        <Label fx:id="abstainL1Lbl" layoutX="10.0" layoutY="10.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
-                                        <Label fx:id="abstainL2Lbl" layoutX="10.0" layoutY="27.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
-                                        <Label fx:id="abstainL3Lbl" layoutX="10.0" layoutY="44.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
+                                        <CheckBox fx:id="sendTxtToDissentChb" mnemonicParsing="false" text="Dissent"/>
+                                        <Label fx:id="dissentL1Lbl" layoutX="10.0" layoutY="10.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css"/>
+                                        <Label fx:id="dissentL2Lbl" layoutX="10.0" layoutY="27.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css"/>
+                                        <Label fx:id="dissentL3Lbl" layoutX="10.0" layoutY="44.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css"/>
                                     </children>
                                 </VBox>
-                                <VBox prefWidth="130.0" spacing="3.0" styleClass="borders-red" stylesheets="@css/szcoreStyle.css" HBox.hgrow="ALWAYS">
+                                <VBox prefWidth="130.0" spacing="3.0" styleClass="borders"
+                                      stylesheets="@css/szcoreStyle.css" HBox.hgrow="ALWAYS">
                                     <children>
-                                        <CheckBox fx:id="sendTxtToAudienceChb" mnemonicParsing="false" text="Audience" />
-                                        <Label fx:id="audienceL1Lbl" layoutX="10.0" layoutY="10.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
-                                        <Label fx:id="audienceL2Lbl" layoutX="10.0" layoutY="27.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
-                                        <Label fx:id="audienceL3Lbl" layoutX="10.0" layoutY="44.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
+                                        <CheckBox fx:id="sendTxtToAbstainChb" mnemonicParsing="false" text="Abstain"/>
+                                        <Label fx:id="abstainL1Lbl" layoutX="10.0" layoutY="10.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css"/>
+                                        <Label fx:id="abstainL2Lbl" layoutX="10.0" layoutY="27.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css"/>
+                                        <Label fx:id="abstainL3Lbl" layoutX="10.0" layoutY="44.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css"/>
+                                    </children>
+                                </VBox>
+                                <VBox prefWidth="130.0" spacing="3.0" styleClass="borders-red"
+                                      stylesheets="@css/szcoreStyle.css" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <CheckBox fx:id="sendTxtToAudienceChb" mnemonicParsing="false" text="Audience"/>
+                                        <Label fx:id="audienceL1Lbl" layoutX="10.0" layoutY="10.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css"/>
+                                        <Label fx:id="audienceL2Lbl" layoutX="10.0" layoutY="27.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css"/>
+                                        <Label fx:id="audienceL3Lbl" layoutX="10.0" layoutY="44.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css"/>
                                     </children>
                                 </VBox>
                             </children>
                         </HBox>
-                        <Separator />
+                        <Separator/>
                     </children>
                 </VBox>
             </children>

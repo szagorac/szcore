@@ -71,13 +71,13 @@
                               <ListView fx:id="sectionOrderLvw" orientation="HORIZONTAL" prefHeight="100.0" prefWidth="370.0" />
                               <HBox alignment="CENTER" spacing="10.0" VBox.vgrow="ALWAYS">
                                  <children>
-                                    <Label stylesheets="@css/szcoreStyle.css" text="Vote" />
+                                    <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Vote current" />
                                     <Label fx:id="voteCurrentLbl" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="0" />
-                                    <Label stylesheets="@css/szcoreStyle.css" text="Max" />
-                                    <Label fx:id="voteMaxLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="0" />
-                                    <Label stylesheets="@css/szcoreStyle.css" text="Min" />
-                                    <Label fx:id="voteMinLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="0" />
-                                    <Label stylesheets="@css/szcoreStyle.css" text="Avg" />
+                                    <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Max" />
+                                    <Label fx:id="voteMaxLbl" styleClass="label-green-txt" stylesheets="@css/szcoreStyle.css" text="0" />
+                                    <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Min" />
+                                    <Label fx:id="voteMinLbl" styleClass="label-red-txt" stylesheets="@css/szcoreStyle.css" text="0" />
+                                    <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Avg" />
                                     <Label fx:id="voteAvgLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="0" />
                                  </children>
                               </HBox>

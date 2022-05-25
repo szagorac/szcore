@@ -109,6 +109,23 @@
     -fx-padding: 3 6 6 6;
 }
 
+.vbox-black{
+    -fx-border-color: black;
+    -fx-border-radius: 2 2 2 2;
+}
+
+.vbox-red{
+    -fx-border-color: red;
+    -fx-border-radius: 2 2 2 2;
+    -fx-background-color: red;
+}
+
+.vbox-green{
+    -fx-border-color: green;
+    -fx-border-radius: 2 2 2 2;
+    -fx-background-color: green;
+}
+
 .chart-series-line {
     -fx-stroke-width: 2px;
     -fx-effect: null;

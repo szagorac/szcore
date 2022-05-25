@@ -15,6 +15,7 @@ public class SectionInfo {
     private IntRange pageRange;
     private final Map<String, String> clientInstrument = new HashMap<>();
     private final Map<String, List<String>> instrumentClients = new HashMap<>();
+    private final VoteInfo voteInfo = new VoteInfo();
 
     public SectionInfo(String sectionId) {
         this.sectionId = sectionId;
@@ -101,6 +102,14 @@ public class SectionInfo {
         return clientInstrument.keySet();
     }
 
+    public VoteInfo getVoteInfo() {
+        return voteInfo;
+    }
+
+    public void populateVoteInfo(int current, int min, int max, int avg, int voterNo) {
+        voteInfo.populate(current, min, max, avg, voterNo);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -120,6 +129,7 @@ public class SectionInfo {
                 "sectionId='" + sectionId + '\'' +
                 ", owner='" + owner + '\'' +
                 ", clientInstrument=" + clientInstrument +
+                ", voteInfo=" + voteInfo +
                 '}';
     }
 }

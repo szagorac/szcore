@@ -13,7 +13,7 @@ public class WebCounterExport {
         }
         this.count = from.getCounterValue();
         this.name = from.getId();
-        this.maxCount = from.getMaxCount();
+        this.maxCount = from.getVoterNo();
     }
 
     public int getCount() {

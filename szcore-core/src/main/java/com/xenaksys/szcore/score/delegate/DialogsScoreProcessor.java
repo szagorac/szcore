@@ -204,6 +204,7 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
         }
         WebAudienceVoteEvent voteEvent = getEventFactory().createWebAudienceVoteEvent(webEvent.getValue(), webEvent.getUsersNo(), getClock().getSystemTimeMillis());
         audienceProcessor.processWebAudienceEvent(voteEvent);
+        updateClients(getBasicScore().getScoreBuilderStrategy());
     }
 
     @Override

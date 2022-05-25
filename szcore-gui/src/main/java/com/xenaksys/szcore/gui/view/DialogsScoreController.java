@@ -9,6 +9,7 @@ import com.xenaksys.szcore.event.gui.StrategyEvent;
 import com.xenaksys.szcore.event.gui.StrategyEventType;
 import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
+import com.xenaksys.szcore.gui.model.AudienceVote;
 import com.xenaksys.szcore.gui.model.Section;
 import com.xenaksys.szcore.gui.model.WebscoreInstructions;
 import com.xenaksys.szcore.model.Clock;
@@ -17,6 +18,7 @@ import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Score;
 import com.xenaksys.szcore.model.ScoreService;
 import com.xenaksys.szcore.model.SectionInfo;
+import com.xenaksys.szcore.model.VoteInfo;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.score.BasicScore;
 import javafx.application.Platform;
@@ -37,6 +39,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +61,7 @@ public class DialogsScoreController {
     public static final String CONCUR = "Concur";
     public static final String DISSENT = "Dissent";
     public static final String ABSTAIN = "Abstain";
+    static final int MIN_VOTER_NO = 10;
     private final ValueScaler transparencyValueScaler = new ValueScaler(0.0, 100.0, 255.0, 0.0);
 
     @FXML
@@ -72,6 +76,8 @@ public class DialogsScoreController {
     private TableColumn<Section, Integer> startPageColumn;
     @FXML
     private TableColumn<Section, Integer> endPageColumn;
+    @FXML
+    private TableColumn<Section, Integer> voteNoColumn;
     @FXML
     private Button assignOwnersBtn;
     @FXML
@@ -176,11 +182,26 @@ public class DialogsScoreController {
     private Label audienceL3Lbl;
     @FXML
     private Slider pitchOverlayTransparencySldr;
+    @FXML
+    private Label voteCurrentLbl;
+    @FXML
+    private Label voteMaxLbl;
+    @FXML
+    private Label voteAvgLbl;
+    @FXML
+    private Label voteMinLbl;
+    @FXML
+    private VBox voteVbox;
+    @FXML
+    private VBox voteUpVbox;
+    @FXML
+    private VBox voteDownVbox;
 
     private SzcoreClient mainApp;
     private EventService publisher;
     private ScoreService scoreService;
     private Clock clock;
+    private String currentSection;
 
     private WebscoreInstructions txtInstructions;
     private WebscoreInstructions presentInstructions;
@@ -189,16 +210,18 @@ public class DialogsScoreController {
     private WebscoreInstructions abstainInstructions;
     private WebscoreInstructions audienceInstructions;
 
-    final private InstrumentId presentInstId = new InstrumentId(PRESENT);
-    final private InstrumentId concurInstId = new InstrumentId(CONCUR);
-    final private InstrumentId dissentInstId = new InstrumentId(DISSENT);
-    final private InstrumentId abstainInstId = new InstrumentId(ABSTAIN);
+    private final InstrumentId presentInstId = new InstrumentId(PRESENT);
+    private final InstrumentId concurInstId = new InstrumentId(CONCUR);
+    private final InstrumentId abstainInstId = new InstrumentId(ABSTAIN);
+    private final InstrumentId dissentInstId = new InstrumentId(DISSENT);
 
-    final private ObservableList<Section> sections = FXCollections.observableArrayList();
-    final private ObservableList<String> sectionOrder = FXCollections.observableArrayList();
-    final private StringProperty nextSectionProp = new SimpleStringProperty("N/A");
-    final private StringProperty playingSectionProp = new SimpleStringProperty("N/A");
-    final private ObservableList<String> overlayPresets = FXCollections.observableArrayList();
+    private final ObservableList<Section> sections = FXCollections.observableArrayList();
+    private final ObservableList<String> sectionOrder = FXCollections.observableArrayList();
+    private final StringProperty nextSectionProp = new SimpleStringProperty("N/A");
+    private final StringProperty playingSectionProp = new SimpleStringProperty("N/A");
+    private final ObservableList<String> overlayPresets = FXCollections.observableArrayList();
+
+    private final AudienceVote audienceVote = new AudienceVote();
 
     public void setMainApp(SzcoreClient mainApp) {
         this.mainApp = mainApp;
@@ -236,6 +259,7 @@ public class DialogsScoreController {
                 if (n < 90.0) return "ff";
                 return "fff";
             }
+
             @Override
             public Double fromString(String s) {
                 switch (s) {
@@ -286,24 +310,24 @@ public class DialogsScoreController {
         });
 
         timbreValLbl.setOnMouseClicked(mouseEvent -> {
-            if(mouseEvent.getButton().equals(MouseButton.PRIMARY)){
-                if(mouseEvent.getClickCount() == 2){
+            if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
+                if (mouseEvent.getClickCount() == 2) {
                     setTimbreDefaultValue();
                 }
             }
         });
 
         dynamicsValLbl.setOnMouseClicked(mouseEvent -> {
-            if(mouseEvent.getButton().equals(MouseButton.PRIMARY)){
-                if(mouseEvent.getClickCount() == 2){
+            if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
+                if (mouseEvent.getClickCount() == 2) {
                     setDynamicsDefaultValue();
                 }
             }
         });
 
         pitchValLbl.setOnMouseClicked(mouseEvent -> {
-            if(mouseEvent.getButton().equals(MouseButton.PRIMARY)){
-                if(mouseEvent.getClickCount() == 2){
+            if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
+                if (mouseEvent.getClickCount() == 2) {
                     setPitchDefaultValue();
                 }
             }
@@ -341,7 +365,7 @@ public class DialogsScoreController {
         sectionOrderLvw.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         sectionOrderLvw.setEditable(false);
         sectionOrderLvw.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            String out  = newSelection;
+            String out = newSelection;
             if (newSelection == null) {
                 out = oldSelection;
             }
@@ -352,6 +376,7 @@ public class DialogsScoreController {
         ownerColumn.setCellValueFactory(cellData -> cellData.getValue().ownerProperty());
         startPageColumn.setCellValueFactory(cellData -> cellData.getValue().startPageProperty().asObject());
         endPageColumn.setCellValueFactory(cellData -> cellData.getValue().endPageProperty().asObject());
+        voteNoColumn.setCellValueFactory(cellData -> cellData.getValue().avgVoteProperty().asObject());
 
         nextSectionLbl.textProperty().bind(nextSectionProp);
         playingSectionLbl.textProperty().bind(playingSectionProp);
@@ -388,6 +413,14 @@ public class DialogsScoreController {
 
         sendTxtToAllInstrumentsChb.selectedProperty().addListener((observable, oldValue, newValue) -> setTxtToAllInstruments(newValue));
         sendTxtToAllChb.selectedProperty().addListener((observable, oldValue, newValue) -> setTxtToAll(newValue));
+
+        voteCurrentLbl.textProperty().bind(audienceVote.voteNoProperty().asString());
+        voteMaxLbl.textProperty().bind(audienceVote.maxVoteProperty().asString());
+        voteMinLbl.textProperty().bind(audienceVote.minVoteProperty().asString());
+        voteAvgLbl.textProperty().bind(audienceVote.avgVoteProperty().asString());
+
+        voteUpVbox.setPrefHeight(0.0);
+        voteDownVbox.setPrefHeight(0.0);
     }
 
     @FXML
@@ -412,7 +445,7 @@ public class DialogsScoreController {
         boolean isVisible = txtInstructions.getVisible();
         List<Id> instrumentIds = getInstrumentsToSendTxt();
 
-        if(isVisible) {
+        if (isVisible) {
             pitchOverlayTransparencySldr.setValue(10);
             if (!usePitchOverlayChb.isSelected()) {
                 usePitchOverlayChb.setSelected(true);
@@ -424,12 +457,12 @@ public class DialogsScoreController {
             pitchOverlayTransparencySldr.setValue(100);
         }
 
-        if(!instrumentIds.isEmpty()) {
+        if (!instrumentIds.isEmpty()) {
             mainApp.sendPitchText(l1, l2, l3, isVisible, instrumentIds);
         }
 
         boolean isAudienceSet = false;
-        if(sendTxtToAudienceChb.isSelected()) {
+        if (sendTxtToAudienceChb.isSelected()) {
             EventFactory eventFactory = publisher.getEventFactory();
             WebAudienceInstructionsEvent instructionsEvent = eventFactory.createWebAudienceInstructionsEvent(l1, l2, l3, isVisible, clock.getSystemTimeMillis());
             publisher.receive(instructionsEvent);
@@ -455,48 +488,48 @@ public class DialogsScoreController {
     }
 
     private void onSectionSelect(Section section) {
-        if(section == null) {
+        if (section == null) {
             return;
         }
         setCurrentSectionLabel(section.getSection());
     }
 
-    private void setCurrentSectionLabel(String value){
-        if(value == null) {
+    private void setCurrentSectionLabel(String value) {
+        if (value == null) {
             value = Consts.NAME_NA;
         }
         String old = playingSectionProp.getValue();
-        if(value.equals(old)) {
+        if (value.equals(old)) {
             return;
         }
         playingSectionProp.setValue(value);
         selectSection(value);
     }
 
-    private void selectSection(String value){
+    private void selectSection(String value) {
         Section section = getSection(value);
-        if(section == null) {
+        if (section == null) {
             return;
         }
         Section selected = sectionsTableView.getSelectionModel().getSelectedItem();
-        if(section.equals(selected)) {
+        if (section.equals(selected)) {
             return;
         }
         sectionsTableView.getSelectionModel().select(section);
 
         String selectedOrder = sectionOrderLvw.getSelectionModel().getSelectedItem();
-        if(value.equals(selectedOrder)) {
+        if (value.equals(selectedOrder)) {
             return;
         }
         sectionOrderLvw.getSelectionModel().select(value);
     }
 
-    private void setNextSectionLabel(String value){
-        if(value == null) {
-            value = Consts.NAME_NA;;
+    private void setNextSectionLabel(String value) {
+        if (value == null) {
+            value = Consts.NAME_NA;
         }
         String old = nextSectionProp.getValue();
-        if(value.equals(old)) {
+        if (value.equals(old)) {
             return;
         }
         nextSectionProp.setValue(value);
@@ -512,30 +545,30 @@ public class DialogsScoreController {
     }
 
     public void onScoreLoad(Score score) {
-        if(!(score instanceof BasicScore)) {
+        if (!(score instanceof BasicScore)) {
             return;
         }
-        BasicScore szcore = (BasicScore)score;
+        BasicScore szcore = (BasicScore) score;
         ScoreBuilderStrategy builderStrategy = szcore.getScoreBuilderStrategy();
-        if(builderStrategy == null || !builderStrategy.isActive()) {
+        if (builderStrategy == null || !builderStrategy.isActive()) {
             return;
         }
         List<String> sectionNames = builderStrategy.getSections();
-        if(sectionNames == null || sectionNames.isEmpty()) {
+        if (sectionNames == null || sectionNames.isEmpty()) {
             return;
         }
         List<Section> guiSections = new ArrayList<>();
-        for(String section : sectionNames) {
+        for (String section : sectionNames) {
             Section guiSection = new Section();
             guiSection.setSection(section);
             String owner = builderStrategy.getSectionOwner(section);
-            if(owner != null) {
+            if (owner != null) {
                 guiSection.setOwner(owner);
             } else {
                 guiSection.setOwner(Consts.EMPTY);
             }
             IntRange pageRange = builderStrategy.getSectionPageRange(section);
-            if(pageRange != null) {
+            if (pageRange != null) {
                 guiSection.setStartPage(pageRange.getStart());
                 guiSection.setEndPage(pageRange.getEnd());
             }
@@ -548,27 +581,43 @@ public class DialogsScoreController {
     }
 
     public void onSectionInfo(List<SectionInfo> sectionInfos, List<String> sectionOrder, boolean isReady, String currentSection, String nextSection) {
-        if(sectionInfos != null) {
-            for(SectionInfo info : sectionInfos) {
+        Section current = null;
+        if (sectionInfos != null) {
+            for (SectionInfo info : sectionInfos) {
                 Section section = new Section();
                 section.setSection(info.getSectionId());
                 section.setOwner(info.getOwner());
                 IntRange pageRange = info.getPageRange();
-                if(pageRange != null) {
+                if (pageRange != null) {
                     section.setStartPage(pageRange.getStart());
                     section.setEndPage(pageRange.getEnd());
+                }
+                VoteInfo voteInfo = info.getVoteInfo();
+                if (voteInfo != null) {
+                    section.setVoteNo(voteInfo.getCurrent());
+                    section.setMinVote(voteInfo.getMin());
+                    section.setMaxVote(voteInfo.getMax());
+                    section.setAvgVote(voteInfo.getAvg());
+                    section.setVoterNo(voteInfo.getVoterNo());
+                }
+                if (currentSection.equals(section.getSection())) {
+                    current = section;
                 }
                 addSection(section);
             }
         }
 
-        if(isReady) {
+        if (isReady) {
             setSectionStatusStyle(Consts.READY, LABEL_GREEN, LABEL_RED);
         } else {
             setSectionStatusStyle(Consts.WAITING, LABEL_RED, LABEL_GREEN);
         }
 
-        if(sectionOrder != null && !sectionOrder.isEmpty()) {
+        if(current != null) {
+            processSectionVote(current);
+        }
+
+        if (sectionOrder != null && !sectionOrder.isEmpty()) {
             setSectionOrderInfo(sectionOrder, currentSection, nextSection);
         }
     }
@@ -578,11 +627,22 @@ public class DialogsScoreController {
             String selectedItem = sectionOrderLvw.getSelectionModel().getSelectedItem();
             sectionOrder.clear();
             sectionOrder.addAll(sections);
-            if(sections.contains(selectedItem)) {
+            if (sections.contains(selectedItem)) {
                 sectionOrderLvw.getSelectionModel().select(selectedItem);
             }
             setCurrentSectionLabel(currentSection);
             setNextSectionLabel(nextSection);
+        });
+    }
+
+    private void processSectionVote(Section section) {
+        Platform.runLater(() -> {
+            audienceVote.setVoteNo(section.getVoteNo());
+            audienceVote.setMinVote(section.getMinVote());
+            audienceVote.setMaxVote(section.getMaxVote());
+            audienceVote.setAvgVote(section.getAvgVote());
+            audienceVote.setVoterNo(section.getVoterNo());
+            updateVoteBar();
         });
     }
 
@@ -591,7 +651,7 @@ public class DialogsScoreController {
             sectionsStatusLbl.setText(text);
             ObservableList<String> styleClass = sectionsStatusLbl.getStyleClass();
             styleClass.remove(styleToRemove);
-            if(!styleClass.contains(style)) {
+            if (!styleClass.contains(style)) {
                 styleClass.add(style);
             }
         });
@@ -622,7 +682,34 @@ public class DialogsScoreController {
             toUpdate.setOwner(section.getOwner());
             toUpdate.setStartPage(section.getStartPage());
             toUpdate.setEndPage(section.getEndPage());
+            toUpdate.setVoteNo(section.getVoteNo());
+            toUpdate.setMinVote(section.getMinVote());
+            toUpdate.setMaxVote(section.getMaxVote());
+            toUpdate.setAvgVote(section.getAvgVote());
         });
+    }
+
+    public void updateVoteBar() {
+        int voteNo = audienceVote.getVoteNo();
+        if (voteNo == 0) {
+            voteUpVbox.setPrefHeight(0.0);
+            voteDownVbox.setPrefHeight(0.0);
+            return;
+        }
+        int voterNo = audienceVote.getVoterNo();
+        if(voterNo < MIN_VOTER_NO) {
+            voterNo = MIN_VOTER_NO;
+        }
+        double maxHeight = voteVbox.getHeight() / 2.0;
+        ValueScaler vs = new ValueScaler(0.0, voterNo, 0.0, maxHeight);
+        double h = vs.scaleValue(Math.abs(voteNo) * 1.0);
+        if (voteNo > 0) {
+            voteDownVbox.setPrefHeight(0.0);
+            voteUpVbox.setPrefHeight(h);
+        } else if (voteNo < 0) {
+            voteUpVbox.setPrefHeight(0.0);
+            voteDownVbox.setPrefHeight(h);
+        }
     }
 
     public Section getSection(String sectionName) {
@@ -640,12 +727,12 @@ public class DialogsScoreController {
     public void setSection(ActionEvent actionEvent) {
         presetsChob.getSelectionModel().select(Consts.PRESET_ALL_ON);
         String playSectionName = playingSectionProp.getValue();
-        if(playSectionName == null) {
+        if (playSectionName == null) {
             return;
         }
         sendSetSection(playSectionName);
         Section nextSection = getSection(playSectionName);
-        if(nextSection == null) {
+        if (nextSection == null) {
             return;
         }
         int startPage = nextSection.getStartPage();
@@ -701,13 +788,13 @@ public class DialogsScoreController {
 
     private void onUsePitchOverlay(Boolean newValue) {
         List<Id> instrumentIds = getInstrumentsToSend();
-        if(instrumentIds.isEmpty()) {
+        if (instrumentIds.isEmpty()) {
             return;
         }
         int alpha = 0;
-        if(newValue) {
+        if (newValue) {
             long transparency = Math.round(pitchOverlayTransparencySldr.getValue());
-            alpha = (int)Math.round(transparencyValueScaler.scaleValue(1.0*transparency));
+            alpha = (int) Math.round(transparencyValueScaler.scaleValue(1.0 * transparency));
         } else {
             usePitchLineChb.setSelected(false);
         }
@@ -718,7 +805,7 @@ public class DialogsScoreController {
 
     private void onUsePitchStaveOverlay(Boolean newValue) {
         List<Id> instrumentIds = getInstrumentsToSend();
-        if(instrumentIds.isEmpty()) {
+        if (instrumentIds.isEmpty()) {
             return;
         }
         int alpha = calcOverlayAlpha(newValue);
@@ -727,10 +814,10 @@ public class DialogsScoreController {
 
     private void onUsePitchLine(Boolean newValue) {
         List<Id> instrumentIds = getInstrumentsToSend();
-        if(instrumentIds.isEmpty()) {
+        if (instrumentIds.isEmpty()) {
             return;
         }
-        if(newValue && !usePitchOverlayChb.isSelected()) {
+        if (newValue && !usePitchOverlayChb.isSelected()) {
             usePitchOverlayChb.setSelected(true);
 //            usePitchStaveOverlayChb.setSelected(true);
         }
@@ -739,18 +826,18 @@ public class DialogsScoreController {
     }
 
     private void onPitchValueChange(long newVal) {
-        if(!usePitchOverlayChb.isSelected()) {
+        if (!usePitchOverlayChb.isSelected()) {
             return;
         }
         List<Id> instrumentIds = getInstrumentsToSend();
-        if(instrumentIds.isEmpty()) {
+        if (instrumentIds.isEmpty()) {
             return;
         }
         mainApp.sendPitchValueChange(newVal, instrumentIds);
     }
 
     private void onPitchOvrlTransparencyChange(long newVal) {
-        if(!usePitchOverlayChb.isSelected()) {
+        if (!usePitchOverlayChb.isSelected()) {
             return;
         }
         onUsePitchOverlay(usePitchOverlayChb.isSelected());
@@ -758,10 +845,10 @@ public class DialogsScoreController {
 
     private void onUseDynamicsOverlay(Boolean newValue) {
         List<Id> instrumentIds = getInstrumentsToSend();
-        if(instrumentIds.isEmpty()) {
+        if (instrumentIds.isEmpty()) {
             return;
         }
-        if(!newValue) {
+        if (!newValue) {
             useDynamicsLineChb.setSelected(false);
         }
         int alpha = calcOverlayAlpha(newValue);
@@ -775,10 +862,10 @@ public class DialogsScoreController {
 
     private void onUseDynamicsLine(Boolean newValue) {
         List<Id> instrumentIds = getInstrumentsToSend();
-        if(instrumentIds.isEmpty()) {
+        if (instrumentIds.isEmpty()) {
             return;
         }
-        if(newValue && !useDynamicsOverlayChb.isSelected()) {
+        if (newValue && !useDynamicsOverlayChb.isSelected()) {
             useDynamicsOverlayChb.setSelected(true);
         }
         mainApp.sendDynamicsValueChange(Math.round(dynamicsSldr.getValue()), instrumentIds);
@@ -786,11 +873,11 @@ public class DialogsScoreController {
     }
 
     private void onTimbreValueChange(long newVal) {
-        if(!useTimbreOverlayChb.isSelected()) {
+        if (!useTimbreOverlayChb.isSelected()) {
             return;
         }
         List<Id> instrumentIds = getInstrumentsToSend();
-        if(instrumentIds.isEmpty()) {
+        if (instrumentIds.isEmpty()) {
             return;
         }
         mainApp.sendTimbreValueChange(newVal, instrumentIds);
@@ -798,10 +885,10 @@ public class DialogsScoreController {
 
     private void onUseTimbreOverlay(Boolean newValue) {
         List<Id> instrumentIds = getInstrumentsToSend();
-        if(instrumentIds.isEmpty()) {
+        if (instrumentIds.isEmpty()) {
             return;
         }
-        if(!newValue) {
+        if (!newValue) {
             useTimbreLineChb.setSelected(false);
         }
         int alpha = calcOverlayAlpha(newValue);
@@ -811,10 +898,10 @@ public class DialogsScoreController {
 
     private void onUseTimbreLine(Boolean newValue) {
         List<Id> instrumentIds = getInstrumentsToSend();
-        if(instrumentIds.isEmpty()) {
+        if (instrumentIds.isEmpty()) {
             return;
         }
-        if(newValue && !useTimbreOverlayChb.isSelected()) {
+        if (newValue && !useTimbreOverlayChb.isSelected()) {
             useTimbreOverlayChb.setSelected(true);
         }
         mainApp.sendTimbreValueChange(Math.round(timbreSldr.getValue()), instrumentIds);
@@ -900,11 +987,11 @@ public class DialogsScoreController {
     }
 
     private void onDynamicsValueChange(long newVal) {
-        if(!useDynamicsOverlayChb.isSelected()) {
+        if (!useDynamicsOverlayChb.isSelected()) {
             return;
         }
         List<Id> instrumentIds = getInstrumentsToSend();
-        if(instrumentIds.isEmpty()) {
+        if (instrumentIds.isEmpty()) {
             return;
         }
         mainApp.sendDynamicsValueChange(newVal, instrumentIds);
@@ -920,8 +1007,8 @@ public class DialogsScoreController {
     }
 
     private void addRemoveInstrument(List<Id> instrumentIds, InstrumentId instId, boolean isSelected) {
-        if(isSelected) {
-            if(!instrumentIds.contains(instId)) {
+        if (isSelected) {
+            if (!instrumentIds.contains(instId)) {
                 instrumentIds.add(instId);
             }
         } else {
@@ -930,16 +1017,16 @@ public class DialogsScoreController {
     }
 
     private void setTxtGuiVals(boolean isAudienceSet, List<Id> instrumentIds, String l1, String l2, String l3) {
-        for(Id instrumentId : instrumentIds) {
-            WebscoreInstructions instructions = getInstrumentInstructions((InstrumentId)instrumentId);
-            if(instructions == null) {
+        for (Id instrumentId : instrumentIds) {
+            WebscoreInstructions instructions = getInstrumentInstructions((InstrumentId) instrumentId);
+            if (instructions == null) {
                 continue;
             }
             instructions.setLine1(l1);
             instructions.setLine2(l2);
             instructions.setLine3(l3);
         }
-        if(isAudienceSet) {
+        if (isAudienceSet) {
             audienceInstructions.setLine1(l1);
             audienceInstructions.setLine2(l2);
             audienceInstructions.setLine3(l3);
@@ -947,7 +1034,7 @@ public class DialogsScoreController {
     }
 
     private WebscoreInstructions getInstrumentInstructions(InstrumentId instrumentId) {
-        switch(instrumentId.getName()) {
+        switch (instrumentId.getName()) {
             case PRESENT:
                 return presentInstructions;
             case CONCUR:
@@ -962,7 +1049,7 @@ public class DialogsScoreController {
 
     private List<Id> getInstrumentsToSend() {
         List<Id> instrumentIds;
-        if(sendToAllChb.isSelected()) {
+        if (sendToAllChb.isSelected()) {
             instrumentIds = mainApp.getAllInstruments();
         } else {
             instrumentIds = mainApp.getSelectedInstruments();

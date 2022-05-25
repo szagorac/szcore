@@ -40,13 +40,49 @@
                             <children>
                                 <TableView fx:id="sectionsTableView" prefHeight="150.0">
                                     <columns>
-                                        <TableColumn fx:id="sectionColumn" maxWidth="200.0" minWidth="100.0" prefWidth="120.0" text="Section" />
-                                        <TableColumn fx:id="ownerColumn" maxWidth="150.0" minWidth="80.0" prefWidth="100.0" text="Owner" />
-                                        <TableColumn fx:id="startPageColumn" maxWidth="120.0" minWidth="30.0" prefWidth="70.0" text="Start Page" />
-                                        <TableColumn fx:id="endPageColumn" maxWidth="120.0" minWidth="30.0" prefWidth="70.0" text="End Page" />
+                                        <TableColumn fx:id="sectionColumn" maxWidth="200.0" minWidth="50.0" prefWidth="70.0" text="Section" />
+                                        <TableColumn fx:id="voteNoColumn" maxWidth="200.0" minWidth="30.0" prefWidth="40.0" text="Vote" />
+                                        <TableColumn fx:id="startPageColumn" maxWidth="120.0" minWidth="30.0" prefWidth="45.0" text="StartP" />
+                                        <TableColumn fx:id="endPageColumn" maxWidth="120.0" minWidth="29.0" prefWidth="45.0" text="EndP" />
+                                        <TableColumn fx:id="ownerColumn" maxWidth="150.0" minWidth="45.0" prefWidth="70.0" text="Owner" />
                                     </columns>
                                 </TableView>
-                        <ListView fx:id="sectionOrderLvw" orientation="HORIZONTAL" prefHeight="100.0" prefWidth="420.0" />
+                        <VBox alignment="TOP_CENTER">
+                           <children>
+                              <Label text="Vote" />
+                              <VBox fx:id="voteVbox" alignment="CENTER" prefHeight="130.0" styleClass="vbox-black" stylesheets="@css/szcoreStyle.css">
+                                 <children>
+                                    <VBox alignment="BOTTOM_CENTER" prefHeight="65.0">
+                                       <children>
+                                          <VBox fx:id="voteUpVbox" prefHeight="0.0" styleClass="vbox-green" stylesheets="@css/szcoreStyle.css" />
+                                       </children>
+                                    </VBox>
+                                    <VBox alignment="TOP_CENTER" prefHeight="65.0">
+                                       <children>
+                                          <VBox fx:id="voteDownVbox" alignment="TOP_CENTER" prefHeight="0.0" styleClass="vbox-red" stylesheets="@css/szcoreStyle.css" />
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </VBox>
+                           </children>
+                        </VBox>
+                        <VBox alignment="TOP_CENTER" stylesheets="@css/szcoreStyle.css">
+                           <children>
+                              <ListView fx:id="sectionOrderLvw" orientation="HORIZONTAL" prefHeight="100.0" prefWidth="370.0" />
+                              <HBox alignment="CENTER" spacing="10.0" VBox.vgrow="ALWAYS">
+                                 <children>
+                                    <Label stylesheets="@css/szcoreStyle.css" text="Vote" />
+                                    <Label fx:id="voteCurrentLbl" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="0" />
+                                    <Label stylesheets="@css/szcoreStyle.css" text="Max" />
+                                    <Label fx:id="voteMaxLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="0" />
+                                    <Label stylesheets="@css/szcoreStyle.css" text="Min" />
+                                    <Label fx:id="voteMinLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="0" />
+                                    <Label stylesheets="@css/szcoreStyle.css" text="Avg" />
+                                    <Label fx:id="voteAvgLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="0" />
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
                             </children>
                         </HBox>
                         <Separator />

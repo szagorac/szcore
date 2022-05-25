@@ -12,6 +12,7 @@ import com.xenaksys.szcore.event.web.audience.WebAudienceVoteEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.ScriptPreset;
+import com.xenaksys.szcore.model.SectionInfo;
 import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.score.web.audience.WebAudienceChangeListener;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreProcessor;
@@ -344,14 +345,25 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
             } else {
                 voteCounter.decrement();
             }
-            voteCounter.setMaxCount(event.getUsersNo());
+            voteCounter.setVoterNo(event.getUsersNo());
             voteCounter.processTime(getClock().getElapsedTimeMillis());
+            processVote(voteCounter);
             getPcs().firePropertyChange(WEB_OBJ_COUNTER, WEB_OBJ_VOTE, voteCounter);
         } catch (NumberFormatException e) {
             LOG.error("Invalid vote value: {}", value);
             return false;
         }
         return true;
+    }
+
+    private void processVote(WebCounter voteCounter) {
+        String section = this.currentSection;
+        ScoreBuilderStrategy scoreBuilderStrategy = ((BasicScore) getScore()).getScoreBuilderStrategy();
+        if(section == null) {
+            section = scoreBuilderStrategy.getCurrentSection();
+        }
+        SectionInfo sectionInfo = scoreBuilderStrategy.getSectionInfo(section);
+        sectionInfo.populateVoteInfo(voteCounter.getCounterValue(), voteCounter.getMin(), voteCounter.getMax(), voteCounter.getAvg(), voteCounter.getVoterNo());
     }
 
     public boolean updateState(WebAudienceStateUpdateEvent event) {

@@ -394,6 +394,7 @@ public interface Consts {
     String WEB_OBJ_CONFIG_PLAYER = "playerConfig";
     String WEB_OBJ_STATE_SPEECH_SYNTH = "speechSynthState";
     String WEB_OBJ_COUNTER = "counter";
+    String WEB_OBJ_VIEW_STATE = "viewState";
     String WEB_OBJ_VOTE = "vote";
     String WEB_OBJ_CONFIG_GRAIN = "grain";
     String WEB_OBJ_CONFIG_GRAIN_ENVELOPE = "envelope";
@@ -481,6 +482,10 @@ public interface Consts {
     String WEB_CONFIG_COUNTER = "counter";
     String WEB_CONFIG_AUDIO_FILES = "audioFiles";
     String WEB_CONFIG_AUDIO_FILE_INDEX_MAP = "audioFilesIndexMap";
+    String WEB_CONFIG_ACTIVE_VIEWS = "activeViews";
+    String WEB_CONFIG_SECTION_NAME = "sectionName";
+    String WEB_CONFIG_IS_SECTION_ACTIVE = "isSectionActive";
+
     int WEB_CONFIG_MAX_VOTE_COUNT = 5;
     double WEB_CONFIG_DOUBLE_CHANGE_THRESHOLD = 10E-3;
 
@@ -507,6 +512,12 @@ public interface Consts {
     String WEB_PARAM_TEXT_L1 = "l1";
     String WEB_PARAM_TEXT_L2 = "l2";
     String WEB_PARAM_TEXT_L3 = "l3";
+
+    String WEB_VIEW_THUMBS = "thumbs";
+    String WEB_VIEW_NOTES = "notes";
+    String WEB_VIEW_METER = "meter";
+    String WEB_VIEW_VOTE = "vote";
+    String WEB_VIEW_AUDIO = "audio";
 
     String WEB_SCORE_ROOT_DIR = "/score/";
     String WEB_SCORE_STAVE_TOP = "topStave";

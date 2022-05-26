@@ -13,6 +13,7 @@ public class SectionInfo {
     private final String sectionId;
     private String owner;
     private IntRange pageRange;
+    private boolean isActive;
     private final Map<String, String> clientInstrument = new HashMap<>();
     private final Map<String, List<String>> instrumentClients = new HashMap<>();
     private final VoteInfo voteInfo = new VoteInfo();
@@ -108,6 +109,14 @@ public class SectionInfo {
 
     public void populateVoteInfo(int current, int min, int max, int avg, int voterNo) {
         voteInfo.populate(current, min, max, avg, voterNo);
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
     }
 
     @Override

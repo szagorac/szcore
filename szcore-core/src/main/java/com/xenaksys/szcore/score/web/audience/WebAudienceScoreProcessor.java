@@ -463,12 +463,20 @@ public abstract class WebAudienceScoreProcessor {
         setAction(WEB_ACTION_ID_RAMP_LINEAR, WebAudienceActionType.AUDIO.name(), target, params);
     }
 
-    public void sendAudioFileConfig() {
-        LOG.error("sendAudioFileConfig: Unsupported call");
+    public void sendState() {
+        updateServerStateAndPush();
     }
 
-    public void setSection() {
+    public void setSection(String id) {
         LOG.error("setSection: Unsupported call");
+    }
+
+    public void activateViews(String... views) {
+        LOG.error("activateViews: Unsupported call");
+    }
+
+    public void deactivateViews(String... views) {
+        LOG.error("deactivateViews: Unsupported call");
     }
 
     public void setSpeechSynthConfigParam(String name, Object value) {
@@ -943,7 +951,7 @@ public abstract class WebAudienceScoreProcessor {
     }
 
     public WebCounter createDefaultWebCounter() {
-        return new WebCounter(WEB_CONFIG_COUNTER, 0, WEB_CONFIG_MAX_VOTE_COUNT, Consts.WEB_COUNTER_PERIOD_MS);
+        return new WebCounter(pcs, WEB_CONFIG_COUNTER, 0, WEB_CONFIG_MAX_VOTE_COUNT, Consts.WEB_COUNTER_PERIOD_MS);
     }
 
     public WebGranulatorConfig createDefaultGranulatorConfig() {
@@ -952,6 +960,10 @@ public abstract class WebAudienceScoreProcessor {
 
     public WebPlayerConfig createDefaultWebPlayerConfig() {
         return new WebPlayerConfig(pcs);
+    }
+
+    public WebViewState createDefaultWebViewState() {
+        return new WebViewState(pcs);
     }
 
     public boolean processPrecountEvent(WebAudiencePrecountEvent event) {

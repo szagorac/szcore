@@ -21,6 +21,7 @@ import com.xenaksys.szcore.score.web.audience.WebAudienceServerState;
 import com.xenaksys.szcore.score.web.audience.WebAudienceStateDeltaTracker;
 import com.xenaksys.szcore.score.web.audience.WebCounter;
 import com.xenaksys.szcore.score.web.audience.WebTextState;
+import com.xenaksys.szcore.score.web.audience.WebViewState;
 import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebPlayerConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
@@ -33,8 +34,8 @@ import com.xenaksys.szcore.score.web.audience.export.WebGranulatorConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebPlayerConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthStateExport;
+import com.xenaksys.szcore.score.web.audience.export.WebViewStateExport;
 import com.xenaksys.szcore.web.WebAudienceAction;
-import com.xenaksys.szcore.web.WebAudienceActionType;
 import com.xenaksys.szcore.web.WebScoreStateType;
 import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.set.TLongSet;
@@ -43,20 +44,18 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.xenaksys.szcore.Consts.COMMA;
 import static com.xenaksys.szcore.Consts.EMPTY;
 import static com.xenaksys.szcore.Consts.EQUALS;
-import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_CONFIG;
-import static com.xenaksys.szcore.Consts.WEB_ACTION_PARAM_ID;
-import static com.xenaksys.szcore.Consts.WEB_ACTION_SECTION;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_ACTIVE_VIEWS;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_ENVELOPE;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_GRAIN;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_LOAD_PRESET;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_PANNER;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_SECTION_NAME;
 import static com.xenaksys.szcore.Consts.WEB_GRANULATOR;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_ACTIONS;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRANULATOR;
@@ -65,11 +64,11 @@ import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_COUNTER;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_INSTRUCTIONS;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_STATE_SPEECH_SYNTH;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_VIEW_STATE;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_VOTE;
 import static com.xenaksys.szcore.Consts.WEB_PLAYER;
 import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_TEXT_BACKGROUND_COLOUR;
-import static com.xenaksys.szcore.Consts.WEB_VIEW;
 
 public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(DialogsWebAudienceProcessor.class);
@@ -92,9 +91,10 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         WebSpeechSynthState speechSynthState = createDefaultSpeechSynthState();
         WebPlayerConfig playerConfig = createDefaultWebPlayerConfig();
         WebCounter counter = createDefaultWebCounter();
+        WebViewState viewState = createDefaultWebViewState();
 
         DialogsWebAudienceServerState webAudienceServerState = new DialogsWebAudienceServerState(currentActions,
-                instructions, granulatorConfig, speechSynthConfig, speechSynthState, playerConfig, counter, getPcs());
+                instructions, granulatorConfig, speechSynthConfig, speechSynthState, playerConfig, counter, viewState, getPcs());
 
         createWebAudienceStateDeltaTracker(webAudienceServerState);
         getPcs().addPropertyChangeListener(new WebAudienceChangeListener(stateDeltaTracker));
@@ -160,7 +160,6 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
                     LOG.info("processPresetConfigs: unknown key: {}", key);
             }
         }
-
     }
 
     private void updatePlayerConfig(Map<String, Object> conf) {
@@ -211,6 +210,9 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         WebPlayerConfigExport playerConfigExport = new WebPlayerConfigExport();
         playerConfigExport.populate(state.getPlayerConfig());
 
+        WebViewStateExport viewStateExport = new WebViewStateExport();
+        viewStateExport.populate(state.getViewState());
+
         WebAudienceScoreStateExport export = new WebAudienceScoreStateExport();
         export.addState(WEB_OBJ_ACTIONS, actions);
         export.addState(WEB_OBJ_INSTRUCTIONS, instructions);
@@ -219,6 +221,8 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         export.addState(WEB_OBJ_STATE_SPEECH_SYNTH, speechSynthStateExport);
         export.addState(WEB_OBJ_CONFIG_PLAYER, playerConfigExport);
         export.addState(WEB_OBJ_COUNTER, counterExport);
+        export.addState(WEB_OBJ_VIEW_STATE, viewStateExport);
+
         return export;
     }
 
@@ -325,9 +329,17 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         }
     }
 
-    public void setCurrentSection(String section) {
+    public void onSectionStart(String section) {
         currentSection = section;
         sectionStartTime = getClock().getElapsedTimeMillis();
+        DialogsWebAudienceServerState state = getDelegateState();
+        WebCounter voteCounter = state.getCounter();
+        voteCounter.resetCounterTimeline();
+        voteCounter.resetCounters();
+        processVote(voteCounter);
+        getPcs().firePropertyChange(WEB_OBJ_COUNTER, WEB_OBJ_VOTE, voteCounter);
+        activateSection(section);
+        updateServerStateAndPush();
     }
 
     private boolean processVote(WebAudienceVoteEvent event) {
@@ -340,15 +352,14 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
             LOG.info("Received vote: {}", voteVal);
             DialogsWebAudienceServerState state = getDelegateState();
             WebCounter voteCounter = state.getCounter();
+            voteCounter.setVoterNo(event.getUsersNo());
+            voteCounter.processTime(getClock().getElapsedTimeMillis());
             if (voteVal > 0) {
                 voteCounter.increment();
             } else {
                 voteCounter.decrement();
             }
-            voteCounter.setVoterNo(event.getUsersNo());
-            voteCounter.processTime(getClock().getElapsedTimeMillis());
             processVote(voteCounter);
-            getPcs().firePropertyChange(WEB_OBJ_COUNTER, WEB_OBJ_VOTE, voteCounter);
         } catch (NumberFormatException e) {
             LOG.error("Invalid vote value: {}", value);
             return false;
@@ -363,7 +374,9 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
             section = scoreBuilderStrategy.getCurrentSection();
         }
         SectionInfo sectionInfo = scoreBuilderStrategy.getSectionInfo(section);
-        sectionInfo.populateVoteInfo(voteCounter.getCounterValue(), voteCounter.getMin(), voteCounter.getMax(), voteCounter.getAvg(), voteCounter.getVoterNo());
+        if(sectionInfo.isActive()) {
+            sectionInfo.populateVoteInfo(voteCounter.getCounterValue(), voteCounter.getMin(), voteCounter.getMax(), voteCounter.getAvg(), voteCounter.getVoterNo());
+        }
     }
 
     public boolean updateState(WebAudienceStateUpdateEvent event) {
@@ -423,25 +436,43 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         return (DialogsWebAudienceStateDeltaTracker) getStateDeltaTracker();
     }
 
-    public void sendAudioFileConfig() {
-        sendPlayerConfig();
-    }
-
     public void setSection(String id) {
-        sendSetSection(id);
+        WebViewState viewState = getDelegateState().getViewState();
+        viewState.setSectionName(id);
+        viewState.setSectionActive(false);
+        getPcs().firePropertyChange(WEB_OBJ_VIEW_STATE, WEB_CONFIG_SECTION_NAME, viewState);
     }
 
-    public void sendPlayerConfig() {
-        String[] target = {WEB_PLAYER};
-        Map<String, Object> params = getDelegateState().getPlayerConfig().toJsMap();
-        setAction(WEB_ACTION_ID_CONFIG, WebAudienceActionType.AUDIO.name(), target, params);
+    public void activateSection(String id) {
+        WebViewState viewState = getDelegateState().getViewState();
+        viewState.setSectionName(id);
+        viewState.setSectionActive(true);
+        getPcs().firePropertyChange(WEB_OBJ_VIEW_STATE, WEB_CONFIG_SECTION_NAME, viewState);
     }
 
-    public void sendSetSection(String id) {
-        String[] target = {WEB_VIEW};
-        Map<String, Object> params = new HashMap<>();
-        params.put(WEB_ACTION_PARAM_ID, id);
-        setAction(WEB_ACTION_SECTION, WebAudienceActionType.ACTIVATE.name(), target, params);
+    public void deactivateSection(String id) {
+        WebViewState viewState = getDelegateState().getViewState();
+        viewState.setSectionName(id);
+        viewState.setSectionActive(false);
+        getPcs().firePropertyChange(WEB_OBJ_VIEW_STATE, WEB_CONFIG_SECTION_NAME, viewState);
+    }
+
+    public void activateViews(String... views) {
+        WebViewState viewState = getDelegateState().getViewState();
+        viewState.activateViews(views);
+        getPcs().firePropertyChange(WEB_OBJ_VIEW_STATE, WEB_CONFIG_ACTIVE_VIEWS, viewState);
+    }
+
+    public void deactivateViews(String... views) {
+        WebViewState viewState = getDelegateState().getViewState();
+        viewState.deactivateViews(views);
+        getPcs().firePropertyChange(WEB_OBJ_VIEW_STATE, WEB_CONFIG_ACTIVE_VIEWS, viewState);
+    }
+
+    public void deactivateAllViews() {
+        WebViewState viewState = getDelegateState().getViewState();
+        viewState.deactivateAllViews();
+        getPcs().firePropertyChange(WEB_OBJ_VIEW_STATE, WEB_CONFIG_ACTIVE_VIEWS, viewState);
     }
 
     private boolean processInstructionsEvent(WebAudienceInstructionsEvent event) {

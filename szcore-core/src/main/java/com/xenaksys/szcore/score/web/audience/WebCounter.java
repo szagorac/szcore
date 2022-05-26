@@ -4,7 +4,11 @@ import gnu.trove.map.hash.TLongIntHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.beans.PropertyChangeSupport;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.xenaksys.szcore.Consts.WEB_OBJ_COUNTER;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_VOTE;
 
 public class WebCounter {
     static final Logger LOG = LoggerFactory.getLogger(WebCounter.class);
@@ -15,11 +19,12 @@ public class WebCounter {
     private final AtomicInteger counter;
     private final AtomicInteger minCount;
     private final AtomicInteger maxCount;
+    private final PropertyChangeSupport pcs;
     private volatile int voterNo;
     private long lastCounterTime = 0L;
     private TLongIntHashMap counterTimeline = new TLongIntHashMap();
 
-    public WebCounter(String id, int startVal, int voterNo, long counterTimeStepMs) {
+    public WebCounter(PropertyChangeSupport pcs, String id, int startVal, int voterNo, long counterTimeStepMs) {
         this.id = id;
         this.counter = new AtomicInteger(startVal);
         this.minCount = new AtomicInteger(startVal);
@@ -27,6 +32,7 @@ public class WebCounter {
         this.voterNo = voterNo;
         this.isRegisterCounterTime = counterTimeStepMs > 0L;
         this.counterTimeStepMs = counterTimeStepMs;
+        this.pcs = pcs;
     }
 
     public String getId() {
@@ -45,12 +51,14 @@ public class WebCounter {
     public int increment() {
         int count = counter.incrementAndGet();
         setMinMax();
+        pcs.firePropertyChange(WEB_OBJ_COUNTER, WEB_OBJ_VOTE, this);
         return count;
     }
 
     public int decrement() {
         int count = counter.decrementAndGet();
         setMinMax();
+        pcs.firePropertyChange(WEB_OBJ_COUNTER, WEB_OBJ_VOTE, this);
         return count;
     }
 

@@ -209,11 +209,11 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
 
     @Override
     public void onSectionStart(String section) {
-        super.onSectionStart(section);
         DialogsWebAudienceProcessor audienceProcessor = (DialogsWebAudienceProcessor) getWebAudienceProcessor();
         if (audienceProcessor == null) {
             return;
         }
-        audienceProcessor.setCurrentSection(section);
+        audienceProcessor.onSectionStart(section);
+        super.onSectionStart(section);
     }
 }

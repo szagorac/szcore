@@ -10,7 +10,12 @@ import org.slf4j.LoggerFactory;
 import java.beans.PropertyChangeSupport;
 import java.util.List;
 
-import static com.xenaksys.szcore.Consts.*;
+import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_ACTIONS;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRANULATOR;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_SPEECH_SYNTH;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_INSTRUCTIONS;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_STATE_SPEECH_SYNTH;
 
 public class WebAudienceServerState {
     static final Logger LOG = LoggerFactory.getLogger(WebAudienceServerState.class);
@@ -103,8 +108,16 @@ public class WebAudienceServerState {
         pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_OBJ_CONFIG_GRANULATOR, granulatorConfig);
     }
 
+    public void onGranulatorConfigUpdate() {
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_GRANULATOR, WEB_OBJ_CONFIG_GRANULATOR, granulatorConfig);
+    }
+
     public void setSpeechSynthConfig(WebSpeechSynthConfig speechSynthConfig) {
         this.speechSynthConfig = speechSynthConfig;
+        pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_OBJ_CONFIG_SPEECH_SYNTH, speechSynthConfig);
+    }
+
+    public void onSpeechSynthConfigUpdate() {
         pcs.firePropertyChange(WEB_OBJ_CONFIG_SPEECH_SYNTH, WEB_OBJ_CONFIG_SPEECH_SYNTH, speechSynthConfig);
     }
 

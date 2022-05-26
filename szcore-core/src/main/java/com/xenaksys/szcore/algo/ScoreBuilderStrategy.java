@@ -322,6 +322,8 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
         if(currentSection != null && !currentSection.equals(section)) {
             LOG.error("onSectionStart: Unexpected section start: {}, expected: {}", section, currentSection);
         }
+        SectionInfo sectionInfo = sectionInfos.get(section);
+        sectionInfo.setActive(true);
         setNextSection();
     }
 
@@ -333,6 +335,8 @@ public class ScoreBuilderStrategy implements ScoreStrategy {
         if(currentSection != null && !currentSection.equals(section)) {
             LOG.error("onSectionEnd: Unexpected section end: {}, expected: {}", section, currentSection);
         }
+        SectionInfo sectionInfo = sectionInfos.get(section);
+        sectionInfo.setActive(false);
         setCurrentSection(getNextSection());
     }
 

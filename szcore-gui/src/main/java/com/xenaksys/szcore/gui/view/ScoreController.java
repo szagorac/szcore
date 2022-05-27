@@ -714,7 +714,7 @@ public class ScoreController {
         adncVolGranulatorSldr.setValue(100.0);
         adncVolSpeechSldr.setValue(100.0);
 
-        semaphore1Crc.setFill(Color.TRANSPARENT);
+        semaphore1Crc.setFill(Color.RED);
         semaphore1Crc.setStroke(Color.BLACK);
         semaphore2Crc.setFill(Color.TRANSPARENT);
         semaphore2Crc.setStroke(Color.BLACK);

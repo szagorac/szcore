@@ -404,10 +404,21 @@ public class SzcoreClient extends Application {
         if(precountInfo != null) {
             processPrecountInfo(precountInfo);
         }
+        boolean isStop = event.isStop();
+        if(isStop) {
+            Platform.runLater(this::onStop);
+        }
+
     }
+
 
     public void processPrecountInfo(PrecountInfo precountInfo) {
         Platform.runLater(new PrecountUpdater(precountInfo));
+    }
+
+    private void onStop() {
+        scoreController.showSemaphore(1, Color.RED);
+        dialogsScoreController.showSemaphore(1, Color.RED);
     }
 
     private void updatePrecount(PrecountInfo precountInfo) {
@@ -579,6 +590,13 @@ public class SzcoreClient extends Application {
         @Override
         public void run() {
             updatePrecount(precountInfo);
+        }
+    }
+
+    class StopUpdater implements Runnable {
+        @Override
+        public void run() {
+            onStop();
         }
     }
 }

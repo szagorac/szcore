@@ -5,18 +5,18 @@ import com.xenaksys.szcore.model.Id;
 public class ScoreInfoEvent extends ClientEvent {
 
     private final Id scoreId;
-    private final boolean isRunning;
+    private final boolean isStop;
     private final PrecountInfo precountInfo;
 
-    public ScoreInfoEvent(Id scoreId, boolean isRunning, PrecountInfo precountInfo, long creationTime) {
+    public ScoreInfoEvent(Id scoreId, boolean isStop, PrecountInfo precountInfo, long creationTime) {
         super(creationTime);
         this.scoreId = scoreId;
-        this.isRunning = isRunning;
+        this.isStop = isStop;
         this.precountInfo = precountInfo;
     }
 
-    public boolean isRunning() {
-        return isRunning;
+    public boolean isStop() {
+        return isStop;
     }
 
     public Id getScoreId() {
@@ -36,7 +36,7 @@ public class ScoreInfoEvent extends ClientEvent {
     public String toString() {
         return "ScoreInfoEvent{" +
                 "scoreId=" + scoreId +
-                ", isRunning=" + isRunning +
+                ", isRunning=" + isStop +
                 ", precountInfo=" + precountInfo +
                 '}';
     }

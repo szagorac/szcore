@@ -12,6 +12,7 @@ import com.xenaksys.szcore.event.EventType;
 import com.xenaksys.szcore.event.gui.ClientEvent;
 import com.xenaksys.szcore.event.gui.ClientInEvent;
 import com.xenaksys.szcore.event.gui.ClientInEventType;
+import com.xenaksys.szcore.event.gui.ScoreInfoEvent;
 import com.xenaksys.szcore.event.gui.ScoreSectionInfoEvent;
 import com.xenaksys.szcore.event.gui.StrategyEvent;
 import com.xenaksys.szcore.event.gui.StrategyEventType;
@@ -1767,6 +1768,9 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
 
         WebAudienceStopEvent webStopEvent = eventFactory.createWebAudienceStopEvent(clock.getSystemTimeMillis());
         process(webStopEvent);
+
+        ScoreInfoEvent clientStop = eventFactory.createScoreInfoEvent(getScore().getId(), true, null, clock.getSystemTimeMillis());
+        sendClientEvent(clientStop);
     }
 
     private ModWindowEvent createModWindowEvent(BeatId beatId, Page nextPage, PageId currentPageId, Stave stave, boolean isOpen) {

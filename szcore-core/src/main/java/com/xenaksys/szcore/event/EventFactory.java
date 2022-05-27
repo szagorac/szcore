@@ -214,8 +214,8 @@ public class EventFactory {
         return new ScoreSectionInfoEvent(scoreId, sectionInfos, sectionOrder, isReady, currentSection, nextSection, creationTime);
     }
 
-    public ScoreInfoEvent createScoreInfoEvent(Id scoreId, boolean isRunning, PrecountInfo precountInfo, long creationTime) {
-        return new ScoreInfoEvent(scoreId, isRunning, precountInfo, creationTime);
+    public ScoreInfoEvent createScoreInfoEvent(Id scoreId, boolean isStop, PrecountInfo precountInfo, long creationTime) {
+        return new ScoreInfoEvent(scoreId, isStop, precountInfo, creationTime);
     }
 
     public OscEvent createOscEvent(String address, List<Object> args, String destination, long creationTime) {

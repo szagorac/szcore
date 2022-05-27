@@ -553,23 +553,24 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
         long clientEventCreatedTime = Long.parseLong(zsRequest.getParam(WEB_EVENT_TIME_NAME));
         long clientEventSentTime = Long.parseLong(zsRequest.getParam(WEB_EVENT_SENT_TIME_NAME));
         String clientId = zsRequest.getParam(WEB_EVENT_CLIENT_ID);
+        WebClientInfo webClientInfo = scoreClientInfos.get(sourceAddr);
 
         switch (type) {
             case HELLO:
                 WebScoreClientHelloEvent clientHelloEvent = eventFactory.createWebScoreClientHelloEvent(clientId, eventId,
-                        sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+                        sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
                 eventService.receive(clientHelloEvent);
                 return createOkWebString(WEB_RESPONSE_SUBMITTED);
             case PART_REG:
                 String part = zsRequest.getParam(WEB_EVENT_PART);
                 WebScorePartRegEvent partRegEvent = eventFactory.createWebScorePartRegEvent(clientId, eventId,
-                        sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+                        sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
                 eventService.receive(partRegEvent);
                 return createOkWebString(WEB_RESPONSE_SUBMITTED);
             case PART_READY:
                 part = zsRequest.getParam(WEB_EVENT_PART);
                 WebScorePartReadyEvent partReadyEvent = eventFactory.createWebScorePartReadyEvent(clientId, eventId,
-                        sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+                        sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
                 eventService.receive(partReadyEvent);
                 return createOkWebString(WEB_RESPONSE_SUBMITTED);
             case PING:
@@ -582,13 +583,13 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
                 String slotInstrument = zsRequest.getParam(WEB_EVENT_SLOT_INSTRUMENT);
                 int slotNo = Integer.parseInt(slotNoStr);
                 WebScoreSelectInstrumentSlotEvent slotEvent = eventFactory.createWebScoreSelectInstrumentSlotEvent(clientId, eventId,
-                        sourceAddr, part, slotNo, slotInstrument, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+                        sourceAddr, part, slotNo, slotInstrument, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
                 eventService.receive(slotEvent);
                 return createOkWebString(WEB_RESPONSE_SUBMITTED);
             case SELECT_SECTION:
                 String section = zsRequest.getParam(WEB_EVENT_SECTION);
                 WebScoreSelectSectionEvent sectionEvent = eventFactory.createWebScoreSelectSectionEvent(clientId, eventId,
-                        sourceAddr, section, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+                        sourceAddr, section, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
                 eventService.receive(sectionEvent);
                 return createOkWebString(WEB_RESPONSE_SUBMITTED);
             default:

@@ -3,6 +3,7 @@ package com.xenaksys.szcore.gui;
 
 import com.aquafx_project.AquaFx;
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.event.gui.PrecountInfo;
 import com.xenaksys.szcore.event.gui.ScoreInfoEvent;
 import com.xenaksys.szcore.event.gui.ScoreSectionInfoEvent;
 import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
@@ -398,7 +399,11 @@ public class SzcoreClient extends Application {
     }
 
     public void processScoreInfo(ScoreInfoEvent event) {
-//        LOG.info("processScoreInfo: isPrecount: {}",event.isPrecount());
+        PrecountInfo precountInfo = event.getPrecountInfo();
+        if(precountInfo != null) {
+            scoreController.processPrecountInfo(precountInfo);
+        }
+
     }
 
     public void setPage(int startPage) {

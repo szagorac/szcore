@@ -2,6 +2,7 @@ package com.xenaksys.szcore.task;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
+import com.xenaksys.szcore.event.gui.PrecountInfo;
 import com.xenaksys.szcore.event.gui.ScoreInfoEvent;
 import com.xenaksys.szcore.event.music.PrecountBeatSetupEvent;
 import com.xenaksys.szcore.event.osc.PrecountBeatOffEvent;
@@ -142,7 +143,8 @@ public class PrecountBeatSetupTask extends EventMusicTask {
     }
 
     private void addAdminClientPrecountTask(long playTime, boolean isOn, int beaterNo, int colourId) {
-        ScoreInfoEvent event = eventFactory.createScoreInfoEvent(null, false, isOn, beaterNo, colourId, clock.getSystemTimeMillis());
+        PrecountInfo precountInfo = new PrecountInfo(isOn, beaterNo, colourId);
+        ScoreInfoEvent event = eventFactory.createScoreInfoEvent(null, false, precountInfo, clock.getSystemTimeMillis());
         ClientEventTask task = taskFactory.createClientEventTask(playTime, event, processor);
         processor.scheduleTask(task);
     }

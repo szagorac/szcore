@@ -3,6 +3,7 @@ package com.xenaksys.szcore.event;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.gui.ParticipantEvent;
 import com.xenaksys.szcore.event.gui.ParticipantStatsEvent;
+import com.xenaksys.szcore.event.gui.PrecountInfo;
 import com.xenaksys.szcore.event.gui.ScoreInfoEvent;
 import com.xenaksys.szcore.event.gui.ScoreSectionInfoEvent;
 import com.xenaksys.szcore.event.gui.StrategyEvent;
@@ -213,8 +214,8 @@ public class EventFactory {
         return new ScoreSectionInfoEvent(scoreId, sectionInfos, sectionOrder, isReady, currentSection, nextSection, creationTime);
     }
 
-    public ScoreInfoEvent createScoreInfoEvent(Id scoreId, boolean isRunning, boolean isPrecountOn, int beaterNo, int colourId, long creationTime) {
-        return new ScoreInfoEvent(scoreId, isRunning, isPrecountOn, beaterNo, colourId, creationTime);
+    public ScoreInfoEvent createScoreInfoEvent(Id scoreId, boolean isRunning, PrecountInfo precountInfo, long creationTime) {
+        return new ScoreInfoEvent(scoreId, isRunning, precountInfo, creationTime);
     }
 
     public OscEvent createOscEvent(String address, List<Object> args, String destination, long creationTime) {
@@ -486,24 +487,24 @@ public class EventFactory {
         return new WebScoreConnectionEvent(webClientInfo, creationTime);
     }
 
-    public WebScoreClientHelloEvent createWebScoreClientHelloEvent(String clientId, String eventId, String sourceAddr, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        return new WebScoreClientHelloEvent(clientId, eventId, sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public WebScoreClientHelloEvent createWebScoreClientHelloEvent(String clientId, String eventId, String sourceAddr, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime, WebClientInfo webClientInfo) {
+        return new WebScoreClientHelloEvent(clientId, eventId, sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
     }
 
-    public WebScorePartRegEvent createWebScorePartRegEvent(String clientId, String eventId, String sourceAddr, String part, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        return new WebScorePartRegEvent(clientId, eventId, sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public WebScorePartRegEvent createWebScorePartRegEvent(String clientId, String eventId, String sourceAddr, String part, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime, WebClientInfo webClientInfo) {
+        return new WebScorePartRegEvent(clientId, eventId, sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
     }
 
-    public WebScorePartReadyEvent createWebScorePartReadyEvent(String clientId, String eventId, String sourceAddr, String part, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        return new WebScorePartReadyEvent(clientId, eventId, sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public WebScorePartReadyEvent createWebScorePartReadyEvent(String clientId, String eventId, String sourceAddr, String part, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime, WebClientInfo webClientInfo) {
+        return new WebScorePartReadyEvent(clientId, eventId, sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
     }
 
-    public WebScoreSelectInstrumentSlotEvent createWebScoreSelectInstrumentSlotEvent(String clientId, String eventId, String sourceAddr, String part, int slotNo, String slotInstrument, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        return new WebScoreSelectInstrumentSlotEvent(clientId, eventId, sourceAddr, part, slotNo, slotInstrument, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public WebScoreSelectInstrumentSlotEvent createWebScoreSelectInstrumentSlotEvent(String clientId, String eventId, String sourceAddr, String part, int slotNo, String slotInstrument, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime, WebClientInfo webClientInfo) {
+        return new WebScoreSelectInstrumentSlotEvent(clientId, eventId, sourceAddr, part, slotNo, slotInstrument, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
     }
 
-    public WebScoreSelectSectionEvent createWebScoreSelectSectionEvent(String clientId, String eventId, String sourceAddr, String section, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        return new WebScoreSelectSectionEvent(clientId, eventId, sourceAddr, section, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public WebScoreSelectSectionEvent createWebScoreSelectSectionEvent(String clientId, String eventId, String sourceAddr, String section, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime, WebClientInfo webClientInfo) {
+        return new WebScoreSelectSectionEvent(clientId, eventId, sourceAddr, section, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
     }
 
     public List<Object> createJavaScriptArgs() {

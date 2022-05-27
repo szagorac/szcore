@@ -1,12 +1,14 @@
 package com.xenaksys.szcore.event.web.in;
 
+import com.xenaksys.szcore.web.WebClientInfo;
+
 public class WebScoreSelectInstrumentSlotEvent extends WebScoreInEvent {
     private final String part;
     private final int slotNo;
     private final String slotInstrument;
 
-    public WebScoreSelectInstrumentSlotEvent(String clientId, String eventId, String sourceAddr, String part, int slotNo, String slotInstrument, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        super(clientId, eventId, sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public WebScoreSelectInstrumentSlotEvent(String clientId, String eventId, String sourceAddr, String part, int slotNo, String slotInstrument, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime, WebClientInfo webClientInfo) {
+        super(clientId, eventId, sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
         this.part = part;
         this.slotNo = slotNo;
         this.slotInstrument = slotInstrument;

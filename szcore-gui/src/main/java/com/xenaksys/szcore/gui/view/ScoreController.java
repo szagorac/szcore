@@ -3,6 +3,7 @@ package com.xenaksys.szcore.gui.view;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
+import com.xenaksys.szcore.event.gui.PrecountInfo;
 import com.xenaksys.szcore.event.osc.AddPartsEvent;
 import com.xenaksys.szcore.event.osc.SendServerIpBroadcastEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEvent;
@@ -52,6 +53,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
@@ -205,6 +207,14 @@ public class ScoreController {
     private Slider adncVolGranulatorSldr;
     @FXML
     private Slider adncVolSpeechSldr;
+    @FXML
+    private Circle semaphore1Crc;
+    @FXML
+    private Circle semaphore2Crc;
+    @FXML
+    private Circle semaphore3Crc;
+    @FXML
+    private Circle semaphore4Crc;
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -227,6 +237,8 @@ public class ScoreController {
     private ObservableList<Participant> selectedParticipants = FXCollections.observableArrayList();
     private ObservableList<Participant> participants;
     private WebscoreInstructions webscoreInstructions;
+
+    private Circle[] semaphore;
 
     private long positionMillis = 0L;
 
@@ -577,6 +589,8 @@ public class ScoreController {
             long oldVal = Math.round(old_val.doubleValue());
             onAudienceSpeechVolumeChange(newVal, oldVal);
         });
+
+        semaphore = new Circle[]{semaphore1Crc, semaphore2Crc, semaphore3Crc, semaphore4Crc};
     }
 
     public void setScoreService(ScoreService scoreService) {
@@ -700,6 +714,15 @@ public class ScoreController {
         adncVolPlayerSldr.setValue(100.0);
         adncVolGranulatorSldr.setValue(100.0);
         adncVolSpeechSldr.setValue(100.0);
+
+        semaphore1Crc.setFill(Color.TRANSPARENT);
+        semaphore1Crc.setStroke(Color.BLACK);
+        semaphore2Crc.setFill(Color.TRANSPARENT);
+        semaphore2Crc.setStroke(Color.BLACK);
+        semaphore3Crc.setFill(Color.TRANSPARENT);
+        semaphore3Crc.setStroke(Color.BLACK);
+        semaphore4Crc.setFill(Color.TRANSPARENT);
+        semaphore4Crc.setStroke(Color.BLACK);
     }
 
     @FXML
@@ -1359,6 +1382,45 @@ public class ScoreController {
         Platform.runLater(new TempoUpdater(transportId, tempo.getBpm()));
     }
 
+    public void processPrecountInfo(PrecountInfo precountInfo) {
+        Platform.runLater(new PrecountUpdater(precountInfo));
+    }
+
+    private void updatePrecount(PrecountInfo precountInfo) {
+        int beaterNo = precountInfo.getBeaterNo();
+        int colId = precountInfo.getColourId();
+        boolean isOn = precountInfo.isPrecountOn();
+        if(isOn) {
+            showSemaphore(beaterNo, resolveColour(colId));
+        } else {
+            showSemaphore(4, Color.TRANSPARENT);
+        }
+    }
+
+    private Color resolveColour(int colId) {
+        switch (colId) {
+            case Consts.OSC_COLOUR_GREEN:
+                return Color.GREEN;
+            case Consts.OSC_COLOUR_YELLOW:
+                return Color.YELLOW;
+            case Consts.OSC_COLOUR_ORANGE:
+                return Color.ORANGE;
+            case Consts.OSC_COLOUR_RED:
+                return Color.RED;
+        }
+        return null;
+    }
+
+    private void showSemaphore(int lightNo, Color fill) {
+        for (int i = 1; i <= lightNo; i++) {
+            if(i > semaphore.length) {
+                continue;
+            }
+            Circle circ = semaphore[i -1];
+            circ.setFill(fill);
+        }
+    }
+
     private Double[] getTempoMultiplierValues() {
         return Consts.TEMPO_MULTIPLIERS;
     }
@@ -1957,8 +2019,8 @@ public class ScoreController {
     }
 
     class TempoUpdater implements Runnable {
-        private Id transportId;
-        private int tempo;
+        private final Id transportId;
+        private final int tempo;
 
         public TempoUpdater(Id transportId, int tempo) {
             this.transportId = transportId;
@@ -1967,8 +2029,19 @@ public class ScoreController {
 
         @Override
         public void run() {
-//LOG.info("Client receieved tempo: " + tempo);
             updateTempo(transportId, tempo);
+        }
+    }
+
+    class PrecountUpdater implements Runnable {
+        private final PrecountInfo precountInfo;
+        public PrecountUpdater(PrecountInfo precountInfo) {
+            this.precountInfo = precountInfo;
+        }
+
+        @Override
+        public void run() {
+            updatePrecount(precountInfo);
         }
     }
 

@@ -6,17 +6,13 @@ public class ScoreInfoEvent extends ClientEvent {
 
     private final Id scoreId;
     private final boolean isRunning;
-    private final boolean isPrecount;
-    private final int beaterNo;
-    private final int colourId;
+    private final PrecountInfo precountInfo;
 
-    public ScoreInfoEvent(Id scoreId, boolean isRunning, boolean isPrecountOn, int beaterNo, int colourId, long creationTime) {
+    public ScoreInfoEvent(Id scoreId, boolean isRunning, PrecountInfo precountInfo, long creationTime) {
         super(creationTime);
         this.scoreId = scoreId;
         this.isRunning = isRunning;
-        this.isPrecount = isPrecountOn;
-        this.beaterNo = beaterNo;
-        this.colourId = colourId;
+        this.precountInfo = precountInfo;
     }
 
     public boolean isRunning() {
@@ -27,16 +23,8 @@ public class ScoreInfoEvent extends ClientEvent {
         return scoreId;
     }
 
-    public boolean isPrecount() {
-        return isPrecount;
-    }
-
-    public int getBeaterNo() {
-        return beaterNo;
-    }
-
-    public int getColourId() {
-        return colourId;
+    public PrecountInfo getPrecountInfo() {
+        return precountInfo;
     }
 
     @Override
@@ -49,6 +37,7 @@ public class ScoreInfoEvent extends ClientEvent {
         return "ScoreInfoEvent{" +
                 "scoreId=" + scoreId +
                 ", isRunning=" + isRunning +
+                ", precountInfo=" + precountInfo +
                 '}';
     }
 }

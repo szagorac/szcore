@@ -862,8 +862,11 @@ public class WebScore {
         try {
             WebClientInfo clientInfo = getClientInfo(event);
             if (clientInfo == null) {
-                LOG.error("processSelectSection: Unknown client source: {} id: {}", event.getSourceAddr(), event.getClientId());
-                return;
+                clientInfo = getClientInfo(event);
+                if (clientInfo == null) {
+                    LOG.error("processSelectSection: Unknown client source: {} id: {}", event.getSourceAddr(), event.getClientId());
+                    return;
+                }
             }
             String section = event.getSection();
             scoreProcessor.processSelectSection(section, clientInfo);
@@ -963,8 +966,25 @@ public class WebScore {
             }
         }
 
+        tryPopulateMissingClient(webEvent);
+        WebClientInfo clientInfo = playerClients.get(clientId);
+        if(clientInfo != null) {
+            return clientInfo;
+        }
+
         clientId = webEvent.getSourceAddr();
         return allClients.get(clientId);
+    }
+    public void tryPopulateMissingClient(WebScoreInEvent webEvent) {
+        WebClientInfo webClientInfo = webEvent.getWebClientInfo();
+        if(webClientInfo == null) {
+            return;
+        }
+        try {
+            addOrUpdateClientInfo(webClientInfo);
+        } catch (Exception e) {
+            LOG.error("tryPopulateMissingClient error", e);
+        }
     }
 
     public List<WebClientInfo> getScoreClients() {

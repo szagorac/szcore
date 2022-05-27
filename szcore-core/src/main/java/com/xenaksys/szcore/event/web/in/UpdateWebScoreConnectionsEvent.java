@@ -9,7 +9,7 @@ public class UpdateWebScoreConnectionsEvent extends WebScoreInEvent {
     private final Set<WebConnection> clientConnections;
 
     public UpdateWebScoreConnectionsEvent(Set<WebConnection> clientConnections, long creationTime) {
-        super(null, null, null, null, creationTime, 0L, 0L);
+        super(null, null, null, null, creationTime, 0L, 0L, null);
         this.clientConnections = clientConnections;
     }
 

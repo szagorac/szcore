@@ -121,4 +121,6 @@ public interface ScoreProcessor extends Processor {
     void setWebDelayMs(long delayMs);
 
     void sendClientEvent(ClientEvent clientEvent);
+
+    void publishAudienceViewState(boolean isNotesEnabled, boolean isAudioEnabled, boolean isThumbsEnabled, boolean isMeterEnabled, boolean isVoteEnabled);
 }

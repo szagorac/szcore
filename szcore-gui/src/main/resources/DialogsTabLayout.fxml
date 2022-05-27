@@ -73,15 +73,15 @@
                                         <ListView fx:id="sectionOrderLvw" orientation="HORIZONTAL" prefHeight="100.0" prefWidth="370.0" />
                               <HBox alignment="CENTER" layoutX="10.0" layoutY="110.0" spacing="10.0">
                                  <children>
-                                            <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Current" />
+                                            <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Dialog current:" />
                                             <Label fx:id="playingSectionLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="N/A" />
-                                            <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Next :" />
+                                            <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="next :" />
                                             <Label fx:id="nextSectionLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="N/A" />
                                  </children>
                               </HBox>
                                         <HBox alignment="CENTER" spacing="10.0" VBox.vgrow="ALWAYS">
                                             <children>
-                                                <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Vote current" />
+                                                <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Vote" />
                                                 <Label fx:id="voteCurrentLbl" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="0" />
                                                 <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Max" />
                                                 <Label fx:id="voteMaxLbl" styleClass="label-green-txt" stylesheets="@css/szcoreStyle.css" text="0" />
@@ -99,6 +99,7 @@
                         <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="372.0" spacing="6.0">
                             <children>
                                 <Label styleClass="label-subtitle" stylesheets="@css/szcoreStyle.css" text="Overlays " />
+                        <Separator orientation="VERTICAL" />
                                 <ChoiceBox fx:id="presetsChob" />
                                 <CheckBox fx:id="sendToAllChb" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" />
                                 <Label layoutX="36.0" layoutY="10.0" text="Send To All" />
@@ -153,9 +154,11 @@
                             </children>
                         </HBox>
                         <Separator layoutX="10.0" layoutY="533.0" />
-                        <HBox alignment="CENTER_LEFT" spacing="5.0">
+                        <HBox alignment="CENTER_LEFT" spacing="7.0">
                             <children>
-                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Text L1:" />
+                        <Label layoutX="10.0" layoutY="15.0" styleClass="label-subtitle" stylesheets="@css/szcoreStyle.css" text="Text" />
+                        <Separator orientation="VERTICAL" />
+                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="L1:" />
                                 <TextField fx:id="instPitchLn1Txt" />
                                 <Label layoutX="10.0" layoutY="15.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="L2:" />
                                 <TextField fx:id="instPitchLn2Txt" layoutX="58.0" layoutY="10.0" />
@@ -218,6 +221,19 @@
                             </children>
                         </HBox>
                         <Separator />
+                  <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="357.0" spacing="7.0">
+                     <children>
+                        <Label layoutX="10.0" layoutY="15.0" styleClass="label-subtitle" stylesheets="@css/szcoreStyle.css" text="Audience" />
+                        <Separator orientation="VERTICAL" />
+                        <CheckBox fx:id="adncNotesChb" mnemonicParsing="false" text="Notes" />
+                        <CheckBox fx:id="adncAudioChb" layoutX="86.0" layoutY="12.0" mnemonicParsing="false" text="Audio" />
+                        <CheckBox fx:id="adncThumbsChb" layoutX="213.0" layoutY="15.0" mnemonicParsing="false" text="Thumbs" />
+                        <CheckBox fx:id="adncMeterChb" layoutX="150.0" layoutY="15.0" mnemonicParsing="false" text="Meter" />
+                        <CheckBox fx:id="adncVoteChb" layoutX="213.0" layoutY="15.0" mnemonicParsing="false" text="Vote" />
+                        <Button fx:id="adncSendViewBtn" mnemonicParsing="false" onAction="#sendAudienceViewState" styleClass="css/szcoreStyle.css" text="Send" />
+                     </children>
+                  </HBox>
+                  <Separator layoutX="10.0" layoutY="485.0" />
                     </children>
                 </VBox>
             </children>

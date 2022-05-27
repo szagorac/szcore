@@ -346,6 +346,11 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     }
 
     @Override
+    public void publishAudienceViewState(boolean isNotesEnabled, boolean isAudioEnabled, boolean isThumbsEnabled, boolean isMeterEnabled, boolean isVoteEnabled) {
+
+    }
+
+    @Override
     public void prepare(Score score) {
         this.szcore = (BasicScore) score;
 

@@ -206,7 +206,18 @@ public class DialogsScoreController {
     private Circle semaphore3Crc;
     @FXML
     private Circle semaphore4Crc;
-
+    @FXML
+    private CheckBox adncNotesChb;
+    @FXML
+    private CheckBox adncAudioChb;
+    @FXML
+    private CheckBox adncThumbsChb;
+    @FXML
+    private CheckBox adncMeterChb;
+    @FXML
+    private CheckBox adncVoteChb;
+    @FXML
+    private Button adncSendViewBtn;
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -461,6 +472,17 @@ public class DialogsScoreController {
         txtInstructions.setVisible(false);
         publishWebscoreInstructions();
     }
+
+    @FXML
+    private void sendAudienceViewState(ActionEvent event) {
+        boolean isNotesEnabled = adncNotesChb.isSelected();
+        boolean isAudioEnabled = adncAudioChb.isSelected();;
+        boolean isThumbsEnabled = adncThumbsChb.isSelected();;
+        boolean isMeterEnabled = adncMeterChb.isSelected();;
+        boolean isVoteEnabled = adncVoteChb.isSelected();;
+        scoreService.publishAudienceViewState(isNotesEnabled, isAudioEnabled, isThumbsEnabled, isMeterEnabled, isVoteEnabled);
+    }
+
 
     private void publishWebscoreInstructions() {
         String l1 = validateWebInstruction(txtInstructions.getLine1());

@@ -70,9 +70,15 @@ import static com.xenaksys.szcore.Consts.WEB_PLAYER;
 import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_TEXT_BACKGROUND_COLOUR;
 import static com.xenaksys.szcore.Consts.WEB_VIEW_AUDIO;
+import static com.xenaksys.szcore.Consts.WEB_VIEW_METER;
+import static com.xenaksys.szcore.Consts.WEB_VIEW_NOTES;
+import static com.xenaksys.szcore.Consts.WEB_VIEW_THUMBS;
+import static com.xenaksys.szcore.Consts.WEB_VIEW_VOTE;
 
 public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(DialogsWebAudienceProcessor.class);
+
+    private static final String[] AVAILABLE_VIEWS = {WEB_VIEW_THUMBS, WEB_VIEW_NOTES, WEB_VIEW_VOTE, WEB_VIEW_AUDIO, WEB_VIEW_METER};
 
     private DialogsAudienceWebscoreConfig audienceWebscoreConfig;
     private final DialogsAudienceConfigLoader configLoader = new DialogsAudienceConfigLoader();
@@ -299,6 +305,8 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
     public boolean processStop(WebAudienceStopEvent event) {
         sendStopAll();
         processWebCounterOnStop();
+        resetVote();
+        sendViewOnStop();
         return true;
     }
 
@@ -333,20 +341,61 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
     public void onSectionStart(String section) {
         currentSection = section;
         sectionStartTime = getClock().getElapsedTimeMillis();
+        resetVote();
+        activateSection(section);
+        activateViews(WEB_VIEW_AUDIO, WEB_VIEW_THUMBS, WEB_VIEW_VOTE, WEB_VIEW_METER);
+        updateServerStateAndPush();
+    }
+
+    public void resetVote() {
         DialogsWebAudienceServerState state = getDelegateState();
         WebCounter voteCounter = state.getCounter();
         voteCounter.resetCounterTimeline();
         voteCounter.resetCounters();
         processVote(voteCounter);
         getPcs().firePropertyChange(WEB_OBJ_COUNTER, WEB_OBJ_VOTE, voteCounter);
-        activateSection(section);
-        activateViews(WEB_VIEW_AUDIO);
-        updateServerStateAndPush();
     }
 
     public void onSectionStop(String section) {
         deactivateSection(section);
-        deactivateViews(WEB_VIEW_AUDIO);
+//        sendViewOnStop();
+    }
+
+    public void sendViewOnStop() {
+        deactivateViews(WEB_VIEW_AUDIO, WEB_VIEW_THUMBS, WEB_VIEW_VOTE);
+        updateServerStateAndPush(true);
+    }
+
+    public void setAudienceViewState(boolean isNotesEnabled, boolean isAudioEnabled, boolean isThumbsEnabled, boolean isMeterEnabled, boolean isVoteEnabled) {
+        ArrayList<String> enable = new ArrayList<>();
+        ArrayList<String> disable = new ArrayList<>();
+        if(isNotesEnabled) {
+            enable.add(WEB_VIEW_NOTES);
+        } else {
+            disable.add(WEB_VIEW_NOTES);
+        }
+        if(isAudioEnabled) {
+            enable.add(WEB_VIEW_AUDIO);
+        } else {
+            disable.add(WEB_VIEW_AUDIO);
+        }
+        if(isThumbsEnabled) {
+            enable.add(WEB_VIEW_THUMBS);
+        } else {
+            disable.add(WEB_VIEW_THUMBS);
+        }
+        if(isMeterEnabled) {
+            enable.add(WEB_VIEW_METER);
+        } else {
+            disable.add(WEB_VIEW_METER);
+        }
+        if(isVoteEnabled) {
+            enable.add(WEB_VIEW_VOTE);
+        } else {
+            disable.add(WEB_VIEW_VOTE);
+        }
+        deactivateViews(disable.toArray(new String[0]));
+        activateViews(enable.toArray(new String[0]));
         updateServerStateAndPush(true);
     }
 

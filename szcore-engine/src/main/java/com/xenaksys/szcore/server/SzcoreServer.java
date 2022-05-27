@@ -518,6 +518,17 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
+    public void publishAudienceViewState(boolean isNotesEnabled, boolean isAudioEnabled, boolean isThumbsEnabled, boolean isMeterEnabled, boolean isVoteEnabled) {
+        try {
+            scoreProcessor.publishAudienceViewState(isNotesEnabled, isAudioEnabled, isThumbsEnabled, isMeterEnabled, isVoteEnabled);
+        } catch (Exception e) {
+            LOG.error("publishAudienceViewState Failed to send view state.", e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to send view state", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+
+    @Override
     public void updateAudienceWebServerConnections(Set<WebConnection> connections) {
         if (webProcessor == null) {
             return;

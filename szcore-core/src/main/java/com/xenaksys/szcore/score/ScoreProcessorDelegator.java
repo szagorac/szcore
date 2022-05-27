@@ -368,6 +368,14 @@ public class ScoreProcessorDelegator implements ScoreProcessor {
     }
 
     @Override
+    public void publishAudienceViewState(boolean isNotesEnabled, boolean isAudioEnabled, boolean isThumbsEnabled, boolean isMeterEnabled, boolean isVoteEnabled) {
+        if(scoreDelegate == null) {
+            return;
+        }
+        scoreDelegate.publishAudienceViewState(isNotesEnabled, isAudioEnabled, isThumbsEnabled, isMeterEnabled, isVoteEnabled);
+    }
+
+    @Override
     public void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst, WebClientInfo clientInfo) {
         if(scoreDelegate == null) {
             return;

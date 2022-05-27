@@ -223,4 +223,12 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
         }
         super.onSectionStop(section);
     }
+
+    @Override
+    public void publishAudienceViewState(boolean isNotesEnabled, boolean isAudioEnabled, boolean isThumbsEnabled, boolean isMeterEnabled, boolean isVoteEnabled) {
+        DialogsWebAudienceProcessor audienceProcessor = (DialogsWebAudienceProcessor) getWebAudienceProcessor();
+        if (audienceProcessor != null) {
+            audienceProcessor.setAudienceViewState(isNotesEnabled, isAudioEnabled, isThumbsEnabled, isMeterEnabled, isVoteEnabled);
+        }
+    }
 }

@@ -108,4 +108,7 @@ public interface ScoreService {
     List<WebClientInfo> getWebScoreInstrumentClients(String instrument);
 
     void setWebDelayMs(long delayMs);
+
+    void publishAudienceViewState(boolean isNotesEnabled, boolean isAudioEnabled, boolean isThumbsEnabled, boolean isMeterEnabled, boolean isVoteEnabled);
+
 }

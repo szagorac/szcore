@@ -43,6 +43,7 @@ import javafx.scene.control.Tab;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -401,9 +402,39 @@ public class SzcoreClient extends Application {
     public void processScoreInfo(ScoreInfoEvent event) {
         PrecountInfo precountInfo = event.getPrecountInfo();
         if(precountInfo != null) {
-            scoreController.processPrecountInfo(precountInfo);
+            processPrecountInfo(precountInfo);
         }
+    }
 
+    public void processPrecountInfo(PrecountInfo precountInfo) {
+        Platform.runLater(new PrecountUpdater(precountInfo));
+    }
+
+    private void updatePrecount(PrecountInfo precountInfo) {
+        int beaterNo = precountInfo.getBeaterNo();
+        int colId = precountInfo.getColourId();
+        boolean isOn = precountInfo.isPrecountOn();
+        if(isOn) {
+            scoreController.showSemaphore(beaterNo, resolveColour(colId));
+            dialogsScoreController.showSemaphore(beaterNo, resolveColour(colId));
+        } else {
+            scoreController.showSemaphore(4, Color.TRANSPARENT);
+            dialogsScoreController.showSemaphore(4, Color.TRANSPARENT);
+        }
+    }
+
+    private Color resolveColour(int colId) {
+        switch (colId) {
+            case Consts.OSC_COLOUR_GREEN:
+                return Color.GREEN;
+            case Consts.OSC_COLOUR_YELLOW:
+                return Color.YELLOW;
+            case Consts.OSC_COLOUR_ORANGE:
+                return Color.ORANGE;
+            case Consts.OSC_COLOUR_RED:
+                return Color.RED;
+        }
+        return null;
     }
 
     public void setPage(int startPage) {
@@ -538,5 +569,16 @@ public class SzcoreClient extends Application {
             return;
         }
         scoreController.sendUseTimbreLine(newValue , instrumentIds);
+    }
+
+    class PrecountUpdater implements Runnable {
+        private final PrecountInfo precountInfo;
+        public PrecountUpdater(PrecountInfo precountInfo) {
+            this.precountInfo = precountInfo;
+        }
+        @Override
+        public void run() {
+            updatePrecount(precountInfo);
+        }
     }
 }

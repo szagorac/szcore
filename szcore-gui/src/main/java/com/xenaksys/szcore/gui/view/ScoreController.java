@@ -3,7 +3,6 @@ package com.xenaksys.szcore.gui.view;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.gui.PrecountInfo;
 import com.xenaksys.szcore.event.osc.AddPartsEvent;
 import com.xenaksys.szcore.event.osc.SendServerIpBroadcastEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEvent;
@@ -1382,36 +1381,7 @@ public class ScoreController {
         Platform.runLater(new TempoUpdater(transportId, tempo.getBpm()));
     }
 
-    public void processPrecountInfo(PrecountInfo precountInfo) {
-        Platform.runLater(new PrecountUpdater(precountInfo));
-    }
-
-    private void updatePrecount(PrecountInfo precountInfo) {
-        int beaterNo = precountInfo.getBeaterNo();
-        int colId = precountInfo.getColourId();
-        boolean isOn = precountInfo.isPrecountOn();
-        if(isOn) {
-            showSemaphore(beaterNo, resolveColour(colId));
-        } else {
-            showSemaphore(4, Color.TRANSPARENT);
-        }
-    }
-
-    private Color resolveColour(int colId) {
-        switch (colId) {
-            case Consts.OSC_COLOUR_GREEN:
-                return Color.GREEN;
-            case Consts.OSC_COLOUR_YELLOW:
-                return Color.YELLOW;
-            case Consts.OSC_COLOUR_ORANGE:
-                return Color.ORANGE;
-            case Consts.OSC_COLOUR_RED:
-                return Color.RED;
-        }
-        return null;
-    }
-
-    private void showSemaphore(int lightNo, Color fill) {
+    public void showSemaphore(int lightNo, Color fill) {
         for (int i = 1; i <= lightNo; i++) {
             if(i > semaphore.length) {
                 continue;
@@ -2032,18 +2002,5 @@ public class ScoreController {
             updateTempo(transportId, tempo);
         }
     }
-
-    class PrecountUpdater implements Runnable {
-        private final PrecountInfo precountInfo;
-        public PrecountUpdater(PrecountInfo precountInfo) {
-            this.precountInfo = precountInfo;
-        }
-
-        @Override
-        public void run() {
-            updatePrecount(precountInfo);
-        }
-    }
-
 }
 

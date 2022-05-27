@@ -40,6 +40,8 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -196,6 +198,15 @@ public class DialogsScoreController {
     private VBox voteUpVbox;
     @FXML
     private VBox voteDownVbox;
+    @FXML
+    private Circle semaphore1Crc;
+    @FXML
+    private Circle semaphore2Crc;
+    @FXML
+    private Circle semaphore3Crc;
+    @FXML
+    private Circle semaphore4Crc;
+
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -220,6 +231,8 @@ public class DialogsScoreController {
     private final StringProperty nextSectionProp = new SimpleStringProperty("N/A");
     private final StringProperty playingSectionProp = new SimpleStringProperty("N/A");
     private final ObservableList<String> overlayPresets = FXCollections.observableArrayList();
+
+    private Circle[] semaphore;
 
     private final AudienceVote audienceVote = new AudienceVote();
 
@@ -355,6 +368,8 @@ public class DialogsScoreController {
             long newVal = Math.round(new_val.doubleValue());
             onPitchOvrlTransparencyChange(newVal);
         });
+
+        semaphore = new Circle[]{semaphore1Crc, semaphore2Crc, semaphore3Crc, semaphore4Crc};
     }
 
     @FXML
@@ -421,6 +436,15 @@ public class DialogsScoreController {
 
         voteUpVbox.setPrefHeight(0.0);
         voteDownVbox.setPrefHeight(0.0);
+
+        semaphore1Crc.setFill(Color.TRANSPARENT);
+        semaphore1Crc.setStroke(Color.BLACK);
+        semaphore2Crc.setFill(Color.TRANSPARENT);
+        semaphore2Crc.setStroke(Color.BLACK);
+        semaphore3Crc.setFill(Color.TRANSPARENT);
+        semaphore3Crc.setStroke(Color.BLACK);
+        semaphore4Crc.setFill(Color.TRANSPARENT);
+        semaphore4Crc.setStroke(Color.BLACK);
     }
 
     @FXML
@@ -504,6 +528,16 @@ public class DialogsScoreController {
         }
         playingSectionProp.setValue(value);
         selectSection(value);
+    }
+
+    public void showSemaphore(int lightNo, Color fill) {
+        for (int i = 1; i <= lightNo; i++) {
+            if(i > semaphore.length) {
+                continue;
+            }
+            Circle circ = semaphore[i -1];
+            circ.setFill(fill);
+        }
     }
 
     private void selectSection(String value) {

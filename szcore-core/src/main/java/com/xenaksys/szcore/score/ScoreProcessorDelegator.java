@@ -2,6 +2,7 @@ package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
+import com.xenaksys.szcore.event.gui.ClientEvent;
 import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
@@ -356,6 +357,14 @@ public class ScoreProcessorDelegator implements ScoreProcessor {
             return;
         }
         scoreDelegate.setWebDelayMs(delayMs);
+    }
+
+    @Override
+    public void sendClientEvent(ClientEvent clientEvent) {
+        if(scoreDelegate == null) {
+            return;
+        }
+        scoreDelegate.sendClientEvent(clientEvent);
     }
 
     @Override

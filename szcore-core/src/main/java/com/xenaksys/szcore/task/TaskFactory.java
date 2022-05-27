@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.task;
 
 import com.xenaksys.szcore.event.EventFactory;
+import com.xenaksys.szcore.event.gui.ClientEvent;
 import com.xenaksys.szcore.event.music.ModWindowEvent;
 import com.xenaksys.szcore.event.music.PrecountBeatSetupEvent;
 import com.xenaksys.szcore.event.music.PrepStaveChangeEvent;
@@ -79,5 +80,9 @@ public class TaskFactory {
 
     public ScriptingEngineEventTask createScriptingEngineEventTask(long playTime, ScriptingEngineEvent event, ScoreScriptingEngine scriptingEngine) {
         return new ScriptingEngineEventTask(playTime, event, scriptingEngine);
+    }
+
+    public ClientEventTask createClientEventTask(long playTime, ClientEvent event, ScoreProcessor scoreProcessor) {
+        return new ClientEventTask(playTime, event, scoreProcessor);
     }
 }

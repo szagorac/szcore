@@ -3,6 +3,7 @@ package com.xenaksys.szcore.event;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.gui.ParticipantEvent;
 import com.xenaksys.szcore.event.gui.ParticipantStatsEvent;
+import com.xenaksys.szcore.event.gui.ScoreInfoEvent;
 import com.xenaksys.szcore.event.gui.ScoreSectionInfoEvent;
 import com.xenaksys.szcore.event.gui.StrategyEvent;
 import com.xenaksys.szcore.event.gui.StrategyEventType;
@@ -210,6 +211,10 @@ public class EventFactory {
 
     public ScoreSectionInfoEvent createScoreSectionInfoEvent(Id scoreId, List<SectionInfo> sectionInfos, List<String> sectionOrder, boolean isReady, String currentSection, String nextSection, long creationTime) {
         return new ScoreSectionInfoEvent(scoreId, sectionInfos, sectionOrder, isReady, currentSection, nextSection, creationTime);
+    }
+
+    public ScoreInfoEvent createScoreInfoEvent(Id scoreId, boolean isRunning, boolean isPrecountOn, int beaterNo, int colourId, long creationTime) {
+        return new ScoreInfoEvent(scoreId, isRunning, isPrecountOn, beaterNo, colourId, creationTime);
     }
 
     public OscEvent createOscEvent(String address, List<Object> args, String destination, long creationTime) {
@@ -457,12 +462,12 @@ public class EventFactory {
         return new WebAudienceVoteEvent(null, null, value, usersNo, creationTime);
     }
 
-    public OutgoingWebEvent createOutgoingWebAudienceEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, long creationTime) {
-        return new OutgoingWebEvent(eventId, beatId, EventType.WEB_AUDIENCE_OUT, eventType, creationTime);
+    public OutgoingWebEvent createOutgoingWebAudienceEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, boolean isSendNow, long creationTime) {
+        return new OutgoingWebEvent(eventId, beatId, EventType.WEB_AUDIENCE_OUT, eventType, isSendNow, creationTime);
     }
 
-    public OutgoingWebEvent createWebScoreOutEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, long creationTime) {
-        return new OutgoingWebEvent(eventId, beatId, EventType.WEB_SCORE_OUT, eventType, creationTime);
+    public OutgoingWebEvent createWebScoreOutEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, boolean isSendNow, long creationTime) {
+        return new OutgoingWebEvent(eventId, beatId, EventType.WEB_SCORE_OUT, eventType, isSendNow, creationTime);
     }
 
     public DelayedOutgoingWebEvent createDelayedWebScoreOutEvent(OutgoingWebEvent outgoingWebEvent, long creationTime) {

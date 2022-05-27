@@ -1,5 +1,6 @@
 package com.xenaksys.szcore.model;
 
+import com.xenaksys.szcore.event.gui.ClientEvent;
 import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
@@ -118,4 +119,6 @@ public interface ScoreProcessor extends Processor {
     void onSectionStop(String section);
 
     void setWebDelayMs(long delayMs);
+
+    void sendClientEvent(ClientEvent clientEvent);
 }

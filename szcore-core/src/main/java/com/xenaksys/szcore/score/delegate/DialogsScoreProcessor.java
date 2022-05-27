@@ -210,10 +210,17 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
     @Override
     public void onSectionStart(String section) {
         DialogsWebAudienceProcessor audienceProcessor = (DialogsWebAudienceProcessor) getWebAudienceProcessor();
-        if (audienceProcessor == null) {
-            return;
+        if (audienceProcessor != null) {
+            audienceProcessor.onSectionStart(section);
         }
-        audienceProcessor.onSectionStart(section);
         super.onSectionStart(section);
+    }
+
+    public void onSectionStop(String section) {
+        DialogsWebAudienceProcessor audienceProcessor = (DialogsWebAudienceProcessor) getWebAudienceProcessor();
+        if (audienceProcessor != null) {
+            audienceProcessor.onSectionStop(section);
+        }
+        super.onSectionStop(section);
     }
 }

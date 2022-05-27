@@ -69,6 +69,7 @@ import static com.xenaksys.szcore.Consts.WEB_OBJ_VOTE;
 import static com.xenaksys.szcore.Consts.WEB_PLAYER;
 import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_TEXT_BACKGROUND_COLOUR;
+import static com.xenaksys.szcore.Consts.WEB_VIEW_AUDIO;
 
 public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
     static final Logger LOG = LoggerFactory.getLogger(DialogsWebAudienceProcessor.class);
@@ -339,7 +340,14 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         processVote(voteCounter);
         getPcs().firePropertyChange(WEB_OBJ_COUNTER, WEB_OBJ_VOTE, voteCounter);
         activateSection(section);
+        activateViews(WEB_VIEW_AUDIO);
         updateServerStateAndPush();
+    }
+
+    public void onSectionStop(String section) {
+        deactivateSection(section);
+        deactivateViews(WEB_VIEW_AUDIO);
+        updateServerStateAndPush(true);
     }
 
     private boolean processVote(WebAudienceVoteEvent event) {

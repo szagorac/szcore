@@ -3,6 +3,7 @@ package com.xenaksys.szcore.gui;
 
 import com.aquafx_project.AquaFx;
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.event.gui.ScoreInfoEvent;
 import com.xenaksys.szcore.event.gui.ScoreSectionInfoEvent;
 import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
@@ -273,7 +274,7 @@ public class SzcoreClient extends Application {
             return;
         }
         Platform.runLater(() -> {
-            LOG.info("Updating Participant: " + toUpdate);
+//            LOG.info("Updating Participant: " + toUpdate);
             toUpdate.setClientId(participant.getClientId());
             toUpdate.setInstrument(participant.getInstrument());
             toUpdate.setPing(participant.getPing());
@@ -316,7 +317,7 @@ public class SzcoreClient extends Application {
     }
 
     public void onTransportPositionChange(Id transportId, int beatNo) {
-        scoreController.onTransportPoisitionChange(transportId, beatNo);
+        scoreController.onTransportPositionChange(transportId, beatNo);
     }
 
     public void onTempoEvent(Id transportId, Tempo tempo) {
@@ -394,6 +395,10 @@ public class SzcoreClient extends Application {
         String currentSection = event.getCurrentSection();
         String nextSection = event.getNextSection();
         dialogsScoreController.onSectionInfo(sectionInfos, sectionOrder, isReady, currentSection, nextSection);
+    }
+
+    public void processScoreInfo(ScoreInfoEvent event) {
+//        LOG.info("processScoreInfo: isPrecount: {}",event.isPrecount());
     }
 
     public void setPage(int startPage) {

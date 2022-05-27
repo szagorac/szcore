@@ -1787,7 +1787,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         args.add(filename);
 
         String destination = szcore.getOscDestination(staveId.getInstrumentId());
-        LOG.info("createDisplayPageEvent: pageName: {} destination: {} staveId: {} stave address: {}", pageName, destination, staveId.getStaveNo(), address);
+//        LOG.info("createDisplayPageEvent: pageName: {} destination: {} staveId: {} stave address: {}", pageName, destination, staveId.getStaveNo(), address);
 
         return eventFactory.createPageDisplayEvent(pageId, rndPageId, filename, staveId, address, args, null, destination, clock.getSystemTimeMillis());
 
@@ -2913,7 +2913,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     }
 
     public void sendWebScoreState(String target, WebScoreTargetType targetType, WebScoreState scoreState, OutgoingWebEventType eventType) {
-        OutgoingWebEvent outEvent = eventFactory.createWebScoreOutEvent(null, null, eventType, clock.getSystemTimeMillis());
+        OutgoingWebEvent outEvent = eventFactory.createWebScoreOutEvent(null, null, eventType, false, clock.getSystemTimeMillis());
         outEvent.addData(Consts.WEB_DATA_SCORE_STATE, scoreState);
         outEvent.addData(Consts.WEB_DATA_TARGET, target);
         outEvent.addData(Consts.WEB_DATA_TARGET_TYPE, targetType);
@@ -2921,7 +2921,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     }
 
     public OutgoingWebEvent createWebScoreStateEvent(BeatId beatId, String target, WebScoreTargetType targetType, WebScoreState scoreState) {
-        OutgoingWebEvent outEvent = eventFactory.createWebScoreOutEvent(beatId, null, OutgoingWebEventType.PUSH_SCORE_STATE, clock.getSystemTimeMillis());
+        OutgoingWebEvent outEvent = eventFactory.createWebScoreOutEvent(beatId, null, OutgoingWebEventType.PUSH_SCORE_STATE, false, clock.getSystemTimeMillis());
         outEvent.addData(Consts.WEB_DATA_SCORE_STATE, scoreState);
         outEvent.addData(Consts.WEB_DATA_TARGET, target);
         outEvent.addData(Consts.WEB_DATA_TARGET_TYPE, targetType);
@@ -3323,7 +3323,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         if(current != null && !current.equals(section)) {
             builderStrategy.onSectionEnd();;
         } else if(section != null) {
-            builderStrategy.onSectionEnd(current);
+            builderStrategy.onSectionEnd(section);
         }
         updateClients(builderStrategy);
     }

@@ -600,7 +600,7 @@ public class DialogsScoreController {
                     section.setAvgVote(voteInfo.getAvg());
                     section.setVoterNo(voteInfo.getVoterNo());
                 }
-                if (currentSection.equals(section.getSection())) {
+                if (currentSection != null && currentSection.equals(section.getSection())) {
                     current = section;
                 }
                 addSection(section);
@@ -677,7 +677,7 @@ public class DialogsScoreController {
             return;
         }
         Platform.runLater(() -> {
-            LOG.info("Updating Section: " + toUpdate);
+//            LOG.info("Updating Section: " + toUpdate);
             toUpdate.setSection(section.getSection());
             toUpdate.setOwner(section.getOwner());
             toUpdate.setStartPage(section.getStartPage());

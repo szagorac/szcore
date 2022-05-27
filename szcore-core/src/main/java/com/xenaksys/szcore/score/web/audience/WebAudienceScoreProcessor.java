@@ -250,8 +250,12 @@ public abstract class WebAudienceScoreProcessor {
 
     public void updateServerStateAndPush() {
         updateServerState();
-//        updateServerStateDelta();
         pushServerStateDelta();
+    }
+
+    public void updateServerStateAndPush(boolean isSendNow) {
+        updateServerState();
+        pushServerStateDelta(isSendNow);
     }
 
     public void resetStateDelta() {
@@ -861,6 +865,10 @@ public abstract class WebAudienceScoreProcessor {
     }
 
     public void pushServerStateDelta() {
+        pushServerStateDelta(false);
+    }
+
+    public void pushServerStateDelta(boolean isSendNow) {
         try {
             WebAudienceStateDeltaTracker deltaTracker = getStateDeltaTracker();
             if (!deltaTracker.hasChanges()) {
@@ -869,7 +877,7 @@ public abstract class WebAudienceScoreProcessor {
             WebAudienceScoreStateDeltaExport deltaExport = deltaTracker.getDeltaExport();
             String deltaOut = WebProcessor.createDeltaOut(deltaExport);
             long creationTime = clock.getSystemTimeMillis();
-            OutgoingWebEvent outgoingAudienceDeltaEvent = eventFactory.createOutgoingWebAudienceEvent(null, null, OutgoingWebEventType.PUSH_SERVER_STATE_DELTA, creationTime);
+            OutgoingWebEvent outgoingAudienceDeltaEvent = eventFactory.createOutgoingWebAudienceEvent(null, null, OutgoingWebEventType.PUSH_SERVER_STATE_DELTA, isSendNow, creationTime);
             outgoingAudienceDeltaEvent.addData(WEB_DATA_SCORE_STATE_DELTA, deltaOut);
             scoreProcessor.onOutgoingWebEvent(outgoingAudienceDeltaEvent);
         } catch (Exception e) {
@@ -880,7 +888,7 @@ public abstract class WebAudienceScoreProcessor {
     public void sendOutgoingWebEvent(OutgoingWebEventType eventType) {
         try {
             long creationTime = clock.getSystemTimeMillis();
-            OutgoingWebEvent outgoingWebAudienceEvent = eventFactory.createOutgoingWebAudienceEvent(null, null, eventType, creationTime);
+            OutgoingWebEvent outgoingWebAudienceEvent = eventFactory.createOutgoingWebAudienceEvent(null, null, eventType, false, creationTime);
             scoreProcessor.onOutgoingWebEvent(outgoingWebAudienceEvent);
         } catch (Exception e) {
             LOG.error("Failed to process sendOutgoingWebEvent, type: {}", eventType, e);

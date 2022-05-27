@@ -2,6 +2,7 @@ package com.xenaksys.szcore.task;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
+import com.xenaksys.szcore.event.gui.ScoreInfoEvent;
 import com.xenaksys.szcore.event.music.PrecountBeatSetupEvent;
 import com.xenaksys.szcore.event.osc.PrecountBeatOffEvent;
 import com.xenaksys.szcore.event.osc.PrecountBeatOnEvent;
@@ -118,6 +119,7 @@ public class PrecountBeatSetupTask extends EventMusicTask {
         //LOG.info("Create Beater ON Task playTime: " + playTime + " beaterNo: " + beaterNo + " colourId: " + colourId);
         processor.scheduleTask(task);
         addWebAudiencePrecountTask(playTime, true, beaterNo, colourId);
+        addAdminClientPrecountTask(playTime, true, beaterNo, colourId);
     }
 
     private void addBeaterOffTask(long playTime, int beaterNo) {
@@ -130,11 +132,18 @@ public class PrecountBeatSetupTask extends EventMusicTask {
         //LOG.info("Create Beater OFF Task playTime: " + playTime + " beaterNo: " + beaterNo);
         processor.scheduleTask(task);
         addWebAudiencePrecountTask(playTime, false, beaterNo, 0);
+        addAdminClientPrecountTask(playTime, false, beaterNo, 0);
     }
 
     private void addWebAudiencePrecountTask(long playTime, boolean isOn, int beaterNo, int colourId) {
         WebAudienceEvent event = eventFactory.createWebAudiencePrecountEvent(beaterNo, isOn, colourId, clock.getSystemTimeMillis());
         WebAudienceEventTask task = taskFactory.createWebAudienceEventTask(playTime, event, webAudienceScoreProcessor);
+        processor.scheduleTask(task);
+    }
+
+    private void addAdminClientPrecountTask(long playTime, boolean isOn, int beaterNo, int colourId) {
+        ScoreInfoEvent event = eventFactory.createScoreInfoEvent(null, false, isOn, beaterNo, colourId, clock.getSystemTimeMillis());
+        ClientEventTask task = taskFactory.createClientEventTask(playTime, event, processor);
         processor.scheduleTask(task);
     }
 }

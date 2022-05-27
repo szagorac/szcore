@@ -1344,42 +1344,15 @@ public class ScoreController {
             LOG.info("BeatIds are NULL");
             return;
         }
-        int pageNo = 0;
-        int barNo = 0;
-        for (BeatId beatId : beatIds) {
-            if (beatId.getBaseBeatNo() == baseBeatNo) {
-                PageId pageId = (PageId) beatId.getPageId();
-                pageNo = pageId.getPageNo();
-                BarId barId = (BarId) beatId.getBarId();
-                barNo = barId.getBarNo();
-                break;
-            }
-        }
-
-        Platform.runLater(new TransportBeatUpdater(transportId, pageNo, barNo, beatNo, baseBeatNo));
+        Platform.runLater(new TransportBeatUpdater(transportId, beatNo, baseBeatNo, beatIds));
     }
 
-    public void onTransportPoisitionChange(Id transportId, int baseBeatNo) {
+    public void onTransportPositionChange(Id transportId, int baseBeatNo) {
         List<BeatId> beatIds = score.findBeatIds(transportId, baseBeatNo);
         if (beatIds == null) {
-            LOG.info("BeatIds are NULL");
             return;
         }
-        int pageNo = 0;
-        int barNo = 0;
-        int beatNo = 0;
-        for (BeatId beatId : beatIds) {
-            if (beatId.getBaseBeatNo() == baseBeatNo) {
-                PageId pageId = (PageId) beatId.getPageId();
-                pageNo = pageId.getPageNo();
-                BarId barId = (BarId) beatId.getBarId();
-                barNo = barId.getBarNo();
-                beatNo = beatId.getBeatNo();
-                break;
-            }
-        }
-
-        Platform.runLater(new TransportBeatUpdater(transportId, pageNo, barNo, beatNo, baseBeatNo));
+        Platform.runLater(new TransportPositionUpdater(transportId, baseBeatNo, beatIds));
     }
 
     public void onTempoEvent(Id transportId, Tempo tempo) {
@@ -1925,24 +1898,60 @@ public class ScoreController {
     }
 
     class TransportBeatUpdater implements Runnable {
-        private Id transportId;
-        private int pageNo;
-        private int barNo;
-        private int beatNo;
-        private int baseBeatNo;
+        private final Id transportId;
+        private final int beatNo;
+        private final int baseBeatNo;
+        private final List<BeatId> beatIds;
 
-        public TransportBeatUpdater(Id transportId, int pageNo, int barNo, int beatNo, int baseBeatNo) {
-
+        public TransportBeatUpdater(Id transportId, int beatNo, int baseBeatNo, List<BeatId> beatIds) {
             this.transportId = transportId;
             this.beatNo = beatNo;
             this.baseBeatNo = baseBeatNo;
-            this.pageNo = pageNo;
-            this.barNo = barNo;
+            this.beatIds = beatIds;
         }
 
         @Override
         public void run() {
-//LOG.info("Client receieved baseBeatNoBeatNo: " + baseBeatNo);
+            int pageNo = 0;
+            int barNo = 0;
+            for (BeatId beatId : beatIds) {
+                if (beatId.getBaseBeatNo() == baseBeatNo) {
+                    PageId pageId = (PageId) beatId.getPageId();
+                    pageNo = pageId.getPageNo();
+                    BarId barId = (BarId) beatId.getBarId();
+                    barNo = barId.getBarNo();
+                    break;
+                }
+            }
+            updateBeatInfo(transportId, pageNo, barNo, beatNo, baseBeatNo);
+        }
+    }
+
+    class TransportPositionUpdater implements Runnable {
+        private final Id transportId;
+        private final int baseBeatNo;
+        private final List<BeatId> beatIds;
+
+        public TransportPositionUpdater(Id transportId, int baseBeatNo, List<BeatId> beatIds) {
+            this.transportId = transportId;
+            this.baseBeatNo = baseBeatNo;
+            this.beatIds = beatIds;
+        }
+        @Override
+        public void run() {
+            int pageNo = 0;
+            int barNo = 0;
+            int beatNo = 0;
+            for (BeatId beatId : beatIds) {
+                if (beatId.getBaseBeatNo() == baseBeatNo) {
+                    PageId pageId = (PageId) beatId.getPageId();
+                    pageNo = pageId.getPageNo();
+                    BarId barId = (BarId) beatId.getBarId();
+                    barNo = barId.getBarNo();
+                    beatNo = beatId.getBeatNo();
+                    break;
+                }
+            }
             updateBeatInfo(transportId, pageNo, barNo, beatNo, baseBeatNo);
         }
     }

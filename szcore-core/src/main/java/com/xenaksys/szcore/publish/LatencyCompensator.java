@@ -19,7 +19,7 @@ public class LatencyCompensator {
     private final List<OutgoingWebEventType> eventTypeFilter;
     private final Clock clock;
 
-    private long webPublishDelayMs = 300L;
+    private long webPublishDelayMs = 0L;
     private boolean isActive = true;
 
     public LatencyCompensator(ScoreProcessor scoreProcessor, EventFactory eventFactory, List<OutgoingWebEventType> eventTypeFilter, Clock clock) {
@@ -37,7 +37,8 @@ public class LatencyCompensator {
         OutgoingWebEventType eventType = webEvent.getOutWebEventType();
         boolean isFilterOut = eventTypeFilter != null && eventTypeFilter.contains(eventType);
 
-        boolean isSendNow =  isFilterOut ||
+        boolean isSendNow =  webEvent.isSendNow() ||
+                isFilterOut ||
                 !scoreProcessor.isSchedulerRunning() ||
                 !isActive ||
                 webPublishDelayMs <= 0L;

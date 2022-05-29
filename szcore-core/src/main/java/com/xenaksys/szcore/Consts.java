@@ -512,6 +512,8 @@ public interface Consts {
     String WEB_PARAM_TEXT_L1 = "l1";
     String WEB_PARAM_TEXT_L2 = "l2";
     String WEB_PARAM_TEXT_L3 = "l3";
+    String WEB_PARAM_VOTE_COUNT = "voteCount";
+    String WEB_PARAM_VOTER_NO = "voterNo";
 
     String WEB_VIEW_THUMBS = "thumbs";
     String WEB_VIEW_NOTES = "notes";

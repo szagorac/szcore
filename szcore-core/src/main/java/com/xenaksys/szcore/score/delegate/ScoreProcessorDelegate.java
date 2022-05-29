@@ -2737,6 +2737,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             case PAGE_DISPLAY:
             case PAGE_MAP_DISPLAY:
             case OVERLAY_TEXT:
+            case VOTE:
             case GENERIC:
                 publishOscEvent(event);
                 break;

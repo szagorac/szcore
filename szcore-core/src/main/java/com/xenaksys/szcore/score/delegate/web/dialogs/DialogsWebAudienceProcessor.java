@@ -1,7 +1,9 @@
 package com.xenaksys.szcore.score.delegate.web.dialogs;
 
+import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.event.EventFactory;
+import com.xenaksys.szcore.event.osc.WebscoreVoteEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceEventType;
 import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
@@ -13,6 +15,7 @@ import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.ScriptPreset;
 import com.xenaksys.szcore.model.SectionInfo;
+import com.xenaksys.szcore.model.VoteInfo;
 import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.score.web.audience.WebAudienceChangeListener;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreProcessor;
@@ -434,6 +437,12 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         if(sectionInfo.isActive()) {
             sectionInfo.populateVoteInfo(voteCounter.getCounterValue(), voteCounter.getMin(), voteCounter.getMax(), voteCounter.getAvg(), voteCounter.getVoterNo());
         }
+
+        VoteInfo sectionVoteInfo = sectionInfo.getVoteInfo();
+        WebscoreVoteEvent webscoreVoteEvent = getEventFactory().createWebscoreVoteEvent(
+                sectionVoteInfo.getCurrent(), sectionVoteInfo.getMin(), sectionVoteInfo.getMax(), sectionVoteInfo.getAvg(), sectionVoteInfo.getVoterNo(),
+                Consts.ALL_DESTINATIONS, getClock().getSystemTimeMillis());
+        getScoreProcessor().process(webscoreVoteEvent);
     }
 
     public boolean updateState(WebAudienceStateUpdateEvent event) {

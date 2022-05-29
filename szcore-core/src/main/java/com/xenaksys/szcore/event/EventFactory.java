@@ -56,6 +56,7 @@ import com.xenaksys.szcore.event.osc.TempoChangeEvent;
 import com.xenaksys.szcore.event.osc.TitleEvent;
 import com.xenaksys.szcore.event.osc.TransitionScriptEvent;
 import com.xenaksys.szcore.event.osc.VoteAudienceEvent;
+import com.xenaksys.szcore.event.osc.WebscoreVoteEvent;
 import com.xenaksys.szcore.event.script.ScriptingEngineEvent;
 import com.xenaksys.szcore.event.script.ScriptingEngineResetEvent;
 import com.xenaksys.szcore.event.web.audience.UpdateWebAudienceConnectionsEvent;
@@ -300,6 +301,10 @@ public class EventFactory {
 
     public PrecountBeatOffEvent createPrecountBeatOffEvent(String destination, long creationTime) {
         return new PrecountBeatOffEvent(createJavaScriptArgs(), destination, creationTime);
+    }
+
+    public WebscoreVoteEvent createWebscoreVoteEvent(int voteCount, int min, int max, int avg, int voterNo, String destination, long creationTime) {
+        return new WebscoreVoteEvent(voteCount, min, max, avg, voterNo, createJavaScriptArgs(), destination, creationTime);
     }
 
     public TitleEvent createTitleEvent(String destination, String title, long creationTime) {

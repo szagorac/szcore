@@ -27,6 +27,7 @@ import com.xenaksys.szcore.event.osc.PrecountBeatOnEvent;
 import com.xenaksys.szcore.event.osc.ResetScoreEvent;
 import com.xenaksys.szcore.event.osc.ResetStavesEvent;
 import com.xenaksys.szcore.event.osc.StaveStartMarkEvent;
+import com.xenaksys.szcore.event.osc.WebscoreVoteEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
@@ -217,6 +218,9 @@ public class WebScore {
                 case OVERLAY_TEXT:
                     processOverlayText((OverlayTextEvent)event);
                     break;
+                case VOTE:
+                    processVote((WebscoreVoteEvent)event);
+                    break;
                 case STAVE_TICK_DY:
                 case HELLO:
                 case SERVER_HELLO:
@@ -229,6 +233,18 @@ public class WebScore {
         } catch (Exception e) {
             LOG.error("publishToWebScoreHack: failed to publish web score event", e);
         }
+    }
+
+    private void processVote(WebscoreVoteEvent event) throws Exception  {
+        int voteCount = event.getVoteCount();
+        int voterNo = event.getVoterNo();
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
+        Map<String, Object> params = new HashMap<>(2);
+        params.put(Consts.WEB_PARAM_VOTE_COUNT, voteCount);
+        params.put(Consts.WEB_PARAM_VOTER_NO, voterNo);
+        WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.VOTE, null, params);
+        scoreState.addAction(action);
+        sendToDestination(Consts.ALL_DESTINATIONS, scoreState);
     }
 
     private void processResetScore(ResetScoreEvent event) {
@@ -624,6 +640,7 @@ public class WebScore {
         scoreState.addAction(action);
         sendToDestination(Consts.ALL_DESTINATIONS, scoreState);
     }
+
     private void sendActivateStave(String destination, String webStaveId, boolean isActive, boolean isPlayStave) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         List<String> targets = Collections.singletonList(webStaveId);

@@ -1,7 +1,9 @@
 package com.xenaksys.szcore.gui.model;
 
 import com.xenaksys.szcore.Consts;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -18,6 +20,7 @@ public class Section {
     private IntegerProperty maxVote = new SimpleIntegerProperty(0);
     private IntegerProperty avgVote = new SimpleIntegerProperty(0);
     private IntegerProperty voterNo = new SimpleIntegerProperty(0);
+    private BooleanProperty isOwnerValid = new SimpleBooleanProperty(true);
 
     public String getSection() {
         return section.get();
@@ -125,6 +128,18 @@ public class Section {
 
     public void setVoterNo(int voterNo) {
         this.voterNo.set(voterNo);
+    }
+
+    public boolean isIsOwnerValid() {
+        return isOwnerValid.get();
+    }
+
+    public BooleanProperty isOwnerValidProperty() {
+        return isOwnerValid;
+    }
+
+    public void setIsOwnerValid(boolean isOwnerValid) {
+        this.isOwnerValid.set(isOwnerValid);
     }
 
     @Override

@@ -10,6 +10,7 @@ import com.xenaksys.szcore.event.gui.StrategyEventType;
 import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.AudienceVote;
+import com.xenaksys.szcore.gui.model.Participant;
 import com.xenaksys.szcore.gui.model.Section;
 import com.xenaksys.szcore.gui.model.WebscoreInstructions;
 import com.xenaksys.szcore.model.Clock;
@@ -35,7 +36,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Slider;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
@@ -63,6 +66,7 @@ public class DialogsScoreController {
     public static final String CONCUR = "Concur";
     public static final String DISSENT = "Dissent";
     public static final String ABSTAIN = "Abstain";
+    public static final String INVALID_OWNER_PREFIX = "--";
     static final int MIN_VOTER_NO = 10;
     private final ValueScaler transparencyValueScaler = new ValueScaler(0.0, 100.0, 255.0, 0.0);
 
@@ -404,6 +408,24 @@ public class DialogsScoreController {
         endPageColumn.setCellValueFactory(cellData -> cellData.getValue().endPageProperty().asObject());
         voteNoColumn.setCellValueFactory(cellData -> cellData.getValue().avgVoteProperty().asObject());
 
+        ownerColumn.setCellFactory(column -> new TableCell<Section, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                TableRow<Section> currentRow = getTableRow();
+                Section section = currentRow.getItem();
+                if (section == null) {
+                    return;
+                }
+                if (section.isIsOwnerValid()) {
+                    currentRow.setStyle("-fx-background-color:inherit");
+                } else {
+                    currentRow.setStyle("-fx-background-color:red");
+                }
+                setText(item);
+            }
+        });
+
         nextSectionLbl.textProperty().bind(nextSectionProp);
         playingSectionLbl.textProperty().bind(playingSectionProp);
 
@@ -717,6 +739,20 @@ public class DialogsScoreController {
         if (section == null) {
             return;
         }
+        boolean isOwnerParticipant = false;
+        String owner = section.getOwner();
+        ObservableList<Participant> participants = mainApp.getParticipants();
+        if(owner != null && !owner.isEmpty()) {
+            for (Participant participant : participants) {
+                if(owner.equals(participant.getClientId())) {
+                    isOwnerParticipant = true;
+                    break;
+                }
+            }
+        }
+
+        section.setIsOwnerValid(isOwnerParticipant);
+
         if (sections.contains(section)) {
             updateSection(section);
             return;
@@ -742,6 +778,7 @@ public class DialogsScoreController {
             toUpdate.setMinVote(section.getMinVote());
             toUpdate.setMaxVote(section.getMaxVote());
             toUpdate.setAvgVote(section.getAvgVote());
+            toUpdate.setIsOwnerValid(section.isIsOwnerValid());
         });
     }
 
@@ -1146,4 +1183,33 @@ public class DialogsScoreController {
         pitchSldr.setValue(50.0);
     }
 
+    public void onParticipantRemove(Participant participant) {
+        for(Section section : sections) {
+            String sectionOwner = section.getOwner();
+            if(sectionOwner.startsWith(INVALID_OWNER_PREFIX)) {
+                sectionOwner = sectionOwner.substring(INVALID_OWNER_PREFIX.length());
+            }
+            if(participant.getClientId().equals(sectionOwner)) {
+                section.setIsOwnerValid(false);
+                String owner = INVALID_OWNER_PREFIX + sectionOwner;
+                section.setOwner(owner);
+            }
+        }
+    }
+
+    public void onParticipantUpdate(Participant participant) {
+        if(participant.getClientId() == null) {
+            return;
+        }
+        for(Section section : sections) {
+            String sectionOwner = section.getOwner();
+            if(sectionOwner.startsWith(INVALID_OWNER_PREFIX)) {
+                sectionOwner = sectionOwner.substring(INVALID_OWNER_PREFIX.length());
+            }
+            if(participant.getClientId().equals(sectionOwner)) {
+                section.setIsOwnerValid(true);
+                section.setOwner(sectionOwner);
+            }
+        }
+    }
 }

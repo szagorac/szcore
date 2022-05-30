@@ -260,6 +260,7 @@ public class SzcoreClient extends Application {
             return;
         }
         Platform.runLater(() -> {
+            checkSectionOwner(participant, false);
             if (participants.contains(participant)) {
                 updateParticipant(participant);
                 return;
@@ -378,10 +379,16 @@ public class SzcoreClient extends Application {
 
         if (isFullUpdate) {
             for (Participant participant : toRemove) {
-                if (participants.contains(participant)) {
-                    participants.remove(participant);
-                }
+                Platform.runLater(new ParticipantRemover(participant));
             }
+        }
+    }
+
+    private void checkSectionOwner(Participant participant, boolean isRemove) {
+        if(isRemove) {
+            dialogsScoreController.onParticipantRemove(participant);
+        } else {
+            dialogsScoreController.onParticipantUpdate(participant);
         }
     }
 
@@ -593,10 +600,19 @@ public class SzcoreClient extends Application {
         }
     }
 
-    class StopUpdater implements Runnable {
+    class ParticipantRemover implements Runnable {
+        private final Participant participant;
+        public ParticipantRemover(Participant participant) {
+            this.participant = participant;
+        }
+
         @Override
         public void run() {
-            onStop();
+            if (participants.contains(this.participant)) {
+                participants.remove(this.participant);
+            }
+            checkSectionOwner(participant, true);
         }
     }
+
 }

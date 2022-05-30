@@ -39,7 +39,7 @@ public class ScoreMerger {
     static final String OUT_DIR = "/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged";
     static final String RSRC_DIR = "/Users/slavko/MyHome/Music/scoreExport/Dialogs/rsrc";
 
-    static final String[] SCORES_ORDER = {"DialogsPitch","DialogsRhythm","DialogsMelody"};
+    static final String[] SCORES_ORDER = {"DialogsPitch","DialogsRhythm","DialogsMelody","DialogsTimbre"};
     static final String SCORE_NAME = "Dialogs";
     static final String SCRIPTS = "ZScripts";
     static final String SCORE_PREFIX = "1_";

@@ -1203,6 +1203,9 @@ public class DialogsScoreController {
         }
         for(Section section : sections) {
             String sectionOwner = section.getOwner();
+            if(sectionOwner == null) {
+                continue;
+            }
             if(sectionOwner.startsWith(INVALID_OWNER_PREFIX)) {
                 sectionOwner = sectionOwner.substring(INVALID_OWNER_PREFIX.length());
             }

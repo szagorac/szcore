@@ -108,7 +108,8 @@ public class WebScore {
 
     private WebScoreInfo initScoreInfo() {
         WebScoreInfo info = new WebScoreInfo();
-        info.setTitle(score.getName());
+        info.setName(score.getName());
+        info.setTitle(score.getTitle());
 
         Tempo tempo = null;
         List<String> instNames = new ArrayList<>();
@@ -126,11 +127,11 @@ public class WebScore {
             info.setBpm(tempo.getBpm());
         }
 
-        String scoreConfigName = ParseUtil.removeAllWhitespaces(info.getTitle()).toLowerCase(Locale.ROOT);
+        String scoreConfigName = ParseUtil.removeAllWhitespaces(info.getName()).toLowerCase(Locale.ROOT);
         String configName = Consts.WEBSCORE_DIR_CONFIG_PREFIX + scoreConfigName;
         String scoreNameDir = props.getProperty(configName);
         if(scoreNameDir == null) {
-            scoreNameDir = info.getTitle().replaceAll("\\s+", "");
+            scoreNameDir = info.getName().replaceAll("\\s+", "");
         }
         String scoreDir = Consts.WEB_SCORE_ROOT_DIR + scoreNameDir + Consts.SLASH;
         info.setScoreDir(scoreDir);
@@ -553,7 +554,7 @@ public class WebScore {
         if(isNoScoreInstrument) {
             imgPageNameToken = imgContPageName;
         } else {
-            String scoreNameToken = scoreInfo.getTitle().replaceAll("\\s+", "_");
+            String scoreNameToken = scoreInfo.getName().replaceAll("\\s+", "_");
             imgPageNameToken = scoreNameToken
                     + Consts.UNDERSCORE
                     + instrumentName

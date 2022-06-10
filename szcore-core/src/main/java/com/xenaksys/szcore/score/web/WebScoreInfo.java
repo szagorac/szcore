@@ -4,6 +4,7 @@ import java.util.List;
 
 public class WebScoreInfo {
     private String title;
+    private String name;
     private String scoreDir;
     private String partHtmlPage;
     private List<String> instruments;
@@ -15,6 +16,14 @@ public class WebScoreInfo {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public List<String> getInstruments() {

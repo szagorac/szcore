@@ -573,6 +573,7 @@ public interface Consts {
     String DEFAULT_THREAD_SUFFIX = "-Thread-";
 
     String CONFIG_SCORE_NAME = "scoreName";
+    String CONFIG_SCORE_TITLE = "scoreTitle";
     String CONFIG_RND_STRATEGY = "rndStrategy";
     String CONFIG_BUILDER_STRATEGY = "builderStrategy";
     String CONFIG_TRANSPOSITION_STRATEGY = "transpositionStrategy";

@@ -46,6 +46,7 @@ public class BasicScore implements Score {
     static final Logger LOG = LoggerFactory.getLogger(BasicScore.class);
 
     private final StrId id;
+    private String title;
 
     private final List<SzcoreEvent> initEvents = new ArrayList<>();
     private final Set<Id> transportIds = new HashSet<>();
@@ -84,8 +85,9 @@ public class BasicScore implements Score {
     public int noContinuousPages = 10;
     private boolean isRandomizeContinuousPageContent = true;
 
-    public BasicScore(StrId id) {
+    public BasicScore(StrId id, String title) {
         this.id = id;
+        this.title = title;
     }
 
     public boolean isUseContinuousPage() {
@@ -278,6 +280,15 @@ public class BasicScore implements Score {
     @Override
     public String getName() {
         return id.getName();
+    }
+
+    @Override
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     @Override

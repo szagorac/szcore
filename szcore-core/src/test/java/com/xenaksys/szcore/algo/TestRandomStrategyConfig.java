@@ -37,7 +37,7 @@ public class TestRandomStrategyConfig {
         file = new File(classLoader.getResource("strategy/strategyConfig.yml").getFile());
 
         StrId scoreId = new StrId("Test Score");
-        score = new BasicScore(scoreId);
+        score = new BasicScore(scoreId, scoreId.getName());
 
         violin1 = TstFactory.createInstrument("Violin1", false);
         score.addInstrument(violin1);

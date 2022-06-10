@@ -165,6 +165,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import static com.xenaksys.szcore.Consts.CONFIG_BUILDER_STRATEGY;
 import static com.xenaksys.szcore.Consts.CONFIG_RND_STRATEGY;
+import static com.xenaksys.szcore.Consts.CONFIG_SCORE_TITLE;
 import static com.xenaksys.szcore.Consts.CONFIG_TRANSPOSITION_STRATEGY;
 import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NAME;
 import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NO;
@@ -297,8 +298,20 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                 case CONFIG_TRANSPOSITION_STRATEGY:
                     initTranspositionStrategyConfig(strategyConfig);
                     break;
+                case CONFIG_SCORE_TITLE:
+                    initScoreTitle(strategyConfig);
+                    break;
             }
         }
+    }
+
+    public void initScoreTitle(Map<String, Object> strategyConfig) throws Exception {
+        Object yamlScoreTitle = strategyConfig.get(CONFIG_SCORE_TITLE);
+        if (yamlScoreTitle == null) {
+            return;
+        }
+        String scoreTitle = (String) yamlScoreTitle;
+        szcore.setTitle(scoreTitle);
     }
 
     public void initRandomisationStrategyConfig(Map<String, Object> strategyConfig) throws Exception {

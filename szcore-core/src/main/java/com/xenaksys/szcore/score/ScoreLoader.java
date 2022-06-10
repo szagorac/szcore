@@ -182,7 +182,7 @@ public class ScoreLoader {
         }
 
         StrId scoreId = new StrId(scoreName);
-        BasicScore score = new BasicScore(scoreId);
+        BasicScore score = new BasicScore(scoreId, scoreId.getName());
 
         for (ScoreElement scoreElement : scoreElements) {
             processScoreElement(scoreElement, score);

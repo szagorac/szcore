@@ -36,7 +36,7 @@ public class TestRandomisationStrategy {
     @Before
     public void init() {
         StrId scoreId = new StrId("testScore");
-        score = new BasicScore(scoreId);
+        score = new BasicScore(scoreId, scoreId.getName());
         ScoreRandomisationStrategyConfig config = new ScoreRandomisationStrategyConfig();
         scoreRandomisationStrategy = new ScoreRandomisationStrategy(score, config);
 

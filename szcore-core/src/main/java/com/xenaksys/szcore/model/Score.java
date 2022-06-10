@@ -34,6 +34,8 @@ public interface Score extends Identifiable {
 
     String getName();
 
+    String getTitle();
+
     Collection<Instrument> getInstruments();
 
     Collection<Instrument> getScoreInstruments();

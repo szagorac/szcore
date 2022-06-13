@@ -607,14 +607,6 @@ public class WebScore {
         webPageInfo.setRndPageId(webRndPageId);
         if(transpositionInfo != null) {
             webPageInfo.setTranspositionInfo(transpositionInfo);
-            List<WebTextinfo> txtInfos = transpositionInfo.getTxtInfos();
-            StringBuilder tInfo = new StringBuilder();
-            if(txtInfos != null) {
-                for (WebTextinfo textinfo : txtInfos) {
-                    tInfo.append(textinfo.toString());
-                }
-                LOG.debug("sendPageInfo: destination: {} file: {} textInfo: {} staveId: {}", destination, filename, tInfo, staveId);
-            }
         }
         scoreState.setPageInfo(webPageInfo);
         sendToDestination(destination, scoreState);

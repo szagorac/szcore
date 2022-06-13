@@ -613,7 +613,7 @@ public class WebScore {
                 for (WebTextinfo textinfo : txtInfos) {
                     tInfo.append(textinfo.toString());
                 }
-                LOG.debug("sendPageInfo: destination: {} file: {} textInfo: {} staveId: {}", destination, filename, tInfo.toString(), staveId);
+                LOG.debug("sendPageInfo: destination: {} file: {} textInfo: {} staveId: {}", destination, filename, tInfo, staveId);
             }
         }
         scoreState.setPageInfo(webPageInfo);

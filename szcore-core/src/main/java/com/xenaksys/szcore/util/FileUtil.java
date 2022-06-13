@@ -14,7 +14,10 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 public class FileUtil {
@@ -201,4 +204,23 @@ public class FileUtil {
             LOG.error("copyDirectory: failed to copy: {} to: {}", from, to);
         }
     }
+
+    public static List<String> findFiles(String dir, String[] filterOutString, String[] fileExtensions) throws Exception {
+        Path path = Paths.get(dir);
+        if (!Files.isDirectory(path)) {
+            throw new IllegalArgumentException("Path must be a directory!");
+        }
+
+        List<String> result;
+        try (Stream<Path> walk = Files.walk(path, 1)) {
+            result = walk
+                    .filter(p -> !Files.isDirectory(p))
+                    .map(Path::toString)
+                    .filter(f -> Arrays.stream(filterOutString).noneMatch(f::contains))
+                    .filter(f -> Arrays.stream(fileExtensions).anyMatch(f::endsWith))
+                    .collect(Collectors.toList());
+        }
+        return result;
+    }
+
 }

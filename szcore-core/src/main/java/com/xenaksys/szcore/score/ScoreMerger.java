@@ -6,6 +6,8 @@ import com.xenaksys.szcore.util.ParseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,10 +42,14 @@ public class ScoreMerger {
     static final String RSRC_DIR = "/Users/slavko/MyHome/Music/scoreExport/Dialogs/rsrc";
 
     static final String[] SCORES_ORDER = {"DialogsPitch","DialogsRhythm","DialogsMelody","DialogsTimbre"};
+    static final String[] IMAGE_EXT = {"png","svg"};
+    static final String[] NOT_INST = {"_AV_","_FullScore_"};
     static final String SCORE_NAME = "Dialogs";
     static final String SCRIPTS = "ZScripts";
     static final String SCORE_PREFIX = "1_";
     static final String PAGE_NO_HEADER = "pageNo: ";
+    static final int SCORE_PAGE_WIDTH = 752;
+    static final int SCORE_PAGE_HEIGHT = 211;
 
     private final List<ScoreElementsContainer> scoreElementsContainers = new ArrayList<>();
     private final ScoreElementsContainer masterContainer = new ScoreElementsContainer(SCORE_NAME, true);
@@ -327,6 +333,32 @@ public class ScoreMerger {
         if(SCORES_ORDER == null || SCORES_ORDER.length <= 0) {
             throw new RuntimeException("Invalid Score Order list");
         }
+        List<String> invalid = validateImageSize();
+        if(!invalid.isEmpty()) {
+            throw new Exception("Invalid image file size");
+        }
+    }
+
+    private List<String> validateImageSize() throws Exception {
+        List<String> imgs = FileUtil.findFiles(IN_DIR, NOT_INST, IMAGE_EXT);
+        List<String> invalid = new ArrayList<>();
+        for(String imgFile : imgs) {
+            BufferedImage bimg = ImageIO.read(new File(imgFile));
+            int width          = bimg.getWidth();
+            boolean isValid = true;
+            if(width != SCORE_PAGE_WIDTH) {
+                isValid = false;
+            }
+            int height         = bimg.getHeight();
+            if(height != SCORE_PAGE_HEIGHT) {
+                isValid = false;
+            }
+            if(!isValid) {
+                invalid.add(imgFile);
+                LOG.error("Invalid image size file: {} width: {} height: {}", imgFile, width, height);
+            }
+        }
+        return invalid;
     }
 
     private static ResourceType getResourceType(String resource) {

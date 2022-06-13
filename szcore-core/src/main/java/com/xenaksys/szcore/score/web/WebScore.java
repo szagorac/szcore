@@ -492,7 +492,7 @@ public class WebScore {
                 }
             }
             instrumentClients.put(instrument, remaining);
-            LOG.info("removeInstrumentClient: have remaining: {} clients for instrument: {}", remaining.size(), instrument);
+            LOG.debug("removeInstrumentClient: have remaining: {} clients for instrument: {}", remaining.size(), instrument);
         }
     }
 

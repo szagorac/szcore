@@ -474,6 +474,28 @@ public class WebScore {
         addInstrumentClient(instrument, clientInfo);
     }
 
+    public void replaceInstrumentClient(String instrument, WebClientInfo clientInfo) throws Exception {
+        removeClientFromInstruments(clientInfo);
+        addInstrumentClient(instrument, clientInfo);
+    }
+
+    public void removeClientFromInstruments(WebClientInfo clientInfo) throws Exception {
+        for(String instrument : instrumentClients.keySet()) {
+            List<WebClientInfo> remaining = new ArrayList<>();
+            List<WebClientInfo> clientInfos = instrumentClients.get(instrument);
+            if(clientInfos == null) {
+                continue;
+            }
+            for(WebClientInfo client : clientInfos) {
+                if(!client.getClientAddr().equals(clientInfo.getClientAddr())) {
+                    remaining.add(client);
+                }
+            }
+            instrumentClients.put(instrument, remaining);
+            LOG.info("removeInstrumentClient: have remaining: {} clients for instrument: {}", remaining.size(), instrument);
+        }
+    }
+
     public void addInstrumentClient(String instrument, WebClientInfo clientInfo) throws Exception {
         if (instrument == null || clientInfo == null) {
             return;
@@ -585,6 +607,14 @@ public class WebScore {
         webPageInfo.setRndPageId(webRndPageId);
         if(transpositionInfo != null) {
             webPageInfo.setTranspositionInfo(transpositionInfo);
+            List<WebTextinfo> txtInfos = transpositionInfo.getTxtInfos();
+            StringBuilder tInfo = new StringBuilder();
+            if(txtInfos != null) {
+                for (WebTextinfo textinfo : txtInfos) {
+                    tInfo.append(textinfo.toString());
+                }
+                LOG.info("sendPageInfo: destination: {} file: {} textInfo: {} staveId: {}", destination, filename, tInfo.toString(), staveId);
+            }
         }
         scoreState.setPageInfo(webPageInfo);
         sendToDestination(destination, scoreState);

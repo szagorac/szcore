@@ -188,7 +188,7 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
         }
 
         try {
-            getWebScore().addInstrumentClient(slotInstrument, clientInfo);
+            getWebScore().replaceInstrumentClient(slotInstrument, clientInfo);
             builderStrategy.addClientInstrument(builderStrategy.getCurrentSection(), clientInfo.getClientId(), slotInstrument);
             getWebScore().sendPartInfo(clientInfo);
         } catch (Exception e) {

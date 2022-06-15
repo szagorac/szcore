@@ -41,7 +41,7 @@ public class ScoreMerger {
     static final String OUT_DIR = "/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged";
     static final String RSRC_DIR = "/Users/slavko/MyHome/Music/scoreExport/Dialogs/rsrc";
 
-    static final String[] SCORES_ORDER = {"DialogsPitch","DialogsRhythm","DialogsMelody","DialogsTimbre"};
+    static final String[] SCORES_ORDER = {"DialogsPitch","DialogsRhythm","DialogsMelody","DialogsTimbre","DialogsImpro"};
     static final String[] IMAGE_EXT = {"png","svg"};
     static final String[] NOT_INST = {"_AV_","_FullScore_"};
     static final String SCORE_NAME = "Dialogs";

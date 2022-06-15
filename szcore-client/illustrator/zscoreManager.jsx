@@ -171,9 +171,9 @@ var ZSCORE = function (Window) {
     var TIMESIG_DENOM_X_OFFSET = 9;
     var TIMESIG_DENOM_Y_OFFSET = 15.5;
     var TEMPO_NOTEVAL_X_OFFSET = 5;
-    var TEMPO_NOTEVAL_Y_OFFSET = 10;
+    var TEMPO_NOTEVAL_Y_OFFSET = 0;
     var TEMPO_BPM_X_OFFSET = 20;
-    var TEMPO_BPM_Y_OFFSET = 6;
+    var TEMPO_BPM_Y_OFFSET = -4;
     var PAGE_NO_TXT_X_OFFSET = 28;
     var PAGE_NO_TXT_Y_OFFSET = 5;
 

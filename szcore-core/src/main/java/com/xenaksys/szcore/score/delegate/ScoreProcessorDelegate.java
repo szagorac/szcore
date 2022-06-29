@@ -196,6 +196,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
 
     private volatile static int instrumentPortRequestCount = 0;
     private volatile int startBaseBeat = 0;
+    private long stopAheadMillis = 5;
     private final Map<Id, InstrumentBeatTracker> instrumentBeatTrackers = new HashMap<>();
     private final BeatFollowerPositionStrategy beatFollowerPositionStrategy = new BeatFollowerPositionStrategy();
     private final Map<Id, TempoModifier> transportTempoModifiers = new ConcurrentHashMap<>();
@@ -252,6 +253,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         if(szcore == null) {
             throw new Exception("loadScore: invalid score");
         }
+        setProps();
         String dir = file.getParent();
         loadStrategyConfig(dir);
         createWebAudienceProcessor();
@@ -261,6 +263,18 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         initScriptingEngine(dir);
         initOverlayProcessor();
         return szcore;
+    }
+
+    private void setProps() {
+        try {
+            String configName = Consts.SCORE_CONFIG_STOP_AHEAD_MILLIS;
+            String stopAheadMillisProp = props.getProperty(configName);
+            if(stopAheadMillisProp != null && !stopAheadMillisProp.isEmpty()) {
+                stopAheadMillis = Long.parseLong(stopAheadMillisProp);
+            }
+        } catch (NumberFormatException e) {
+            LOG.error("setProps: failed to set properties", e);
+        }
     }
 
     public void initWebScore() {
@@ -2673,7 +2687,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                 long elapsedTime = clock.getElapsedTimeMillis();
                 transport = szcore.getTransport(stopEvent.getTransportId());
                 int duration = transport.getCurrentBeatDuration();
-                long stopTime = elapsedTime + duration;
+                long stopTime = elapsedTime + duration - stopAheadMillis;
                 LOG.debug("processMusicEvent: STOP time event beat duration: {} elapsedTime: {} stopTime: {}", duration, elapsedTime, stopTime);
                 task = taskFactory.createStopPlayTask(stopEvent, stopTime, this);
                 break;

@@ -74,6 +74,7 @@ public interface Consts {
     String LOCALHOST = "localhost";
     String SCORE_PROCESSOR_CLS_SUFFIX = "ScoreProcessor";
     String SCORE_DELEGATE_CONFIG_PREFIX = "score.delegate.";
+    String SCORE_CONFIG_STOP_AHEAD_MILLIS = "score.stop.ahead.millis";
     String SCORE_DELEGATE_PACKAGE = "com.xenaksys.szcore.score.delegate.";
     String WEBSCORE_DIR_CONFIG_PREFIX = "webscore.dir.";
     String WEBSCORE_PART_HTML_PREFIX = "webscore.part.html.";
@@ -235,6 +236,8 @@ public interface Consts {
     String OSC_JS_RESET_SCORE = "resetScore()";
     String OSC_JS_RESET_STAVES = "resetStaves()";
     String OSC_JS_RESET_INSTRUMENT = "resetInstrument()";
+
+    String OSC_JS_VOTE = "vote()";
 
     double OSC_STAVE_BEATER_Y_MIN = -0.66;
     double OSC_STAV_BEATER_Y_MAX = -0.9;

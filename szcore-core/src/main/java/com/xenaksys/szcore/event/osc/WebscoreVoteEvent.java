@@ -1,5 +1,7 @@
 package com.xenaksys.szcore.event.osc;
 
+import com.xenaksys.szcore.Consts;
+
 import java.util.List;
 
 public class WebscoreVoteEvent extends OscJavascriptEvent {
@@ -16,6 +18,15 @@ public class WebscoreVoteEvent extends OscJavascriptEvent {
         this.min = min;
         this.max = max;
         this.avg = avg;
+        addCommandArg();
+    }
+
+    public void addCommandArg() {
+        List<Object> args = getArguments();
+        if (args.size() == 2) {
+            args.remove(1);
+        }
+        args.add(1, Consts.OSC_JS_VOTE);
     }
 
     public int getVoteCount() {

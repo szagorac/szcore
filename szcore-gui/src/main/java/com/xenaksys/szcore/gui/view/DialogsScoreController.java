@@ -86,6 +86,7 @@ public class DialogsScoreController {
     public static final String SCORE = "SCORE";
     public static final String FREE = "FREE";
     public static final String WELCOME = "WELCOME";
+    public static final String INTRO = "INTRO";
     public static final String END = "END";
     public static final String CURRENT = "CURRENT";
     public static final String PITCH = "PITCH";
@@ -264,6 +265,8 @@ public class DialogsScoreController {
     private RadioButton presetFreeRdb;
     @FXML
     private RadioButton presetWelcomeRdb;
+    @FXML
+    private RadioButton presetIntroRdb;
     @FXML
     private RadioButton presetEndRdb;
     @FXML
@@ -459,6 +462,7 @@ public class DialogsScoreController {
         presetImproTimbreRdb.setSelected(false);
         presetImproImproRdb.setSelected(false);
         presetWelcomeRdb.setSelected(false);
+        presetIntroRdb.setSelected(false);
         presetEndRdb.setSelected(false);
 
         playAudioOnNewSectionChb.selectedProperty().addListener((observable, oldValue, newValue) -> onPlayAudioOnNewSection(newValue));
@@ -564,6 +568,8 @@ public class DialogsScoreController {
         presetFreeRdb.setUserData(FREE);
         presetWelcomeRdb.setToggleGroup(presetGroup);
         presetWelcomeRdb.setUserData(WELCOME);
+        presetIntroRdb.setToggleGroup(presetGroup);
+        presetIntroRdb.setUserData(INTRO);
         presetEndRdb.setToggleGroup(presetGroup);
         presetEndRdb.setUserData(END);
         presetImproCurrentRdb.setToggleGroup(presetGroup);
@@ -623,10 +629,13 @@ public class DialogsScoreController {
                 processPresetFree();
                 break;
             case WELCOME:
-//                processPresetWelcome();
+                processPresetWelcome();
+                break;
+            case INTRO:
+                processPresetIntro();
                 break;
             case END:
-//                processPresetEnd();
+                processPresetEnd();
                 break;
             case CURRENT:
                 processPresetImproCurrent();
@@ -676,6 +685,57 @@ public class DialogsScoreController {
         txtInstructions.setVisible(true);
         selectAllInstrumentsTxtChb.setSelected(true);
         selectAudienceTxtChb.setSelected(false);
+        publishWebscoreInstructions();
+    }
+
+    private void processPresetWelcome() {
+        adncNotesChb.setSelected(false);
+        adncAudioChb.setSelected(false);
+        adncThumbsChb.setSelected(false);
+        adncMeterChb.setSelected(true);
+        adncVoteChb.setSelected(false);
+        sendAudienceViewState(null);
+
+        txtInstructions.setLine1("Welcome to");
+        txtInstructions.setLine2("Socket Dialogues");
+        txtInstructions.setLine3("Workshop");
+        txtInstructions.setVisible(true);
+        selectAllInstrumentsTxtChb.setSelected(false);
+        selectAudienceTxtChb.setSelected(true);
+        publishWebscoreInstructions();
+    }
+
+    private void processPresetIntro() {
+        adncNotesChb.setSelected(false);
+        adncAudioChb.setSelected(false);
+        adncThumbsChb.setSelected(false);
+        adncMeterChb.setSelected(true);
+        adncVoteChb.setSelected(false);
+        sendAudienceViewState(null);
+
+        txtInstructions.setLine1("Players are now choosing");
+        txtInstructions.setLine2("their roles and");
+        txtInstructions.setLine3("the order of dialogues");
+        txtInstructions.setVisible(true);
+        selectAllInstrumentsTxtChb.setSelected(false);
+        selectAudienceTxtChb.setSelected(true);
+        publishWebscoreInstructions();
+    }
+
+    private void processPresetEnd() {
+        adncNotesChb.setSelected(false);
+        adncAudioChb.setSelected(false);
+        adncThumbsChb.setSelected(false);
+        adncMeterChb.setSelected(true);
+        adncVoteChb.setSelected(false);
+        sendAudienceViewState(null);
+
+        txtInstructions.setLine1("The End");
+        txtInstructions.setLine2("Thank you for your participation in");
+        txtInstructions.setLine3("Socket Dialogues");
+        txtInstructions.setVisible(true);
+        selectAllInstrumentsTxtChb.setSelected(false);
+        selectAudienceTxtChb.setSelected(true);
         publishWebscoreInstructions();
     }
 
@@ -1178,6 +1238,7 @@ public class DialogsScoreController {
         EventFactory eventFactory = publisher.getEventFactory();
         StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.RESET, clock.getSystemTimeMillis());
         publisher.receive(strategyEvent);
+        processPresetIntro();
     }
 
     private void sendSetSection(String sectionName) {

@@ -54,9 +54,14 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class SzcoreClient extends Application {
     static final Logger LOG = LoggerFactory.getLogger(SzcoreClient.class);
+
+    private final ScheduledExecutorService scheduleExecutor = Executors.newSingleThreadScheduledExecutor();
 
     private Stage primaryStage;
     private BorderPane rootLayout;
@@ -325,6 +330,7 @@ public class SzcoreClient extends Application {
 
     public void onTempoEvent(Id transportId, Tempo tempo) {
         scoreController.onTempoEvent(transportId, tempo);
+        dialogsScoreController.onTempoEvent(tempo);
     }
 
     public void processWebAudienceClientInfos(WebAudienceClientInfoUpdateEvent event) {
@@ -587,6 +593,10 @@ public class SzcoreClient extends Application {
             return;
         }
         scoreController.sendUseTimbreLine(newValue , instrumentIds);
+    }
+
+    public void scheduleTask(Runnable task, long delay, TimeUnit tu) {
+        scheduleExecutor.schedule(task, delay, tu);
     }
 
     class PrecountUpdater implements Runnable {

@@ -111,4 +111,7 @@ public interface ScoreService {
 
     void publishAudienceViewState(boolean isNotesEnabled, boolean isAudioEnabled, boolean isThumbsEnabled, boolean isMeterEnabled, boolean isVoteEnabled);
 
+    void sendMaxPreset(int preset);
+
+    void sendMaxEvent(String target, List<Object> args);
 }

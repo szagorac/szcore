@@ -123,4 +123,8 @@ public interface ScoreProcessor extends Processor {
     void sendClientEvent(ClientEvent clientEvent);
 
     void publishAudienceViewState(boolean isNotesEnabled, boolean isAudioEnabled, boolean isThumbsEnabled, boolean isMeterEnabled, boolean isVoteEnabled);
+
+    void sendMaxPreset(int preset);
+
+    void sendMaxEvent(String target, List<Object> args);
 }

@@ -527,6 +527,25 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
         }
     }
 
+    @Override
+    public void sendMaxPreset(int preset) {
+        try {
+            scoreProcessor.sendMaxPreset(preset);
+        } catch (Exception e) {
+            LOG.error("sendMaxPreset Failed to send max preset.", e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to send max preset", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
+    public void sendMaxEvent(String target, List<Object> args) {
+        try {
+            scoreProcessor.sendMaxEvent(target, args);
+        } catch (Exception e) {
+            LOG.error("sendMaxEvent Failed to send max event.", e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to send max event", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
 
     @Override
     public void updateAudienceWebServerConnections(Set<WebConnection> connections) {

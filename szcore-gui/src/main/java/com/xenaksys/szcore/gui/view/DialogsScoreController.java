@@ -19,6 +19,7 @@ import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Score;
 import com.xenaksys.szcore.model.ScoreService;
 import com.xenaksys.szcore.model.SectionInfo;
+import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.VoteInfo;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.score.BasicScore;
@@ -34,6 +35,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TableCell;
@@ -41,6 +43,8 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -50,9 +54,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.Consts.MAXMSP_CMD_PLAY;
+import static com.xenaksys.szcore.Consts.MAXMSP_CMD_SET_FILE;
+import static com.xenaksys.szcore.Consts.MAXMSP_GRANULATOR;
+import static com.xenaksys.szcore.Consts.MAXMSP_GRANULATOR_CONT;
+import static com.xenaksys.szcore.Consts.MAXMSP_GRANULATOR_CONT_STOP;
+import static com.xenaksys.szcore.Consts.MAXMSP_GROOVE;
+import static com.xenaksys.szcore.Consts.MAXMSP_GROOVE_CONT;
+import static com.xenaksys.szcore.Consts.MAXMSP_GROOVE_CONT_STOP;
+import static com.xenaksys.szcore.Consts.OSC_ADDRESS_ZSCORE;
 import static com.xenaksys.szcore.gui.view.ScoreController.fixedLengthString;
 
 public class DialogsScoreController {
@@ -66,7 +83,24 @@ public class DialogsScoreController {
     public static final String CONCUR = "Concur";
     public static final String DISSENT = "Dissent";
     public static final String ABSTAIN = "Abstain";
+    public static final String SCORE = "SCORE";
+    public static final String FREE = "FREE";
+    public static final String WELCOME = "WELCOME";
+    public static final String END = "END";
+    public static final String CURRENT = "CURRENT";
+    public static final String PITCH = "PITCH";
+    public static final String RHYTHM = "RHYTHM";
+    public static final String MELODY = "MELODY";
+    public static final String TIMBRE = "TIMBRE";
+    public static final String IMPRO = "IMPRO";
     public static final String INVALID_OWNER_PREFIX = "--";
+    public static final String MAX_GRANULATOR_ADDR = OSC_ADDRESS_ZSCORE + MAXMSP_GRANULATOR;
+    public static final String MAX_GRANULATOR_CONT_ADDR = OSC_ADDRESS_ZSCORE + MAXMSP_GRANULATOR_CONT;
+    public static final String MAX_GRANULATOR_CONT_STOP_ADDR = OSC_ADDRESS_ZSCORE + MAXMSP_GRANULATOR_CONT_STOP;
+    public static final String MAX_GROOVE_ADDR = OSC_ADDRESS_ZSCORE + MAXMSP_GROOVE;
+    public static final String MAX_GROOVE_CONT_ADDR = OSC_ADDRESS_ZSCORE + MAXMSP_GROOVE_CONT;
+    public static final String MAX_GROOVE_CONT_STOP_ADDR = OSC_ADDRESS_ZSCORE + MAXMSP_GROOVE_CONT_STOP;
+
     static final int MIN_VOTER_NO = 10;
     private final ValueScaler transparencyValueScaler = new ValueScaler(0.0, 100.0, 255.0, 0.0);
 
@@ -143,9 +177,11 @@ public class DialogsScoreController {
     @FXML
     private Button clearPitchTextInstructionsBtn;
     @FXML
-    private CheckBox sendTxtToAllInstrumentsChb;
+    private CheckBox selectAllInstrumentsTxtChb;
     @FXML
-    private CheckBox sendTxtToAllChb;
+    private CheckBox selectAudienceTxtChb;
+    @FXML
+    private CheckBox selectAllTxtRecipientsChb;
     @FXML
     private CheckBox sendTxtToPresentChb;
     @FXML
@@ -222,6 +258,30 @@ public class DialogsScoreController {
     private CheckBox adncVoteChb;
     @FXML
     private Button adncSendViewBtn;
+    @FXML
+    private RadioButton presetScoreRdb;
+    @FXML
+    private RadioButton presetFreeRdb;
+    @FXML
+    private RadioButton presetWelcomeRdb;
+    @FXML
+    private RadioButton presetEndRdb;
+    @FXML
+    private RadioButton presetImproCurrentRdb;
+    @FXML
+    private RadioButton presetImproPitchRdb;
+    @FXML
+    private RadioButton presetImproRhythmRdb;
+    @FXML
+    private RadioButton presetImproMelodyRdb;
+    @FXML
+    private RadioButton presetImproTimbreRdb;
+    @FXML
+    private RadioButton presetImproImproRdb;
+    @FXML
+    private Button presetSendBtn;
+    @FXML
+    private CheckBox playAudioOnNewSectionChb;
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -246,6 +306,9 @@ public class DialogsScoreController {
     private final StringProperty nextSectionProp = new SimpleStringProperty("N/A");
     private final StringProperty playingSectionProp = new SimpleStringProperty("N/A");
     private final ObservableList<String> overlayPresets = FXCollections.observableArrayList();
+
+    private final ToggleGroup presetGroup = new ToggleGroup();
+    private Tempo tempo;
 
     private Circle[] semaphore;
 
@@ -376,7 +439,8 @@ public class DialogsScoreController {
         txtInstructions.setLine2(EMPTY);
         txtInstructions.setLine3(EMPTY);
 
-        sendTxtToAllInstrumentsChb.setSelected(true);
+        selectAllInstrumentsTxtChb.setSelected(true);
+        selectAudienceTxtChb.setSelected(false);
         pitchOverlayTransparencySldr.setValue(100.0);
         pitchOverlayTransparencySldr.valueProperty().addListener((ov, old_val, new_val) -> {
 //            LOG.debug("old_val: {}, new_val: {}", old_val, new_val);
@@ -385,6 +449,19 @@ public class DialogsScoreController {
         });
 
         semaphore = new Circle[]{semaphore1Crc, semaphore2Crc, semaphore3Crc, semaphore4Crc};
+
+        presetScoreRdb.setSelected(false);
+        presetFreeRdb.setSelected(false);
+        presetImproCurrentRdb.setSelected(false);
+        presetImproPitchRdb.setSelected(false);
+        presetImproRhythmRdb.setSelected(false);
+        presetImproMelodyRdb.setSelected(false);
+        presetImproTimbreRdb.setSelected(false);
+        presetImproImproRdb.setSelected(false);
+        presetWelcomeRdb.setSelected(false);
+        presetEndRdb.setSelected(false);
+
+        playAudioOnNewSectionChb.selectedProperty().addListener((observable, oldValue, newValue) -> onPlayAudioOnNewSection(newValue));
     }
 
     @FXML
@@ -399,6 +476,7 @@ public class DialogsScoreController {
             if (newSelection == null) {
                 out = oldSelection;
             }
+
             onSectionSelect(out);
         });
 
@@ -459,8 +537,9 @@ public class DialogsScoreController {
         audienceL2Lbl.textProperty().bindBidirectional(audienceInstructions.line2Property());
         audienceL3Lbl.textProperty().bindBidirectional(audienceInstructions.line3Property());
 
-        sendTxtToAllInstrumentsChb.selectedProperty().addListener((observable, oldValue, newValue) -> setTxtToAllInstruments(newValue));
-        sendTxtToAllChb.selectedProperty().addListener((observable, oldValue, newValue) -> setTxtToAll(newValue));
+        selectAllInstrumentsTxtChb.selectedProperty().addListener((observable, oldValue, newValue) -> selectTxtToAllInstruments(newValue));
+        selectAudienceTxtChb.selectedProperty().addListener((observable, oldValue, newValue) -> selectTxtToAudience(newValue));
+        selectAllTxtRecipientsChb.selectedProperty().addListener((observable, oldValue, newValue) -> selectTxtToAll(newValue));
 
         voteCurrentLbl.textProperty().bind(audienceVote.voteNoProperty().asString());
         voteMaxLbl.textProperty().bind(audienceVote.maxVoteProperty().asString());
@@ -478,6 +557,29 @@ public class DialogsScoreController {
         semaphore3Crc.setStroke(Color.BLACK);
         semaphore4Crc.setFill(Color.TRANSPARENT);
         semaphore4Crc.setStroke(Color.BLACK);
+
+        presetScoreRdb.setToggleGroup(presetGroup);
+        presetScoreRdb.setUserData(SCORE);
+        presetFreeRdb.setToggleGroup(presetGroup);
+        presetFreeRdb.setUserData(FREE);
+        presetWelcomeRdb.setToggleGroup(presetGroup);
+        presetWelcomeRdb.setUserData(WELCOME);
+        presetEndRdb.setToggleGroup(presetGroup);
+        presetEndRdb.setUserData(END);
+        presetImproCurrentRdb.setToggleGroup(presetGroup);
+        presetImproCurrentRdb.setUserData(CURRENT);
+        presetImproPitchRdb.setToggleGroup(presetGroup);
+        presetImproPitchRdb.setUserData(PITCH);
+        presetImproRhythmRdb.setToggleGroup(presetGroup);
+        presetImproRhythmRdb.setUserData(RHYTHM);
+        presetImproMelodyRdb.setToggleGroup(presetGroup);
+        presetImproMelodyRdb.setUserData(MELODY);
+        presetImproTimbreRdb.setToggleGroup(presetGroup);
+        presetImproTimbreRdb.setUserData(TIMBRE);
+        presetImproImproRdb.setToggleGroup(presetGroup);
+        presetImproImproRdb.setUserData(IMPRO);
+
+        playAudioOnNewSectionChb.setSelected(true);
     }
 
     @FXML
@@ -498,13 +600,177 @@ public class DialogsScoreController {
     @FXML
     private void sendAudienceViewState(ActionEvent event) {
         boolean isNotesEnabled = adncNotesChb.isSelected();
-        boolean isAudioEnabled = adncAudioChb.isSelected();;
-        boolean isThumbsEnabled = adncThumbsChb.isSelected();;
-        boolean isMeterEnabled = adncMeterChb.isSelected();;
-        boolean isVoteEnabled = adncVoteChb.isSelected();;
+        boolean isAudioEnabled = adncAudioChb.isSelected();
+        boolean isThumbsEnabled = adncThumbsChb.isSelected();
+        boolean isMeterEnabled = adncMeterChb.isSelected();
+        boolean isVoteEnabled = adncVoteChb.isSelected();
         scoreService.publishAudienceViewState(isNotesEnabled, isAudioEnabled, isThumbsEnabled, isMeterEnabled, isVoteEnabled);
     }
 
+    @FXML
+    private void sendPreset(ActionEvent event) {
+        Toggle selected = presetGroup.getSelectedToggle();
+        if(selected == null) {
+            return;
+        }
+        String preset = selected.getUserData().toString();
+        LOG.info("sendPreset: {}", preset);
+        switch (preset) {
+            case SCORE:
+                processPresetScore();
+                break;
+            case FREE:
+                processPresetFree();
+                break;
+            case WELCOME:
+//                processPresetWelcome();
+                break;
+            case END:
+//                processPresetEnd();
+                break;
+            case CURRENT:
+                processPresetImproCurrent();
+                break;
+            case PITCH:
+                processPresetPitch();
+                break;
+            case RHYTHM:
+                processPresetRhythm();
+                break;
+            case MELODY:
+                processPresetMelody();
+                break;
+            case TIMBRE:
+                processPresetTimbre();
+                break;
+            case IMPRO:
+                processPresetImproImpro();
+                break;
+            default:
+                LOG.error("Unkonwn preset: {}", preset);
+        }
+    }
+
+    private void processPresetScore() {
+        txtInstructions.setLine1(EMPTY);
+        txtInstructions.setLine2(EMPTY);
+        txtInstructions.setLine3(EMPTY);
+        txtInstructions.setVisible(false);
+        selectAllInstrumentsTxtChb.setSelected(true);
+        selectAudienceTxtChb.setSelected(true);
+        publishWebscoreInstructions();
+
+        adncNotesChb.setSelected(false);
+        adncAudioChb.setSelected(true);
+        adncThumbsChb.setSelected(false);
+        adncMeterChb.setSelected(true);
+        adncVoteChb.setSelected(false);
+        sendAudienceViewState(null);
+        sendMaxPreset(2);
+    }
+
+    private void processPresetFree() {
+        txtInstructions.setLine1("Free");
+        txtInstructions.setLine2("Improvisation");
+        txtInstructions.setLine3(EMPTY);
+        txtInstructions.setVisible(true);
+        selectAllInstrumentsTxtChb.setSelected(true);
+        selectAudienceTxtChb.setSelected(false);
+        publishWebscoreInstructions();
+    }
+
+    private void processPresetImpro() {
+        txtInstructions.setLine1(EMPTY);
+        txtInstructions.setLine2(EMPTY);
+        txtInstructions.setLine3(EMPTY);
+        txtInstructions.setVisible(true);
+        selectAllInstrumentsTxtChb.setSelected(false);
+        selectAudienceTxtChb.setSelected(true);
+        publishWebscoreInstructions();
+
+        txtInstructions.setLine1("Free Improvisation");
+        txtInstructions.setLine2("Follow audience / MAX");
+        txtInstructions.setLine3(EMPTY);
+        txtInstructions.setVisible(true);
+        selectAllInstrumentsTxtChb.setSelected(true);
+        selectAudienceTxtChb.setSelected(false);
+        publishWebscoreInstructions();
+
+        adncNotesChb.setSelected(true);
+        adncAudioChb.setSelected(true);
+        adncThumbsChb.setSelected(false);
+        adncMeterChb.setSelected(true);
+        adncVoteChb.setSelected(false);
+        sendAudienceViewState(null);
+        sendMaxPreset(3);
+    }
+
+    private void processPresetImproCurrent() {
+        processPresetImpro();
+    }
+
+    private void sendMaxPitchFiles() {
+        sendMaxFiles("DialogsPitch_b4.wav", "DialogsPitch_b8.wav");
+    }
+
+    private void sendMaxRhythmFiles() {
+        sendMaxFiles("DialogsRhythm_b2.wav", "DialogsRhythm_b8.wav");
+    }
+
+    private void sendMaxMelodyFiles() {
+        sendMaxFiles("DialogsMelody_b2.wav", "DialogsMelody_b8.wav");
+    }
+
+    private void sendMaxTimbreFiles() {
+        sendMaxFiles("DialogsTimbre_b4.wav", "DialogsTimbre_b8.wav");
+    }
+
+    private void sendMaxImproFiles() {
+        sendMaxFiles("DialogsImpro_b10.wav", "DialogsImpro_b8.wav");
+    }
+
+    private void sendMaxFiles(String granulatorFile, String grooveFile) {
+        sendMaxEvent(MAX_GRANULATOR_ADDR, Arrays.asList(MAXMSP_CMD_SET_FILE, granulatorFile));
+        sendMaxEvent(MAX_GROOVE_ADDR, Arrays.asList(MAXMSP_CMD_SET_FILE, grooveFile));
+    }
+
+    private void processPresetPitch() {
+        sendMaxPitchFiles();
+        processPresetImpro();
+    }
+
+    private void processPresetRhythm() {
+        sendMaxRhythmFiles();
+        processPresetImpro();
+    }
+
+    private void processPresetMelody() {
+        sendMaxMelodyFiles();
+        processPresetImpro();
+    }
+
+    private void processPresetTimbre() {
+        sendMaxTimbreFiles();
+        processPresetImpro();
+    }
+
+    private void processPresetImproImpro() {
+        sendMaxImproFiles();
+        processPresetImpro();
+    }
+
+    private void sendMaxPreset(int preset) {
+        scoreService.sendMaxPreset(preset);
+    }
+
+    private void sendMaxEventWithDelay(String target, List<Object> args, long delay, TimeUnit tu) {
+        Runnable task = new MaxSender(target, args);
+        mainApp.scheduleTask(task, delay, tu);
+    }
+
+    private void sendMaxEvent(String target, List<Object> args) {
+        scoreService.sendMaxEvent(target, args);
+    }
 
     private void publishWebscoreInstructions() {
         String l1 = validateWebInstruction(txtInstructions.getLine1());
@@ -514,13 +780,25 @@ public class DialogsScoreController {
         List<Id> instrumentIds = getInstrumentsToSendTxt();
 
         if (isVisible) {
-            pitchOverlayTransparencySldr.setValue(10);
+            pitchOverlayTransparencySldr.setValue(0);
             if (!usePitchOverlayChb.isSelected()) {
                 usePitchOverlayChb.setSelected(true);
+            }
+            if (!useDynamicsOverlayChb.isSelected()) {
+                useDynamicsOverlayChb.setSelected(true);
+            }
+            if (!useTimbreOverlayChb.isSelected()) {
+                useTimbreOverlayChb.setSelected(true);
             }
         } else {
             if (usePitchOverlayChb.isSelected()) {
                 usePitchOverlayChb.setSelected(false);
+            }
+            if (useDynamicsOverlayChb.isSelected()) {
+                useDynamicsOverlayChb.setSelected(false);
+            }
+            if (useTimbreOverlayChb.isSelected()) {
+                useTimbreOverlayChb.setSelected(false);
             }
             pitchOverlayTransparencySldr.setValue(100);
         }
@@ -553,6 +831,49 @@ public class DialogsScoreController {
             return;
         }
         onSectionSelect(section);
+    }
+
+    private void playAudio(String sectionName) {
+        if(!playAudioOnNewSectionChb.isSelected()) {
+            return;
+        }
+        String name = sectionName.toUpperCase(Locale.ROOT);
+        switch (name) {
+            case PITCH:
+                sendMaxPitchFiles();
+                break;
+            case RHYTHM:
+                sendMaxRhythmFiles();
+                break;
+            case MELODY:
+                sendMaxMelodyFiles();
+                break;
+            case TIMBRE:
+                sendMaxTimbreFiles();
+                break;
+            case IMPRO:
+                sendMaxImproFiles();
+                break;
+            default:
+                LOG.error("playAudio: unknown section: {}", name);
+        }
+        sendMaxPreset(3);
+
+        long beatSec = 2;
+        if(tempo != null) {
+            int bpm = tempo.getBpm();
+            beatSec = (60 * 1000) / bpm;
+        }
+
+        sendMaxEventWithDelay(MAX_GROOVE_CONT_ADDR, Collections.singletonList(MAXMSP_CMD_PLAY), 2*beatSec, TimeUnit.MILLISECONDS);
+        sendMaxEventWithDelay(MAX_GRANULATOR_CONT_ADDR, Collections.singletonList(MAXMSP_CMD_PLAY), 4*beatSec, TimeUnit.MILLISECONDS);
+    }
+
+    private void onPlayAudioOnNewSection(Boolean newValue) {
+        if(!newValue) {
+            sendMaxEvent(MAX_GRANULATOR_CONT_STOP_ADDR, Collections.singletonList(MAXMSP_CMD_PLAY));
+            sendMaxEvent(MAX_GROOVE_CONT_STOP_ADDR, Collections.singletonList(MAXMSP_CMD_PLAY));
+        }
     }
 
     private void onSectionSelect(Section section) {
@@ -700,7 +1021,9 @@ public class DialogsScoreController {
         }
     }
 
-    private void setSectionOrderInfo(final List<String> sections, final String currentSection, final String nextSection) {
+    private void setSectionOrderInfo(final List<String> sections, final String cSection, final String nextSection) {
+        String prev = this.currentSection;
+        this.currentSection = cSection;
         Platform.runLater(() -> {
             String selectedItem = sectionOrderLvw.getSelectionModel().getSelectedItem();
             sectionOrder.clear();
@@ -708,9 +1031,12 @@ public class DialogsScoreController {
             if (sections.contains(selectedItem)) {
                 sectionOrderLvw.getSelectionModel().select(selectedItem);
             }
-            setCurrentSectionLabel(currentSection);
+            setCurrentSectionLabel(cSection);
             setNextSectionLabel(nextSection);
         });
+        if(currentSection != null && !currentSection.equals(prev)) {
+            playAudio(cSection);
+        }
     }
 
     private void processSectionVote(Section section) {
@@ -867,16 +1193,20 @@ public class DialogsScoreController {
         publisher.receive(strategyEvent);
     }
 
-    private void setTxtToAllInstruments(Boolean newValue) {
+    private void selectTxtToAllInstruments(Boolean newValue) {
         sendTxtToPresentChb.setSelected(newValue);
         sendTxtToDissentChb.setSelected(newValue);
         sendTxtToConcurChb.setSelected(newValue);
         sendTxtToAbstainChb.setSelected(newValue);
     }
 
-    private void setTxtToAll(Boolean newValue) {
+    private void selectTxtToAudience(Boolean newValue) {
         sendTxtToAudienceChb.setSelected(newValue);
-        setTxtToAllInstruments(newValue);
+    }
+
+    private void selectTxtToAll(Boolean newValue) {
+        selectTxtToAudience(newValue);
+        selectTxtToAllInstruments(newValue);
     }
 
     private void onUsePitchOverlay(Boolean newValue) {
@@ -1168,7 +1498,7 @@ public class DialogsScoreController {
         setDynamicsDefaultValue();
         setPitchDefaultValue();
         presetsChob.getSelectionModel().select(Consts.PRESET_ALL_OFF);
-        sendTxtToAllChb.setSelected(false);
+        selectAllTxtRecipientsChb.setSelected(false);
     }
 
     public void setTimbreDefaultValue() {
@@ -1215,4 +1545,23 @@ public class DialogsScoreController {
             }
         }
     }
+
+    public void onTempoEvent(Tempo tempo) {
+        this.tempo = tempo;
+    }
+
+    class MaxSender implements Runnable {
+        private String target;
+        private List<Object> args;
+        public MaxSender(String target, List<Object> args) {
+            this.target = target;
+            this.args = args;
+        }
+        @Override
+        public void run() {
+            LOG.info("MaxSender: sending to {}", target);
+            sendMaxEvent(target, args);
+        }
+    }
+
 }

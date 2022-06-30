@@ -143,6 +143,7 @@ public interface Consts {
     String OSC_ADDR_BEAT_INFO = OSC_ADDRESS_JSUI;
     String OSC_CMD_BEAT_INFO = "beatInfo";
     String OSC_CMD_SET_TEMPO = "setTempo";
+    String OSC_CMD_PRESET = "preset";
 
     int OSC_UPDATE_BEAT_COMPLETE_PERC_THRESHOLD = 1;
 
@@ -628,6 +629,13 @@ public interface Consts {
     String MAXMSP_ID = "max";
     String MAXMSP_CMD_SET_FILE = "setFile";
     String MAXMSP_CMD_PLAY = "play";
+    String MAXMSP_GRANULATOR = "granulator";
+    String MAXMSP_GRANULATOR_CONT = "granulatorCont";
+    String MAXMSP_GRANULATOR_CONT_STOP = "granulatorContStop";
+    String MAXMSP_GROOVE = "groove";
+    String MAXMSP_GROOVE_CONT = "grooveCont";
+    String MAXMSP_GROOVE_CONT_STOP = "grooveContStop";
+
 
     String MAXMSP_BAR_PREFIX = "b";
 

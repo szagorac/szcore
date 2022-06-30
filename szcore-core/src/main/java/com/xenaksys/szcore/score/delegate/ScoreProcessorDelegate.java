@@ -171,6 +171,8 @@ import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NAME;
 import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NO;
 import static com.xenaksys.szcore.Consts.MAX_BPM;
 import static com.xenaksys.szcore.Consts.MIN_BPM;
+import static com.xenaksys.szcore.Consts.OSC_ADDRESS_ZSCORE;
+import static com.xenaksys.szcore.Consts.OSC_CMD_PRESET;
 import static com.xenaksys.szcore.Consts.UNDERSCORE;
 
 public class ScoreProcessorDelegate implements ScoreProcessor {
@@ -721,6 +723,26 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         }
 
         scriptPreset.addScriptEvent(beatScriptEvent);
+    }
+
+    public void sendMaxPreset(int preset) {
+        String target = OSC_ADDRESS_ZSCORE + preset;
+        List<Object> args = Collections.singletonList(OSC_CMD_PRESET);
+        Collection<Instrument> avInsts = getBasicScore().getAvInstruments();
+        for(Instrument instrument : avInsts) {
+            String destination = szcore.getOscDestination(instrument.getId());
+            OscScriptEvent presetEvent = eventFactory.createOscScriptEvent(destination, null, target, args, clock.getSystemTimeMillis());
+            publishOscEvent(presetEvent);
+        }
+    }
+
+    public void sendMaxEvent(String target, List<Object> args) {
+        Collection<Instrument> avInsts = getBasicScore().getAvInstruments();
+        for(Instrument instrument : avInsts) {
+            String destination = szcore.getOscDestination(instrument.getId());
+            OscScriptEvent maxCmdEvent = eventFactory.createOscScriptEvent(destination, null, target, args, clock.getSystemTimeMillis());
+            publishOscEvent(maxCmdEvent);
+        }
     }
 
     private void addBeatScriptEvent(BeatId beatId, Script script, Id transportId) {

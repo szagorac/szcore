@@ -376,6 +376,22 @@ public class ScoreProcessorDelegator implements ScoreProcessor {
     }
 
     @Override
+    public void sendMaxPreset(int preset) {
+        if(scoreDelegate == null) {
+            return;
+        }
+        scoreDelegate.sendMaxPreset(preset);
+    }
+
+    @Override
+    public void sendMaxEvent(String target, List<Object> args) {
+        if(scoreDelegate == null) {
+            return;
+        }
+        scoreDelegate.sendMaxEvent(target, args);
+    }
+
+    @Override
     public void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst, WebClientInfo clientInfo) {
         if(scoreDelegate == null) {
             return;

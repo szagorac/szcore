@@ -373,6 +373,7 @@ public interface Consts {
     String WEB_GRANULATOR = "granulator";
     String WEB_STAGE = "stage";
     String WEB_SPEECH_SYNTH = "speechSynth";
+    String WEB_SYNTH = "synth";
     String WEB_PLAYER = "player";
     String WEB_VIEW = "view";
     String WEB_SPEECH_VOICE_RANDOM = "random";
@@ -395,6 +396,7 @@ public interface Consts {
     String WEB_OBJ_ZOOM_LEVEL = "zoomLevel";
     String WEB_OBJ_CONFIG_GRANULATOR = "granulatorConfig";
     String WEB_OBJ_CONFIG_SPEECH_SYNTH = "speechSynthConfig";
+    String WEB_OBJ_CONFIG_SYNTH = "synthConfig";
     String WEB_OBJ_CONFIG_PLAYER = "playerConfig";
     String WEB_OBJ_STATE_SPEECH_SYNTH = "speechSynthState";
     String WEB_OBJ_COUNTER = "counter";
@@ -457,6 +459,7 @@ public interface Consts {
     String WEB_CONFIG_IS_USE_SIZE_OSCILLATOR = "isUseSizeOscillator";
     String WEB_CONFIG_IS_USE_POSITION_FREQ_MOD = "isUsePositionFrequencyMod";
     String WEB_CONFIG_IS_USE_POSITION_RANGE_MOD = "isUsePositionRangeMod";
+    String WEB_CONFIG_BPM = "bpm";
     String WEB_CONFIG_VOLUME = "volume";
     String WEB_CONFIG_PITCH = "pitch";
     String WEB_CONFIG_RATE = "rate";
@@ -489,6 +492,10 @@ public interface Consts {
     String WEB_CONFIG_ACTIVE_VIEWS = "activeViews";
     String WEB_CONFIG_SECTION_NAME = "sectionName";
     String WEB_CONFIG_IS_SECTION_ACTIVE = "isSectionActive";
+    String WEB_CONFIG_OSC1_FREQ = "osc1Freq";
+    String WEB_CONFIG_OSC2_FREQ = "osc2Freq";
+    String WEB_CONFIG_OSC3_FREQ = "osc3Freq";
+    String WEB_CONFIG_DUR_MULTIPLIER = "durMultiplier";
 
     int WEB_CONFIG_MAX_VOTE_COUNT = 5;
     double WEB_CONFIG_DOUBLE_CHANGE_THRESHOLD = 10E-3;

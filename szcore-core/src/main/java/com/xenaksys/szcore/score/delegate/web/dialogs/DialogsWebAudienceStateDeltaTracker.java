@@ -5,8 +5,10 @@ import com.xenaksys.szcore.score.web.audience.WebAudienceStateDeltaTracker;
 import com.xenaksys.szcore.score.web.audience.WebCounter;
 import com.xenaksys.szcore.score.web.audience.WebViewState;
 import com.xenaksys.szcore.score.web.audience.config.WebPlayerConfig;
+import com.xenaksys.szcore.score.web.audience.config.WebSynthConfig;
 import com.xenaksys.szcore.score.web.audience.export.WebCounterExport;
 import com.xenaksys.szcore.score.web.audience.export.WebPlayerConfigExport;
+import com.xenaksys.szcore.score.web.audience.export.WebSynthConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebViewStateExport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +20,7 @@ import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRAIN_PANNER;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRANULATOR;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_PLAYER;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_SPEECH_SYNTH;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_COUNTER;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_INSTRUCTIONS;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_STATE_SPEECH_SYNTH;
@@ -70,6 +73,9 @@ public class DialogsWebAudienceStateDeltaTracker extends WebAudienceStateDeltaTr
             case WEB_OBJ_CONFIG_PLAYER:
                 processPlayerConfig(id, newValue);
                 break;
+            case WEB_OBJ_CONFIG_SYNTH:
+                processSynthConfig(id, newValue);
+                break;
             default:
                 LOG.error("processUpdate: Unknown propertyName: {}", propertyName);
         }
@@ -100,6 +106,13 @@ public class DialogsWebAudienceStateDeltaTracker extends WebAudienceStateDeltaTr
         WebPlayerConfigExport export = new WebPlayerConfigExport();
         export.populate(config);
         addDelta(WEB_OBJ_CONFIG_PLAYER, export);
+    }
+
+    protected void processSynthConfig(String id, Object newValue) {
+        WebSynthConfig config = getDelegateState().getSynthConfig();
+        WebSynthConfigExport export = new WebSynthConfigExport();
+        export.populate(config);
+        addDelta(WEB_OBJ_CONFIG_SYNTH, export);
     }
 
     @Override

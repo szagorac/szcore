@@ -25,6 +25,7 @@ import com.xenaksys.szcore.score.web.audience.config.WebPannerConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebPlayerConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthState;
+import com.xenaksys.szcore.score.web.audience.config.WebSynthConfig;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
 import com.xenaksys.szcore.web.WebAudienceAction;
@@ -968,6 +969,10 @@ public abstract class WebAudienceScoreProcessor {
 
     public WebPlayerConfig createDefaultWebPlayerConfig() {
         return new WebPlayerConfig(pcs);
+    }
+
+    public WebSynthConfig createDefaultWebSynthConfig() {
+        return new WebSynthConfig(pcs);
     }
 
     public WebViewState createDefaultWebViewState() {

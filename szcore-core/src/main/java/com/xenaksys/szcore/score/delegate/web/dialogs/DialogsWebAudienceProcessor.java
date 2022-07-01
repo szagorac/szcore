@@ -29,6 +29,7 @@ import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebPlayerConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthState;
+import com.xenaksys.szcore.score.web.audience.config.WebSynthConfig;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceInstructionsExport;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
 import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateExport;
@@ -37,6 +38,7 @@ import com.xenaksys.szcore.score.web.audience.export.WebGranulatorConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebPlayerConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthStateExport;
+import com.xenaksys.szcore.score.web.audience.export.WebSynthConfigExport;
 import com.xenaksys.szcore.score.web.audience.export.WebViewStateExport;
 import com.xenaksys.szcore.web.WebAudienceAction;
 import com.xenaksys.szcore.web.WebScoreStateType;
@@ -64,6 +66,7 @@ import static com.xenaksys.szcore.Consts.WEB_OBJ_ACTIONS;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRANULATOR;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_PLAYER;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_SPEECH_SYNTH;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_COUNTER;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_INSTRUCTIONS;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_STATE_SPEECH_SYNTH;
@@ -71,6 +74,7 @@ import static com.xenaksys.szcore.Consts.WEB_OBJ_VIEW_STATE;
 import static com.xenaksys.szcore.Consts.WEB_OBJ_VOTE;
 import static com.xenaksys.szcore.Consts.WEB_PLAYER;
 import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
+import static com.xenaksys.szcore.Consts.WEB_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_TEXT_BACKGROUND_COLOUR;
 import static com.xenaksys.szcore.Consts.WEB_VIEW_AUDIO;
 import static com.xenaksys.szcore.Consts.WEB_VIEW_METER;
@@ -100,11 +104,12 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         WebSpeechSynthConfig speechSynthConfig = createDefaultSpeechSynthConfig();
         WebSpeechSynthState speechSynthState = createDefaultSpeechSynthState();
         WebPlayerConfig playerConfig = createDefaultWebPlayerConfig();
+        WebSynthConfig synthConfig = createDefaultWebSynthConfig();
         WebCounter counter = createDefaultWebCounter();
         WebViewState viewState = createDefaultWebViewState();
 
         DialogsWebAudienceServerState webAudienceServerState = new DialogsWebAudienceServerState(currentActions,
-                instructions, granulatorConfig, speechSynthConfig, speechSynthState, playerConfig, counter, viewState, getPcs());
+                instructions, granulatorConfig, speechSynthConfig, speechSynthState, playerConfig, synthConfig, counter, viewState, getPcs());
 
         createWebAudienceStateDeltaTracker(webAudienceServerState);
         getPcs().addPropertyChangeListener(new WebAudienceChangeListener(stateDeltaTracker));
@@ -118,7 +123,7 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
     public void resetState() {
         getState().clearActions();
         getState().setInstructions("Welcome to ZScore", 1);
-        getState().setInstructions("<span style='color:blueviolet;'>Dialogs</span>", 2);
+        getState().setInstructions("<span style='color:blueviolet;'>Dialogues</span>", 2);
         getState().setInstructions("awaiting performance start ...", 3);
         getState().setInstructionsVisible(true);
 
@@ -126,6 +131,7 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         getState().setSpeechSynthConfig(createDefaultSpeechSynthConfig());
         getState().setSpeechSynthState(createDefaultSpeechSynthState());
         getDelegateState().setPlayerConfig(createDefaultWebPlayerConfig());
+        getDelegateState().setSynthConfig(createDefaultWebSynthConfig());
 
         reset(WEB_CONFIG_LOAD_PRESET);
         updateServerState();
@@ -166,6 +172,9 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
                 case WEB_SPEECH_SYNTH:
                     updateSpeechSynthConfig((Map<String, Object>) configs.get(key));
                     break;
+                case WEB_SYNTH:
+                    updateSynthConfig((Map<String, Object>) configs.get(key));
+                    break;
                 default:
                     LOG.info("processPresetConfigs: unknown key: {}", key);
             }
@@ -184,8 +193,16 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         getSpeechSynthConfig().update(conf);
     }
 
+    private void updateSynthConfig(Map<String, Object> conf) {
+        getSynthConfig().update(conf);
+    }
+
     public WebPlayerConfig getPlayerConfig() {
         return getDelegateState().getPlayerConfig();
+    }
+
+    public WebSynthConfig getSynthConfig() {
+        return getDelegateState().getSynthConfig();
     }
 
     public void loadConfig(String configDir) {
@@ -220,6 +237,9 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         WebPlayerConfigExport playerConfigExport = new WebPlayerConfigExport();
         playerConfigExport.populate(state.getPlayerConfig());
 
+        WebSynthConfigExport synthConfigExport = new WebSynthConfigExport();
+        synthConfigExport.populate(state.getSynthConfig());
+
         WebViewStateExport viewStateExport = new WebViewStateExport();
         viewStateExport.populate(state.getViewState());
 
@@ -232,6 +252,7 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         export.addState(WEB_OBJ_CONFIG_PLAYER, playerConfigExport);
         export.addState(WEB_OBJ_COUNTER, counterExport);
         export.addState(WEB_OBJ_VIEW_STATE, viewStateExport);
+        export.addState(WEB_OBJ_CONFIG_SYNTH, synthConfigExport);
 
         return export;
     }

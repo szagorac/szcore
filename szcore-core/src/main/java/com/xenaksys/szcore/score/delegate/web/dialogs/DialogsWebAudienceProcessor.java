@@ -371,6 +371,7 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
         sectionStartTime = getClock().getElapsedTimeMillis();
         resetVote();
         activateSection(section);
+        deactivateViews(WEB_VIEW_NOTES);
         activateViews(WEB_VIEW_AUDIO, WEB_VIEW_THUMBS, WEB_VIEW_VOTE, WEB_VIEW_METER);
         updateServerStateAndPush();
     }

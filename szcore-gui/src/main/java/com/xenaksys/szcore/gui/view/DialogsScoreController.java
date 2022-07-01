@@ -104,6 +104,12 @@ public class DialogsScoreController {
     public static final String MELODY = "MELODY";
     public static final String TIMBRE = "TIMBRE";
     public static final String IMPRO = "IMPRO";
+    public static final String MP = "MP";
+    public static final String MF = "MF";
+    public static final String F = "F";
+    public static final String P = "P";
+    public static final String FF = "FF";
+    public static final String PP = "PP";
     public static final String INVALID_OWNER_PREFIX = "--";
     public static final String MAX_GRANULATOR_ADDR = OSC_ADDRESS_ZSCORE + MAXMSP_GRANULATOR;
     public static final String MAX_GRANULATOR_CONT_ADDR = OSC_ADDRESS_ZSCORE + MAXMSP_GRANULATOR_CONT;
@@ -309,6 +315,18 @@ public class DialogsScoreController {
     private ChoiceBox<Double> synthFreqChob;
     @FXML
     private ChoiceBox<Double> synthDurChob;
+    @FXML
+    private RadioButton presetFreqDurMfRdb;
+    @FXML
+    private RadioButton presetFreqDurFRdb;
+    @FXML
+    private RadioButton presetFreqDurFfRdb;
+    @FXML
+    private RadioButton presetFreqDurMpRdb;
+    @FXML
+    private RadioButton presetFreqDurPRdb;
+    @FXML
+    private RadioButton presetFreqDurPpRdb;
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -337,6 +355,7 @@ public class DialogsScoreController {
     private final ObservableList<Double> synthDur = FXCollections.observableArrayList();
 
     private final ToggleGroup presetGroup = new ToggleGroup();
+    private final ToggleGroup freqPresetGroup = new ToggleGroup();
     private Tempo tempo;
 
     private Circle[] semaphore;
@@ -494,6 +513,13 @@ public class DialogsScoreController {
         presetIntroRdb.setSelected(false);
         presetAudiencePlayRdb.setSelected(false);
         presetEndRdb.setSelected(false);
+
+        presetFreqDurMfRdb.setSelected(false);
+        presetFreqDurFRdb.setSelected(false);
+        presetFreqDurFfRdb.setSelected(false);
+        presetFreqDurMpRdb.setSelected(false);
+        presetFreqDurPRdb.setSelected(false);
+        presetFreqDurPpRdb.setSelected(false);
 
         playAudioOnNewSectionChb.selectedProperty().addListener((observable, oldValue, newValue) -> onPlayAudioOnNewSection(newValue));
 
@@ -668,6 +694,26 @@ public class DialogsScoreController {
 
         adncMasterVolSldr.setValue(100.0);
         adncSynthVolSldr.setValue(10.0);
+
+        presetFreqDurMfRdb.setToggleGroup(freqPresetGroup);
+        presetFreqDurMfRdb.setUserData(MF);
+        presetFreqDurFRdb.setToggleGroup(freqPresetGroup);
+        presetFreqDurFRdb.setUserData(F);
+        presetFreqDurFfRdb.setToggleGroup(freqPresetGroup);
+        presetFreqDurFfRdb.setUserData(FF);
+        presetFreqDurMpRdb.setToggleGroup(freqPresetGroup);
+        presetFreqDurMpRdb.setUserData(MP);
+        presetFreqDurPRdb.setToggleGroup(freqPresetGroup);
+        presetFreqDurPRdb.setUserData(P);
+        presetFreqDurPpRdb.setToggleGroup(freqPresetGroup);
+        presetFreqDurPpRdb.setUserData(PP);
+
+        freqPresetGroup.selectedToggleProperty().addListener((ov, old_toggle, new_toggle) -> {
+            if (freqPresetGroup.getSelectedToggle() != null) {
+                System.out.println(freqPresetGroup.getSelectedToggle().getUserData().toString());
+                onFreqDurPresetChange(freqPresetGroup.getSelectedToggle().getUserData().toString());
+            }
+        });
     }
 
     @FXML
@@ -751,16 +797,16 @@ public class DialogsScoreController {
         txtInstructions.setLine3(EMPTY);
         txtInstructions.setVisible(false);
         selectAllInstrumentsTxtChb.setSelected(true);
-        selectAudienceTxtChb.setSelected(true);
+        selectAudienceTxtChb.setSelected(false);
         publishWebscoreInstructions();
 
-        adncNotesChb.setSelected(false);
-        adncAudioChb.setSelected(true);
-        adncThumbsChb.setSelected(false);
-        adncMeterChb.setSelected(true);
-        adncVoteChb.setSelected(false);
-        sendAudienceViewState(null);
-        sendMaxPreset(2);
+//        adncNotesChb.setSelected(false);
+//        adncAudioChb.setSelected(true);
+//        adncThumbsChb.setSelected(false);
+//        adncMeterChb.setSelected(true);
+//        adncVoteChb.setSelected(false);
+//        sendAudienceViewState(null);
+//        sendMaxPreset(2);
     }
 
     private void processPresetFree() {
@@ -869,6 +915,41 @@ public class DialogsScoreController {
 
     private void processPresetImproCurrent() {
         processPresetImpro();
+    }
+
+    private void onFreqDurPresetChange(String value) {
+        if(value == null) {
+            return;
+        }
+        switch (value) {
+            case PP:
+                setFreqDur(0.6, 8.0);
+                break;
+            case P:
+                setFreqDur(0.8, 8.0);
+                break;
+            case MP:
+                setFreqDur(1.0, 8.0);
+                break;
+            case MF:
+                setFreqDur(2.0, 2.0);
+                break;
+            case F:
+                setFreqDur(4.0, 0.5);
+                break;
+            case FF:
+                setFreqDur(8.0, 0.05);
+                break;
+        }
+    }
+
+    private void setFreqDur(double freq, double duration) {
+        if(synthFreq.contains(freq)) {
+            synthFreqChob.setValue(freq);
+        }
+        if(synthDur.contains(duration)) {
+            synthDurChob.setValue(duration);
+        }
     }
 
     private void onSynthFreqChobChange(Double value) {

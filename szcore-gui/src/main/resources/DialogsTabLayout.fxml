@@ -248,12 +248,18 @@
                                  <children>
                                     <Label fx:id="synthFreqLbl" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Freq" />
                                     <ChoiceBox fx:id="synthFreqChob" />
+                                    <RadioButton fx:id="presetFreqDurMfRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="mf " />
+                                    <RadioButton fx:id="presetFreqDurFRdb" layoutX="104.0" layoutY="15.0" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="f" />
+                                    <RadioButton fx:id="presetFreqDurFfRdb" layoutX="143.0" layoutY="15.0" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="ff" />
                                  </children>
                               </HBox>
                               <HBox alignment="CENTER_LEFT" spacing="7.0">
                                  <children>
                                     <Label fx:id="synthDurLbl" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Dur " />
                                     <ChoiceBox fx:id="synthDurChob" />
+                                    <RadioButton fx:id="presetFreqDurMpRdb" layoutX="104.0" layoutY="15.0" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="mp" />
+                                    <RadioButton fx:id="presetFreqDurPRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="p" />
+                                    <RadioButton fx:id="presetFreqDurPpRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="pp" />
                                  </children>
                               </HBox>
                            </children>
@@ -296,9 +302,9 @@
                                     <RadioButton fx:id="presetFreeRdb" mnemonicParsing="false" text="Free" />
                                     <Separator layoutX="72.0" layoutY="10.0" orientation="VERTICAL" stylesheets="@css/szcoreStyle.css" />
                                     <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Audience: " />
-                                    <RadioButton fx:id="presetAudiencePlayRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="Play   " />
+                                    <RadioButton fx:id="presetAudiencePlayRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="PLAY    " />
                                     <RadioButton fx:id="presetWelcomeRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="Welcome" />
-                                    <RadioButton fx:id="presetIntroRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="Intro     " />
+                                    <RadioButton fx:id="presetIntroRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="Intro  " />
                                     <RadioButton fx:id="presetEndRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="END" />
                                  </children>
                                  <padding>

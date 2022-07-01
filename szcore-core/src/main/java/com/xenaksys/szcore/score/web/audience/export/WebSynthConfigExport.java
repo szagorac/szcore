@@ -10,6 +10,7 @@ import java.util.Map;
 
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_BPM;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_DUR_MULTIPLIER;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_FREQ_MULTIPLIER;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_OSC1_FREQ;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_OSC2_FREQ;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_OSC3_FREQ;
@@ -21,7 +22,8 @@ public class WebSynthConfigExport {
     private ArrayList<Double> osc2Freq;
     private ArrayList<Double> osc3Freq;
     private int bpm;
-    private int durationMultiplier;
+    private double durationMultiplier;
+    private double freqMultiplier;
 
     public ArrayList<Double> getOsc1Freq() {
         return osc1Freq;
@@ -55,12 +57,20 @@ public class WebSynthConfigExport {
         this.bpm = bpm;
     }
 
-    public int getDurationMultiplier() {
+    public double getDurationMultiplier() {
         return durationMultiplier;
     }
 
-    public void setDurationMultiplier(int durationMultiplier) {
+    public void setDurationMultiplier(double durationMultiplier) {
         this.durationMultiplier = durationMultiplier;
+    }
+
+    public double getFreqMultiplier() {
+        return freqMultiplier;
+    }
+
+    public void setFreqMultiplier(double freqMultiplier) {
+        this.freqMultiplier = freqMultiplier;
     }
 
     public void populate(WebSynthConfig from) {
@@ -72,6 +82,7 @@ public class WebSynthConfigExport {
         this.osc2Freq = from.getOsc2Freq();
         this.osc3Freq = from.getOsc3Freq();
         this.durationMultiplier = from.getDurationMultiplier();
+        this.freqMultiplier = from.getFreqMultiplier();
     }
 
     public Map<String, Object> toJsMap() {
@@ -81,6 +92,7 @@ public class WebSynthConfigExport {
         config.put(WEB_CONFIG_OSC2_FREQ, getOsc2Freq());
         config.put(WEB_CONFIG_OSC3_FREQ, getOsc3Freq());
         config.put(WEB_CONFIG_DUR_MULTIPLIER, getDurationMultiplier());
+        config.put(WEB_CONFIG_FREQ_MULTIPLIER, getFreqMultiplier());
         return config;
     }
 }

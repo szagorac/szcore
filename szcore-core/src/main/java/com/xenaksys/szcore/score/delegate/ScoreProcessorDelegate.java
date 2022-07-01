@@ -745,6 +745,11 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         }
     }
 
+    @Override
+    public void sendAudienceConfig(String configName, int presetNo, Map<String, Object> overrides) {
+
+    }
+
     private void addBeatScriptEvent(BeatId beatId, Script script, Id transportId) {
         OscEvent beatScriptEvent = createBeatScriptEvent(script, beatId);
         szcore.addScoreBaseBeatEvent(transportId, beatScriptEvent);

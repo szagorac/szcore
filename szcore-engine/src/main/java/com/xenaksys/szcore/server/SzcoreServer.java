@@ -548,6 +548,16 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     }
 
     @Override
+    public void sendAudienceConfig(String configName, int presetNo, Map<String, Object> overrides) {
+        try {
+            scoreProcessor.sendAudienceConfig(configName, presetNo, overrides);
+        } catch (Exception e) {
+            LOG.error("sendAudienceConfig Failed to send audience config.", e);
+            eventProcessor.notifyListeners(new ErrorEvent("Failed to send audience config", "SzcoreServer", e, clock.getSystemTimeMillis()));
+        }
+    }
+
+    @Override
     public void updateAudienceWebServerConnections(Set<WebConnection> connections) {
         if (webProcessor == null) {
             return;

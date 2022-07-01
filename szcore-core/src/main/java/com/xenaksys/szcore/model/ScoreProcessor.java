@@ -127,4 +127,6 @@ public interface ScoreProcessor extends Processor {
     void sendMaxPreset(int preset);
 
     void sendMaxEvent(String target, List<Object> args);
+
+    void sendAudienceConfig(String configName, int presetNo, Map<String, Object> overrides);
 }

@@ -109,6 +109,7 @@ import static com.xenaksys.szcore.Consts.WEB_PLAYER;
 import static com.xenaksys.szcore.Consts.WEB_SCORE_ID;
 import static com.xenaksys.szcore.Consts.WEB_SPEECH_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_STAGE;
+import static com.xenaksys.szcore.Consts.WEB_SYNTH;
 import static com.xenaksys.szcore.Consts.WEB_TARGET_ALL;
 
 public abstract class WebAudienceScoreProcessor {
@@ -352,6 +353,9 @@ public abstract class WebAudienceScoreProcessor {
                 break;
             case SPEECH:
                 target = WEB_SPEECH_SYNTH;
+                break;
+            case SYNTH:
+                target = WEB_SYNTH;
                 break;
         }
         String[] targets = {target};

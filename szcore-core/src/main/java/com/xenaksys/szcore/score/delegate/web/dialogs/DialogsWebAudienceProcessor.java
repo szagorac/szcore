@@ -4,6 +4,7 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.osc.WebscoreVoteEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceEventType;
 import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
@@ -287,6 +288,9 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
                 case VOTE:
                     isSendStateUpdate = processVote((WebAudienceVoteEvent) event);
                     break;
+                case AUDIO:
+                    isSendStateUpdate = processAudioEvent((WebAudienceAudioEvent) event);
+                    break;
                 case RESET:
                 case SCRIPT:
                     List<WebAudienceScoreScript> jsScripts = event.getScripts();
@@ -387,6 +391,45 @@ public class DialogsWebAudienceProcessor extends WebAudienceScoreProcessor {
 
     public void sendViewOnStop() {
         deactivateViews(WEB_VIEW_AUDIO, WEB_VIEW_THUMBS, WEB_VIEW_VOTE);
+        updateServerStateAndPush(true);
+    }
+
+    public void sendAudienceConfig(String configName, int presetNo, Map<String, Object> overrides) {
+        Map<String, Object> config  = overrides;
+        if(presetNo > 0) {
+            ScriptPreset preset = audienceWebscoreConfig.getPreset(presetNo);
+            if (preset == null) {
+                LOG.info("resetState: Unknown preset: {}", presetNo);
+                return;
+            }
+            Map<String, Object> configs = preset.getConfigs();
+            if(!configs.containsKey(configName)) {
+                return;
+            }
+            config = (Map<String, Object>) configs.get(configName);
+            if(overrides != null && !overrides.isEmpty()) {
+                for (String override : overrides.keySet()) {
+                    config.put(override, overrides.get(override));
+                }
+            }
+        }
+
+        switch (configName) {
+            case WEB_PLAYER:
+                updatePlayerConfig(config);
+                break;
+            case WEB_GRANULATOR:
+                updateGranulatorConfig(config);
+                break;
+            case WEB_SPEECH_SYNTH:
+                updateSpeechSynthConfig(config);
+                break;
+            case WEB_SYNTH:
+                updateSynthConfig(config);
+                break;
+            default:
+                LOG.info("sendAudienceConfig: unknown config: {}", config);
+        }
         updateServerStateAndPush(true);
     }
 

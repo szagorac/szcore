@@ -12,6 +12,7 @@ import java.util.Objects;
 
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_BPM;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_DUR_MULTIPLIER;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_FREQ_MULTIPLIER;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_OSC1_FREQ;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_OSC2_FREQ;
 import static com.xenaksys.szcore.Consts.WEB_CONFIG_OSC3_FREQ;
@@ -26,12 +27,14 @@ public class WebSynthConfig {
 
     private static final int DEFAULT_BPM = 80;
     private static final int DEFAULT_DURATION_MULTIPLIER = 8;
+    private static final int DEFAULT_FREQ_MULTIPLIER = 1;
 
     private ArrayList<Double> osc1Freq = DEFAULT_OSC1_FREQ;
     private ArrayList<Double> osc2Freq = DEFAULT_OSC2_FREQ;
     private ArrayList<Double> osc3Freq = DEFAULT_OSC3_FREQ;
     private int bpm = DEFAULT_BPM;
-    private int durationMultiplier = DEFAULT_DURATION_MULTIPLIER;
+    private double durationMultiplier = DEFAULT_DURATION_MULTIPLIER;
+    private double freqMultiplier = DEFAULT_FREQ_MULTIPLIER;
 
     private final PropertyChangeSupport pcs;
 
@@ -51,15 +54,27 @@ public class WebSynthConfig {
         }
     }
 
-    public int getDurationMultiplier() {
+    public double getDurationMultiplier() {
         return durationMultiplier;
     }
 
-    public void setDurationMultiplier(int durationMultiplier) {
+    public void setDurationMultiplier(double durationMultiplier) {
         double old = this.durationMultiplier;
         this.durationMultiplier = durationMultiplier;
         if (Math.abs(old - this.durationMultiplier) > 0) {
             pcs.firePropertyChange(WEB_OBJ_CONFIG_SYNTH, WEB_CONFIG_DUR_MULTIPLIER, durationMultiplier);
+        }
+    }
+
+    public double getFreqMultiplier() {
+        return freqMultiplier;
+    }
+
+    public void setFreqMultiplier(double freqMultiplier) {
+        double old = this.freqMultiplier;
+        this.freqMultiplier = freqMultiplier;
+        if (Math.abs(old - this.freqMultiplier) > 0) {
+            pcs.firePropertyChange(WEB_OBJ_CONFIG_SYNTH, WEB_CONFIG_FREQ_MULTIPLIER, freqMultiplier);
         }
     }
 
@@ -120,7 +135,10 @@ public class WebSynthConfig {
             setOsc3Freq((ArrayList<Double>) config.get(WEB_CONFIG_OSC3_FREQ));
         }
         if (config.containsKey(WEB_CONFIG_DUR_MULTIPLIER)) {
-            setDurationMultiplier((Integer)config.get(WEB_CONFIG_DUR_MULTIPLIER));
+            setDurationMultiplier((Double)config.get(WEB_CONFIG_DUR_MULTIPLIER));
+        }
+        if (config.containsKey(WEB_CONFIG_FREQ_MULTIPLIER)) {
+            setFreqMultiplier((Double)config.get(WEB_CONFIG_FREQ_MULTIPLIER));
         }
     }
 

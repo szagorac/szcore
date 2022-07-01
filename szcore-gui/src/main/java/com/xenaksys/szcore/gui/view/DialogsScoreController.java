@@ -7,6 +7,8 @@ import com.xenaksys.szcore.algo.ValueScaler;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.gui.StrategyEvent;
 import com.xenaksys.szcore.event.gui.StrategyEventType;
+import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEventType;
 import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.AudienceVote;
@@ -23,6 +25,8 @@ import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.VoteInfo;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.score.BasicScore;
+import com.xenaksys.szcore.score.web.audience.AudioComponentType;
+import com.xenaksys.szcore.util.MathUtil;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -58,6 +62,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.xenaksys.szcore.Consts.EMPTY;
@@ -70,6 +75,10 @@ import static com.xenaksys.szcore.Consts.MAXMSP_GROOVE;
 import static com.xenaksys.szcore.Consts.MAXMSP_GROOVE_CONT;
 import static com.xenaksys.szcore.Consts.MAXMSP_GROOVE_CONT_STOP;
 import static com.xenaksys.szcore.Consts.OSC_ADDRESS_ZSCORE;
+import static com.xenaksys.szcore.Consts.WEB_AUDIO_ACTION_DURATION_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_DUR_MULTIPLIER;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_FREQ_MULTIPLIER;
+import static com.xenaksys.szcore.Consts.WEB_SYNTH;
 import static com.xenaksys.szcore.gui.view.ScoreController.fixedLengthString;
 
 public class DialogsScoreController {
@@ -87,6 +96,7 @@ public class DialogsScoreController {
     public static final String FREE = "FREE";
     public static final String WELCOME = "WELCOME";
     public static final String INTRO = "INTRO";
+    public static final String PLAY = "PLAY";
     public static final String END = "END";
     public static final String CURRENT = "CURRENT";
     public static final String PITCH = "PITCH";
@@ -268,6 +278,8 @@ public class DialogsScoreController {
     @FXML
     private RadioButton presetIntroRdb;
     @FXML
+    private RadioButton presetAudiencePlayRdb;
+    @FXML
     private RadioButton presetEndRdb;
     @FXML
     private RadioButton presetImproCurrentRdb;
@@ -285,6 +297,18 @@ public class DialogsScoreController {
     private Button presetSendBtn;
     @FXML
     private CheckBox playAudioOnNewSectionChb;
+    @FXML
+    private Label synthFreqLbl;
+    @FXML
+    private Label synthDurLbl;
+    @FXML
+    private Slider adncMasterVolSldr;
+    @FXML
+    private Slider adncSynthVolSldr;
+    @FXML
+    private ChoiceBox<Double> synthFreqChob;
+    @FXML
+    private ChoiceBox<Double> synthDurChob;
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -309,6 +333,8 @@ public class DialogsScoreController {
     private final StringProperty nextSectionProp = new SimpleStringProperty("N/A");
     private final StringProperty playingSectionProp = new SimpleStringProperty("N/A");
     private final ObservableList<String> overlayPresets = FXCollections.observableArrayList();
+    private final ObservableList<Double> synthFreq = FXCollections.observableArrayList();
+    private final ObservableList<Double> synthDur = FXCollections.observableArrayList();
 
     private final ToggleGroup presetGroup = new ToggleGroup();
     private Tempo tempo;
@@ -316,6 +342,9 @@ public class DialogsScoreController {
     private Circle[] semaphore;
 
     private final AudienceVote audienceVote = new AudienceVote();
+
+    private double lastSythFreqValue = 0.0;
+    private double lastSythDurationValue = 8.0;
 
     public void setMainApp(SzcoreClient mainApp) {
         this.mainApp = mainApp;
@@ -463,9 +492,57 @@ public class DialogsScoreController {
         presetImproImproRdb.setSelected(false);
         presetWelcomeRdb.setSelected(false);
         presetIntroRdb.setSelected(false);
+        presetAudiencePlayRdb.setSelected(false);
         presetEndRdb.setSelected(false);
 
         playAudioOnNewSectionChb.selectedProperty().addListener((observable, oldValue, newValue) -> onPlayAudioOnNewSection(newValue));
+
+        synthFreqChob.setItems(synthFreq);
+        synthFreq.addAll(getSynthFreqValues());
+        synthFreqChob.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            Double out = newSelection;
+            if (newSelection == null) {
+                out = oldSelection;
+            }
+            onSynthFreqChobChange(out);
+        });
+        synthDurChob.setItems(synthDur);
+        synthDur.addAll(getSynthFreqValues());
+        synthDurChob.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            Double out = newSelection;
+            if (newSelection == null) {
+                out = oldSelection;
+            }
+            onSynthDurChobChange(out);
+        });
+        synthFreqLbl.setOnMouseClicked(mouseEvent -> {
+            if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
+                if (mouseEvent.getClickCount() == 2) {
+                    setSynthFreqDefaultValue();
+                }
+            }
+        });
+        setSynthFreqDefaultValue();
+        synthDurLbl.setOnMouseClicked(mouseEvent -> {
+            if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
+                if (mouseEvent.getClickCount() == 2) {
+                    setSynthDurDefaultValue();
+                }
+            }
+        });
+        setSynthDurDefaultValue();
+
+        adncMasterVolSldr.valueProperty().addListener((ov, old_val, new_val) -> {
+            long newVal = Math.round(new_val.doubleValue());
+            long oldVal = Math.round(old_val.doubleValue());
+            onAudienceMasterVolumeChange(newVal, oldVal);
+        });
+
+        adncSynthVolSldr.valueProperty().addListener((ov, old_val, new_val) -> {
+            long newVal = Math.round(new_val.doubleValue());
+            long oldVal = Math.round(old_val.doubleValue());
+            onAudienceSynthVolumeChange(newVal, oldVal);
+        });
     }
 
     @FXML
@@ -570,6 +647,8 @@ public class DialogsScoreController {
         presetWelcomeRdb.setUserData(WELCOME);
         presetIntroRdb.setToggleGroup(presetGroup);
         presetIntroRdb.setUserData(INTRO);
+        presetAudiencePlayRdb.setToggleGroup(presetGroup);
+        presetAudiencePlayRdb.setUserData(PLAY);
         presetEndRdb.setToggleGroup(presetGroup);
         presetEndRdb.setUserData(END);
         presetImproCurrentRdb.setToggleGroup(presetGroup);
@@ -586,6 +665,9 @@ public class DialogsScoreController {
         presetImproImproRdb.setUserData(IMPRO);
 
         playAudioOnNewSectionChb.setSelected(true);
+
+        adncMasterVolSldr.setValue(100.0);
+        adncSynthVolSldr.setValue(10.0);
     }
 
     @FXML
@@ -633,6 +715,9 @@ public class DialogsScoreController {
                 break;
             case INTRO:
                 processPresetIntro();
+                break;
+            case PLAY:
+                processPresetAudiencePlay();
                 break;
             case END:
                 processPresetEnd();
@@ -722,6 +807,23 @@ public class DialogsScoreController {
         publishWebscoreInstructions();
     }
 
+    private void processPresetAudiencePlay() {
+        adncNotesChb.setSelected(true);
+        adncAudioChb.setSelected(true);
+        adncThumbsChb.setSelected(false);
+        adncMeterChb.setSelected(true);
+        adncVoteChb.setSelected(false);
+        sendAudienceViewState(null);
+
+        txtInstructions.setLine1("Click note to play");
+        txtInstructions.setLine2(EMPTY);
+        txtInstructions.setLine3(EMPTY);
+        txtInstructions.setVisible(true);
+        selectAllInstrumentsTxtChb.setSelected(false);
+        selectAudienceTxtChb.setSelected(true);
+        publishWebscoreInstructions();
+    }
+
     private void processPresetEnd() {
         adncNotesChb.setSelected(false);
         adncAudioChb.setSelected(false);
@@ -731,7 +833,7 @@ public class DialogsScoreController {
         sendAudienceViewState(null);
 
         txtInstructions.setLine1("The End");
-        txtInstructions.setLine2("Thank you for your participation in");
+        txtInstructions.setLine2("Thanks for your participation in");
         txtInstructions.setLine3("Socket Dialogues");
         txtInstructions.setVisible(true);
         selectAllInstrumentsTxtChb.setSelected(false);
@@ -740,7 +842,7 @@ public class DialogsScoreController {
     }
 
     private void processPresetImpro() {
-        txtInstructions.setLine1(EMPTY);
+        txtInstructions.setLine1("Click note to play");
         txtInstructions.setLine2(EMPTY);
         txtInstructions.setLine3(EMPTY);
         txtInstructions.setVisible(true);
@@ -767,6 +869,52 @@ public class DialogsScoreController {
 
     private void processPresetImproCurrent() {
         processPresetImpro();
+    }
+
+    private void onSynthFreqChobChange(Double value) {
+        if(value == lastSythFreqValue) {
+            return;
+        }
+        Map<String, Object> overrides = Collections.singletonMap(WEB_CONFIG_FREQ_MULTIPLIER, value);
+        sendAudienceSynthConfig(0, overrides);
+        lastSythFreqValue = value;
+    }
+
+    private void onSynthDurChobChange(Double value) {
+        if(value == lastSythDurationValue) {
+            return;
+        }
+        Map<String, Object> overrides = Collections.singletonMap(WEB_CONFIG_DUR_MULTIPLIER, value);
+        sendAudienceSynthConfig(0, overrides);
+        lastSythDurationValue = value;
+    }
+
+    private void sendAudienceConfig(String configName, int presetNo, Map<String, Object> overrides) {
+        scoreService.sendAudienceConfig(configName, presetNo, overrides);
+    }
+
+    private void sendAudienceSynthConfig(int presetNo, Map<String, Object> overrides) {
+        sendAudienceConfig(WEB_SYNTH, presetNo, overrides);
+    }
+
+    private void sendAudiencePitchConfig(Map<String, Object> overrides) {
+        sendAudienceSynthConfig(1002, overrides);
+    }
+
+    private void sendAudienceRhythmConfig(Map<String, Object> overrides) {
+        sendAudienceSynthConfig( 1003, overrides);
+    }
+
+    private void sendAudienceMelodyConfig(Map<String, Object> overrides) {
+        sendAudienceSynthConfig( 1004, overrides);
+    }
+
+    private void sendAudienceTimbreConfig(Map<String, Object> overrides) {
+        sendAudienceSynthConfig( 1005, overrides);
+    }
+
+    private void sendAudienceImproConfig(Map<String, Object> overrides) {
+        sendAudienceConfig(WEB_SYNTH, 1006, overrides);
     }
 
     private void sendMaxPitchFiles() {
@@ -797,26 +945,31 @@ public class DialogsScoreController {
     private void processPresetPitch() {
         sendMaxPitchFiles();
         processPresetImpro();
+        sendAudiencePitchConfig(null);
     }
 
     private void processPresetRhythm() {
         sendMaxRhythmFiles();
         processPresetImpro();
+        sendAudienceRhythmConfig(null);
     }
 
     private void processPresetMelody() {
         sendMaxMelodyFiles();
         processPresetImpro();
+        sendAudienceMelodyConfig(null);
     }
 
     private void processPresetTimbre() {
         sendMaxTimbreFiles();
         processPresetImpro();
+        sendAudienceTimbreConfig(null);
     }
 
     private void processPresetImproImpro() {
         sendMaxImproFiles();
         processPresetImpro();
+        sendAudienceImproConfig(null);
     }
 
     private void sendMaxPreset(int preset) {
@@ -839,31 +992,30 @@ public class DialogsScoreController {
         boolean isVisible = txtInstructions.getVisible();
         List<Id> instrumentIds = getInstrumentsToSendTxt();
 
-        if (isVisible) {
-            pitchOverlayTransparencySldr.setValue(0);
-            if (!usePitchOverlayChb.isSelected()) {
-                usePitchOverlayChb.setSelected(true);
-            }
-            if (!useDynamicsOverlayChb.isSelected()) {
-                useDynamicsOverlayChb.setSelected(true);
-            }
-            if (!useTimbreOverlayChb.isSelected()) {
-                useTimbreOverlayChb.setSelected(true);
-            }
-        } else {
-            if (usePitchOverlayChb.isSelected()) {
-                usePitchOverlayChb.setSelected(false);
-            }
-            if (useDynamicsOverlayChb.isSelected()) {
-                useDynamicsOverlayChb.setSelected(false);
-            }
-            if (useTimbreOverlayChb.isSelected()) {
-                useTimbreOverlayChb.setSelected(false);
-            }
-            pitchOverlayTransparencySldr.setValue(100);
-        }
-
         if (!instrumentIds.isEmpty()) {
+            if (isVisible) {
+                pitchOverlayTransparencySldr.setValue(0);
+                if (!usePitchOverlayChb.isSelected()) {
+                    usePitchOverlayChb.setSelected(true);
+                }
+                if (!useDynamicsOverlayChb.isSelected()) {
+                    useDynamicsOverlayChb.setSelected(true);
+                }
+                if (!useTimbreOverlayChb.isSelected()) {
+                    useTimbreOverlayChb.setSelected(true);
+                }
+            } else {
+                if (usePitchOverlayChb.isSelected()) {
+                    usePitchOverlayChb.setSelected(false);
+                }
+                if (useDynamicsOverlayChb.isSelected()) {
+                    useDynamicsOverlayChb.setSelected(false);
+                }
+                if (useTimbreOverlayChb.isSelected()) {
+                    useTimbreOverlayChb.setSelected(false);
+                }
+                pitchOverlayTransparencySldr.setValue(100);
+            }
             mainApp.sendPitchText(l1, l2, l3, isVisible, instrumentIds);
         }
 
@@ -876,6 +1028,24 @@ public class DialogsScoreController {
         }
 
         setTxtGuiVals(isAudienceSet, instrumentIds, l1, l2, l3);
+    }
+
+    private void onAudienceMasterVolumeChange(long newVal, long oldVal) {
+        publishAudienceAudioVolumeChange(AudioComponentType.MASTER, convertAudioVolumeToWeb(newVal));
+    }
+
+    private void onAudienceSynthVolumeChange(long newVal, long oldVal) {
+        publishAudienceAudioVolumeChange(AudioComponentType.SYNTH, convertAudioVolumeToWeb(newVal));
+    }
+
+    private double convertAudioVolumeToWeb(long value) {
+        return MathUtil.convertToRange(1.0*value, Consts.WEB_SLIDER_MIN, Consts.WEB_SLIDER_MAX, Consts.WEB_AUDIO_MIN, Consts.WEB_AUDIO_MAX);
+    }
+
+    private void publishAudienceAudioVolumeChange(AudioComponentType componentType, double value) {
+        EventFactory eventFactory = publisher.getEventFactory();
+        WebAudienceAudioEvent instructionsEvent = eventFactory.createWebAudienceAudioEvent(componentType, WebAudienceAudioEventType.VOLUME, value, WEB_AUDIO_ACTION_DURATION_MS, clock.getSystemTimeMillis());
+        publisher.receive(instructionsEvent);
     }
 
     private String validateWebInstruction(String instruction) {
@@ -1470,6 +1640,10 @@ public class DialogsScoreController {
         return Consts.DIALOGS_OVERLAY_PRESETS;
     }
 
+    private Double[] getSynthFreqValues() {
+        return Consts.DIALOGS_SYNTH_FREQ_VAlUES;
+    }
+
     private void onDynamicsValueChange(long newVal) {
         if (!useDynamicsOverlayChb.isSelected()) {
             return;
@@ -1572,6 +1746,14 @@ public class DialogsScoreController {
 
     public void setPitchDefaultValue() {
         pitchSldr.setValue(50.0);
+    }
+
+    public void setSynthFreqDefaultValue() {
+        synthFreqChob.setValue(1.0);
+    }
+
+    public void setSynthDurDefaultValue() {
+        synthDurChob.setValue(8.0);
     }
 
     public void onParticipantRemove(Participant participant) {

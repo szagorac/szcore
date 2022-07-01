@@ -15,6 +15,7 @@ import com.xenaksys.szcore.web.ZsWebResponse;
 import java.io.File;
 import java.net.InetAddress;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public interface ScoreService {
@@ -114,4 +115,6 @@ public interface ScoreService {
     void sendMaxPreset(int preset);
 
     void sendMaxEvent(String target, List<Object> args);
+
+    void sendAudienceConfig(String configName, int presetNo, Map<String, Object> overrides);
 }

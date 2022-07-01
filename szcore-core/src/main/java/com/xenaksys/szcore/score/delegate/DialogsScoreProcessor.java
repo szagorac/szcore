@@ -37,6 +37,7 @@ import com.xenaksys.szcore.web.WebClientInfo;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NAME;
@@ -229,6 +230,14 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
         DialogsWebAudienceProcessor audienceProcessor = (DialogsWebAudienceProcessor) getWebAudienceProcessor();
         if (audienceProcessor != null) {
             audienceProcessor.setAudienceViewState(isNotesEnabled, isAudioEnabled, isThumbsEnabled, isMeterEnabled, isVoteEnabled);
+        }
+    }
+
+    @Override
+    public void sendAudienceConfig(String configName, int presetNo, Map<String, Object> overrides) {
+        DialogsWebAudienceProcessor audienceProcessor = (DialogsWebAudienceProcessor) getWebAudienceProcessor();
+        if (audienceProcessor != null) {
+            audienceProcessor.sendAudienceConfig(configName, presetNo, overrides);
         }
     }
 }

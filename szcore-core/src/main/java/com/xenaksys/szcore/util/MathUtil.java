@@ -44,6 +44,13 @@ public class MathUtil {
         return (double) Math.round(value * 100d) / 100d;
     }
 
+    public static double roundTo1DecimalPlace(double value) {
+        return (double) Math.round(value * 10d) / 10d;
+    }
+
+    public static double roundToHalf(double value) {
+        return (double) Math.round(value * 2d) / 2d;
+    }
 
     public static double bytesToMbyte(long bytes) {
         return 1.0 * bytes / MEGABYTE;

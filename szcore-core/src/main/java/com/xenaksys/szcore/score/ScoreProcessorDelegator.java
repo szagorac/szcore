@@ -392,6 +392,14 @@ public class ScoreProcessorDelegator implements ScoreProcessor {
     }
 
     @Override
+    public void sendAudienceConfig(String configName, int presetNo, Map<String, Object> overrides) {
+        if(scoreDelegate == null) {
+            return;
+        }
+        scoreDelegate.sendAudienceConfig(configName, presetNo, overrides);
+    }
+
+    @Override
     public void processSelectInstrumentSlot(int slotNo, String slotInstrument, String sourceInst, WebClientInfo clientInfo) {
         if(scoreDelegate == null) {
             return;

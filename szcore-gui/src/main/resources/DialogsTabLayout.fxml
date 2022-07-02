@@ -301,11 +301,11 @@
                                     <RadioButton fx:id="presetScoreRdb" mnemonicParsing="false" text="Score    " />
                                     <RadioButton fx:id="presetFreeRdb" mnemonicParsing="false" text="Free" />
                                     <Separator layoutX="72.0" layoutY="10.0" orientation="VERTICAL" stylesheets="@css/szcoreStyle.css" />
-                                    <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Audience: " />
-                                    <RadioButton fx:id="presetAudiencePlayRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="PLAY    " />
+                                    <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Audience" />
+                                    <RadioButton fx:id="presetAudienceNotesRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="NOTES" />
+                                    <RadioButton fx:id="presetAudienceThumbsRdb" layoutX="237.0" layoutY="15.0" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="Thumbs" />
                                     <RadioButton fx:id="presetWelcomeRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="Welcome" />
                                     <RadioButton fx:id="presetIntroRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="Intro  " />
-                                    <RadioButton fx:id="presetEndRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="END" />
                                  </children>
                                  <padding>
                                     <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
@@ -327,6 +327,7 @@
                               </HBox>
                            </children>
                         </VBox>
+                        <RadioButton fx:id="presetEndRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="END" />
                         <Separator layoutX="72.0" layoutY="10.0" orientation="VERTICAL" />
                         <Button fx:id="presetSendBtn" layoutX="289.0" layoutY="10.0" mnemonicParsing="false" onAction="#sendPreset" styleClass="css/szcoreStyle.css" text="Send" />
                      </children>

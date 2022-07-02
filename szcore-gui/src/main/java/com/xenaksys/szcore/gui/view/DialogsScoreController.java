@@ -96,7 +96,8 @@ public class DialogsScoreController {
     public static final String FREE = "FREE";
     public static final String WELCOME = "WELCOME";
     public static final String INTRO = "INTRO";
-    public static final String PLAY = "PLAY";
+    public static final String NOTES = "NOTES";
+    public static final String THUMBS = "THUMBS";
     public static final String END = "END";
     public static final String CURRENT = "CURRENT";
     public static final String PITCH = "PITCH";
@@ -284,7 +285,9 @@ public class DialogsScoreController {
     @FXML
     private RadioButton presetIntroRdb;
     @FXML
-    private RadioButton presetAudiencePlayRdb;
+    private RadioButton presetAudienceNotesRdb;
+    @FXML
+    private RadioButton presetAudienceThumbsRdb;
     @FXML
     private RadioButton presetEndRdb;
     @FXML
@@ -510,7 +513,8 @@ public class DialogsScoreController {
         presetImproImproRdb.setSelected(false);
         presetWelcomeRdb.setSelected(false);
         presetIntroRdb.setSelected(false);
-        presetAudiencePlayRdb.setSelected(false);
+        presetAudienceNotesRdb.setSelected(false);
+        presetAudienceThumbsRdb.setSelected(false);
         presetEndRdb.setSelected(false);
 
         presetFreqDurMfRdb.setSelected(false);
@@ -672,8 +676,10 @@ public class DialogsScoreController {
         presetWelcomeRdb.setUserData(WELCOME);
         presetIntroRdb.setToggleGroup(presetGroup);
         presetIntroRdb.setUserData(INTRO);
-        presetAudiencePlayRdb.setToggleGroup(presetGroup);
-        presetAudiencePlayRdb.setUserData(PLAY);
+        presetAudienceNotesRdb.setToggleGroup(presetGroup);
+        presetAudienceNotesRdb.setUserData(NOTES);
+        presetAudienceThumbsRdb.setToggleGroup(presetGroup);
+        presetAudienceThumbsRdb.setUserData(THUMBS);
         presetEndRdb.setToggleGroup(presetGroup);
         presetEndRdb.setUserData(END);
         presetImproCurrentRdb.setToggleGroup(presetGroup);
@@ -761,8 +767,11 @@ public class DialogsScoreController {
             case INTRO:
                 processPresetIntro();
                 break;
-            case PLAY:
+            case NOTES:
                 processPresetAudiencePlay();
+                break;
+            case THUMBS:
+                processPresetAudienceThumbs();
                 break;
             case END:
                 processPresetEnd();
@@ -854,6 +863,23 @@ public class DialogsScoreController {
         txtInstructions.setLine2("their roles and");
         txtInstructions.setLine3("the order of dialogues");
         txtInstructions.setVisible(true);
+        selectAudienceTxtChb.setSelected(true);
+        publishWebscoreInstructions();
+    }
+
+    private void processPresetAudienceThumbs() {
+        adncNotesChb.setSelected(false);
+        adncAudioChb.setSelected(true);
+        adncThumbsChb.setSelected(true);
+        adncMeterChb.setSelected(true);
+        adncVoteChb.setSelected(true);
+        sendAudienceViewState(null);
+
+        disableAllTxtRecipients();
+        txtInstructions.setLine1(EMPTY);
+        txtInstructions.setLine2(EMPTY);
+        txtInstructions.setLine3(EMPTY);
+        txtInstructions.setVisible(false);
         selectAudienceTxtChb.setSelected(true);
         publishWebscoreInstructions();
     }
@@ -1477,6 +1503,7 @@ public class DialogsScoreController {
 
     public void playSection(ActionEvent actionEvent) {
         mainApp.playSection();
+        updateOverlays();
     }
 
     public void stopSection(ActionEvent actionEvent) {
@@ -1645,6 +1672,10 @@ public class DialogsScoreController {
         }
         mainApp.sendTimbreValueChange(Math.round(timbreSldr.getValue()), instrumentIds);
         mainApp.sendUseTimbreLine(newValue, instrumentIds);
+    }
+
+    private void clearAllScreens() {
+        updateOverlays();
     }
 
     private void updateOverlays() {

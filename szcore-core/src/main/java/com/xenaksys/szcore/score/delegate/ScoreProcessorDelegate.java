@@ -3461,6 +3461,10 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         return webScore;
     }
 
+    public OscDestinationEventListener getOscDestinationEventListener() {
+        return oscDestinationEventListener;
+    }
+
     class ScoreTransportListener implements TransportListener {
 
         private final Id transportId;

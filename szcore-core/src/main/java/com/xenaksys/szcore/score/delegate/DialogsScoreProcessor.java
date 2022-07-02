@@ -142,6 +142,9 @@ public class DialogsScoreProcessor extends ScoreProcessorDelegate {
         int precountBeatNo = 4;
         szcore.setPrecount(precountMillis, precountBeatNo);
 
+        Collection<Instrument> maxClients = szcore.getOscPlayers();
+        getOscDestinationEventListener().reloadDestinations(maxClients);
+
         addNoScoreInstrument(INSTRUMENT_ABSTAIN);
 
         setScoreLoaded(true);

@@ -490,8 +490,7 @@ public class DialogsScoreController {
         txtInstructions.setLine2(EMPTY);
         txtInstructions.setLine3(EMPTY);
 
-        selectAllInstrumentsTxtChb.setSelected(true);
-        selectAudienceTxtChb.setSelected(false);
+        disableAllTxtRecipients();
         pitchOverlayTransparencySldr.setValue(100.0);
         pitchOverlayTransparencySldr.valueProperty().addListener((ov, old_val, new_val) -> {
 //            LOG.debug("old_val: {}, new_val: {}", old_val, new_val);
@@ -791,13 +790,19 @@ public class DialogsScoreController {
         }
     }
 
+    private void disableAllTxtRecipients() {
+        selectAllTxtRecipientsChb.setSelected(false);
+        selectAllInstrumentsTxtChb.setSelected(false);
+        selectAudienceTxtChb.setSelected(false);
+    }
+
     private void processPresetScore() {
+        disableAllTxtRecipients();
         txtInstructions.setLine1(EMPTY);
         txtInstructions.setLine2(EMPTY);
         txtInstructions.setLine3(EMPTY);
         txtInstructions.setVisible(false);
         selectAllInstrumentsTxtChb.setSelected(true);
-        selectAudienceTxtChb.setSelected(false);
         publishWebscoreInstructions();
 
 //        adncNotesChb.setSelected(false);
@@ -810,12 +815,12 @@ public class DialogsScoreController {
     }
 
     private void processPresetFree() {
+        disableAllTxtRecipients();
         txtInstructions.setLine1("Free");
         txtInstructions.setLine2("Improvisation");
         txtInstructions.setLine3(EMPTY);
         txtInstructions.setVisible(true);
         selectAllInstrumentsTxtChb.setSelected(true);
-        selectAudienceTxtChb.setSelected(false);
         publishWebscoreInstructions();
     }
 
@@ -827,11 +832,11 @@ public class DialogsScoreController {
         adncVoteChb.setSelected(false);
         sendAudienceViewState(null);
 
+        disableAllTxtRecipients();
         txtInstructions.setLine1("Welcome to");
         txtInstructions.setLine2("Socket Dialogues");
         txtInstructions.setLine3("Workshop");
         txtInstructions.setVisible(true);
-        selectAllInstrumentsTxtChb.setSelected(false);
         selectAudienceTxtChb.setSelected(true);
         publishWebscoreInstructions();
     }
@@ -844,11 +849,11 @@ public class DialogsScoreController {
         adncVoteChb.setSelected(false);
         sendAudienceViewState(null);
 
+        disableAllTxtRecipients();
         txtInstructions.setLine1("Players are now choosing");
         txtInstructions.setLine2("their roles and");
         txtInstructions.setLine3("the order of dialogues");
         txtInstructions.setVisible(true);
-        selectAllInstrumentsTxtChb.setSelected(false);
         selectAudienceTxtChb.setSelected(true);
         publishWebscoreInstructions();
     }
@@ -861,11 +866,11 @@ public class DialogsScoreController {
         adncVoteChb.setSelected(false);
         sendAudienceViewState(null);
 
+        disableAllTxtRecipients();
         txtInstructions.setLine1("Click note to play");
         txtInstructions.setLine2(EMPTY);
         txtInstructions.setLine3(EMPTY);
         txtInstructions.setVisible(true);
-        selectAllInstrumentsTxtChb.setSelected(false);
         selectAudienceTxtChb.setSelected(true);
         publishWebscoreInstructions();
     }
@@ -882,26 +887,25 @@ public class DialogsScoreController {
         txtInstructions.setLine2("Thanks for your participation in");
         txtInstructions.setLine3("Socket Dialogues");
         txtInstructions.setVisible(true);
-        selectAllInstrumentsTxtChb.setSelected(false);
-        selectAudienceTxtChb.setSelected(true);
+        selectAllTxtRecipientsChb.setSelected(true);
         publishWebscoreInstructions();
     }
 
     private void processPresetImpro() {
+        disableAllTxtRecipients();
         txtInstructions.setLine1("Click note to play");
         txtInstructions.setLine2(EMPTY);
         txtInstructions.setLine3(EMPTY);
         txtInstructions.setVisible(true);
-        selectAllInstrumentsTxtChb.setSelected(false);
         selectAudienceTxtChb.setSelected(true);
         publishWebscoreInstructions();
 
+        disableAllTxtRecipients();
         txtInstructions.setLine1("Free Improvisation");
         txtInstructions.setLine2("Follow audience / MAX");
         txtInstructions.setLine3(EMPTY);
         txtInstructions.setVisible(true);
         selectAllInstrumentsTxtChb.setSelected(true);
-        selectAudienceTxtChb.setSelected(false);
         publishWebscoreInstructions();
 
         adncNotesChb.setSelected(true);
@@ -1647,6 +1651,7 @@ public class DialogsScoreController {
         Platform.runLater(() -> {
             presetsChob.getSelectionModel().select(Consts.PRESET_ALL_OFF);
         });
+        processPresetScore();
     }
 
     private void onPresetsChobChange(String newSelection) {

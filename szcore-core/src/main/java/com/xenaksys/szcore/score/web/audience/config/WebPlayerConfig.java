@@ -16,17 +16,7 @@ import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_PLAYER;
 public class WebPlayerConfig {
     static final Logger LOG = LoggerFactory.getLogger(WebPlayerConfig.class);
 
-    static ArrayList<String> DEFAULT_AUDIO_FILES = new ArrayList<>(Arrays.asList(
-            "/audio/DialogsPitch1-1.mp3",
-            "/audio/DialogsPitch1-2.mp3",
-            "/audio/DialogsPitch1-3.mp3",
-            "/audio/DialogsPitch2-1.mp3",
-            "/audio/DialogsPitch2-2.mp3",
-            "/audio/DialogsPitch2-3.mp3",
-            "/audio/DialogsPitch3-1.mp3",
-            "/audio/DialogsPitch3-2.mp3",
-            "/audio/DialogsPitch3-3.mp3"
-    ));
+    static ArrayList<String> DEFAULT_AUDIO_FILES = new ArrayList<>();
 
     static ArrayList<ArrayList<Integer>> DEFAULT_AUDIO_FILE_INDEX_MAP = new ArrayList<>();
     static {

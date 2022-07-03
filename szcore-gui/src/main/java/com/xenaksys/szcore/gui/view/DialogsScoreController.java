@@ -1787,7 +1787,9 @@ public class DialogsScoreController {
                 instrumentIds.add(instId);
             }
         } else {
-            instrumentIds.remove(instId);
+            while(instrumentIds.contains(instId)) {
+                instrumentIds.remove(instId);
+            }
         }
     }
 

@@ -36,15 +36,20 @@ import static com.xenaksys.szcore.score.ResourceType.WEB_AUDIENCE;
 public class ScoreMerger {
     static final Logger LOG = LoggerFactory.getLogger(ScoreMerger.class);
 
-    static final String HEADER = "scoreName,instrumentName,pageName,pageNo,barName,barNo,timeSigNum,timeSigDenom,tempoBpm,tempoBeatValue,beatNo,startTimeMillis,durationTimeMillis,endTimeMillis,startBaseBeatUnits,durationBeatUnits,endBaseBeatUnits,xStartPxl,xEndPxl,yStartPxl,yEndPxl,isUpbeat,resource,unitBeatNo";
-    static final String IN_DIR = "/Users/slavko/MyHome/Music/scoreExport/Dialogs/export";
-    static final String OUT_DIR = "/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged";
-    static final String RSRC_DIR = "/Users/slavko/MyHome/Music/scoreExport/Dialogs/rsrc";
+//    static final String SCORE_NAME = "Dialogs";
+//    static final String[] SCORES_ORDER = {"DialogsPitch","DialogsRhythm","DialogsMelody","DialogsTimbre","DialogsImpro"};
 
-    static final String[] SCORES_ORDER = {"DialogsPitch","DialogsRhythm","DialogsMelody","DialogsTimbre","DialogsImpro"};
+    static final String SCORE_NAME = "Symphonea";
+    static final String[] SCORES_ORDER = {"Symphonea"};
+
+    static final String HEADER = "scoreName,instrumentName,pageName,pageNo,barName,barNo,timeSigNum,timeSigDenom,tempoBpm,tempoBeatValue,beatNo,startTimeMillis,durationTimeMillis,endTimeMillis,startBaseBeatUnits,durationBeatUnits,endBaseBeatUnits,xStartPxl,xEndPxl,yStartPxl,yEndPxl,isUpbeat,resource,unitBeatNo";
+    static final String IN_DIR = "/Users/slavko/MyHome/Music/scoreExport/" + SCORE_NAME + "/export";
+    static final String OUT_DIR = "/Users/slavko/MyHome/Music/scoreExport/" + SCORE_NAME + "/merged";
+    static final String RSRC_DIR = "/Users/slavko/MyHome/Music/scoreExport/" + SCORE_NAME + "/rsrc";
+
     static final String[] IMAGE_EXT = {"png","svg"};
     static final String[] NOT_INST = {"_AV_","_FullScore_"};
-    static final String SCORE_NAME = "Dialogs";
+
     static final String SCRIPTS = "ZScripts";
     static final String SCORE_PREFIX = "1_";
     static final String PAGE_NO_HEADER = "pageNo: ";

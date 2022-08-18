@@ -17,6 +17,8 @@ public class RootLayoutController {
     @FXML
     private Tab dialogsScoreTab;
     @FXML
+    private Tab symphoneaScoreTab;
+    @FXML
     private Tab scoreTab;
 
     public void setMainApp(SzcoreClient mainApp) {
@@ -47,6 +49,10 @@ public class RootLayoutController {
 
     public Tab getDialogsScoreTab() {
         return dialogsScoreTab;
+    }
+
+    public Tab getSymphoneaScoreTab() {
+        return symphoneaScoreTab;
     }
 
     @FXML

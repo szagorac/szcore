@@ -18,6 +18,7 @@ import com.xenaksys.szcore.gui.view.LoggerController;
 import com.xenaksys.szcore.gui.view.RootLayoutController;
 import com.xenaksys.szcore.gui.view.ScoreController;
 import com.xenaksys.szcore.gui.view.SettingsController;
+import com.xenaksys.szcore.gui.view.SymphoneaScoreController;
 import com.xenaksys.szcore.model.EventService;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Score;
@@ -76,6 +77,7 @@ public class SzcoreClient extends Application {
     private ClientEventProcessor clientEventProcessor;
     private GuiLoggerProcessor loggerProcessor;
 
+    private SymphoneaScoreController symphoneaScoreController;
     private DialogsScoreController dialogsScoreController;
     private ScoreController scoreController;
     private SettingsController settingsController;
@@ -103,6 +105,7 @@ public class SzcoreClient extends Application {
         initLoggerTab();
         initSettingsTab();
         initDialogTab();
+        initSymphoneaTab();
         initScoreTab();
 
         initProcessors();
@@ -231,6 +234,28 @@ public class SzcoreClient extends Application {
             dialogsScoreController.setPublisher(eventService);
 
             dialogsScoreController.populate();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void initSymphoneaTab() {
+        try {
+
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(SzcoreClient.class.getResource("/SymphoneaTabLayout.fxml"));
+            BorderPane scorePane = (BorderPane) loader.load();
+
+            Tab symphoneaTab = rootController.getSymphoneaScoreTab();
+
+            symphoneaTab.setContent(scorePane);
+            symphoneaScoreController = loader.getController();
+
+            symphoneaScoreController.setMainApp(this);
+            symphoneaScoreController.setScoreService(scoreService);
+            symphoneaScoreController.setPublisher(eventService);
+
+            symphoneaScoreController.populate();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -432,6 +457,7 @@ public class SzcoreClient extends Application {
     private void onStop() {
         scoreController.showSemaphore(1, Color.RED);
         dialogsScoreController.showSemaphore(1, Color.RED);
+        symphoneaScoreController.showSemaphore(1, Color.RED);
     }
 
     private void updatePrecount(PrecountInfo precountInfo) {
@@ -441,9 +467,11 @@ public class SzcoreClient extends Application {
         if(isOn) {
             scoreController.showSemaphore(beaterNo, resolveColour(colId));
             dialogsScoreController.showSemaphore(beaterNo, resolveColour(colId));
+            symphoneaScoreController.showSemaphore(beaterNo, resolveColour(colId));
         } else {
             scoreController.showSemaphore(4, Color.TRANSPARENT);
             dialogsScoreController.showSemaphore(4, Color.TRANSPARENT);
+            symphoneaScoreController.showSemaphore(4, Color.TRANSPARENT);
         }
     }
 
@@ -475,11 +503,17 @@ public class SzcoreClient extends Application {
         if(dialogsScoreController != null) {
             dialogsScoreController.reset();
         }
+        if(symphoneaScoreController != null) {
+            symphoneaScoreController.reset();
+        }
     }
 
     public void onScoreLoad(Score score) {
         if(dialogsScoreController != null) {
             dialogsScoreController.onScoreLoad(score);
+        }
+        if(symphoneaScoreController != null) {
+            symphoneaScoreController.onScoreLoad(score);
         }
     }
 

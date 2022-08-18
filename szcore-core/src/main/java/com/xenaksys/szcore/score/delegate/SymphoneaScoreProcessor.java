@@ -8,27 +8,12 @@ import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.osc.VoteAudienceEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceVoteEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
-import com.xenaksys.szcore.model.Bar;
-import com.xenaksys.szcore.model.EventReceiver;
-import com.xenaksys.szcore.model.Instrument;
-import com.xenaksys.szcore.model.MutableClock;
-import com.xenaksys.szcore.model.OscPublisher;
-import com.xenaksys.szcore.model.Page;
-import com.xenaksys.szcore.model.Scheduler;
-import com.xenaksys.szcore.model.Score;
-import com.xenaksys.szcore.model.TempoModifier;
-import com.xenaksys.szcore.model.Transport;
-import com.xenaksys.szcore.model.WebPublisher;
+import com.xenaksys.szcore.model.*;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StrId;
-import com.xenaksys.szcore.score.BasicPage;
-import com.xenaksys.szcore.score.BasicScore;
-import com.xenaksys.szcore.score.InscorePageMap;
-import com.xenaksys.szcore.score.InstrumentBeatTracker;
-import com.xenaksys.szcore.score.ScoreLoader;
-import com.xenaksys.szcore.score.ScoreProcessorDelegator;
+import com.xenaksys.szcore.score.*;
 import com.xenaksys.szcore.score.delegate.web.symphonea.SymphoneaWebAudienceProcessor;
 import com.xenaksys.szcore.score.web.WebScore;
 import com.xenaksys.szcore.score.web.overlay.SymphoneaWebOverlayFactory;
@@ -41,9 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NAME;
-import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NO;
-import static com.xenaksys.szcore.Consts.UNDERSCORE;
+import static com.xenaksys.szcore.Consts.*;
 
 public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
 
@@ -124,8 +107,8 @@ public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
         DynamicMovementStrategy dynamicMovementStrategy = szcore.getDynamicScoreStrategy();
         if(dynamicMovementStrategy != null && dynamicMovementStrategy.isActive()) {
             dynamicMovementStrategy.setInstruments(INSTRUMENTS);
-            dynamicMovementStrategy.setDynamicInstruments(DYNAMIC_INSTRUMENTS);
-            dynamicMovementStrategy.setDefaultInstrument(INSTRUMENT_DEFAULT);
+            dynamicMovementStrategy.setDynamicParts(DYNAMIC_INSTRUMENTS);
+            dynamicMovementStrategy.setDefaultPart(INSTRUMENT_DEFAULT);
         }
 
         int precountMillis = 5 * 1000;

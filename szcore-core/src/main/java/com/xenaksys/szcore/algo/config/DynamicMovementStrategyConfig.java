@@ -13,7 +13,7 @@ public class DynamicMovementStrategyConfig implements StrategyConfig{
     private boolean isActive;
     private String scoreName;
     private SectionAssignmentType assignmentType;
-    private boolean isStopOnSectionEnd;
+    private boolean isStopOnMovementEnd;
 
     public String getScoreName() {
         return scoreName;
@@ -51,12 +51,12 @@ public class DynamicMovementStrategyConfig implements StrategyConfig{
         this.assignmentType = assignmentType;
     }
 
-    public boolean isStopOnSectionEnd() {
-        return isStopOnSectionEnd;
+    public boolean isStopOnMovementEnd() {
+        return isStopOnMovementEnd;
     }
 
-    public void setStopOnSectionEnd(boolean stopOnSectionEnd) {
-        isStopOnSectionEnd = stopOnSectionEnd;
+    public void setStopOnMovementEnd(boolean stopOnMovementEnd) {
+        isStopOnMovementEnd = stopOnMovementEnd;
     }
 
     @Override

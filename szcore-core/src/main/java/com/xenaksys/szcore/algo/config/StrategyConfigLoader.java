@@ -13,57 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
-import static com.xenaksys.szcore.Consts.CONFIG_ALL;
-import static com.xenaksys.szcore.Consts.CONFIG_ASSIGNMENT_TYPE;
-import static com.xenaksys.szcore.Consts.CONFIG_BOTTOM_STAVE_START_X;
-import static com.xenaksys.szcore.Consts.CONFIG_BOTTOM_STAVE_X_REF;
-import static com.xenaksys.szcore.Consts.CONFIG_BOTTOM_STAVE_Y_REF;
-import static com.xenaksys.szcore.Consts.CONFIG_BUILDER_STRATEGY;
-import static com.xenaksys.szcore.Consts.CONFIG_DX;
-import static com.xenaksys.szcore.Consts.CONFIG_DY;
-import static com.xenaksys.szcore.Consts.CONFIG_DYNAMIC_MOVEMENT_STRATEGY;
-import static com.xenaksys.szcore.Consts.CONFIG_END;
-import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_DX;
-import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_DY;
-import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_HEIGHT;
-import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_MOD_HEIGHT;
-import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_MOD_WIDTH;
-import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_WIDTH;
-import static com.xenaksys.szcore.Consts.CONFIG_INSTRUMENTS;
-import static com.xenaksys.szcore.Consts.CONFIG_IS_ACTIVE;
-import static com.xenaksys.szcore.Consts.CONFIG_IS_RND_ACTIVE;
-import static com.xenaksys.szcore.Consts.CONFIG_MIN_X_DISTANCE;
-import static com.xenaksys.szcore.Consts.CONFIG_MIN_Y_DISTANCE;
-import static com.xenaksys.szcore.Consts.CONFIG_MOVEMENTS;
-import static com.xenaksys.szcore.Consts.CONFIG_NAME;
-import static com.xenaksys.szcore.Consts.CONFIG_PAGES;
-import static com.xenaksys.szcore.Consts.CONFIG_PAGE_NO;
-import static com.xenaksys.szcore.Consts.CONFIG_PAGE_RANGES;
-import static com.xenaksys.szcore.Consts.CONFIG_PART;
-import static com.xenaksys.szcore.Consts.CONFIG_PARTS;
-import static com.xenaksys.szcore.Consts.CONFIG_RANGE;
-import static com.xenaksys.szcore.Consts.CONFIG_RND_STRATEGY;
-import static com.xenaksys.szcore.Consts.CONFIG_SCORE_NAME;
-import static com.xenaksys.szcore.Consts.CONFIG_SECTIONS;
-import static com.xenaksys.szcore.Consts.CONFIG_SELECTION_RANGE;
-import static com.xenaksys.szcore.Consts.CONFIG_START;
-import static com.xenaksys.szcore.Consts.CONFIG_STOP_ON_SECTION_END;
-import static com.xenaksys.szcore.Consts.CONFIG_TEXT_ELEMENTS;
-import static com.xenaksys.szcore.Consts.CONFIG_TOP_STAVE_START_X;
-import static com.xenaksys.szcore.Consts.CONFIG_TOP_STAVE_X_REF;
-import static com.xenaksys.szcore.Consts.CONFIG_TOP_STAVE_Y_REF;
-import static com.xenaksys.szcore.Consts.CONFIG_TRANSPOSITION_STRATEGY;
-import static com.xenaksys.szcore.Consts.CONFIG_TXT;
-import static com.xenaksys.szcore.Consts.EMPTY;
-import static com.xenaksys.szcore.Consts.NAME_FULL_SCORE;
-import static com.xenaksys.szcore.Consts.STRATEGY_CONFIG_FILE_SUFFIX;
-import static com.xenaksys.szcore.Consts.YAML_FILE_EXTENSION;
+import static com.xenaksys.szcore.Consts.*;
 
 public class StrategyConfigLoader extends YamlLoader {
     static final Logger LOG = LoggerFactory.getLogger(StrategyConfigLoader.class);
@@ -515,7 +467,7 @@ public class StrategyConfigLoader extends YamlLoader {
         }
 
         String assignmentTypeConfig = getString(CONFIG_ASSIGNMENT_TYPE, movementStrategyConfig);
-        if(assignmentTypeConfig != null) {
+        if (assignmentTypeConfig != null) {
             SectionAssignmentType assignmentType = SectionAssignmentType.MANUAL;
             try {
                 assignmentType = SectionAssignmentType.valueOf(assignmentTypeConfig.trim().toUpperCase(Locale.ROOT));
@@ -525,50 +477,9 @@ public class StrategyConfigLoader extends YamlLoader {
             config.setAssignmentType(assignmentType);
         }
 
-        Boolean isStopOnSectionEnd = getBoolean(CONFIG_STOP_ON_SECTION_END, movementStrategyConfig);
-        if(isStopOnSectionEnd != null) {
-            config.setStopOnSectionEnd(isStopOnSectionEnd);
-        }
-
-        List<Map<String, Object>> instActiveRangesConfigs = getListOfMaps(CONFIG_PAGE_RANGES, movementStrategyConfig);
-        for (Map<String, Object> instConfig : instActiveRangesConfigs) {
-            List<InstrumentId> participatingInsts = new ArrayList<>();
-            List<String> configInstruments = getStrList(CONFIG_INSTRUMENTS, instConfig);
-            if(configInstruments != null) {
-                for (String inst : configInstruments) {
-                    if (CONFIG_ALL.equals(inst)) {
-                        participatingInsts.addAll(participatingScoreInsts);
-                        break;
-                    }
-                    for (InstrumentId instrumentId : participatingScoreInsts) {
-                        if (inst.equals(instrumentId.getName())) {
-                            participatingInsts.add(instrumentId);
-                        }
-                    }
-                }
-            }
-
-            Map<String, Object> activeRangeConfig = getMap(CONFIG_RANGE, instConfig);
-            Integer start = null;
-            Integer end = null;
-            if (activeRangeConfig != null) {
-                start = getInteger(CONFIG_START, activeRangeConfig);
-                end = getInteger(CONFIG_END, activeRangeConfig);
-            }
-            if (start == null || end == null) {
-                LOG.error("loadBuilderStrategyConfig: invalid start - end range");
-                continue;
-            }
-
-            String sectionName = getString(CONFIG_NAME, instConfig);
-            if (sectionName == null) {
-                sectionName = EMPTY;
-            }
-
-            IntRange range = new SequentalIntRange(start, end);
-            BuilderPageRangeConfig pageRangeConfig = new BuilderPageRangeConfig(participatingInsts, range, sectionName);
-
-            config.addPageRangeConfig(pageRangeConfig);
+        Boolean isStopOnMovementEnd = getBoolean(CONFIG_STOP_ON_SECTION_END, movementStrategyConfig);
+        if (isStopOnMovementEnd != null) {
+            config.setStopOnMovementEnd(isStopOnMovementEnd);
         }
 
         return config;

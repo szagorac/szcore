@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.algo.DynamicMovementStrategy;
 import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.algo.ScoreStrategy;
@@ -885,6 +886,14 @@ public class BasicScore implements Score {
 
     public ScoreBuilderStrategy getScoreBuilderStrategy() {
         return scoreStrategyContainer.getScoreBuilderStrategy();
+    }
+
+    public DynamicMovementStrategy getDynamicScoreStrategy() {
+        return scoreStrategyContainer.getDynamicScoreStrategy();
+    }
+
+    public List<ScoreStrategy> getStrategies() {
+        return scoreStrategyContainer.getStrategies();
     }
 
     public TranspositionStrategy getTranspositionStrategy() {

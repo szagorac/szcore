@@ -85,7 +85,7 @@ public class SymphoneaWebAudienceStateDeltaTracker extends WebAudienceStateDelta
         if (!(newValue instanceof WebCounter)) {
             return;
         }
-        WebCounter counter = (WebCounter)newValue;
+        WebCounter counter = (WebCounter) newValue;
         WebCounterExport counterExport = new WebCounterExport();
         counterExport.populate(counter);
         addDelta(WEB_OBJ_COUNTER, counterExport);
@@ -95,7 +95,7 @@ public class SymphoneaWebAudienceStateDeltaTracker extends WebAudienceStateDelta
         if (!(newValue instanceof WebViewState)) {
             return;
         }
-        WebViewState viewState = (WebViewState)newValue;
+        WebViewState viewState = (WebViewState) newValue;
         WebViewStateExport viewStateExport = new WebViewStateExport();
         viewStateExport.populate(viewState);
         addDelta(WEB_OBJ_VIEW_STATE, viewStateExport);

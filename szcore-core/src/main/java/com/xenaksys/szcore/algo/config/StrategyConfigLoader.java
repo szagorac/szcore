@@ -27,6 +27,7 @@ import static com.xenaksys.szcore.Consts.CONFIG_BOTTOM_STAVE_Y_REF;
 import static com.xenaksys.szcore.Consts.CONFIG_BUILDER_STRATEGY;
 import static com.xenaksys.szcore.Consts.CONFIG_DX;
 import static com.xenaksys.szcore.Consts.CONFIG_DY;
+import static com.xenaksys.szcore.Consts.CONFIG_DYNAMIC_MOVEMENT_STRATEGY;
 import static com.xenaksys.szcore.Consts.CONFIG_END;
 import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_DX;
 import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_DY;
@@ -39,11 +40,13 @@ import static com.xenaksys.szcore.Consts.CONFIG_IS_ACTIVE;
 import static com.xenaksys.szcore.Consts.CONFIG_IS_RND_ACTIVE;
 import static com.xenaksys.szcore.Consts.CONFIG_MIN_X_DISTANCE;
 import static com.xenaksys.szcore.Consts.CONFIG_MIN_Y_DISTANCE;
+import static com.xenaksys.szcore.Consts.CONFIG_MOVEMENTS;
 import static com.xenaksys.szcore.Consts.CONFIG_NAME;
 import static com.xenaksys.szcore.Consts.CONFIG_PAGES;
 import static com.xenaksys.szcore.Consts.CONFIG_PAGE_NO;
 import static com.xenaksys.szcore.Consts.CONFIG_PAGE_RANGES;
 import static com.xenaksys.szcore.Consts.CONFIG_PART;
+import static com.xenaksys.szcore.Consts.CONFIG_PARTS;
 import static com.xenaksys.szcore.Consts.CONFIG_RANGE;
 import static com.xenaksys.szcore.Consts.CONFIG_RND_STRATEGY;
 import static com.xenaksys.szcore.Consts.CONFIG_SCORE_NAME;
@@ -388,6 +391,146 @@ public class StrategyConfigLoader extends YamlLoader {
         }
 
         List<Map<String, Object>> instActiveRangesConfigs = getListOfMaps(CONFIG_PAGE_RANGES, builderStrategyConfig);
+        for (Map<String, Object> instConfig : instActiveRangesConfigs) {
+            List<InstrumentId> participatingInsts = new ArrayList<>();
+            List<String> configInstruments = getStrList(CONFIG_INSTRUMENTS, instConfig);
+            if(configInstruments != null) {
+                for (String inst : configInstruments) {
+                    if (CONFIG_ALL.equals(inst)) {
+                        participatingInsts.addAll(participatingScoreInsts);
+                        break;
+                    }
+                    for (InstrumentId instrumentId : participatingScoreInsts) {
+                        if (inst.equals(instrumentId.getName())) {
+                            participatingInsts.add(instrumentId);
+                        }
+                    }
+                }
+            }
+
+            Map<String, Object> activeRangeConfig = getMap(CONFIG_RANGE, instConfig);
+            Integer start = null;
+            Integer end = null;
+            if (activeRangeConfig != null) {
+                start = getInteger(CONFIG_START, activeRangeConfig);
+                end = getInteger(CONFIG_END, activeRangeConfig);
+            }
+            if (start == null || end == null) {
+                LOG.error("loadBuilderStrategyConfig: invalid start - end range");
+                continue;
+            }
+
+            String sectionName = getString(CONFIG_NAME, instConfig);
+            if (sectionName == null) {
+                sectionName = EMPTY;
+            }
+
+            IntRange range = new SequentalIntRange(start, end);
+            BuilderPageRangeConfig pageRangeConfig = new BuilderPageRangeConfig(participatingInsts, range, sectionName);
+
+            config.addPageRangeConfig(pageRangeConfig);
+        }
+
+        return config;
+    }
+
+    public static DynamicMovementStrategyConfig loadDynamicMovementStrategyConfig(Map<String, Object> configMap, Score score) throws Exception {
+        if(!configMap.containsKey(CONFIG_DYNAMIC_MOVEMENT_STRATEGY)) {
+            return null;
+        }
+        DynamicMovementStrategyConfig config = new DynamicMovementStrategyConfig();
+        Object yamlScoreName = configMap.get(CONFIG_SCORE_NAME);
+        if (yamlScoreName == null) {
+            throw new RuntimeException("loadDynamicMovementStrategyConfig: invalid score name");
+        }
+        String scoreName = (String) yamlScoreName;
+        config.setScoreName(scoreName);
+
+        Object yamlBiulderStrategyObj = configMap.get(CONFIG_DYNAMIC_MOVEMENT_STRATEGY);
+        if (yamlBiulderStrategyObj == null) {
+            return config;
+        }
+        Map<String, Object> movementStrategyConfig = (Map<String, Object>) yamlBiulderStrategyObj;
+
+        List<InstrumentId> participatingScoreInsts = new ArrayList<>();
+        Collection<Instrument> scoreInstruments = score.getInstruments();
+        for (Instrument instrument : scoreInstruments) {
+            if (!instrument.isAv() && !instrument.getName().equals(NAME_FULL_SCORE)) {
+                participatingScoreInsts.add((InstrumentId) instrument.getId());
+            }
+        }
+
+        Boolean isActiveConfig = getBoolean(CONFIG_IS_ACTIVE, movementStrategyConfig);
+        if(isActiveConfig == null) {
+            isActiveConfig = false;
+        }
+        config.setActive(isActiveConfig);
+
+
+        List<Map<String, Object>> movementsConfig = getListOfMaps(CONFIG_MOVEMENTS, movementStrategyConfig);
+        List<MovementConfig> movements = new ArrayList<>();
+        for (Map<String, Object> movementConfig : movementsConfig) {
+            MovementConfig movement = new MovementConfig();
+            String name = getString(CONFIG_NAME, movementConfig);
+            movement.setName(name);
+
+            List<Map<String, Object>> sectionsConfig = getListOfMaps(CONFIG_SECTIONS, movementConfig);
+            for (Map<String, Object> sectionConfig : sectionsConfig) {
+                String sectionName = getString(CONFIG_NAME, movementConfig);
+                Map<String, Object> pageRangeConfig = getMap(CONFIG_RANGE, sectionConfig);
+                Integer start = null;
+                Integer end = null;
+                if (pageRangeConfig != null) {
+                    start = getInteger(CONFIG_START, pageRangeConfig);
+                    end = getInteger(CONFIG_END, pageRangeConfig);
+                }
+                if (start == null || end == null) {
+                    LOG.error("loadDynamicMovementStrategyConfig: movement section invalid start - end range");
+                    continue;
+                }
+                IntRange range = new SequentalIntRange(start, end);
+                List<String> partsConfig = getStrList(CONFIG_PARTS, movementConfig);
+                List<String> parts = new ArrayList<>();
+                if(partsConfig != null) {
+                    parts.addAll(partsConfig);
+                }
+                movement.addSectionConfig(sectionName, parts, range);
+            }
+            movements.add(movement);
+        }
+        config.addMovements(movements);
+
+        List<Object> partsConfig = getList(CONFIG_PARTS, movementStrategyConfig);
+        if(partsConfig != null) {
+            List<String> parts = new ArrayList<>();
+            for (Object partConfig : partsConfig) {
+                if (!(partConfig instanceof String)) {
+                    LOG.error("loadBuilderStrategyConfig: invalid section name config");
+                    continue;
+                }
+                String partName = (String) partConfig;
+                parts.add(partName.trim());
+            }
+            config.addParts(parts);
+        }
+
+        String assignmentTypeConfig = getString(CONFIG_ASSIGNMENT_TYPE, movementStrategyConfig);
+        if(assignmentTypeConfig != null) {
+            SectionAssignmentType assignmentType = SectionAssignmentType.MANUAL;
+            try {
+                assignmentType = SectionAssignmentType.valueOf(assignmentTypeConfig.trim().toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException e) {
+                LOG.error("loadBuilderStrategyConfig: invalid assignment type config");
+            }
+            config.setAssignmentType(assignmentType);
+        }
+
+        Boolean isStopOnSectionEnd = getBoolean(CONFIG_STOP_ON_SECTION_END, movementStrategyConfig);
+        if(isStopOnSectionEnd != null) {
+            config.setStopOnSectionEnd(isStopOnSectionEnd);
+        }
+
+        List<Map<String, Object>> instActiveRangesConfigs = getListOfMaps(CONFIG_PAGE_RANGES, movementStrategyConfig);
         for (Map<String, Object> instConfig : instActiveRangesConfigs) {
             List<InstrumentId> participatingInsts = new ArrayList<>();
             List<String> configInstruments = getStrList(CONFIG_INSTRUMENTS, instConfig);

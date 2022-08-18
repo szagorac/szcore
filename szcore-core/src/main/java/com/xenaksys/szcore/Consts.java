@@ -589,6 +589,7 @@ public interface Consts {
     String CONFIG_SCORE_TITLE = "scoreTitle";
     String CONFIG_RND_STRATEGY = "rndStrategy";
     String CONFIG_BUILDER_STRATEGY = "builderStrategy";
+    String CONFIG_DYNAMIC_MOVEMENT_STRATEGY = "dynamicMovementStrategy";
     String CONFIG_TRANSPOSITION_STRATEGY = "transpositionStrategy";
     String CONFIG_IS_ACTIVE = "isActive";
     String CONFIG_ACTIVE_RANGES = "activePageRanges";
@@ -597,6 +598,8 @@ public interface Consts {
     String CONFIG_PAGE_RANGES = "pageRanges";
     String CONFIG_PAGES = "pages";
     String CONFIG_SECTIONS = "sections";
+    String CONFIG_MOVEMENTS = "movements";
+    String CONFIG_PARTS= "parts";
     String CONFIG_INSTRUMENTS = "instruments";
     String CONFIG_ACTIVE_RANGE = "activeRange";
     String CONFIG_RANGE = "range";

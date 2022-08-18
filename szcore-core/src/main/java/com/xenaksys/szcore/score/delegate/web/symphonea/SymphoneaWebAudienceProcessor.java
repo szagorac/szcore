@@ -124,7 +124,7 @@ public class SymphoneaWebAudienceProcessor extends WebAudienceScoreProcessor {
     public void resetState() {
         getState().clearActions();
         getState().setInstructions("Welcome to ZScore", 1);
-        getState().setInstructions("<span style='color:blueviolet;'>Dialogues</span>", 2);
+        getState().setInstructions("<span style='color:blueviolet;'>SymPhonea</span>", 2);
         getState().setInstructions("awaiting performance start ...", 3);
         getState().setInstructionsVisible(true);
 
@@ -341,7 +341,7 @@ public class SymphoneaWebAudienceProcessor extends WebAudienceScoreProcessor {
     private void processWebCounterOnStop() {
         try {
             String section = this.currentSection;
-            if(section == null) {
+            if (section == null) {
                 ScoreBuilderStrategy scoreBuilderStrategy = ((BasicScore) getScore()).getScoreBuilderStrategy();
                 section = scoreBuilderStrategy.getCurrentSection();
             }
@@ -353,9 +353,9 @@ public class SymphoneaWebAudienceProcessor extends WebAudienceScoreProcessor {
             long[] times = keys.toArray();
             Arrays.sort(times);
             String delimiter = "";
-            for(long time : times) {
+            for (long time : times) {
                 out.append(delimiter).append(time - sectionStartTime).append(EQUALS).append(counterTimeline.get(time));
-                if(!delimiter.equals(COMMA)) {
+                if (!delimiter.equals(COMMA)) {
                     delimiter = COMMA;
                 }
             }
@@ -396,19 +396,19 @@ public class SymphoneaWebAudienceProcessor extends WebAudienceScoreProcessor {
     }
 
     public void sendAudienceConfig(String configName, int presetNo, Map<String, Object> overrides) {
-        Map<String, Object> config  = overrides;
-        if(presetNo > 0) {
+        Map<String, Object> config = overrides;
+        if (presetNo > 0) {
             ScriptPreset preset = audienceWebscoreConfig.getPreset(presetNo);
             if (preset == null) {
                 LOG.info("resetState: Unknown preset: {}", presetNo);
                 return;
             }
             Map<String, Object> configs = preset.getConfigs();
-            if(!configs.containsKey(configName)) {
+            if (!configs.containsKey(configName)) {
                 return;
             }
             config = (Map<String, Object>) configs.get(configName);
-            if(overrides != null && !overrides.isEmpty()) {
+            if (overrides != null && !overrides.isEmpty()) {
                 for (String override : overrides.keySet()) {
                     config.put(override, overrides.get(override));
                 }
@@ -437,27 +437,27 @@ public class SymphoneaWebAudienceProcessor extends WebAudienceScoreProcessor {
     public void setAudienceViewState(boolean isNotesEnabled, boolean isAudioEnabled, boolean isThumbsEnabled, boolean isMeterEnabled, boolean isVoteEnabled) {
         ArrayList<String> enable = new ArrayList<>();
         ArrayList<String> disable = new ArrayList<>();
-        if(isNotesEnabled) {
+        if (isNotesEnabled) {
             enable.add(WEB_VIEW_NOTES);
         } else {
             disable.add(WEB_VIEW_NOTES);
         }
-        if(isAudioEnabled) {
+        if (isAudioEnabled) {
             enable.add(WEB_VIEW_AUDIO);
         } else {
             disable.add(WEB_VIEW_AUDIO);
         }
-        if(isThumbsEnabled) {
+        if (isThumbsEnabled) {
             enable.add(WEB_VIEW_THUMBS);
         } else {
             disable.add(WEB_VIEW_THUMBS);
         }
-        if(isMeterEnabled) {
+        if (isMeterEnabled) {
             enable.add(WEB_VIEW_METER);
         } else {
             disable.add(WEB_VIEW_METER);
         }
-        if(isVoteEnabled) {
+        if (isVoteEnabled) {
             enable.add(WEB_VIEW_VOTE);
         } else {
             disable.add(WEB_VIEW_VOTE);
@@ -495,11 +495,11 @@ public class SymphoneaWebAudienceProcessor extends WebAudienceScoreProcessor {
     private void processVote(WebCounter voteCounter) {
         String section = this.currentSection;
         ScoreBuilderStrategy scoreBuilderStrategy = ((BasicScore) getScore()).getScoreBuilderStrategy();
-        if(section == null) {
+        if (section == null) {
             section = scoreBuilderStrategy.getCurrentSection();
         }
         SectionInfo sectionInfo = scoreBuilderStrategy.getSectionInfo(section);
-        if(sectionInfo.isActive()) {
+        if (sectionInfo.isActive()) {
             sectionInfo.populateVoteInfo(voteCounter.getCounterValue(), voteCounter.getMin(), voteCounter.getMax(), voteCounter.getAvg(), voteCounter.getVoterNo());
         }
 

@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.score.delegate;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.algo.DynamicMovementStrategy;
 import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.event.EventFactory;
@@ -28,9 +29,9 @@ import com.xenaksys.szcore.score.InscorePageMap;
 import com.xenaksys.szcore.score.InstrumentBeatTracker;
 import com.xenaksys.szcore.score.ScoreLoader;
 import com.xenaksys.szcore.score.ScoreProcessorDelegator;
-import com.xenaksys.szcore.score.delegate.web.dialogs.DialogsWebAudienceProcessor;
+import com.xenaksys.szcore.score.delegate.web.symphonea.SymphoneaWebAudienceProcessor;
 import com.xenaksys.szcore.score.web.WebScore;
-import com.xenaksys.szcore.score.web.overlay.DialogsWebOverlayFactory;
+import com.xenaksys.szcore.score.web.overlay.SymphoneaWebOverlayFactory;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.web.WebClientInfo;
@@ -45,6 +46,13 @@ import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NO;
 import static com.xenaksys.szcore.Consts.UNDERSCORE;
 
 public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
+
+    private final static String PART1 = "Part1";
+    private final static String PART2 = "Part2";
+    private final static String PART3 = "Part3";
+    private final static String INSTRUMENT_DEFAULT = PART1;
+    private final static String[] INSTRUMENTS = {PART1, PART2, PART3};
+    private final static String[] DYNAMIC_INSTRUMENTS = INSTRUMENTS;
 
     public SymphoneaScoreProcessor(TransportFactory transportFactory,
                                    MutableClock clock,
@@ -63,11 +71,11 @@ public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
     }
 
     protected void createWebAudienceProcessor() {
-        setWebAudienceProcessor(new DialogsWebAudienceProcessor(this, getEventFactory(), getClock()));
+        setWebAudienceProcessor(new SymphoneaWebAudienceProcessor(this, getEventFactory(), getClock()));
     }
 
     public void initWebScore() {
-        setWebScore(new WebScore(this, getEventFactory(), getClock(), getProps(), new DialogsWebOverlayFactory()));
+        setWebScore(new WebScore(this, getEventFactory(), getClock(), getProps(), new SymphoneaWebOverlayFactory()));
     }
 
     @Override
@@ -113,17 +121,11 @@ public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
         }
 
         szcore.initScoreStrategies();
-//        boolean isStopOnSectionEnd = false;
-//        ScoreBuilderStrategy scoreBuilderStrategy = szcore.getScoreBuilderStrategy();
-//        if(scoreBuilderStrategy != null && scoreBuilderStrategy.isActive()) {
-//            scoreBuilderStrategy.setInstruments(INSTRUMENTS);
-//            scoreBuilderStrategy.setDynamicInstruments(DYNAMIC_INSTRUMENTS);
-//            scoreBuilderStrategy.setDefaultInstrument(INSTRUMENT_DEFAULT);
-////            isStopOnSectionEnd = scoreBuilderStrategy.isStopOnSectionEnd();
-//        }
-
-        if (lastBeat != null && !szcore.isUseContinuousPage() ) {
-            addStopEvent(lastBeat, transport.getId());
+        DynamicMovementStrategy dynamicMovementStrategy = szcore.getDynamicScoreStrategy();
+        if(dynamicMovementStrategy != null && dynamicMovementStrategy.isActive()) {
+            dynamicMovementStrategy.setInstruments(INSTRUMENTS);
+            dynamicMovementStrategy.setDynamicInstruments(DYNAMIC_INSTRUMENTS);
+            dynamicMovementStrategy.setDefaultInstrument(INSTRUMENT_DEFAULT);
         }
 
         int precountMillis = 5 * 1000;
@@ -180,8 +182,8 @@ public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
     }
 
     protected void processVote(VoteAudienceEvent webEvent) {
-        LOG.debug("processVote dialogs: ");
-        DialogsWebAudienceProcessor audienceProcessor = (DialogsWebAudienceProcessor) getWebAudienceProcessor();
+        LOG.debug("processVote symphonea: ");
+        SymphoneaWebAudienceProcessor audienceProcessor = (SymphoneaWebAudienceProcessor) getWebAudienceProcessor();
         if (audienceProcessor == null) {
             return;
         }
@@ -192,7 +194,7 @@ public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
 
     @Override
     public void onSectionStart(String section) {
-        DialogsWebAudienceProcessor audienceProcessor = (DialogsWebAudienceProcessor) getWebAudienceProcessor();
+        SymphoneaWebAudienceProcessor audienceProcessor = (SymphoneaWebAudienceProcessor) getWebAudienceProcessor();
         if (audienceProcessor != null) {
             audienceProcessor.onSectionStart(section);
         }
@@ -200,7 +202,7 @@ public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
     }
 
     public void onSectionStop(String section) {
-        DialogsWebAudienceProcessor audienceProcessor = (DialogsWebAudienceProcessor) getWebAudienceProcessor();
+        SymphoneaWebAudienceProcessor audienceProcessor = (SymphoneaWebAudienceProcessor) getWebAudienceProcessor();
         if (audienceProcessor != null) {
             audienceProcessor.onSectionStop(section);
         }
@@ -209,7 +211,7 @@ public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
 
     @Override
     public void publishAudienceViewState(boolean isNotesEnabled, boolean isAudioEnabled, boolean isThumbsEnabled, boolean isMeterEnabled, boolean isVoteEnabled) {
-        DialogsWebAudienceProcessor audienceProcessor = (DialogsWebAudienceProcessor) getWebAudienceProcessor();
+        SymphoneaWebAudienceProcessor audienceProcessor = (SymphoneaWebAudienceProcessor) getWebAudienceProcessor();
         if (audienceProcessor != null) {
             audienceProcessor.setAudienceViewState(isNotesEnabled, isAudioEnabled, isThumbsEnabled, isMeterEnabled, isVoteEnabled);
         }
@@ -217,7 +219,7 @@ public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
 
     @Override
     public void sendAudienceConfig(String configName, int presetNo, Map<String, Object> overrides) {
-        DialogsWebAudienceProcessor audienceProcessor = (DialogsWebAudienceProcessor) getWebAudienceProcessor();
+        SymphoneaWebAudienceProcessor audienceProcessor = (SymphoneaWebAudienceProcessor) getWebAudienceProcessor();
         if (audienceProcessor != null) {
             audienceProcessor.sendAudienceConfig(configName, presetNo, overrides);
         }

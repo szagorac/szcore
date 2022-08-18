@@ -1,5 +1,6 @@
 package com.xenaksys.szcore.algo;
 
+import com.xenaksys.szcore.algo.config.DynamicMovementStrategyConfig;
 import com.xenaksys.szcore.algo.config.ScoreBuilderStrategyConfig;
 import com.xenaksys.szcore.algo.config.ScoreRandomisationStrategyConfig;
 import com.xenaksys.szcore.algo.config.StrategyConfig;
@@ -8,6 +9,7 @@ import com.xenaksys.szcore.score.BasicScore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 
@@ -35,9 +37,18 @@ public class ScoreStrategyContainer {
             case TRANSPOSITION:
                 initTranpositionStrategy((TranspositionStrategyConfig)config, szcore);
                 break;
+            case DYNAMIC:
+                initDynamicStrategy((DynamicMovementStrategyConfig)config, szcore);
+                break;
             default:
                 LOG.error("initStrategy: unknown strategy type: {}", type);
         }
+    }
+
+    private void initDynamicStrategy(DynamicMovementStrategyConfig config, BasicScore szcore) {
+        DynamicMovementStrategy dynamicMovementStrategy = new DynamicMovementStrategy(szcore, config);
+        dynamicMovementStrategy.init();
+        addStrategy(dynamicMovementStrategy);
     }
 
     private void initTranpositionStrategy(TranspositionStrategyConfig config, BasicScore szcore) {
@@ -81,11 +92,22 @@ public class ScoreStrategyContainer {
         return (ScoreBuilderStrategy)strategies.get(StrategyType.BUILDER);
     }
 
+    public DynamicMovementStrategy getDynamicScoreStrategy() {
+        if(!strategies.containsKey(StrategyType.DYNAMIC)) {
+            return null;
+        }
+        return (DynamicMovementStrategy)strategies.get(StrategyType.DYNAMIC);
+    }
+
     public TranspositionStrategy getTranspositionStrategy() {
         if(!strategies.containsKey(StrategyType.TRANSPOSITION)) {
             return null;
         }
         return (TranspositionStrategy) strategies.get(StrategyType.TRANSPOSITION);
+    }
+
+    public List<ScoreStrategy> getStrategies() {
+        return new ArrayList<>(strategies.values());
     }
 
     public void addStrategyConfig(StrategyConfig strategyConfig) {

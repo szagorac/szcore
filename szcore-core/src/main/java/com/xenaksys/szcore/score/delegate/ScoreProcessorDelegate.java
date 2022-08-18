@@ -3,6 +3,7 @@ package com.xenaksys.szcore.score.delegate;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
+import com.xenaksys.szcore.algo.config.DynamicMovementStrategyConfig;
 import com.xenaksys.szcore.algo.config.ScoreBuilderStrategyConfig;
 import com.xenaksys.szcore.algo.config.ScoreRandomisationStrategyConfig;
 import com.xenaksys.szcore.algo.config.StrategyConfigLoader;
@@ -164,6 +165,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static com.xenaksys.szcore.Consts.CONFIG_BUILDER_STRATEGY;
+import static com.xenaksys.szcore.Consts.CONFIG_DYNAMIC_MOVEMENT_STRATEGY;
 import static com.xenaksys.szcore.Consts.CONFIG_RND_STRATEGY;
 import static com.xenaksys.szcore.Consts.CONFIG_SCORE_TITLE;
 import static com.xenaksys.szcore.Consts.CONFIG_TRANSPOSITION_STRATEGY;
@@ -317,6 +319,9 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                 case CONFIG_SCORE_TITLE:
                     initScoreTitle(strategyConfig);
                     break;
+                case CONFIG_DYNAMIC_MOVEMENT_STRATEGY:
+                    initDynamicMovementStrategyConfig(strategyConfig);
+                    break;
             }
         }
     }
@@ -341,6 +346,13 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         ScoreBuilderStrategyConfig builderStrategyConfig = StrategyConfigLoader.loadBuilderStrategyConfig(strategyConfig, szcore);
         if(builderStrategyConfig != null) {
             szcore.addStrategyConfig(builderStrategyConfig);
+        }
+    }
+
+    public void initDynamicMovementStrategyConfig(Map<String, Object> strategyConfig) throws Exception {
+        DynamicMovementStrategyConfig dynamicMovStrategyConfig = StrategyConfigLoader.loadDynamicMovementStrategyConfig(strategyConfig, szcore);
+        if(dynamicMovStrategyConfig != null) {
+            szcore.addStrategyConfig(dynamicMovStrategyConfig);
         }
     }
 

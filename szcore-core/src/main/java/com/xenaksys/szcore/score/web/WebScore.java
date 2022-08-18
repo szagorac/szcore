@@ -1,8 +1,10 @@
 package com.xenaksys.szcore.score.web;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.algo.DynamicMovementStrategy;
 import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
+import com.xenaksys.szcore.algo.ScoreStrategy;
 import com.xenaksys.szcore.algo.SectionAssignmentType;
 import com.xenaksys.szcore.algo.SequentalIntRange;
 import com.xenaksys.szcore.algo.StrategyType;
@@ -51,6 +53,7 @@ import com.xenaksys.szcore.score.OverlayType;
 import com.xenaksys.szcore.score.web.overlay.WebOverlayFactory;
 import com.xenaksys.szcore.score.web.overlay.WebOverlayProcessor;
 import com.xenaksys.szcore.score.web.strategy.WebBuilderStrategy;
+import com.xenaksys.szcore.score.web.strategy.WebDynamicScoreStrategy;
 import com.xenaksys.szcore.score.web.strategy.WebStrategy;
 import com.xenaksys.szcore.util.ParseUtil;
 import com.xenaksys.szcore.util.WebUtil;
@@ -148,12 +151,27 @@ public class WebScore {
 
     private void initWebStrategyInfo() {
         webStrategyInfo = new WebStrategyInfo();
-        ScoreBuilderStrategy builderStrategy = score.getScoreBuilderStrategy();
-        if(builderStrategy != null) {
-            for(String clientId : playerClients.keySet()) {
-                builderStrategy.addClientId(clientId);
+
+        List<ScoreStrategy> strategies = score.getStrategies();
+        for(ScoreStrategy strategy : strategies) {
+            switch (strategy.getType()) {
+                case BUILDER:
+                    ScoreBuilderStrategy builderStrategy = (ScoreBuilderStrategy)strategy;
+                    for(String clientId : playerClients.keySet()) {
+                        builderStrategy.addClientId(clientId);
+                    }
+                    createOrUpdateWebBuilderStrategy(builderStrategy);
+                    break;
+                case DYNAMIC:
+                    DynamicMovementStrategy dynamicStrategy = (DynamicMovementStrategy)strategy;
+                    if(dynamicStrategy != null) {
+                        for(String clientId : playerClients.keySet()) {
+                            dynamicStrategy.addClientId(clientId);
+                        }
+                        createOrUpdateWebDynamicScoreStrategy(dynamicStrategy);
+                    }
+                    break;
             }
-            createOrUpdateWebBuilderStrategy(builderStrategy);
         }
     }
 
@@ -942,6 +960,30 @@ public class WebScore {
         }
     }
 
+    public void createOrUpdateWebDynamicScoreStrategy(DynamicMovementStrategy dynamicMovementStrategy) {
+        if(dynamicMovementStrategy == null) {
+            return;
+        }
+        WebDynamicScoreStrategy webDynamicScoreStrategy = getOrCreateWebDynamicScoreStrategy();
+        webDynamicScoreStrategy.setName(StrategyType.DYNAMIC.name());
+        webDynamicScoreStrategy.setReady(dynamicMovementStrategy.isReady());
+        SectionAssignmentType assignmentType = dynamicMovementStrategy.getConfig().getAssignmentType();
+        if (assignmentType != null) {
+            webDynamicScoreStrategy.setAssignmentType(assignmentType.name());
+        }
+        List<String> sections = dynamicMovementStrategy.getSections();
+        webDynamicScoreStrategy.clearSectionOwners();
+        if(sections != null) {
+            webDynamicScoreStrategy.setSections(sections);
+            for(String section : sections) {
+                String owner = dynamicMovementStrategy.getSectionOwner(section);
+                if(owner != null) {
+                    webDynamicScoreStrategy.addSectionOwner(section, owner);
+                }
+            }
+        }
+    }
+
     private WebBuilderStrategy getWebBuilderStrategy() {
         List<WebStrategy> webStrategies = webStrategyInfo.getStrategies();
         if(webStrategies == null) {
@@ -950,6 +992,19 @@ public class WebScore {
         for (WebStrategy strategy : webStrategies) {
             if (strategy instanceof WebBuilderStrategy) {
                 return (WebBuilderStrategy) strategy;
+            }
+        }
+        return null;
+    }
+
+    private WebDynamicScoreStrategy getWebDynamicScoreStrategy() {
+        List<WebStrategy> webStrategies = webStrategyInfo.getStrategies();
+        if(webStrategies == null) {
+            return null;
+        }
+        for (WebStrategy strategy : webStrategies) {
+            if (strategy instanceof WebDynamicScoreStrategy) {
+                return (WebDynamicScoreStrategy) strategy;
             }
         }
         return null;
@@ -964,6 +1019,18 @@ public class WebScore {
         webStrategyInfo.addStrategy(webBuilderStrategy);
         return webBuilderStrategy;
     }
+
+    private WebDynamicScoreStrategy getOrCreateWebDynamicScoreStrategy() {
+        WebDynamicScoreStrategy webDynamicScoreStrategy = getWebDynamicScoreStrategy();
+        if(webDynamicScoreStrategy != null) {
+            return webDynamicScoreStrategy;
+        }
+        webDynamicScoreStrategy = new WebDynamicScoreStrategy();
+        webStrategyInfo.addStrategy(webDynamicScoreStrategy);
+        return webDynamicScoreStrategy;
+    }
+
+
 
     private void setBuilderWebStrategyReady(boolean isReady) {
         WebBuilderStrategy webBuilderStrategy = getOrCreateWebBuilderStrategy();

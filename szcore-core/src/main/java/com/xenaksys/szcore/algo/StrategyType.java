@@ -1,5 +1,5 @@
 package com.xenaksys.szcore.algo;
 
 public enum StrategyType {
-    RND, BUILDER, TRANSPOSITION
+    RND, BUILDER, TRANSPOSITION, DYNAMIC
 }

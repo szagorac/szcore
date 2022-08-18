@@ -1,6 +1,5 @@
 package com.xenaksys.szcore.algo.config;
 
-import com.xenaksys.szcore.algo.SectionAssignmentType;
 import com.xenaksys.szcore.algo.StrategyType;
 
 import java.util.ArrayList;
@@ -12,7 +11,6 @@ public class DynamicMovementStrategyConfig implements StrategyConfig{
     private final List<String> parts = new ArrayList<>();
     private boolean isActive;
     private String scoreName;
-    private SectionAssignmentType assignmentType;
     private boolean isStopOnMovementEnd;
 
     public String getScoreName() {
@@ -41,14 +39,6 @@ public class DynamicMovementStrategyConfig implements StrategyConfig{
 
     public List<String> getParts() {
         return parts;
-    }
-
-    public SectionAssignmentType getAssignmentType() {
-        return assignmentType;
-    }
-
-    public void setAssignmentType(SectionAssignmentType assignmentType) {
-        this.assignmentType = assignmentType;
     }
 
     public boolean isStopOnMovementEnd() {

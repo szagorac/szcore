@@ -48,9 +48,9 @@ public class DynamicMovementStrategy implements ScoreStrategy {
         }
         if (movementsConfig.size() > 0) {
             this.currentMovement = movementsConfig.get(0).getName();
-        } else {
-            isReady = true;
         }
+
+        isReady = true;
     }
 
     private MovementInfo getOrCreateMovementInfo(final MovementConfig movementConfig) {

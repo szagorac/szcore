@@ -617,6 +617,8 @@ public interface Consts {
     String CONFIG_TILE_COLS = "tileCols";
     String CONFIG_ASSIGNMENT_TYPE = "assignmentType";
     String CONFIG_STOP_ON_SECTION_END = "isStopOnSectionEnd";
+    String CONFIG_STOP_ON_MOVEMENT_END = "isStopOnMovementEnd";
+
     String CONFIG_PAGE_NO = "pageNo";
     String CONFIG_PART = "part";
     String CONFIG_TEXT_ELEMENTS = "textElements";

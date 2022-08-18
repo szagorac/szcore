@@ -1,11 +1,49 @@
 package com.xenaksys.szcore.score.web;
 
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.algo.*;
+import com.xenaksys.szcore.algo.DynamicMovementStrategy;
+import com.xenaksys.szcore.algo.IntRange;
+import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
+import com.xenaksys.szcore.algo.ScoreStrategy;
+import com.xenaksys.szcore.algo.SectionAssignmentType;
+import com.xenaksys.szcore.algo.SequentalIntRange;
+import com.xenaksys.szcore.algo.StrategyType;
+import com.xenaksys.szcore.algo.TranspositionStrategy;
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.osc.*;
-import com.xenaksys.szcore.event.web.in.*;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.event.osc.DateTickEvent;
+import com.xenaksys.szcore.event.osc.ElementAlphaEvent;
+import com.xenaksys.szcore.event.osc.ElementColorEvent;
+import com.xenaksys.szcore.event.osc.ElementYPositionEvent;
+import com.xenaksys.szcore.event.osc.InstrumentResetSlotsEvent;
+import com.xenaksys.szcore.event.osc.InstrumentSlotsEvent;
+import com.xenaksys.szcore.event.osc.OscEvent;
+import com.xenaksys.szcore.event.osc.OscEventType;
+import com.xenaksys.szcore.event.osc.OscStaveActivateEvent;
+import com.xenaksys.szcore.event.osc.OscStaveTempoEvent;
+import com.xenaksys.szcore.event.osc.OscStopEvent;
+import com.xenaksys.szcore.event.osc.OverlayTextEvent;
+import com.xenaksys.szcore.event.osc.PageDisplayEvent;
+import com.xenaksys.szcore.event.osc.PageMapDisplayEvent;
+import com.xenaksys.szcore.event.osc.PrecountBeatOffEvent;
+import com.xenaksys.szcore.event.osc.PrecountBeatOnEvent;
+import com.xenaksys.szcore.event.osc.ResetScoreEvent;
+import com.xenaksys.szcore.event.osc.ResetStavesEvent;
+import com.xenaksys.szcore.event.osc.StaveStartMarkEvent;
+import com.xenaksys.szcore.event.osc.WebscoreVoteEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
+import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
+import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreSelectInstrumentSlotEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreSelectSectionEvent;
+import com.xenaksys.szcore.model.Clock;
+import com.xenaksys.szcore.model.Instrument;
+import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.ScoreProcessor;
+import com.xenaksys.szcore.model.SectionInfo;
+import com.xenaksys.szcore.model.Tempo;
+import com.xenaksys.szcore.model.Transport;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.score.BasicScore;
@@ -25,7 +63,14 @@ import com.xenaksys.szcore.web.WebScoreActionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WebScore {
@@ -112,6 +157,9 @@ public class WebScore {
             switch (strategy.getType()) {
                 case BUILDER:
                     ScoreBuilderStrategy builderStrategy = (ScoreBuilderStrategy)strategy;
+                    if(!builderStrategy.isActive()) {
+                        break;
+                    }
                     for(String clientId : playerClients.keySet()) {
                         builderStrategy.addClientId(clientId);
                     }
@@ -119,12 +167,13 @@ public class WebScore {
                     break;
                 case DYNAMIC:
                     DynamicMovementStrategy dynamicStrategy = (DynamicMovementStrategy)strategy;
-                    if(dynamicStrategy != null) {
-                        for(String clientId : playerClients.keySet()) {
-                            dynamicStrategy.addClientId(clientId);
-                        }
-                        createOrUpdateWebDynamicScoreStrategy(dynamicStrategy);
+                    if(!dynamicStrategy.isActive()) {
+                        break;
                     }
+                    for(String clientId : playerClients.keySet()) {
+                        dynamicStrategy.addClientId(clientId);
+                    }
+                    createOrUpdateWebDynamicScoreStrategy(dynamicStrategy);
                     break;
             }
         }
@@ -435,16 +484,39 @@ public class WebScore {
     public void addInstrumentClient(WebClientInfo clientInfo) throws Exception {
         String instrument = clientInfo.getInstrument();
         if (instrument == null) {
-            ScoreBuilderStrategy builderStrategy = score.getScoreBuilderStrategy();
-            if(builderStrategy == null) {
-                return;
-            }
-            instrument = builderStrategy.getDefaultInstrument();
+            instrument = getDefaultStrategyInstrument();
         }
         if (instrument == null) {
             return;
         }
         addInstrumentClient(instrument, clientInfo);
+    }
+
+    public String getDefaultStrategyInstrument() {
+        String out = null;
+        List<ScoreStrategy> strategies = score.getStrategies();
+        for(ScoreStrategy strategy : strategies) {
+            switch (strategy.getType()) {
+                case BUILDER:
+                    ScoreBuilderStrategy builderStrategy = (ScoreBuilderStrategy)strategy;
+                    if(!builderStrategy.isActive()) {
+                        break;
+                    }
+                    out = builderStrategy.getDefaultInstrument();
+                    break;
+                case DYNAMIC:
+                    DynamicMovementStrategy dynamicStrategy = (DynamicMovementStrategy)strategy;
+                    if(!dynamicStrategy.isActive()) {
+                        break;
+                    }
+                    out = dynamicStrategy.getDefaultPart();
+                    break;
+            }
+            if(out != null) {
+                return out;
+            }
+        }
+        return out;
     }
 
     public void replaceInstrumentClient(String instrument, WebClientInfo clientInfo) throws Exception {
@@ -922,10 +994,6 @@ public class WebScore {
         WebDynamicScoreStrategy webDynamicScoreStrategy = getOrCreateWebDynamicScoreStrategy();
         webDynamicScoreStrategy.setName(StrategyType.DYNAMIC.name());
         webDynamicScoreStrategy.setReady(dynamicMovementStrategy.isReady());
-        SectionAssignmentType assignmentType = dynamicMovementStrategy.getConfig().getAssignmentType();
-        if (assignmentType != null) {
-            webDynamicScoreStrategy.setAssignmentType(assignmentType.name());
-        }
 //        List<String> sections = dynamicMovementStrategy.getSections();
 //        webDynamicScoreStrategy.clearSectionOwners();
 //        if(sections != null) {

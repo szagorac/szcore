@@ -45,24 +45,28 @@ public class MovementConfig {
             this.sections.put(section.getName(), section);
         }
     }
-    public void addSectionConfig(String name, List<String> parts, IntRange range) {
-        SectionConfig sectionConfig = createSectionConfig(name, parts, range);
+    public void addSectionConfig(String name, IntRange pageRange, List<String> parts, List<String> maxConfig, List<String> webConfig) {
+        SectionConfig sectionConfig = createSectionConfig(name, pageRange, parts, maxConfig, webConfig);
         addSection(sectionConfig);
     }
 
-    public SectionConfig createSectionConfig(String name, List<String> parts, IntRange range) {
-        return new SectionConfig(name, parts, range);
+    public SectionConfig createSectionConfig(String name, IntRange pageRange, List<String> parts, List<String> maxConfig, List<String> webConfig) {
+        return new SectionConfig(name, pageRange, parts, maxConfig, webConfig);
     }
 
     public class SectionConfig {
         private final String name;
-        private final List<String> parts;
         private final IntRange range;
+        private final List<String> parts;
+        private final List<String> maxConfig;
+        private final List<String> webConfig;
 
-        public SectionConfig(String name, List<String> parts, IntRange range) {
+        public SectionConfig(String name, IntRange range, List<String> parts, List<String> maxConfig, List<String> webConfig) {
             this.name = name;
             this.parts = parts;
             this.range = range;
+            this.maxConfig = maxConfig;
+            this.webConfig = webConfig;
         }
 
         public String getName() {
@@ -75,6 +79,14 @@ public class MovementConfig {
 
         public IntRange getRange() {
             return range;
+        }
+
+        public List<String> getMaxConfig() {
+            return maxConfig;
+        }
+
+        public List<String> getWebConfig() {
+            return webConfig;
         }
     }
 }

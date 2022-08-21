@@ -600,6 +600,10 @@ public interface Consts {
     String CONFIG_SECTIONS = "sections";
     String CONFIG_MOVEMENTS = "movements";
     String CONFIG_PARTS= "parts";
+    String CONFIG_MAX= "max";
+    String CONFIG_WEB= "web";
+    String CONFIG_MAX_CONFIGS = "maxConfigs";
+    String CONFIG_WEB_CONFIGS = "webConfigs";
     String CONFIG_INSTRUMENTS = "instruments";
     String CONFIG_ACTIVE_RANGE = "activeRange";
     String CONFIG_RANGE = "range";
@@ -609,6 +613,7 @@ public interface Consts {
     String CONFIG_START = "start";
     String CONFIG_END = "end";
     String CONFIG_ALL = "all";
+    String CONFIG_PRESET = "preset";
     String CONFIG_PRESETS = "presets";
     String CONFIG_SCRIPTS = "scripts";
     String CONFIG_WEB_CONFIG = "config";
@@ -618,6 +623,12 @@ public interface Consts {
     String CONFIG_ASSIGNMENT_TYPE = "assignmentType";
     String CONFIG_STOP_ON_SECTION_END = "isStopOnSectionEnd";
     String CONFIG_STOP_ON_MOVEMENT_END = "isStopOnMovementEnd";
+    String CONFIG_BUFFER1 = "b1";
+    String CONFIG_BUFFER2 = "b2";
+    String CONFIG_BUFFER3 = "b3";
+    String CONFIG_BUFFER4 = "b4";
+    String CONFIG_GRANULATOR = "grn";
+    String CONFIG_GROOVE = "grv";
 
     String CONFIG_PAGE_NO = "pageNo";
     String CONFIG_PART = "part";

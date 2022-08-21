@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -24,6 +25,10 @@ import static com.xenaksys.szcore.Consts.CONFIG_ASSIGNMENT_TYPE;
 import static com.xenaksys.szcore.Consts.CONFIG_BOTTOM_STAVE_START_X;
 import static com.xenaksys.szcore.Consts.CONFIG_BOTTOM_STAVE_X_REF;
 import static com.xenaksys.szcore.Consts.CONFIG_BOTTOM_STAVE_Y_REF;
+import static com.xenaksys.szcore.Consts.CONFIG_BUFFER1;
+import static com.xenaksys.szcore.Consts.CONFIG_BUFFER2;
+import static com.xenaksys.szcore.Consts.CONFIG_BUFFER3;
+import static com.xenaksys.szcore.Consts.CONFIG_BUFFER4;
 import static com.xenaksys.szcore.Consts.CONFIG_BUILDER_STRATEGY;
 import static com.xenaksys.szcore.Consts.CONFIG_DX;
 import static com.xenaksys.szcore.Consts.CONFIG_DY;
@@ -35,21 +40,29 @@ import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_HEIGHT;
 import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_MOD_HEIGHT;
 import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_MOD_WIDTH;
 import static com.xenaksys.szcore.Consts.CONFIG_EXT_RECT_WIDTH;
+import static com.xenaksys.szcore.Consts.CONFIG_GRANULATOR;
+import static com.xenaksys.szcore.Consts.CONFIG_GROOVE;
+import static com.xenaksys.szcore.Consts.CONFIG_ID;
 import static com.xenaksys.szcore.Consts.CONFIG_INSTRUMENTS;
 import static com.xenaksys.szcore.Consts.CONFIG_IS_ACTIVE;
 import static com.xenaksys.szcore.Consts.CONFIG_IS_RND_ACTIVE;
+import static com.xenaksys.szcore.Consts.CONFIG_MAX;
+import static com.xenaksys.szcore.Consts.CONFIG_MAX_CONFIGS;
 import static com.xenaksys.szcore.Consts.CONFIG_MIN_X_DISTANCE;
 import static com.xenaksys.szcore.Consts.CONFIG_MIN_Y_DISTANCE;
 import static com.xenaksys.szcore.Consts.CONFIG_MOVEMENTS;
 import static com.xenaksys.szcore.Consts.CONFIG_NAME;
 import static com.xenaksys.szcore.Consts.CONFIG_PAGES;
 import static com.xenaksys.szcore.Consts.CONFIG_PAGE_NO;
+import static com.xenaksys.szcore.Consts.CONFIG_PAGE_RANGE;
 import static com.xenaksys.szcore.Consts.CONFIG_PAGE_RANGES;
 import static com.xenaksys.szcore.Consts.CONFIG_PART;
 import static com.xenaksys.szcore.Consts.CONFIG_PARTS;
+import static com.xenaksys.szcore.Consts.CONFIG_PRESET;
 import static com.xenaksys.szcore.Consts.CONFIG_RANGE;
 import static com.xenaksys.szcore.Consts.CONFIG_RND_STRATEGY;
 import static com.xenaksys.szcore.Consts.CONFIG_SCORE_NAME;
+import static com.xenaksys.szcore.Consts.CONFIG_SCRIPTS;
 import static com.xenaksys.szcore.Consts.CONFIG_SECTIONS;
 import static com.xenaksys.szcore.Consts.CONFIG_SELECTION_RANGE;
 import static com.xenaksys.szcore.Consts.CONFIG_START;
@@ -61,6 +74,8 @@ import static com.xenaksys.szcore.Consts.CONFIG_TOP_STAVE_X_REF;
 import static com.xenaksys.szcore.Consts.CONFIG_TOP_STAVE_Y_REF;
 import static com.xenaksys.szcore.Consts.CONFIG_TRANSPOSITION_STRATEGY;
 import static com.xenaksys.szcore.Consts.CONFIG_TXT;
+import static com.xenaksys.szcore.Consts.CONFIG_WEB;
+import static com.xenaksys.szcore.Consts.CONFIG_WEB_CONFIGS;
 import static com.xenaksys.szcore.Consts.EMPTY;
 import static com.xenaksys.szcore.Consts.NAME_FULL_SCORE;
 import static com.xenaksys.szcore.Consts.STRATEGY_CONFIG_FILE_SUFFIX;
@@ -68,6 +83,8 @@ import static com.xenaksys.szcore.Consts.YAML_FILE_EXTENSION;
 
 public class StrategyConfigLoader extends YamlLoader {
     static final Logger LOG = LoggerFactory.getLogger(StrategyConfigLoader.class);
+
+    private static final String[] MAX_CONFIGS = {CONFIG_BUFFER1, CONFIG_BUFFER2, CONFIG_BUFFER3, CONFIG_BUFFER4, CONFIG_GRANULATOR, CONFIG_GROOVE};
 
     public static ScoreRandomisationStrategyConfig loadRndStrategyConfig(String workingDir, Score score) throws Exception {
         String path = workingDir + Consts.SLASH + STRATEGY_CONFIG_FILE_SUFFIX + YAML_FILE_EXTENSION;
@@ -478,7 +495,7 @@ public class StrategyConfigLoader extends YamlLoader {
             List<Map<String, Object>> sectionsConfig = getListOfMaps(CONFIG_SECTIONS, movementConfig);
             for (Map<String, Object> sectionConfig : sectionsConfig) {
                 String sectionName = getString(CONFIG_NAME, sectionConfig);
-                Map<String, Object> pageRangeConfig = getMap(CONFIG_RANGE, sectionConfig);
+                Map<String, Object> pageRangeConfig = getMap(CONFIG_PAGE_RANGE, sectionConfig);
                 Integer start = null;
                 Integer end = null;
                 if (pageRangeConfig != null) {
@@ -489,13 +506,23 @@ public class StrategyConfigLoader extends YamlLoader {
                     LOG.error("loadDynamicMovementStrategyConfig: movement section invalid start - end range");
                     continue;
                 }
-                IntRange range = new SequentalIntRange(start, end);
-                List<String> partsConfig = getStrList(CONFIG_PARTS, movementConfig);
+                IntRange pageRange = new SequentalIntRange(start, end);
+                List<String> partsConfig = getStrList(CONFIG_PARTS, sectionConfig);
                 List<String> parts = new ArrayList<>();
                 if(partsConfig != null) {
                     parts.addAll(partsConfig);
                 }
-                movement.addSectionConfig(sectionName, parts, range);
+                List<String> maxConfigs = getStrList(CONFIG_MAX, sectionConfig);
+                List<String> max = new ArrayList<>();
+                if(maxConfigs != null) {
+                    max.addAll(maxConfigs);
+                }
+                List<String> webConfigs = getStrList(CONFIG_WEB, sectionConfig);
+                List<String> web = new ArrayList<>();
+                if(webConfigs != null) {
+                    web.addAll(webConfigs);
+                }
+                movement.addSectionConfig(sectionName, pageRange, parts, max, web);
             }
             movements.add(movement);
         }
@@ -519,6 +546,57 @@ public class StrategyConfigLoader extends YamlLoader {
         if (isStopOnMovementEnd != null) {
             config.setStopOnMovementEnd(isStopOnMovementEnd);
         }
+
+        List<Map<String, Object>> maxConfigs = getListOfMaps(CONFIG_MAX_CONFIGS, movementStrategyConfig);
+        List<ExternalScoreConfig> maxConfs = new ArrayList<>();
+        for (Map<String, Object> maxConfig : maxConfigs) {
+            ExternalScoreConfig max = new ExternalScoreConfig();
+            String id = getString(CONFIG_ID, maxConfig);
+            max.setId(id);
+            Integer preset = getInteger(CONFIG_PRESET, maxConfig);
+            if(preset != null) {
+                max.setPreset(preset);
+            }
+
+            List<String> scripts = new ArrayList<>();
+            List<String> scriptsConfig = getStrList(CONFIG_SCRIPTS, maxConfig);
+            if(scriptsConfig != null) {
+                scripts.addAll(scriptsConfig);
+            }
+            max.setScripts(scripts);
+
+            Map<String, String> targetValues = new HashMap<>();
+            for(String target : MAX_CONFIGS) {
+                String targetConf = getString(target, maxConfig);
+                if(targetConf != null) {
+                    targetValues.put(target, targetConf);
+                }
+            }
+            max.setTargetValues(targetValues);
+            maxConfs.add(max);
+        }
+        config.addMaxConfigs(maxConfs);
+
+        List<Map<String, Object>> webConfigs = getListOfMaps(CONFIG_WEB_CONFIGS, movementStrategyConfig);
+        List<ExternalScoreConfig> webConfs = new ArrayList<>();
+        for (Map<String, Object> webConfig : webConfigs) {
+            ExternalScoreConfig web = new ExternalScoreConfig();
+            String id = getString(CONFIG_ID, webConfig);
+            web.setId(id);
+            Integer preset = getInteger(CONFIG_PRESET, webConfig);
+            if(preset != null) {
+                web.setPreset(preset);
+            }
+
+            List<String> scripts = new ArrayList<>();
+            List<String> scriptsConfig = getStrList(CONFIG_SCRIPTS, webConfig);
+            if(scriptsConfig != null) {
+                scripts.addAll(scriptsConfig);
+            }
+            web.setScripts(scripts);
+            webConfs.add(web);
+        }
+        config.addWebConfigs(webConfs);
 
         return config;
     }

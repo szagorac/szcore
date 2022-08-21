@@ -1,7 +1,10 @@
 package com.xenaksys.szcore.algo;
 
 import com.xenaksys.szcore.algo.config.DynamicMovementStrategyConfig;
+import com.xenaksys.szcore.algo.config.ExternalScoreConfig;
 import com.xenaksys.szcore.algo.config.MovementConfig;
+import com.xenaksys.szcore.model.ExtScoreInfo;
+import com.xenaksys.szcore.model.MaxScoreInfo;
 import com.xenaksys.szcore.model.MovementInfo;
 import com.xenaksys.szcore.model.MovementSectionInfo;
 import com.xenaksys.szcore.score.BasicScore;
@@ -64,6 +67,37 @@ public class DynamicMovementStrategy implements ScoreStrategy {
             sectionInfo.setPageRange(sectionConfig.getRange());
             sectionInfo.setActive(false);
             movementInfo.addSection(sectionInfo);
+
+            List<ExtScoreInfo> maxInfos = new ArrayList<>();
+            List<String> maxConfigIds = sectionConfig.getMaxConfig();
+            for(String maxConfigId : maxConfigIds) {
+                ExternalScoreConfig conf = config.getMaxConfig(maxConfigId);
+                if(conf != null) {
+                    MaxScoreInfo maxInfo = new MaxScoreInfo(maxConfigId);
+                    maxInfo.setPreset(conf.getPreset());
+                    maxInfo.setScripts(conf.getScripts());
+                    Map<String, String> targetValues = conf.getTargetValues();
+                    maxInfo.setTargetValues(targetValues);
+                    maxInfos.add(maxInfo);
+                }
+
+            }
+            sectionInfo.setMaxConfigs(maxInfos);
+
+            List<ExtScoreInfo> webInfos = new ArrayList<>();
+            List<String> webConfigIds = sectionConfig.getWebConfig();
+            for(String webConfigId : webConfigIds) {
+                ExternalScoreConfig conf = config.getWebConfig(webConfigId);
+                if(conf != null) {
+                    ExtScoreInfo webInfo = new ExtScoreInfo(webConfigId);
+                    webInfo.setPreset(conf.getPreset());
+                    webInfo.setScripts(conf.getScripts());
+                    Map<String, String> targetValues = conf.getTargetValues();
+                    webInfo.setTargetValues(targetValues);
+                    webInfos.add(webInfo);
+                }
+            }
+            sectionInfo.setWebConfigs(webInfos);
         }
 
         movementInfos.put(movementInfo.getMovementId(), movementInfo);

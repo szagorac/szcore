@@ -2,7 +2,12 @@ package com.xenaksys.szcore.model;
 
 import com.xenaksys.szcore.algo.IntRange;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 public class MovementSectionInfo {
     private final String sectionId;
@@ -12,6 +17,8 @@ public class MovementSectionInfo {
     private final Map<String, String> clientPart = new HashMap<>();
     private final Map<String, List<String>> partClients = new HashMap<>();
     private final VoteInfo voteInfo = new VoteInfo();
+    private final List<ExtScoreInfo> maxConfigs = new ArrayList<>();
+    private final List<ExtScoreInfo> webConfigs = new ArrayList<>();
 
     public MovementSectionInfo(String sectionId) {
         this.sectionId = sectionId;
@@ -112,6 +119,28 @@ public class MovementSectionInfo {
 
     public void setCurrentPage(int currentPage) {
         this.currentPage = currentPage;
+    }
+
+    public List<ExtScoreInfo> getMaxConfigs() {
+        return maxConfigs;
+    }
+
+    public void setMaxConfigs(List<ExtScoreInfo> maxConfigs) {
+        if(maxConfigs == null) {
+            return;
+        }
+        this.maxConfigs.addAll(maxConfigs);
+    }
+
+    public List<ExtScoreInfo> getWebConfigs() {
+        return webConfigs;
+    }
+
+    public void setWebConfigs(List<ExtScoreInfo> webConfigs) {
+        if(webConfigs == null) {
+            return;
+        }
+        this.webConfigs.addAll(webConfigs);
     }
 
     @Override

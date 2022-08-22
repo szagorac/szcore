@@ -8,12 +8,27 @@ import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.osc.VoteAudienceEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceVoteEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.model.Bar;
+import com.xenaksys.szcore.model.EventReceiver;
+import com.xenaksys.szcore.model.Instrument;
+import com.xenaksys.szcore.model.MutableClock;
+import com.xenaksys.szcore.model.OscPublisher;
+import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.Scheduler;
+import com.xenaksys.szcore.model.Score;
+import com.xenaksys.szcore.model.TempoModifier;
+import com.xenaksys.szcore.model.Transport;
+import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StrId;
-import com.xenaksys.szcore.score.*;
+import com.xenaksys.szcore.score.BasicPage;
+import com.xenaksys.szcore.score.BasicScore;
+import com.xenaksys.szcore.score.InscorePageMap;
+import com.xenaksys.szcore.score.InstrumentBeatTracker;
+import com.xenaksys.szcore.score.ScoreLoader;
+import com.xenaksys.szcore.score.ScoreProcessorDelegator;
 import com.xenaksys.szcore.score.delegate.web.symphonea.SymphoneaWebAudienceProcessor;
 import com.xenaksys.szcore.score.web.WebScore;
 import com.xenaksys.szcore.score.web.overlay.SymphoneaWebOverlayFactory;
@@ -26,15 +41,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import static com.xenaksys.szcore.Consts.*;
+import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NAME;
+import static com.xenaksys.szcore.Consts.CONTINUOUS_PAGE_NO;
+import static com.xenaksys.szcore.Consts.UNDERSCORE;
 
 public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
 
-    private final static String PART1 = "Part1";
-    private final static String PART2 = "Part2";
-    private final static String PART3 = "Part3";
-    private final static String INSTRUMENT_DEFAULT = PART1;
-    private final static String[] INSTRUMENTS = {PART1, PART2, PART3};
+    private final static String PART_BLUE = "Blue";
+    private final static String PART_RED = "Red";
+    private final static String PART_GREEN = "Green";
+    private final static String INSTRUMENT_DEFAULT = PART_BLUE;
+    private final static String[] INSTRUMENTS = {PART_BLUE, PART_RED, PART_GREEN};
     private final static String[] DYNAMIC_INSTRUMENTS = INSTRUMENTS;
 
     public SymphoneaScoreProcessor(TransportFactory transportFactory,
@@ -165,7 +182,7 @@ public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
     }
 
     protected void processVote(VoteAudienceEvent webEvent) {
-        LOG.debug("processVote symphonea: ");
+        LOG.debug("processVote Symphonea: ");
         SymphoneaWebAudienceProcessor audienceProcessor = (SymphoneaWebAudienceProcessor) getWebAudienceProcessor();
         if (audienceProcessor == null) {
             return;

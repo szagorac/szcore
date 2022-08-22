@@ -39,6 +39,7 @@ import com.xenaksys.szcore.event.web.in.WebScoreSelectInstrumentSlotEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreSelectSectionEvent;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Instrument;
+import com.xenaksys.szcore.model.MovementInfo;
 import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.SectionInfo;
@@ -585,29 +586,9 @@ public class WebScore {
             LOG.warn("createPartInfoUpdate: unknown instrument: {}", instrumentName);
             return null;
         }
-        int firstPageNo = 1;
-        int lastPageNo = 1;
-        Page lastPage = score.getLastInstrumentPage(instrument.getId());
-        if (lastPage != null) {
-            lastPageNo = lastPage.getPageNo();
-        }
 
-        String section = null;
-        ScoreBuilderStrategy scoreBuilderStrategy = score.getScoreBuilderStrategy();
-        if(scoreBuilderStrategy != null) {
-            section = scoreBuilderStrategy.getCurrentSection();
-            SectionInfo sectionInfo = scoreBuilderStrategy.getSectionInfo(section);
-            if(sectionInfo != null) {
-                IntRange pageRange = sectionInfo.getPageRange();
-                if(pageRange != null) {
-                    firstPageNo = pageRange.getStart();
-                    lastPageNo = pageRange.getEnd();
-                }
-            }
-        }
-
+        SequentalIntRange pageRange = getInstrumentPageRange(instrument);
         boolean isNoScoreInstrument = scoreProcessor.isNoScoreInstrument(instrumentName);
-        SequentalIntRange pageRange = new SequentalIntRange(firstPageNo, lastPageNo);
         ArrayList<IntRange> pageRanges = new ArrayList<>();
         pageRanges.add(pageRange);
         String imgDir = scoreInfo.getScoreDir() + Consts.RSRC_DIR;
@@ -631,6 +612,8 @@ public class WebScore {
                     + Consts.PNG_FILE_EXTENSION;
         }
 
+        String section = getCurrentSection();
+
         WebPartInfo partInfo = new WebPartInfo();
         partInfo.setName(instrumentName);
         partInfo.setPageRanges(pageRanges);
@@ -641,6 +624,73 @@ public class WebScore {
         partInfo.setCurrentSection(section);
         scoreState.setPartInfo(partInfo);
         return scoreState;
+    }
+
+    private SequentalIntRange getInstrumentPageRange(Instrument instrument) {
+        int firstPageNo = 1;
+        int lastPageNo = 1;
+        Page lastPage = score.getLastInstrumentPage(instrument.getId());
+        if (lastPage != null) {
+            lastPageNo = lastPage.getPageNo();
+        }
+        SequentalIntRange  out = new SequentalIntRange(firstPageNo, lastPageNo);
+
+        String section = getCurrentSection();
+        List<ScoreStrategy> strategies = score.getStrategies();
+        for(ScoreStrategy strategy : strategies) {
+            switch (strategy.getType()) {
+                case BUILDER:
+                    ScoreBuilderStrategy scoreBuilderStrategy = (ScoreBuilderStrategy) strategy;
+                    if(!scoreBuilderStrategy.isActive()) {
+                        break;
+                    }
+                    SectionInfo sectionInfo = scoreBuilderStrategy.getSectionInfo(section);
+                    if(sectionInfo != null) {
+                        IntRange pageRange = sectionInfo.getPageRange();
+                        if(pageRange != null) {
+                            firstPageNo = pageRange.getStart();
+                            lastPageNo = pageRange.getEnd();
+                            out = new SequentalIntRange(firstPageNo, lastPageNo);
+                        }
+                    }
+                    break;
+                case DYNAMIC:
+                    DynamicMovementStrategy dynamicStrategy = (DynamicMovementStrategy)strategy;
+                    if(!dynamicStrategy.isActive()) {
+                        break;
+                    }
+                    MovementInfo movementInfo = dynamicStrategy.getMovement(section);
+                    if(movementInfo != null) {
+                        out = movementInfo.getPageRange();
+                    }
+                    break;
+            }
+        }
+        return out;
+    }
+
+    private String getCurrentSection() {
+        String section = null;
+        List<ScoreStrategy> strategies = score.getStrategies();
+        for(ScoreStrategy strategy : strategies) {
+            switch (strategy.getType()) {
+                case BUILDER:
+                    ScoreBuilderStrategy scoreBuilderStrategy = (ScoreBuilderStrategy) strategy;
+                    if (!scoreBuilderStrategy.isActive()) {
+                        break;
+                    }
+                    section = scoreBuilderStrategy.getCurrentSection();
+                    break;
+                case DYNAMIC:
+                    DynamicMovementStrategy dynamicStrategy = (DynamicMovementStrategy) strategy;
+                    if (!dynamicStrategy.isActive()) {
+                        break;
+                    }
+                    section = dynamicStrategy.getCurrentMovement();
+                    break;
+            }
+        }
+        return section;
     }
 
     public void sendPageInfo(String destination, String pageId, String webRndPageId, String filename, String staveId, WebTranspositionInfo transpositionInfo) throws Exception {

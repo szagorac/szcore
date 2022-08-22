@@ -267,4 +267,8 @@ public class DynamicMovementStrategy implements ScoreStrategy {
         movementInfos.clear();
         movementOrder.clear();
     }
+
+    public MovementInfo getMovement(String section) {
+        return movementInfos.get(section);
+    }
 }

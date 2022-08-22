@@ -11,27 +11,10 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
-import static com.xenaksys.szcore.Consts.COMMA;
-import static com.xenaksys.szcore.Consts.RESOURCE_JAVASCRIPT;
-import static com.xenaksys.szcore.Consts.RESOURCE_MAXMSP;
-import static com.xenaksys.szcore.Consts.RESOURCE_SCRIPT_ENGINE;
-import static com.xenaksys.szcore.Consts.RESOURCE_TRANSITION;
-import static com.xenaksys.szcore.Consts.RESOURCE_WEB;
-import static com.xenaksys.szcore.Consts.SLASH;
-import static com.xenaksys.szcore.Consts.TXT_FILE_EXTENSION;
-import static com.xenaksys.szcore.score.ResourceType.FILE;
-import static com.xenaksys.szcore.score.ResourceType.JAVASCRIPT;
-import static com.xenaksys.szcore.score.ResourceType.MAXMSP;
-import static com.xenaksys.szcore.score.ResourceType.SCRIPT_ENGINE;
-import static com.xenaksys.szcore.score.ResourceType.TRANSITION;
-import static com.xenaksys.szcore.score.ResourceType.WEB_AUDIENCE;
+import static com.xenaksys.szcore.Consts.*;
+import static com.xenaksys.szcore.score.ResourceType.*;
 
 public class ScoreMerger {
     static final Logger LOG = LoggerFactory.getLogger(ScoreMerger.class);
@@ -40,15 +23,18 @@ public class ScoreMerger {
 //    static final String[] SCORES_ORDER = {"DialogsPitch","DialogsRhythm","DialogsMelody","DialogsTimbre","DialogsImpro"};
 
     static final String SCORE_NAME = "Symphonea";
-    static final String[] SCORES_ORDER = {"Symphonea"};
+    static final String[] SCORES_ORDER = {"SymphoneaM1", "SymphoneaT"};
+
+    //    static final String SCORE_DIR = "/Users/slavko/MyHome/Music/scoreExport/";
+    static final String SCORE_DIR = "/System/Volumes/Data/MyHome/Music/scoreExport/";
 
     static final String HEADER = "scoreName,instrumentName,pageName,pageNo,barName,barNo,timeSigNum,timeSigDenom,tempoBpm,tempoBeatValue,beatNo,startTimeMillis,durationTimeMillis,endTimeMillis,startBaseBeatUnits,durationBeatUnits,endBaseBeatUnits,xStartPxl,xEndPxl,yStartPxl,yEndPxl,isUpbeat,resource,unitBeatNo";
-    static final String IN_DIR = "/Users/slavko/MyHome/Music/scoreExport/" + SCORE_NAME + "/export";
-    static final String OUT_DIR = "/Users/slavko/MyHome/Music/scoreExport/" + SCORE_NAME + "/merged";
-    static final String RSRC_DIR = "/Users/slavko/MyHome/Music/scoreExport/" + SCORE_NAME + "/rsrc";
+    static final String IN_DIR = SCORE_DIR + SCORE_NAME + "/export";
+    static final String OUT_DIR = SCORE_DIR + SCORE_NAME + "/merged";
+    static final String RSRC_DIR = SCORE_DIR + SCORE_NAME + "/rsrc";
 
-    static final String[] IMAGE_EXT = {"png","svg"};
-    static final String[] NOT_INST = {"_AV_","_FullScore_"};
+    static final String[] IMAGE_EXT = {"png", "svg"};
+    static final String[] NOT_INST = {"_AV_", "_FullScore_"};
 
     static final String SCRIPTS = "ZScripts";
     static final String SCORE_PREFIX = "1_";

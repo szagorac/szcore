@@ -2,6 +2,7 @@ package com.xenaksys.szcore.gui.view;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.DynamicMovementStrategy;
+import com.xenaksys.szcore.algo.SequentalIntRange;
 import com.xenaksys.szcore.algo.ValueScaler;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.gui.StrategyEvent;
@@ -11,12 +12,14 @@ import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEventType;
 import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.AudienceVote;
-import com.xenaksys.szcore.gui.model.Participant;
+import com.xenaksys.szcore.gui.model.Movement;
+import com.xenaksys.szcore.gui.model.MovementSection;
 import com.xenaksys.szcore.gui.model.Section;
 import com.xenaksys.szcore.gui.model.WebscoreInstructions;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.EventService;
 import com.xenaksys.szcore.model.Id;
+import com.xenaksys.szcore.model.MovementInfo;
 import com.xenaksys.szcore.model.Score;
 import com.xenaksys.szcore.model.ScoreService;
 import com.xenaksys.szcore.model.Tempo;
@@ -38,9 +41,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Slider;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
@@ -53,6 +54,7 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -88,7 +90,6 @@ public class SymphoneaScoreController {
     public static final String P = "P";
     public static final String FF = "FF";
     public static final String PP = "PP";
-    public static final String INVALID_OWNER_PREFIX = "--";
     public static final String MAX_GRANULATOR_ADDR = OSC_ADDRESS_ZSCORE + MAXMSP_GRANULATOR;
     public static final String MAX_GRANULATOR_CONT_ADDR = OSC_ADDRESS_ZSCORE + MAXMSP_GRANULATOR_CONT;
     public static final String MAX_GRANULATOR_CONT_STOP_ADDR = OSC_ADDRESS_ZSCORE + MAXMSP_GRANULATOR_CONT_STOP;
@@ -100,19 +101,17 @@ public class SymphoneaScoreController {
     private final ValueScaler transparencyValueScaler = new ValueScaler(0.0, 100.0, 255.0, 0.0);
 
     @FXML
-    private TableView<Section> sectionsTableView;
+    private TableView<MovementSection> sectionsTableView;
     @FXML
     private ListView<String> movementOrderLvw;
     @FXML
-    private TableColumn<Section, String> sectionColumn;
+    private TableColumn<MovementSection, String> sectionColumn;
     @FXML
-    private TableColumn<Section, String> ownerColumn;
+    private TableColumn<MovementSection, Integer> startPageColumn;
     @FXML
-    private TableColumn<Section, Integer> startPageColumn;
+    private TableColumn<MovementSection, Integer> endPageColumn;
     @FXML
-    private TableColumn<Section, Integer> endPageColumn;
-    @FXML
-    private TableColumn<Section, Integer> voteNoColumn;
+    private TableColumn<MovementSection, Integer> voteNoColumn;
     @FXML
     private Label sectionsStatusLbl;
     @FXML
@@ -246,7 +245,8 @@ public class SymphoneaScoreController {
     private WebscoreInstructions presentInstructions;
     private WebscoreInstructions audienceInstructions;
 
-    private final ObservableList<Section> sections = FXCollections.observableArrayList();
+    private final ObservableList<Movement> movements = FXCollections.observableArrayList();
+    private final ObservableList<MovementSection> sections = FXCollections.observableArrayList();
     private final ObservableList<String> movementOrder = FXCollections.observableArrayList();
     private final StringProperty nextMovementProp = new SimpleStringProperty("N/A");
     private final StringProperty playingMovementProp = new SimpleStringProperty("N/A");
@@ -479,28 +479,9 @@ public class SymphoneaScoreController {
         });
 
         sectionColumn.setCellValueFactory(cellData -> cellData.getValue().sectionProperty());
-        ownerColumn.setCellValueFactory(cellData -> cellData.getValue().ownerProperty());
         startPageColumn.setCellValueFactory(cellData -> cellData.getValue().startPageProperty().asObject());
         endPageColumn.setCellValueFactory(cellData -> cellData.getValue().endPageProperty().asObject());
         voteNoColumn.setCellValueFactory(cellData -> cellData.getValue().avgVoteProperty().asObject());
-
-        ownerColumn.setCellFactory(column -> new TableCell<Section, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                TableRow<Section> currentRow = getTableRow();
-                Section section = currentRow.getItem();
-                if (section == null) {
-                    return;
-                }
-                if (section.isIsOwnerValid()) {
-                    currentRow.setStyle("-fx-background-color:inherit");
-                } else {
-                    currentRow.setStyle("-fx-background-color:red");
-                }
-                setText(item);
-            }
-        });
 
         nextSectionLbl.textProperty().bind(nextMovementProp);
         playingSectionLbl.textProperty().bind(playingMovementProp);
@@ -636,10 +617,6 @@ public class SymphoneaScoreController {
         adncAudioChb.setSelected(true);
         sendAudienceViewState(null);
         sendMaxPreset(3);
-    }
-
-    private void processPresetImproCurrent() {
-        processPresetImpro();
     }
 
     private void onFreqDurPresetChange(String value) {
@@ -787,15 +764,11 @@ public class SymphoneaScoreController {
     }
 
     private void onMovementSelect(String movementName) {
-        Section section = getSection(movementName);
-        if (section == null) {
+        Movement movement = getMovement(movementName);
+        if (movement == null) {
             return;
         }
-        onMovementSelect(section);
-    }
-
-    private void playAudio(String sectionName) {
-
+        onMovementSelect(movement);
     }
 
     private void onPlayAudioOnNewSection(Boolean newValue) {
@@ -805,11 +778,11 @@ public class SymphoneaScoreController {
         }
     }
 
-    private void onMovementSelect(Section section) {
-        if (section == null) {
+    private void onMovementSelect(Movement movement) {
+        if (movement == null) {
             return;
         }
-        setCurrentMovementLabel(section.getSection());
+        setCurrentMovementLabel(movement.getMovement());
     }
 
     private void setCurrentMovementLabel(String value) {
@@ -871,6 +844,20 @@ public class SymphoneaScoreController {
         if (movementStrategy == null || !movementStrategy.isActive()) {
             return;
         }
+
+        List<MovementInfo>  movementInfos = movementStrategy.getMovementInfos();
+        List<Movement> guiMovements = new ArrayList<>();
+        for(MovementInfo movementInfo : movementInfos) {
+            Movement movement = new Movement();
+            movement.setMovement(movementInfo.getMovementId());
+            SequentalIntRange range = movementInfo.getPageRange();
+            if(range != null) {
+                movement.setStartPage(range.getStart());
+                movement.setStartPage(range.getEnd());
+            }
+            guiMovements.add(movement);
+        }
+
         List<String> movementNames = movementStrategy.getMovementOrder();
         if (movementNames == null || movementNames.isEmpty()) {
             return;
@@ -886,6 +873,7 @@ public class SymphoneaScoreController {
         setMovementOrderInfo(movementNames, curMovement, nextMovement);
         Platform.runLater(() -> {
             resetOverlays();
+            movements.addAll(guiMovements);
         });
     }
 
@@ -926,53 +914,6 @@ public class SymphoneaScoreController {
         });
     }
 
-    public void addSection(Section section) {
-        if (section == null) {
-            return;
-        }
-        boolean isOwnerParticipant = false;
-        String owner = section.getOwner();
-        ObservableList<Participant> participants = mainApp.getParticipants();
-        if(owner != null && !owner.isEmpty()) {
-            for (Participant participant : participants) {
-                if(owner.equals(participant.getClientId())) {
-                    isOwnerParticipant = true;
-                    break;
-                }
-            }
-        }
-
-        section.setIsOwnerValid(isOwnerParticipant);
-
-        if (sections.contains(section)) {
-            updateSection(section);
-            return;
-        }
-        Platform.runLater(() -> {
-            LOG.info("Adding Section: " + section);
-            sections.add(section);
-        });
-    }
-
-    public void updateSection(Section section) {
-        Section toUpdate = getSection(section.getSection());
-        if (toUpdate == null) {
-            return;
-        }
-        Platform.runLater(() -> {
-//            LOG.info("Updating Section: " + toUpdate);
-            toUpdate.setSection(section.getSection());
-            toUpdate.setOwner(section.getOwner());
-            toUpdate.setStartPage(section.getStartPage());
-            toUpdate.setEndPage(section.getEndPage());
-            toUpdate.setVoteNo(section.getVoteNo());
-            toUpdate.setMinVote(section.getMinVote());
-            toUpdate.setMaxVote(section.getMaxVote());
-            toUpdate.setAvgVote(section.getAvgVote());
-            toUpdate.setIsOwnerValid(section.isIsOwnerValid());
-        });
-    }
-
     public void updateVoteBar() {
         int voteNo = audienceVote.getVoteNo();
         if (voteNo == 0) {
@@ -996,36 +937,36 @@ public class SymphoneaScoreController {
         }
     }
 
-    public Section getSection(String sectionName) {
-        if (sectionName == null) {
+    public Movement getMovement(String name) {
+        if (name == null) {
             return null;
         }
-        for (Section section : sections) {
-            if (sectionName.equals(section.getSection())) {
-                return section;
+        for (Movement movement : movements) {
+            if (name.equals(movement.getMovement())) {
+                return movement;
             }
         }
         return null;
     }
 
-    public void setSection(ActionEvent actionEvent) {
+    public void setMovement(ActionEvent actionEvent) {
         presetsChob.getSelectionModel().select(Consts.PRESET_ALL_ON);
-        String playSectionName = playingMovementProp.getValue();
-        if (playSectionName == null) {
+        String playMovName = playingMovementProp.getValue();
+        if (playMovName == null) {
             return;
         }
-        sendSetSection(playSectionName);
-        Section nextSection = getSection(playSectionName);
-        if (nextSection == null) {
+        sendSetMovement(playMovName);
+        Movement nextMovement = getMovement(playMovName);
+        if (nextMovement == null) {
             return;
         }
-        int startPage = nextSection.getStartPage();
+        int startPage = nextMovement.getStartPage();
         mainApp.setPage(startPage);
         mainApp.sendPosition();
         updateOverlays();
     }
 
-    public void playSection(ActionEvent actionEvent) {
+    public void playMovement(ActionEvent actionEvent) {
         mainApp.playSection();
         updateOverlays();
     }
@@ -1034,28 +975,10 @@ public class SymphoneaScoreController {
         mainApp.stopSection();
     }
 
-    public void assignSectionOwnersRnd(ActionEvent actionEvent) {
+    private void sendSetMovement(String movementName) {
         EventFactory eventFactory = publisher.getEventFactory();
-        StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.ASSIGN_OWNERS_RND, clock.getSystemTimeMillis());
-        publisher.receive(strategyEvent);
-    }
-
-    public void resetSectionOwners(ActionEvent actionEvent) {
-        EventFactory eventFactory = publisher.getEventFactory();
-        StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.RESET, clock.getSystemTimeMillis());
-        publisher.receive(strategyEvent);
-    }
-
-    private void sendSetSection(String sectionName) {
-        EventFactory eventFactory = publisher.getEventFactory();
-        StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.SET_SECTION, clock.getSystemTimeMillis());
-        strategyEvent.setSectionName(sectionName);
-        publisher.receive(strategyEvent);
-    }
-
-    public void shuffleSectionOrder(ActionEvent actionEvent) {
-        EventFactory eventFactory = publisher.getEventFactory();
-        StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.SHUFFLE_ORDER, clock.getSystemTimeMillis());
+        StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.SET_MOVEMENT, clock.getSystemTimeMillis());
+        strategyEvent.setMovementName(movementName);
         publisher.receive(strategyEvent);
     }
 
@@ -1298,18 +1221,6 @@ public class SymphoneaScoreController {
         return instruments;
     }
 
-    private void addRemoveInstrument(List<Id> instrumentIds, InstrumentId instId, boolean isSelected) {
-        if (isSelected) {
-            if (!instrumentIds.contains(instId)) {
-                instrumentIds.add(instId);
-            }
-        } else {
-            while(instrumentIds.contains(instId)) {
-                instrumentIds.remove(instId);
-            }
-        }
-    }
-
     private void setTxtGuiVals(boolean isAudienceSet, List<Id> instrumentIds, String l1, String l2, String l3) {
         for (Id instrumentId : instrumentIds) {
             WebscoreInstructions instructions = getInstrumentInstructions((InstrumentId) instrumentId);
@@ -1351,7 +1262,7 @@ public class SymphoneaScoreController {
     }
 
     public void resetSections() {
-        sections.clear();
+        movements.clear();
         movementOrder.clear();
         nextMovementProp.setValue(Consts.NAME_NA);
         playingMovementProp.setValue(Consts.NAME_NA);
@@ -1384,39 +1295,6 @@ public class SymphoneaScoreController {
 
     public void setSynthDurDefaultValue() {
         synthDurChob.setValue(8.0);
-    }
-
-    public void onParticipantRemove(Participant participant) {
-        for(Section section : sections) {
-            String sectionOwner = section.getOwner();
-            if(sectionOwner.startsWith(INVALID_OWNER_PREFIX)) {
-                sectionOwner = sectionOwner.substring(INVALID_OWNER_PREFIX.length());
-            }
-            if(participant.getClientId().equals(sectionOwner)) {
-                section.setIsOwnerValid(false);
-                String owner = INVALID_OWNER_PREFIX + sectionOwner;
-                section.setOwner(owner);
-            }
-        }
-    }
-
-    public void onParticipantUpdate(Participant participant) {
-        if(participant.getClientId() == null) {
-            return;
-        }
-        for(Section section : sections) {
-            String sectionOwner = section.getOwner();
-            if(sectionOwner == null) {
-                continue;
-            }
-            if(sectionOwner.startsWith(INVALID_OWNER_PREFIX)) {
-                sectionOwner = sectionOwner.substring(INVALID_OWNER_PREFIX.length());
-            }
-            if(participant.getClientId().equals(sectionOwner)) {
-                section.setIsOwnerValid(true);
-                section.setOwner(sectionOwner);
-            }
-        }
     }
 
     public void onTempoEvent(Tempo tempo) {

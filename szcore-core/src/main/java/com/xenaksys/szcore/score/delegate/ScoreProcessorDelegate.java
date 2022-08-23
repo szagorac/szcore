@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.score.delegate;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.algo.DynamicMovementStrategy;
 import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.algo.config.DynamicMovementStrategyConfig;
@@ -2583,6 +2584,9 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             case SET_SECTION:
                 setSectionName(event.getSectionName());
                 break;
+            case SET_MOVEMENT:
+                setMovementName(event.getMovementName());
+                break;
             case SHUFFLE_ORDER:
                 shuffleSectionOrder();
                 break;
@@ -2609,6 +2613,17 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             return;
         }
         strategy.setCurrentSection(sectionName);
+    }
+
+    private void setMovementName(String movementName) {
+        if(movementName == null) {
+            return;
+        }
+        DynamicMovementStrategy strategy = szcore.getDynamicScoreStrategy();
+        if(strategy == null) {
+            return;
+        }
+        strategy.setCurrentMovement(movementName);
     }
 
     protected void resetStrategy() throws Exception {

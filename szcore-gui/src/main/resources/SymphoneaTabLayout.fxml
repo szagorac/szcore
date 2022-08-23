@@ -15,14 +15,11 @@
                     <children>
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                             <children>
-                                <Label text="Movements" />
+                                <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Movements" />
                                 <Label fx:id="sectionsStatusLbl" styleClass="label-red" stylesheets="@css/szcoreStyle.css" text="WAITING" />
-                                <Button fx:id="resetOwnersBtn" layoutX="147.0" layoutY="11.0" mnemonicParsing="false" onAction="#resetSectionOwners" text="Reset" />
-                                <Button fx:id="assignOwnersBtn" mnemonicParsing="false" onAction="#assignSectionOwnersRnd" text="Assign" />
-                                <Button fx:id="shuffleOrderBtn" layoutX="269.0" layoutY="11.0" mnemonicParsing="false" onAction="#shuffleSectionOrder" text="Shuffle" />
                                 <Separator orientation="VERTICAL" />
-                                <Button fx:id="setNextSectionBtn" minWidth="30.0" mnemonicParsing="false" onAction="#setSection" prefWidth="55.0" styleClass="button-orange" stylesheets="@css/szcoreStyle.css" text="Set" />
-                                <Button fx:id="playNextSectionBtn" layoutX="539.0" layoutY="11.0" minWidth="30.0" mnemonicParsing="false" onAction="#playSection" prefWidth="55.0" styleClass="button-green" stylesheets="@css/szcoreStyle.css" text="Play" />
+                                <Button fx:id="setNextSectionBtn" minWidth="30.0" mnemonicParsing="false" onAction="#setMovement" prefWidth="55.0" styleClass="button-orange" stylesheets="@css/szcoreStyle.css" text="Set" />
+                                <Button fx:id="playNextSectionBtn" layoutX="539.0" layoutY="11.0" minWidth="30.0" mnemonicParsing="false" onAction="#playMovement" prefWidth="55.0" styleClass="button-green" stylesheets="@css/szcoreStyle.css" text="Play" />
                                 <Button fx:id="stopNextSectionBtn" layoutX="586.0" layoutY="11.0" minWidth="30.0" mnemonicParsing="false" onAction="#stopSection" prefWidth="55.0" styleClass="button-red" stylesheets="@css/szcoreStyle.css" text="Stop" />
                                 <Circle fx:id="semaphore4Crc" fill="#ff212100" radius="10.0" stroke="BLACK" strokeType="INSIDE" />
                                 <Circle fx:id="semaphore3Crc" fill="#21ff3400" radius="10.0" stroke="BLACK" strokeType="INSIDE" />
@@ -49,13 +46,12 @@
                               </HBox>
                                     </children>
                                 </VBox>
-                                <TableView fx:id="sectionsTableView" prefHeight="150.0" prefWidth="285.0">
+                                <TableView fx:id="sectionsTableView" prefHeight="150.0" prefWidth="250.0">
                                     <columns>
                                         <TableColumn fx:id="sectionColumn" maxWidth="200.0" minWidth="50.0" prefWidth="70.0" text="Section" />
                                         <TableColumn fx:id="voteNoColumn" maxWidth="200.0" minWidth="30.0" prefWidth="40.0" text="Vote" />
                                         <TableColumn fx:id="startPageColumn" maxWidth="120.0" minWidth="30.0" prefWidth="45.0" text="StartP" />
                                         <TableColumn fx:id="endPageColumn" maxWidth="120.0" minWidth="29.0" prefWidth="45.0" text="EndP" />
-                                        <TableColumn fx:id="ownerColumn" maxWidth="150.0" minWidth="45.0" text="Owner" />
                                     </columns>
                                 </TableView>
                                 <VBox alignment="TOP_CENTER">

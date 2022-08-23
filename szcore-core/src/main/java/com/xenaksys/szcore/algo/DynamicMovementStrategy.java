@@ -40,7 +40,7 @@ public class DynamicMovementStrategy implements ScoreStrategy {
         if (config == null) {
             return;
         }
-        List<MovementConfig> movementsConfig = getMovements();
+        List<MovementConfig> movementsConfig = getMovementConfigs();
         if (movementsConfig == null) {
             return;
         }
@@ -112,7 +112,7 @@ public class DynamicMovementStrategy implements ScoreStrategy {
         return config;
     }
 
-    public List<MovementConfig> getMovements() {
+    public List<MovementConfig> getMovementConfigs() {
         return config.getMovements();
     }
 
@@ -134,7 +134,7 @@ public class DynamicMovementStrategy implements ScoreStrategy {
     }
 
     private boolean isBuildComplete() {
-        List<MovementConfig> movements = getMovements();
+        List<MovementConfig> movements = getMovementConfigs();
         if (movements == null) {
             return true;
         }

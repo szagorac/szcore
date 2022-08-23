@@ -10,6 +10,7 @@ import java.util.Map;
 public class MovementConfig {
     private String name;
     private Map<String, SectionConfig> sections = new HashMap<>();
+    private int startPage;
 
     public String getName() {
         return name;
@@ -45,6 +46,7 @@ public class MovementConfig {
             this.sections.put(section.getName(), section);
         }
     }
+
     public void addSectionConfig(String name, IntRange pageRange, List<String> parts, List<String> maxConfig, List<String> webConfig) {
         SectionConfig sectionConfig = createSectionConfig(name, pageRange, parts, maxConfig, webConfig);
         addSection(sectionConfig);
@@ -52,6 +54,14 @@ public class MovementConfig {
 
     public SectionConfig createSectionConfig(String name, IntRange pageRange, List<String> parts, List<String> maxConfig, List<String> webConfig) {
         return new SectionConfig(name, pageRange, parts, maxConfig, webConfig);
+    }
+
+    public int getStartPage() {
+        return startPage;
+    }
+
+    public void setStartPage(int startPage) {
+        this.startPage = startPage;
     }
 
     public class SectionConfig {

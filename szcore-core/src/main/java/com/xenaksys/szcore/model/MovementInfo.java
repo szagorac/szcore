@@ -3,13 +3,7 @@ package com.xenaksys.szcore.model;
 import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.algo.SequentalIntRange;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public class MovementInfo {
     private final String movementId;
@@ -17,6 +11,7 @@ public class MovementInfo {
     private final Set<String> activeSections = new HashSet<>();
 
     private SequentalIntRange pageRange;
+    private int startPage;
     private volatile boolean isActive;
 
     public MovementInfo(String movementId) {
@@ -113,13 +108,21 @@ public class MovementInfo {
                 lastPage = sectionEnd;
             }
         }
-        if(firstPage == Integer.MAX_VALUE) {
+        if (firstPage == Integer.MAX_VALUE) {
             firstPage = 0;
         }
-        if(lastPage == 0) {
+        if (lastPage == 0) {
             lastPage = firstPage;
         }
         pageRange = new SequentalIntRange(firstPage, lastPage);
+    }
+
+    public void setStartPage(int startPage) {
+        this.startPage = startPage;
+    }
+
+    public int getStartPage() {
+        return startPage;
     }
 
     @Override

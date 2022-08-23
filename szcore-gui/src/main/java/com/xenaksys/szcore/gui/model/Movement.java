@@ -10,8 +10,9 @@ import java.util.Objects;
 
 public class Movement {
     private StringProperty movement = new SimpleStringProperty(Consts.EMPTY);
+    private IntegerProperty firstPage = new SimpleIntegerProperty(0);
+    private IntegerProperty lastPage = new SimpleIntegerProperty(0);
     private IntegerProperty startPage = new SimpleIntegerProperty(0);
-    private IntegerProperty endPage = new SimpleIntegerProperty(0);
 
     public String getMovement() {
         return movement.get();
@@ -25,6 +26,30 @@ public class Movement {
         this.movement.set(movement);
     }
 
+    public int getFirstPage() {
+        return firstPage.get();
+    }
+
+    public IntegerProperty firstPageProperty() {
+        return firstPage;
+    }
+
+    public void setFirstPage(int firstPage) {
+        this.firstPage.set(firstPage);
+    }
+
+    public int getLastPage() {
+        return lastPage.get();
+    }
+
+    public IntegerProperty lastPageProperty() {
+        return lastPage;
+    }
+
+    public void setLastPage(int lastPage) {
+        this.lastPage.set(lastPage);
+    }
+
     public int getStartPage() {
         return startPage.get();
     }
@@ -36,19 +61,6 @@ public class Movement {
     public void setStartPage(int startPage) {
         this.startPage.set(startPage);
     }
-
-    public int getEndPage() {
-        return endPage.get();
-    }
-
-    public IntegerProperty endPageProperty() {
-        return endPage;
-    }
-
-    public void setEndPage(int endPage) {
-        this.endPage.set(endPage);
-    }
-
 
     @Override
     public boolean equals(Object o) {
@@ -67,8 +79,8 @@ public class Movement {
     public String toString() {
         return "Section{" +
                 "section=" + movement +
-                ", startPage=" + startPage +
-                ", endPage=" + endPage +
+                ", startPage=" + firstPage +
+                ", endPage=" + lastPage +
                 '}';
     }
 }

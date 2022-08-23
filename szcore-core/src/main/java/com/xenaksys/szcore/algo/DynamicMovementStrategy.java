@@ -100,6 +100,8 @@ public class DynamicMovementStrategy implements ScoreStrategy {
             sectionInfo.setWebConfigs(webInfos);
         }
 
+        movementInfo.setStartPage(movementConfig.getStartPage());
+
         movementInfos.put(movementInfo.getMovementId(), movementInfo);
         return movementInfo;
     }

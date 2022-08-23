@@ -31,6 +31,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import static com.xenaksys.szcore.Consts.RESOURCE_JAVASCRIPT;
+import static com.xenaksys.szcore.Consts.RESOURCE_MAXMSP;
+import static com.xenaksys.szcore.Consts.RESOURCE_SCRIPT_ENGINE;
+import static com.xenaksys.szcore.Consts.RESOURCE_TRANSITION;
+import static com.xenaksys.szcore.Consts.RESOURCE_WEB;
 import static com.xenaksys.szcore.score.ResourceType.FILE;
 import static com.xenaksys.szcore.score.ResourceType.JAVASCRIPT;
 import static com.xenaksys.szcore.score.ResourceType.MAXMSP;
@@ -42,11 +47,7 @@ import static com.xenaksys.szcore.score.ResourceType.WEB_AUDIENCE;
 public class ScoreLoader {
     static final Logger LOG = LoggerFactory.getLogger(ScoreLoader.class);
 
-    static final String RESOURCE_JAVASCRIPT = "javascript";
-    static final String RESOURCE_WEB = "web";
-    static final String RESOURCE_MAXMSP = "max";
-    static final String RESOURCE_SCRIPT_ENGINE = "sce";
-    static final String RESOURCE_TRANSITION = "transition";
+
     static final String BEAT = "beat";
     static final String IS_RESET_POINT = "reset";
     static final String ONLY = "only";
@@ -57,8 +58,10 @@ public class ScoreLoader {
     static final String SCRIPT_COMMA_REPLACE_CHAR = "|";
     static final String COMMA = ",";
     static final String COMMA_TOKEN = "@C@";
+    static final String SINGLE_QUOTE_TOKEN = "@Q@";
     static final String CURLY_QUOTE = "�";
     static final String SINGLE_QUOTE = "'";
+    static final String SINGLE_QUOTE_HTML = "&#39;";
     static final String AV = "AV";
 
     public static volatile String workingDir;
@@ -90,7 +93,7 @@ public class ScoreLoader {
             "unitBeatNo"            //23
     };
 
-    static Score load(String path) throws Exception {
+    public static Score load(String path) throws Exception {
         if (path != null) {
             File file = FileUtil.getFileFromClassPath(path);
             return load(file);
@@ -98,7 +101,7 @@ public class ScoreLoader {
         return null;
     }
 
-    static Score load(File file) throws Exception {
+    public static Score load(File file) throws Exception {
         if (file == null) {
             return null;
         }
@@ -109,7 +112,16 @@ public class ScoreLoader {
         return loadLines(lines);
     }
 
-    static Score loadLines(List<String> lines) throws Exception {
+    public static List<ScoreElement> loadScoreElements(File file) throws Exception {
+        if (file == null) {
+            return null;
+        }
+        workingDir = file.getParent();
+        List<String> lines = FileUtil.loadFile(file);
+        return loadScoreElementLines(lines);
+    }
+
+    public static Score loadLines(List<String> lines) throws Exception {
         if (lines == null || lines.isEmpty()) {
             return null;
         }
@@ -133,7 +145,31 @@ public class ScoreLoader {
         return createScoreFromElements(scoreElements);
     }
 
-    private static BasicScore createScoreFromElements(List<ScoreElement> scoreElements) throws Exception {
+    public static List<ScoreElement> loadScoreElementLines(List<String> lines) throws Exception {
+        if (lines == null || lines.isEmpty()) {
+            return null;
+        }
+
+        String headersLine = lines.remove(0);
+        String[] headers = parseHeaders(headersLine);
+
+        boolean isHeaderCorrect = Arrays.equals(expextedHeaders, headers);
+        if (!isHeaderCorrect) {
+            LOG.error("Unexpeted headers: " + Arrays.toString(headers));
+            return null;
+        }
+
+        List<ScoreElement> scoreElements = new ArrayList<>();
+
+        for (String line : lines) {
+            ScoreElement scoreElement = parseLine(line);
+            scoreElements.add(scoreElement);
+        }
+
+        return scoreElements;
+    }
+
+    public static BasicScore createScoreFromElements(List<ScoreElement> scoreElements) throws Exception {
         if (scoreElements == null || scoreElements.isEmpty()) {
             return null;
         }
@@ -146,7 +182,7 @@ public class ScoreLoader {
         }
 
         StrId scoreId = new StrId(scoreName);
-        BasicScore score = new BasicScore(scoreId);
+        BasicScore score = new BasicScore(scoreId, scoreId.getName());
 
         for (ScoreElement scoreElement : scoreElements) {
             processScoreElement(scoreElement, score);
@@ -199,7 +235,6 @@ public class ScoreLoader {
     private static ResourceType getResourceType(String resource) {
         if (resource == null) {
             return FILE;
-
         }
         if (resource.startsWith(RESOURCE_JAVASCRIPT)) {
             return JAVASCRIPT;
@@ -423,6 +458,7 @@ public class ScoreLoader {
         if (sargs.length > 2) {
             for (int i = 2; i < sargs.length; i++) {
                 String arg = ParseUtil.parseToken(sargs[i], COMMA_TOKEN, COMMA);
+                arg = ParseUtil.parseToken(arg, SINGLE_QUOTE_TOKEN, SINGLE_QUOTE_HTML);
                 args.add(ParseUtil.convertToType(arg));
             }
         }
@@ -523,6 +559,7 @@ public class ScoreLoader {
         }
 
         script = ParseUtil.parseToken(script, COMMA_TOKEN, COMMA);
+        script = ParseUtil.parseToken(script, SINGLE_QUOTE_TOKEN, SINGLE_QUOTE_HTML);
 
         Script scriptObj = new WebAudienceScoreScript(id, beatId, script, isResetPoint, isResetOnly);
         LOG.info("Created script: {}", scriptObj);

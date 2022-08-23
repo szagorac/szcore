@@ -15,7 +15,7 @@ abstract public class ClientEvent implements SzcoreEvent {
 
     @Override
     public EventType getEventType() {
-        return EventType.CLIENT;
+        return EventType.ADMIN_OUT;
     }
 
     @Override

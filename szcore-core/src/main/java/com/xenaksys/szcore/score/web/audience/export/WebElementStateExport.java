@@ -1,6 +1,6 @@
 package com.xenaksys.szcore.score.web.audience.export;
 
-import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
+import com.xenaksys.szcore.score.web.audience.WebAudienceElementState;
 
 public class WebElementStateExport {
     private String id;
@@ -44,7 +44,7 @@ public class WebElementStateExport {
         return clickCount;
     }
 
-    public void populate(WebAudienceScore.WebAudienceElementState from) {
+    public void populate(WebAudienceElementState from) {
         if (from == null) {
             return;
         }

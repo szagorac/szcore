@@ -1,5 +1,6 @@
 package com.xenaksys.szcore.algo;
 
+import com.xenaksys.szcore.algo.config.ScoreRandomisationStrategyConfig;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.id.InstrumentId;
@@ -35,7 +36,7 @@ public class TestRandomisationStrategy {
     @Before
     public void init() {
         StrId scoreId = new StrId("testScore");
-        score = new BasicScore(scoreId);
+        score = new BasicScore(scoreId, scoreId.getName());
         ScoreRandomisationStrategyConfig config = new ScoreRandomisationStrategyConfig();
         scoreRandomisationStrategy = new ScoreRandomisationStrategy(score, config);
 

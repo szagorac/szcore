@@ -11,6 +11,7 @@ import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class MathUtil {
 
@@ -25,6 +26,16 @@ public class MathUtil {
         return interpolator.interpolate(x, y);
     }
 
+    public static double convertToRange(double value, double min, double max, double newMin, double newMax) {
+        double range = (max - min);
+        double out = newMin;
+        if (range != 0.0) {
+            double newRange = (newMax - newMin);
+            out = (((value - min) * newRange) / range) + newMin;
+        }
+        return out;
+    }
+
     public static double roundTo5DecimalPlaces(double value) {
         return (double) Math.round(value * 100000d) / 100000d;
     }
@@ -33,6 +44,13 @@ public class MathUtil {
         return (double) Math.round(value * 100d) / 100d;
     }
 
+    public static double roundTo1DecimalPlace(double value) {
+        return (double) Math.round(value * 10d) / 10d;
+    }
+
+    public static double roundToHalf(double value) {
+        return (double) Math.round(value * 2d) / 2d;
+    }
 
     public static double bytesToMbyte(long bytes) {
         return 1.0 * bytes / MEGABYTE;
@@ -94,6 +112,10 @@ public class MathUtil {
         return median.evaluate(values);
     }
 
+    public static int getRandomInRange(int rangeStart, int rangeEnd) {
+        return ThreadLocalRandom.current().nextInt(rangeStart, rangeEnd + 1);
+    }
+
     public static double[] mode(double[] values) {
         return StatUtils.mode(values);
     }
@@ -101,6 +123,14 @@ public class MathUtil {
     public static long min(long[] values) {
         Arrays.sort(values);
         return minSorted(values);
+    }
+
+    public static Integer toInt(String str) {
+        try {
+            return Integer.parseInt(str);
+        } catch( Exception e ){
+            return null;
+        }
     }
 
     public static long minSorted(long[] sortedValues) {

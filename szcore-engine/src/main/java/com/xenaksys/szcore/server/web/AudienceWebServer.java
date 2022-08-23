@@ -125,14 +125,13 @@ public class AudienceWebServer extends BaseZsWebServer {
             Path indexPath = Paths.get(path.toAbsolutePath().toString(), INDEX_HTML);
 
             if (Files.exists(path) && Files.exists(indexPath)) {
+                LOG.info("Audience web server using root: {}", path.toAbsolutePath());
                 staticDataHandler = createStaticDataHandler(path);
-
-//                DirectBufferCache bufferCache = new DirectBufferCache(1024, 10,1024 * 1024 * 200);
-//                staticDataHandler = new CacheHandler(bufferCache, staticPathHandler);
-
-//                staticDataHandler = resource(new PathResourceManager(path, transferMinSize))
-//                        .setWelcomeFiles(INDEX_HTML);
+            } else {
+                LOG.error("Could not initialise Audience web root: {}", getStaticDataPath());
             }
+        } else {
+            LOG.error("Failed to initialise staticDataHandler for Audience root: {}, using default", getStaticDataPath());
         }
 
         udtowAudience = Undertow.builder()
@@ -193,12 +192,6 @@ public class AudienceWebServer extends BaseZsWebServer {
         Set<WebConnection> connections = new HashSet<>();
         connections.addAll(getWsConnections());
         connections.addAll(getSseConnections());
-
-//        if (connections.isEmpty()) {
-//            return;
-//        }
-//        long now = System.currentTimeMillis();
-
         getSzcoreServer().updateAudienceWebServerConnections(connections);
     }
 

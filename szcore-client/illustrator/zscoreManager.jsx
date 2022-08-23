@@ -78,13 +78,17 @@ var ZSCORE = function (Window) {
     var NAME_SVG = "svg";
     var NAME_SCORE = "score";
     var NAME_FULL_SCORE = "FullScore";
+    var NAME_AV = "AV";
     var NAME_RIM = "rim";
     var NAME_TEXT_TRAME_SCRIPT = "[TextFrame script]"
     var NAME_PAGENUM_PREFIX = "P";
-    
+
+    var NOTE_NAMES = ["A", "B", "C", "D", "E", "F", "G"];
+
     var NAME_INSCORE_MAP_FILE_SUFFIX = "_InScoreMap.txt";
     var NAME_BEAT_INFO_FILE_SUFFIX = "_BeatInfo.csv";
- 
+    var NAME_NOTE_INFO_FILE_SUFFIX = "_NoteInfo.txt";
+
     var IS_USE_BEATLINE = true;
     var IS_SHOW_TIMESIG = true;
 
@@ -133,6 +137,7 @@ var ZSCORE = function (Window) {
     var BT_PROP_EXPORT_SCORE = "propExportScore";
     var BT_PROP_EXPORT_PARTS = "propExportParts";
     var BT_PROP_EXPORT_BEATLINES = "propExportBeatlines";
+    var BT_PROP_EXPORT_NOTE_INFO = "propExportNoteInfo";
     var BT_PROP_USE_FROM_PAGE_POSITION = "propUseFromPagePosition";
     var BT_PROP_SRC_DOC = "propSrcDoc";
     var BT_PROP_DEST_DOC = "propDestDoc";
@@ -144,14 +149,14 @@ var ZSCORE = function (Window) {
     var BT_HEADER_CALLER = "BTMH_CALLER";
 
     var START_PXL = 64;
-    var WHOLE_PXL = 160;
+    var WHOLE_PXL = 220;
     var MINIM_PXL = WHOLE_PXL / 2;
     var CROTCHET_PXL = WHOLE_PXL / 4;
     var QUAVER_PXL = WHOLE_PXL / 8;
     var SEMI_QUAVER_PXL = WHOLE_PXL / 16;
     var DEMI_SEMI_QUAVER_PXL = WHOLE_PXL / 32;
     var FIRST_BEAT_PXL = 5;
-    
+
     var BASE_BEAT_UNIT = 8;
     var NO_BASE_UNITS_IN_BEAT = 2;
     var TEMPO_BEAT_UNIT = 4;
@@ -166,11 +171,14 @@ var ZSCORE = function (Window) {
     var TIMESIG_DENOM_X_OFFSET = 9;
     var TIMESIG_DENOM_Y_OFFSET = 15.5;
     var TEMPO_NOTEVAL_X_OFFSET = 5;
-    var TEMPO_NOTEVAL_Y_OFFSET = 10;
+    var TEMPO_NOTEVAL_Y_OFFSET = 0;
     var TEMPO_BPM_X_OFFSET = 20;
-    var TEMPO_BPM_Y_OFFSET = 6;
+    var TEMPO_BPM_Y_OFFSET = -4;
     var PAGE_NO_TXT_X_OFFSET = 28;
     var PAGE_NO_TXT_Y_OFFSET = 5;
+
+    var NOTE_NAME_X_OFFSET = 62.5;
+    var NOTE_NAME_Y_OFFSET = -27.0;
 
     var BARS_REGEX = /^bar\d+/;
     var PAGES_REGEX = /^page\d+/;
@@ -197,8 +205,9 @@ var ZSCORE = function (Window) {
     var defaultName = "layerXml.xml";
     var pathSeparator = SLASH;
     var defaultSaveFilePath = defaultPath + pathSeparator + defaultName;
-    
+
     var scoreFile;
+    var noteInfoFile;
     var scoreFileHeaderWritten = false;
 
     var btCallProps;
@@ -260,8 +269,8 @@ var ZSCORE = function (Window) {
     };
 
     var InstrumentMetricTrackerMap = {};
-    
-    var MetricTracker = function(){
+
+    var MetricTracker = function () {
         this.beatNo = 0;
         this.unitBeatNo = 0;
         this.timeSigNum = "";
@@ -270,8 +279,8 @@ var ZSCORE = function (Window) {
         this.tempoBeatValue = 0;
         this.barNo = 0;
         this.timeMillis = 0;
-        
-        this.reset = function(){
+
+        this.reset = function () {
             this.beatNo = 0;
             this.unitBeatNo = 0;
             this.timeSigNum = "";
@@ -282,14 +291,14 @@ var ZSCORE = function (Window) {
             this.timeMillis = 0;
         };
     };
-    
-    var BeatInfo = function(){
+
+    var BeatInfo = function () {
         this.scoreName = "";
         this.instrumentName = "";
         this.pageName = "";
         this.pageNo = 0;
         this.barName = "";
-        this.barNo = 0;        
+        this.barNo = 0;
         this.timeSigNum = "";
         this.timeSigDenom = 0;
         this.tempoBpm = 0;
@@ -307,14 +316,14 @@ var ZSCORE = function (Window) {
         this.yEndPxl = 0;
         this.isUpbeat = 0;
         this.resource = 0;
-        
-        this.reset = function(){
+
+        this.reset = function () {
             this.scoreName = "";
             this.instrumentName = "";
             this.pageName = "";
             this.pageNo = 0;
             this.barName = "";
-            this.barNo = 0;        
+            this.barNo = 0;
             this.timeSigNum = "";
             this.timeSigDenom = 0;
             this.tempoBpm = 0;
@@ -333,78 +342,78 @@ var ZSCORE = function (Window) {
             this.isUpbeat = 0;
             this.resource = 0;
         };
-        
-    };    
-    
-    var createBeatInfoCsvStr = function (properties, beatinfo){
+
+    };
+
+    var createBeatInfoCsvStr = function (properties, beatinfo) {
         var out = "";
         for (var i = 0; i < properties.length; i++) {
             var prop = properties[i];
-            if(!prop){
+            if (!prop) {
                 conrinue;
             }
             var value = beatinfo[prop];
-            if(value || value === 0){
+            if (value || value === 0) {
                 out += value + COMMA;
             } else {
                 out += COMMA;
             }
         }
-        if(endsWith(out, COMMA)){
-            out = out.substring(0, out.length -1);
+        if (endsWith(out, COMMA)) {
+            out = out.substring(0, out.length - 1);
         }
         return out;
     };
-    
-    var createBeatInfoHeaderCsvStr = function (properties, barInfo){
+
+    var createBeatInfoHeaderCsvStr = function (properties, barInfo) {
         var out = "";
         for (var i = 0; i < properties.length; i++) {
             var prop = properties[i];
-            if(!prop){
+            if (!prop) {
                 continue;
             }
-            
+
             out += prop + COMMA;
         }
-        if(endsWith(out, COMMA)){
-            out = out.substring(0, out.length -1);
+        if (endsWith(out, COMMA)) {
+            out = out.substring(0, out.length - 1);
         }
         return out;
     };
-    
-    var getObjectProperties = function (obj){
+
+    var getObjectProperties = function (obj) {
         var out = [];
         for (var property in obj) {
             if (obj.hasOwnProperty(property)) {
-                if(isFunction(obj[property])){
+                if (isFunction(obj[property])) {
                     continue;
                 }
                 out.push(property);
             }
-        }      
+        }
         return out;
     };
-    
-    var resetInstrumentMap = function (map){
+
+    var resetInstrumentMap = function (map) {
         for (var property in map) {
             if (map.hasOwnProperty(property)) {
                 var tracker = map[property];
-                if(tracker){
+                if (tracker) {
                     tracker.reset();
                 }
             }
         }
     };
-    
-    var getInstrumentMetricTracker = function (instrumentName){
+
+    var getInstrumentMetricTracker = function (instrumentName) {
         var metricTracker = InstrumentMetricTrackerMap[instrumentName];
-        if(!metricTracker){
+        if (!metricTracker) {
             metricTracker = new MetricTracker();
             InstrumentMetricTrackerMap[instrumentName] = metricTracker;
         }
         return metricTracker;
     };
-    
+
     var showAlertInternal = function (content) {
         if (!theWindow) {
             return;
@@ -415,8 +424,8 @@ var ZSCORE = function (Window) {
     var isArray = function (obj) {
         return Object.prototype.toString.call(obj) === '[object Array]';
     };
-    
-    var isFunction = function(functionToCheck) {
+
+    var isFunction = function (functionToCheck) {
         var getType = {};
         return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
     };
@@ -446,14 +455,37 @@ var ZSCORE = function (Window) {
     var isBoolean = function (value) {
         return (typeof value) === TYPE_BOOLEAN;
     };
-    
+
     var isScriptEvent = function (eventItem) {
-        if (!eventItem || eventItem.constructor.name !== "TextFrame"){
+        if (!eventItem || eventItem.constructor.name !== "TextFrame") {
             return false;
         }
-        if (eventItem == NAME_TEXT_TRAME_SCRIPT){  
+        if (eventItem == NAME_TEXT_TRAME_SCRIPT) {
             return true;
         }
+    };
+
+    var isNoteNameText = function (notationItem) {
+        if (!notationItem || notationItem.constructor.name !== "TextFrame") {
+            return false;
+        }
+        for (var i = 0; i < NOTE_NAMES.length; i++) {
+            var noteName = NOTE_NAMES[i];
+            var content = notationItem.contents;
+            if (content === noteName) {
+                return true;
+            }
+        }
+    };
+
+    var compareNoteInfo = function ( a, b ) {
+        if ( a.xPos < b.xPos ){
+          return -1;
+        }
+        if ( a.xPos > b.xPos ){
+          return 1;
+        }
+        return 0;
     };
 
     var stringToBoolean = function (value) {
@@ -498,9 +530,9 @@ var ZSCORE = function (Window) {
 
         return str.slice(-1 * suffix.length) === suffix;
     };
-    
-    var trimRegex = function(value) {
-        return value.replace(/^\s+|\s+$/gm,'');
+
+    var trimRegex = function (value) {
+        return value.replace(/^\s+|\s+$/gm, '');
     };
 
     var convertCsvToArr = function (csvStr) {
@@ -510,12 +542,12 @@ var ZSCORE = function (Window) {
 
         return csvStr.split(COMMA);
     };
-    
+
     var convertCsvToIntArr = function (csvStr) {
         var arr = convertCsvToArr(csvStr);
         var out = [];
-        
-        for(var i = 0; i < arr.length; i++){
+
+        for (var i = 0; i < arr.length; i++) {
             var val = arr[i];
             out.push(parseInt(val));
         }
@@ -552,25 +584,25 @@ var ZSCORE = function (Window) {
             fn(collection[i]);
         }
     };
-    
-    function hideLayers(layers) {  
-        if(!layers){
-            return;
-        }
-        forEach(layers, function(layer) {  
-                layer.visible = false;  
-            }
-        );  
-    }  
 
-    function showLayers(layers)  { 
-        if(!layers){
+    function hideLayers(layers) {
+        if (!layers) {
             return;
         }
-        forEach(layers, function(layer) {  
-                layer.visible = true;  
+        forEach(layers, function (layer) {
+                layer.visible = false;
+        }
+        );
+    }
+
+    function showLayers(layers) {
+        if (!layers) {
+            return;
+        }
+        forEach(layers, function (layer) {
+                layer.visible = true;
             }
-        );   
+        );
     }
 
     var logErr = function (value) {
@@ -669,7 +701,7 @@ var ZSCORE = function (Window) {
         }
 
         var header = makeXmlOpenTag(headerName) + value + makeXmlCloseTag(headerName);
-        return  header + msg;
+        return header + msg;
     };
 
     var getBtMsgHeaders = function (content) {
@@ -685,7 +717,7 @@ var ZSCORE = function (Window) {
             var suffix = makeXmlCloseTag(header);
 
             if (!content.lastIndexOf(prefix, 0) === 0 ||
-                    !content.indexOf(suffix) > 0) {
+                !content.indexOf(suffix) > 0) {
                 return BT_CALL_UNKNOWN;
             }
 
@@ -727,9 +759,9 @@ var ZSCORE = function (Window) {
 
         return ax.length - bx.length;
     };
-   
+
     var replaceAll = function (inString, replaceValue, replaceWith) {
-        if(!inString || !replaceValue || !replaceWith) {
+        if (!inString || !replaceValue || !replaceWith) {
             return inString;
         }
         return inString.replace(new RegExp(replaceValue, 'g'), replaceWith);
@@ -771,11 +803,11 @@ var ZSCORE = function (Window) {
         try {
             log("Saving file: " + filePath);
             var destFile = new File(filePath);
-            if(destFile.error){
+            if (destFile.error) {
                 showAlertInternal("Failed to open file " + filePath + " error: " + destFile.error);
                 return;
             }
-            
+
             destFile.open('w');
             destFile.write(content);
             destFile.close();
@@ -783,7 +815,7 @@ var ZSCORE = function (Window) {
             logErr("Failed to save file " + filePath);
         }
     };
-    
+
     var appendLineInFile = function (filePath, content) {
         if (!filePath || !content) {
             return;
@@ -791,11 +823,11 @@ var ZSCORE = function (Window) {
         try {
             log("Saving file: " + filePath);
             var destFile = new File(filePath);
-            if(destFile.error){
+            if (destFile.error) {
                 showAlertInternal("Failed to open file " + filePath + " error: " + destFile.error);
                 return;
             }
-            
+
             destFile.open('a');
             destFile.write(content);
             destFile.close();
@@ -803,7 +835,7 @@ var ZSCORE = function (Window) {
             logErr("Failed to save file " + filePath);
         }
     };
-    
+
     var writeLinesInFile = function (filePath, lines) {
         if (!filePath || !lines || !isArray(lines)) {
             return;
@@ -811,13 +843,13 @@ var ZSCORE = function (Window) {
         try {
             log("Saving file: " + filePath);
             var destFile = new File(filePath);
-            if(destFile.error){
+            if (destFile.error) {
                 showAlertInternal("Failed to open file " + filePath + " error: " + destFile.error);
                 return;
             }
-            
+
             destFile.open('w');
-            for(var i = 0; i < lines.length; i++){
+            for (var i = 0; i < lines.length; i++) {
                 destFile.write(lines[i]);
                 destFile.write(NEW_LINE);
             }
@@ -826,22 +858,22 @@ var ZSCORE = function (Window) {
             logErr("Failed to save file " + filePath);
         }
     };
-    
-    var writeLinesInOpenFile = function (destFile, lines) {
+
+    var writeLinesInScoreFile = function (destFile, lines) {
         if (!destFile || !destFile.exists || !lines || !isArray(lines)) {
             return;
         }
         try {
-            for(var i = 0; i < lines.length; i++){
+            for (var i = 0; i < lines.length; i++) {
                 var line = lines[i];
-                if(i === 0 && scoreFileHeaderWritten){
+                if (i === 0 && scoreFileHeaderWritten) {
                     continue;
                 }
 
                 destFile.write(line);
                 destFile.write(NEW_LINE);
-                
-                if(i === 0){
+
+                if (i === 0) {
                     scoreFileHeaderWritten = true;
                 }
             }
@@ -849,7 +881,22 @@ var ZSCORE = function (Window) {
             logErr("Failed to save file " + destFile);
         }
     };
-    
+
+    var writeLinesInOpenFile = function (destFile, lines) {
+        if (!destFile || !destFile.exists || !lines || !isArray(lines)) {
+            return;
+        }
+        try {
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i];
+                destFile.write(line);
+                destFile.write(NEW_LINE);
+            }
+        } catch (e) {
+            logErr("Failed to save file " + destFile);
+        }
+    };
+
     var openFileForWrite = function (filePath) {
         if (!filePath) {
             return;
@@ -857,18 +904,18 @@ var ZSCORE = function (Window) {
         try {
             log("Opening file for write: " + filePath);
             var destFile = new File(filePath);
-            if(destFile.error){
+            if (destFile.error) {
                 showAlertInternal("Failed to open file " + filePath + " error: " + destFile.error);
                 return;
             }
-            
+
             destFile.open('w');
             return destFile;
         } catch (e) {
             logErr("Failed to open file " + filePath);
         }
     };
-    
+
     var closeFile = function (destFile) {
         if (!destFile) {
             return;
@@ -910,31 +957,31 @@ var ZSCORE = function (Window) {
         }
         return filePath;
     };
-    
-    var getFileExportOptions = function(propFormat){
+
+    var getFileExportOptions = function (propFormat) {
         var options;
-        switch(propFormat){
+        switch (propFormat) {
             case NAME_SVG:
                 options = new ExportOptionsSVG();
-                options.embedRasterImages = true; 
-                options.embedAllFonts = true; 
+                options.embedRasterImages = true;
+                options.embedAllFonts = true;
                 options.compressed = false;
                 options.fontSubsetting = SVGFontSubsetting.GLYPHSUSED;
                 break;
             default:
-                options = new ExportOptionsPNG24();  
-                options.antiAliasing = true;  
-                options.transparency = true;  
+                options = new ExportOptionsPNG24();
+                options.antiAliasing = true;
+                options.transparency = true;
                 options.artBoardClipping = false;
                 break;
         }
-        
+
         return options;
     };
-    
-    var getFileExportType = function(propFormat){
+
+    var getFileExportType = function (propFormat) {
         var type;
-        switch(propFormat){
+        switch (propFormat) {
             case NAME_SVG:
                 type = ExportType.SVG;
                 break;
@@ -942,7 +989,7 @@ var ZSCORE = function (Window) {
                 type = ExportType.PNG24;
                 break;
         }
-        
+
         return type;
     };
 
@@ -962,7 +1009,7 @@ var ZSCORE = function (Window) {
 
         return false;
     };
-    
+
     var createLayer = function (name, doc) {
         if (!doc) {
             return;
@@ -1013,8 +1060,8 @@ var ZSCORE = function (Window) {
         removeObject(artboard);
     };
 
-    var getUnitMultiplier = function(beatUnit, baseBeatUnit){
-        return Math.round(baseBeatUnit/beatUnit);
+    var getUnitMultiplier = function (beatUnit, baseBeatUnit) {
+        return Math.round(baseBeatUnit / beatUnit);
     };
 
     var removePageItems = function (layer) {
@@ -1124,30 +1171,30 @@ var ZSCORE = function (Window) {
 
         addXmlToLayer(layer, propXmlModel, aDoc);
     };
-    
-    var createFileName = function(doc, page, instrumentName, scoreName){
+
+    var createFileName = function (doc, page, instrumentName, scoreName) {
         var name = "";
-        
-        if(scoreName){
+
+        if (scoreName) {
             name += scoreName;
         } else {
-            if(doc){
+            if (doc) {
                 name += doc.name;
-                if(contains(name,DOT)){
+                if (contains(name, DOT)) {
                     var index = name.indexOf(DOT);
                     name = name.substring(0, index);
                 }
             }
         }
-        if(instrumentName){
+        if (instrumentName) {
             name += UNDERSCORE + instrumentName;
         }
-        if(page){
+        if (page) {
             name += UNDERSCORE + page.name;
         }
-        
+
         name = replaceAll(name, SPACE, UNDERSCORE);
-        
+
         return name;
     };
 
@@ -1199,27 +1246,27 @@ var ZSCORE = function (Window) {
 
         return ret;
     };
-    
-    var getBarNoFromName = function (barName){
-        if(!barName || !startsWith(barName, barNamePrefix)){
+
+    var getBarNoFromName = function (barName) {
+        if (!barName || !startsWith(barName, barNamePrefix)) {
             return null;
         }
-        
+
         var barNoStr = barName.substring(barNamePrefix.length);
-        return parseInt(barNoStr);        
+        return parseInt(barNoStr);
     };
 
-    var createBarNameFromNo = function (barNo){
-        return barNamePrefix + barNo;    
+    var createBarNameFromNo = function (barNo) {
+        return barNamePrefix + barNo;
     };
-    
-    var getPageNoFromName = function (pageName){
-        if(!pageName || !startsWith(pageName, pageNamePrefix)){
+
+    var getPageNoFromName = function (pageName) {
+        if (!pageName || !startsWith(pageName, pageNamePrefix)) {
             return null;
         }
-        
+
         var pageNoStr = pageName.substring(pageNamePrefix.length);
-        return parseInt(pageNoStr);        
+        return parseInt(pageNoStr);
     };
 
     var createNewBarLayer = function (parent, barName, doc) {
@@ -1351,10 +1398,10 @@ var ZSCORE = function (Window) {
         }
 
         var endCopyItem = Date.now();
-        var diff = (endCopyItem - startCopyItem)/1000.0;
-        var diffDuplicate = (endDuplicate - startDuplicate)/1000.0;
-        var diffMove = (endMoveTo - startMoveTo)/1000.0;
-        log("copy item took: " + diff + " seconds" + " moveToBeginningTime: " + diffMove  + "sec, duplicateTime: " + diffDuplicate  + "sec, item: " + pageItem.name + " targetLayer: " + targetLayer.name);
+        var diff = (endCopyItem - startCopyItem) / 1000.0;
+        var diffDuplicate = (endDuplicate - startDuplicate) / 1000.0;
+        var diffMove = (endMoveTo - startMoveTo) / 1000.0;
+        log("copy item took: " + diff + " seconds" + " moveToBeginningTime: " + diffMove + "sec, duplicateTime: " + diffDuplicate + "sec, item: " + pageItem.name + " targetLayer: " + targetLayer.name);
 
         return dupRef;
     };
@@ -1390,13 +1437,13 @@ var ZSCORE = function (Window) {
     };
 
     var printFonts = function () {
-        if(!availableFonts) {
+        if (!availableFonts) {
             return;
         }
         var count = availableFonts.length;
-        for(var i = 0; i< count; i++) {
+        for (var i = 0; i < count; i++) {
             var font = availableFonts[i];
-            log("Font: " + font.name + " style: " + font.style  + " family: " + font.family + " typename: " + font.typename);
+            log("Font: " + font.name + " style: " + font.style + " family: " + font.family + " typename: " + font.typename);
         }
 
     };
@@ -1509,6 +1556,7 @@ var ZSCORE = function (Window) {
             btPropExportScore: BT_PROP_EXPORT_SCORE,
             btPropExportParts: BT_PROP_EXPORT_PARTS,
             btPropExportBeatlines: BT_PROP_EXPORT_BEATLINES,
+            btPropExportNoteInfo: BT_PROP_EXPORT_NOTE_INFO,
             btPropUseFromPagePosition: BT_PROP_USE_FROM_PAGE_POSITION,
             btPropSrcDoc: BT_PROP_SRC_DOC,
             btPropPageDestDoc: BT_PROP_DEST_DOC,
@@ -2106,12 +2154,12 @@ var ZSCORE = function (Window) {
         findBeatlineItems: function (barLayer, doc) {
             var itemList = [];
             var beatlinesLayer = this.getBeatlinesLayer(barLayer, doc);
-            if(!beatlinesLayer){
+            if (!beatlinesLayer) {
                 return itemList;
             }
             for (var i = 0; i < beatlinesLayer.pageItems.length; i++) {
                 var pageItem = beatlinesLayer.pageItems[i];
-                if (!pageItem || !startsWith(pageItem.name, beatlineName) ){
+                if (!pageItem || !startsWith(pageItem.name, beatlineName)) {
                     continue;
                 }
                 itemList.push(pageItem);
@@ -2121,15 +2169,31 @@ var ZSCORE = function (Window) {
         findEventItems: function (barLayer, doc) {
             var itemList = [];
             var eventsLayer = this.getEventsLayer(barLayer, doc);
-            if(!eventsLayer){
+            if (!eventsLayer) {
                 return itemList;
             }
             for (var i = 0; i < eventsLayer.pageItems.length; i++) {
                 var pageItem = eventsLayer.pageItems[i];
-                if (!pageItem){
+                if (!pageItem) {
                     continue;
                 }
                 itemList.push(pageItem);
+            }
+            return itemList;
+        },
+        findNoteNameItems: function (barLayer, doc) {
+            var itemList = [];
+            var notationLayer = this.getNotationLayer(barLayer, doc);
+            if (!notationLayer) {
+                return itemList;
+            }
+            var pItems = notationLayer.pageItems;
+            var len = pItems.length;
+            for (var i = 0; i < len; i++) {
+                var pageItem = pItems[i];
+                if(isNoteNameText(pageItem)) {
+                    itemList.push(pageItem);
+                }
             }
             return itemList;
         },
@@ -2149,7 +2213,7 @@ var ZSCORE = function (Window) {
         findNamedPathItem: function (layer, itemName) {
             var itemList = [];
             this.findPageItems(layer, itemName, itemList);
-            if(itemList.length > 0){
+            if (itemList.length > 0) {
                 return itemList[0];
             }
             return null;
@@ -2185,16 +2249,16 @@ var ZSCORE = function (Window) {
 
             return false;
         },
-        findStaveRim: function (instLayer, doc){
+        findStaveRim: function (instLayer, doc) {
             var staveLayer = this.getStaveLayer(instLayer, doc);
             return this.findNamedPathItem(staveLayer, rim);
         },
-        findStaveLayer: function (instLayer, doc){
+        findStaveLayer: function (instLayer, doc) {
             return this.getStaveLayer(instLayer, doc);
         },
-        findStavePosition: function (barLayer, doc){
+        findStavePosition: function (barLayer, doc) {
             var rim = this.findStaveRim(barLayer, doc);
-            if(!rim){
+            if (!rim) {
                 return null;
             }
             return rim.position;
@@ -2229,40 +2293,40 @@ var ZSCORE = function (Window) {
             var nextBlPosition = [];
             var nextBlIndex = blIndex + 1;
             var blPosition = beatLineItem.position;
-            
-            if(nextBlIndex < blItems.length){
+
+            if (nextBlIndex < blItems.length) {
                 nextBlPosition = blItems[nextBlIndex].position;
                 return nextBlPosition;
             }
-            
+
             var nextBarIndex = barIndex + 1;
-            if(nextBarIndex < bars.length){
+            if (nextBarIndex < bars.length) {
                 var nextBar = bars[nextBarIndex];
                 var firstBeatItem = this.findBeatLine(nextBar, 1);
-                if(firstBeatItem){
+                if (firstBeatItem) {
                     nextBlPosition = firstBeatItem.position;
                     return nextBlPosition;
                 }
             }
 
             var bar = bars[barIndex];
-            var endLine =  this.findEndLine(bar);
-            if(endLine){
+            var endLine = this.findEndLine(bar);
+            if (endLine) {
                 nextBlPosition = endLine.position;
             } else {
-                var lastDistance = beatDistances[(beatDistances.length -1)];
+                var lastDistance = beatDistances[(beatDistances.length - 1)];
                 nextBlPosition[0] = blPosition[0] + lastDistance;
                 nextBlPosition[1] = blPosition[1];
             }
-            
+
             return nextBlPosition;
         },
-        getUnitsPerBeat: function (beatIndex, unitsPerBeat) {        
-            if(!unitsPerBeat){
+        getUnitsPerBeat: function (beatIndex, unitsPerBeat) {
+            if (!unitsPerBeat) {
                 return 1;
             }
             var unitPerBeat;
-            if(beatIndex < 0 || beatIndex >= unitsPerBeat.length) {
+            if (beatIndex < 0 || beatIndex >= unitsPerBeat.length) {
                 unitPerBeat = 1;
             } else {
                 unitPerBeat = unitsPerBeat[beatIndex];
@@ -2287,9 +2351,9 @@ var ZSCORE = function (Window) {
         deletePage: function (propPageName, artboardName, doc) {
             var pagePrefix = NAME_PAGE;
             var pageNos = "";
-            if(contains(propPageName, COLUMN)) {
+            if (contains(propPageName, COLUMN)) {
                 var items = propPageName.split(COLUMN);
-                if(items.length === 2) {
+                if (items.length === 2) {
                     pagePrefix = items[0];
                     pageNos = items[1];
                 }
@@ -2297,9 +2361,9 @@ var ZSCORE = function (Window) {
 
             var artboardPrefix = NAME_PAGE;
             var artboardNos = "";
-            if(contains(artboardName, COLUMN)) {
+            if (contains(artboardName, COLUMN)) {
                 var items = artboardName.split(COLUMN);
-                if(items.length === 2) {
+                if (items.length === 2) {
                     artboardPrefix = items[0];
                     artboardNos = items[1];
                 }
@@ -2308,8 +2372,8 @@ var ZSCORE = function (Window) {
             var filter = new NumbersFilter();
             filter.init(pageNos);
             var pages = filter.getValues();
-            if(isArray(pages)) {
-                for(var i = 0; i < pages.length; i++) {
+            if (isArray(pages)) {
+                for (var i = 0; i < pages.length; i++) {
                     var artbName = pagePrefix + pages[i];
                     var layer = this.findLayer(artbName, doc);
                     removeLayer(layer);
@@ -2319,8 +2383,8 @@ var ZSCORE = function (Window) {
             var afilter = new NumbersFilter();
             afilter.init(artboardNos);
             var artboards = afilter.getValues();
-            if(isArray(artboards)) {
-                for(var i = 0; i < artboards.length; i++) {
+            if (isArray(artboards)) {
+                for (var i = 0; i < artboards.length; i++) {
                     var artboardName = artboardPrefix + artboards[i];
                     var artboard = this.findArtboard(artboardName, doc);
                     removeArtboard(artboard);
@@ -2339,16 +2403,16 @@ var ZSCORE = function (Window) {
                 var instrument = instruments[i];
                 var staveLayer = this.findStaveLayer(instrument, doc);
                 this.updatePagenum(staveLayer, propPageName, doc);
-                
+
             }
-            
+
         },
         setPageNum: function (pageName, staveLayer, doc) {
             if (!pageName || !staveLayer || !doc) {
                 return;
             }
             var pageNo = getPageNoFromName(pageName);
-            if(!pageNo) {
+            if (!pageNo) {
                 pageno = "N/A";
             }
 
@@ -2357,7 +2421,7 @@ var ZSCORE = function (Window) {
             var pagenum = this.findPagenum(staveLayer);
             if (!pagenum) {
                 var endLine = this.findPageEndLine(staveLayer);
-                if(!endLine) {
+                if (!endLine) {
                     return;
                 }
                 this.createPagenum(pageNoStr, endLine, staveLayer, doc);
@@ -2440,22 +2504,22 @@ var ZSCORE = function (Window) {
 
             return out;
         },
-        getScoreSaveDir: function(doc){
-            if(!doc){
+        getScoreSaveDir: function (doc) {
+            if (!doc) {
                 return ".";
             }
-            var afile = doc.fullName;  
+            var afile = doc.fullName;
             var folder = afile.parent;
             var path = folder.fsName + SLASH + NAME_SCORE + SLASH;
-            
+
             return path;
         },
-        exportLayerFile: function(path, propFormat, doc){
+        exportLayerFile: function (path, propFormat, doc) {
             var options = getFileExportOptions(propFormat);
             var type = getFileExportType(propFormat);
 
             var file = new File(path);
-            doc.exportFile(file,type,options); 
+            doc.exportFile(file, type, options);
             file.close();
         },
         getOrCreateBarLayerChild: function (name, barLayer, doc) {
@@ -2473,6 +2537,9 @@ var ZSCORE = function (Window) {
         },
         getBeatlinesLayer: function (barLayer, doc) {
             return this.getOrCreateBarLayerChild(NAME_BEATLINES, barLayer, doc);
+        },
+        getNotationLayer: function (barLayer, doc) {
+            return this.getBarLayerChild(NAME_NOTATION, barLayer, doc);
         },
         getEventsLayer: function (barLayer, doc) {
             return this.getBarLayerChild(NAME_EVENTS, barLayer, doc);
@@ -2663,11 +2730,11 @@ var ZSCORE = function (Window) {
         },
         getBeatDistancePxl: function (beatUnit) {
             var distance = CROTCHET_PXL;
-            if(!beatUnit || !isNumber(beatUnit)){
+            if (!beatUnit || !isNumber(beatUnit)) {
                 return distance;
             }
-            
-            distance = wholeNoteDistancePxl/beatUnit;
+
+            distance = wholeNoteDistancePxl / beatUnit;
             distance = Math.round(distance);
             return distance;
         },
@@ -2676,7 +2743,7 @@ var ZSCORE = function (Window) {
             var beatUnits = [];
             if (this.isComplexMeter(timeSigNum)) {
                 var beatUnitsStrs = timeSigNum.split(PLUS);
-                for(var i = 0; i < beatUnitsStrs.length; i++){
+                for (var i = 0; i < beatUnitsStrs.length; i++) {
                     var beatUnitStr = beatUnitsStrs[i];
                     beatUnits[i] = parseInt(beatUnitStr);
                 }
@@ -2745,15 +2812,15 @@ var ZSCORE = function (Window) {
 
             this.setEndLinePosition(endLine, startLine, beatNo, beatDistances);
         },
-        getPageNumber: function (pageLayer, doc){
-            if(!pageLayer || ! doc){
+        getPageNumber: function (pageLayer, doc) {
+            if (!pageLayer || !doc) {
                 return null;
             }
             var pageName = pageLayer.name;
             return getPageNoFromName(pageName);
-        },      
-        getBarNumber: function (barLayer, doc){
-            if(!barLayer || !doc){
+        },
+        getBarNumber: function (barLayer, doc) {
+            if (!barLayer || !doc) {
                 return null;
             }
             var barInfoLayer = this.getBarInfoLayer(barLayer, doc);
@@ -2761,10 +2828,10 @@ var ZSCORE = function (Window) {
             var displayNo;
             if (barnum) {
                 displayNo = parseInt(barnum.contents);
-            } 
+            }
             var barName = barLayer.name;
             var nameNo = getBarNoFromName(barName);
-            if(displayNo !== nameNo){
+            if (displayNo !== nameNo) {
                 log("Inconsistent bar Number in bar name: " + nameNo + " and view: " + displayNo);
             }
             return displayNo;
@@ -2784,7 +2851,7 @@ var ZSCORE = function (Window) {
                 this.setItemContents(barnum, barNoStr);
             }
         },
-        updatePagenum: function (staveLayer, pageName, doc) {            
+        updatePagenum: function (staveLayer, pageName, doc) {
             this.setPageNum(pageName, staveLayer, doc);
         },
         removeTimeSig: function (barLayer, doc) {
@@ -2942,7 +3009,7 @@ var ZSCORE = function (Window) {
             if (!pageLayer) {
                 return BT_RESP_ERROR;
             }
- 
+
             var barLayers;
             if (overwriteBarName) {
                 barLayers = this.findLayersByName(overwriteBarName, pageLayer);
@@ -3035,7 +3102,7 @@ var ZSCORE = function (Window) {
                     var instrument = instruments[i];
                     var staveLayer = this.findStaveLayer(instrument, doc);
                     this.updatePagenum(staveLayer, newPageName, doc);
-                    
+
                 }
 
             } catch (e) {
@@ -3050,23 +3117,23 @@ var ZSCORE = function (Window) {
                 return;
             }
 
-            if(!srcDocName) {
+            if (!srcDocName) {
                 srcDocName = doc;
             }
 
-            if(!destDocName) {
+            if (!destDocName) {
                 destDocName = doc;
             }
-        
+
             try {
                 var srcDoc = getDocument(srcDocName);
                 var destDoc = getDocument(destDocName);
 
                 var pagePrefix = NAME_PAGE;
                 var pageNos = "";
-                if(contains(pageNames, COLUMN)) {
+                if (contains(pageNames, COLUMN)) {
                     var items = pageNames.split(COLUMN);
-                    if(items.length === 2) {
+                    if (items.length === 2) {
                         pagePrefix = items[0];
                         pageNos = items[1];
                     }
@@ -3075,15 +3142,15 @@ var ZSCORE = function (Window) {
                 var filter = new NumbersFilter();
                 filter.init(pageNos);
                 var pages = filter.getValues();
-                if(isArray(pages)) {
-                    for(var i = 0; i < pages.length; i++) {
+                if (isArray(pages)) {
+                    for (var i = 0; i < pages.length; i++) {
                         var pName = pagePrefix + pages[i];
                         this.copyPageFromPage(pName, pName, srcDoc, destDoc, isUseFromPagePosition, fromPageName, spacer, relativePosition, doc);
                     }
                 }
-                
+
             } catch (e) {
-                log("copyNewPageFromPage: " +  e, ERROR);
+                log("copyNewPageFromPage: " + e, ERROR);
             }
         },
         copyPageFromPage: function (pageName, artboardName, srcDoc, destDoc, isUseFromPagePosition, fromPageName, spacer, relativePosition, doc) {
@@ -3091,7 +3158,7 @@ var ZSCORE = function (Window) {
             var prevActive = theApp.activeDocument;
 
             // Source DOC logic
-            theApp.activeDocument = srcDoc; 
+            theApp.activeDocument = srcDoc;
             var pageArtboard = this.findArtboard(artboardName, srcDoc);
 
             var newPageArtboard;
@@ -3114,11 +3181,11 @@ var ZSCORE = function (Window) {
             var yOffset = 0;
 
             // Destination DOC logic
-            theApp.activeDocument = destDoc; 
+            theApp.activeDocument = destDoc;
 
-            if(isUseFromPagePosition) {
+            if (isUseFromPagePosition) {
                 var fromPageArtboard = this.findArtboard(fromPageName, destDoc);
-                if(fromPageArtboard) {
+                if (fromPageArtboard) {
                     var frect = fromPageArtboard.artboardRect;
                     var xstart = frect[0];
                     var xend = frect[2];
@@ -3134,16 +3201,16 @@ var ZSCORE = function (Window) {
             }
 
             var scoreLayer = this.findScoreLayer(destDoc);
-            if(!scoreLayer) {
+            if (!scoreLayer) {
                 log("Could not find score layer is dest doc", ERROR);
                 return;
             }
-            if(isArray(scoreLayer)) {
+            if (isArray(scoreLayer)) {
                 scoreLayer = scoreLayer[0];
             }
 
             var destArtboard = this.findArtboard(artboardName, destDoc);
-            if(!destArtboard) {
+            if (!destArtboard) {
                 destArtboard = destDoc.artboards.add(rect);
                 destArtboard.name = artboardName;
             } else {
@@ -3151,102 +3218,114 @@ var ZSCORE = function (Window) {
             }
 
             var destLayer = this.findLayer(pageName, destDoc);
-            if(destLayer) {
+            if (destLayer) {
                 this.deleteLayers(pageName, destDoc);
             }
 
             var destLayer = createLayerInParent(pageName, scoreLayer, destDoc);
             deepCopyLayer(pageLayer, destLayer, xOffset, yOffset, destDoc);
 
-            theApp.activeDocument = prevActive; 
+            theApp.activeDocument = prevActive;
             var end = new Date().getTime();
             var diff = end - start;
-            log("copy page took: " + diff/1000 + " seconds");
+            log("copy page took: " + diff / 1000 + " seconds");
         },
-        initIntrumentMetric: function(bar, metricTracker, doc){
+        initIntrumentMetric: function (bar, metricTracker, doc) {
             var timesigLayer = this.getTimesigLayer(bar, doc);
             var timeSigNumItem = this.findTimesigNum(timesigLayer);
-            if(timeSigNumItem){
+            if (timeSigNumItem) {
                 metricTracker.timeSigNum = timeSigNumItem.contents;
             }
 
             var timeSigDenomItem = this.findTimesigDenom(timesigLayer);
-            if(timeSigDenomItem){
+            if (timeSigDenomItem) {
                 metricTracker.timeSigDenom = timeSigDenomItem.contents;
             }
-            
+
             var tempoLayer = this.getTempoLayer(bar, doc);
             var bpmItem = this.findBpm(tempoLayer);
-            if(bpmItem){
+            if (bpmItem) {
                 metricTracker.tempoBpm = parseInt(bpmItem.contents);
-            }  
-            
+            }
+
             metricTracker.tempoBeatValue = tempoBeatUnit;
-            
+
         },
-        calculateBeatDurationMillis: function(numberOfBaseUnits, tempoBpm, tempoBeatValue){
-            var millisPerBeat = Math.round(MILLIS_IN_MIN/tempoBpm);
-            var multiplier = baseBeatUnit/tempoBeatValue;
-            var duration = millisPerBeat*(1/multiplier);
-            duration = Math.round(numberOfBaseUnits*duration);
+        calculateBeatDurationMillis: function (numberOfBaseUnits, tempoBpm, tempoBeatValue) {
+            var millisPerBeat = Math.round(MILLIS_IN_MIN / tempoBpm);
+            var multiplier = baseBeatUnit / tempoBeatValue;
+            var duration = millisPerBeat * (1 / multiplier);
+            duration = Math.round(numberOfBaseUnits * duration);
             return duration;
         },
-        caluclateNumberOfBaseUnits: function(beatUnit, unitPerBeat, baseBeatUnit){
-            var unitMultiplier = getUnitMultiplier(beatUnit, baseBeatUnit);        
+        caluclateNumberOfBaseUnits: function (beatUnit, unitPerBeat, baseBeatUnit) {
+            var unitMultiplier = getUnitMultiplier(beatUnit, baseBeatUnit);
             return unitPerBeat * unitMultiplier;
-        },        
-        createInScoreMapString: function(beatInfo){     
-            var mapString = "( [" + beatInfo.xStartPxl + ", " +  beatInfo.xEndPxl + "[ [" 
-                    + beatInfo.yStartPxl + ", " + beatInfo.yEndPxl + "[ ) ( [" 
+        },
+        createInScoreMapString: function(beatInfo){
+            var mapString = "( [" + beatInfo.xStartPxl + ", " +  beatInfo.xEndPxl + "[ ["
+                    + beatInfo.yStartPxl + ", " + beatInfo.yEndPxl + "[ ) ( ["
                     + beatInfo.startBaseBeatUnits + "/"+ baseBeatUnit +", " + beatInfo.endBaseBeatUnits + "/"+ baseBeatUnit +"[ )";
             return mapString;
-        },      
-        createBeatInfoString: function(infoProps, beatInfo){    
+        },
+        createNoteInfoString: function (noteInfos) {
+            var xPos = Math.round(noteInfos.xPos  * 100) / 100;
+            var yPos = Math.round(noteInfos.yPos  * 100) / 100;
+            var mapString = "{ dx: " + xPos + ", dy: " + yPos + ", txt: " + noteInfos.noteName + " }";
+            return mapString;
+        },
+        createBeatInfoString: function (infoProps, beatInfo) {
             var infoStr = createBeatInfoCsvStr(infoProps, beatInfo);
             return infoStr;
-        },  
-        createBeatInfoHeaderString: function(infoProps, beatInfo){    
+        },
+        createBeatInfoHeaderString: function (infoProps, beatInfo) {
             var infoStr = createBeatInfoHeaderCsvStr(infoProps, beatInfo);
             return infoStr;
         },
-        exportInscoreMapStrings: function(inscoreMapStrings, fileName){    
+        exportInscoreMapStrings: function (inscoreMapStrings, fileName) {
             fileName += NAME_INSCORE_MAP_FILE_SUFFIX;
             writeLinesInFile(fileName, inscoreMapStrings);
         },
-        exportInfoStrings: function(beatInfoStrings, fileName){    
+        exportInfoStrings: function (beatInfoStrings, fileName) {
             fileName += NAME_BEAT_INFO_FILE_SUFFIX;
             writeLinesInFile(fileName, beatInfoStrings);
-            if(scoreFile){
-                writeLinesInOpenFile(scoreFile, beatInfoStrings);
+            if (scoreFile) {
+                writeLinesInScoreFile(scoreFile, beatInfoStrings);
             }
         },
-        exportBeatInfosAsFullScore: function(beatInfos, eventBeatInfos, instrument, fileName){ 
-            if(!beatInfos || !instrument || !fileName){
-                 return;
-            } 
-            
+        exportNoteNameStrings: function (noteNameStrings) {
+            if(!noteInfoFile) {
+                return;
+            }
+            writeLinesInOpenFile(noteInfoFile, noteNameStrings);
+        },
+        exportBeatInfosAsFullScore: function (beatInfos, eventBeatInfos, instrument, fileName) {
+            if (!beatInfos || !instrument || !fileName) {
+                return;
+            }
+
             var fileNameFullScore = fileName.replace(instrument.name, NAME_FULL_SCORE);
-            
+
             var fullScoreBeatInfos = [];
-            for(var i = 0; i < beatInfos.length; i++){
+            for (var i = 0; i < beatInfos.length; i++) {
                 var beatInfo = beatInfos[i];
                 var fullcoreBeatInfo = new BeatInfo();
-                
-                if(!beatInfo.scoreName || beatInfo.scoreName ==="") {
+
+                if (!beatInfo.scoreName || beatInfo.scoreName === "") {
                     logError("Invalid score name");
                     continue;
                 }
-                
+
                 fullcoreBeatInfo.scoreName = beatInfo.scoreName;
                 fullcoreBeatInfo.instrumentName = NAME_FULL_SCORE;
                 fullcoreBeatInfo.pageName = beatInfo.pageName;
                 fullcoreBeatInfo.pageNo = beatInfo.pageNo;
                 fullcoreBeatInfo.barName = beatInfo.barName;
-                fullcoreBeatInfo.barNo = beatInfo.barNo;        
+                fullcoreBeatInfo.barNo = beatInfo.barNo;
                 fullcoreBeatInfo.timeSigNum = beatInfo.timeSigNum;
                 fullcoreBeatInfo.timeSigDenom = beatInfo.timeSigDenom;
                 fullcoreBeatInfo.tempoBpm = beatInfo.tempoBpm;
-                fullcoreBeatInfo.tempoBeatValue = beatInfo.tempoBeatValue;     
+                fullcoreBeatInfo.tempoBeatValue = beatInfo.tempoBeatValue;
                 fullcoreBeatInfo.beatNo = beatInfo.beatNo;
                 fullcoreBeatInfo.unitBeatNo = beatInfo.unitBeatNo;
                 fullcoreBeatInfo.startTimeMillis = beatInfo.startTimeMillis;
@@ -3260,13 +3339,13 @@ var ZSCORE = function (Window) {
                 fullcoreBeatInfo.yStartPxl = beatInfo.yStartPxl;
                 fullcoreBeatInfo.yEndPxl = beatInfo.yEndPxl;
                 fullcoreBeatInfo.isUpbeat = beatInfo.isUpbeat;
-                fullcoreBeatInfo.resource = fileNameFullScore;      
-                
+                fullcoreBeatInfo.resource = fileNameFullScore;
+
                 fullScoreBeatInfos.push(fullcoreBeatInfo);
             }
-            
-            if(eventBeatInfos) {
-                for(var i = 0; i < eventBeatInfos.length; i++){
+
+            if (eventBeatInfos) {
+                for (var i = 0; i < eventBeatInfos.length; i++) {
                     var beatInfo = eventBeatInfos[i];
                     var fullcoreBeatInfo = new BeatInfo();
 
@@ -3275,11 +3354,11 @@ var ZSCORE = function (Window) {
                     fullcoreBeatInfo.pageName = beatInfo.pageName;
                     fullcoreBeatInfo.pageNo = beatInfo.pageNo;
                     fullcoreBeatInfo.barName = beatInfo.barName;
-                    fullcoreBeatInfo.barNo = beatInfo.barNo;        
+                    fullcoreBeatInfo.barNo = beatInfo.barNo;
                     fullcoreBeatInfo.timeSigNum = beatInfo.timeSigNum;
                     fullcoreBeatInfo.timeSigDenom = beatInfo.timeSigDenom;
                     fullcoreBeatInfo.tempoBpm = beatInfo.tempoBpm;
-                    fullcoreBeatInfo.tempoBeatValue = beatInfo.tempoBeatValue;     
+                    fullcoreBeatInfo.tempoBeatValue = beatInfo.tempoBeatValue;
                     fullcoreBeatInfo.beatNo = beatInfo.beatNo;
                     fullcoreBeatInfo.unitBeatNo = beatInfo.unitBeatNo;
                     fullcoreBeatInfo.startTimeMillis = beatInfo.startTimeMillis;
@@ -3293,51 +3372,78 @@ var ZSCORE = function (Window) {
                     fullcoreBeatInfo.yStartPxl = beatInfo.yStartPxl;
                     fullcoreBeatInfo.yEndPxl = beatInfo.yEndPxl;
                     fullcoreBeatInfo.isUpbeat = beatInfo.isUpbeat;
-                    fullcoreBeatInfo.resource = fileNameFullScore;      
+                    fullcoreBeatInfo.resource = fileNameFullScore;
 
                     fullScoreBeatInfos.push(fullcoreBeatInfo);
                 }
             }
-            
+
             this.exportBeatInfos(fullScoreBeatInfos, null, fileNameFullScore);
         },
-        exportBeatInfos: function(beatInfos, eventBeatInfos, fileName){                        
-            if(!beatInfos){
+        exportBeatInfos: function (beatInfos, eventBeatInfos, fileName) {
+            if (!beatInfos) {
                 return;
             }
-            
+
             var inscoreMapStrings = [];
             var beatInfoStrings = [];
             var infoProps = [];
-            for(var i = 0; i < beatInfos.length; i++){
+            for (var i = 0; i < beatInfos.length; i++) {
                 var beatInfo = beatInfos[i];
-                
+
                 var inScoreString = this.createInScoreMapString(beatInfo);
-                inscoreMapStrings.push(inScoreString);  
-                
-                if(i === 0){
+                inscoreMapStrings.push(inScoreString);
+
+                if (i === 0) {
                     infoProps = getObjectProperties(beatInfo);
                     var beatInfoHeader = this.createBeatInfoHeaderString(infoProps, beatInfo);
                     beatInfoStrings.push(beatInfoHeader);
                 }
                 var beatInfoString = this.createBeatInfoString(infoProps, beatInfo);
                 beatInfoStrings.push(beatInfoString);
-            }     
-            
-            if(eventBeatInfos) {
-                for(var i = 0; i < eventBeatInfos.length; i++){
+            }
+
+            if (eventBeatInfos) {
+                for (var i = 0; i < eventBeatInfos.length; i++) {
                     var beatInfo = eventBeatInfos[i];
                     var beatInfoString = this.createBeatInfoString(infoProps, beatInfo);
                     beatInfoStrings.push(beatInfoString);
-                }     
+                }
             }
-            
+
             this.exportInscoreMapStrings(inscoreMapStrings, fileName);
             this.exportInfoStrings(beatInfoStrings, fileName);
         },
-        createBeatInfo: function(beatLineItem, beatLineItems, blIndex, bars, barIndex, beatDistances, stavePosition, 
-                                    metricTracker, beatUnit, untsPerBeat, beatInfos, docName, instrumentName, pageName, pageNo, 
-                                    barName, barNo, fileName, scoreName){
+        exportNoteNameInfos: function (noteNameInfos, page, instrument) {
+            if (!noteNameInfos) {
+                return;
+            }
+            var noteInfoStrings = [];
+            noteNameInfos.sort(compareNoteInfo); 
+
+            var out = "- { pageNo: " + page + ", part: " + instrument + ", textElements: [ ";
+            var delimiter = "";
+            for (var i = 0; i < noteNameInfos.length; i++) {
+                var noteNameInfo = noteNameInfos[i];
+                var noteInfoString = this.createNoteInfoString(noteNameInfo);
+                out += delimiter + noteInfoString;
+                var delimiter = COMMA + " ";
+            }
+            out += " ] }";
+            noteInfoStrings.push(out);
+            this.exportNoteNameStrings(noteInfoStrings);
+        },
+        createNoteInfo: function (pageNo, noteName, xPos, yPos) {
+            var noteInfo = {};
+            noteInfo.pageNo = pageNo;
+            noteInfo.noteName = noteName;
+            noteInfo.xPos = xPos;
+            noteInfo.yPos = yPos;
+            return noteInfo;
+        },
+        createBeatInfo: function (beatLineItem, beatLineItems, blIndex, bars, barIndex, beatDistances, stavePosition,
+            metricTracker, beatUnit, untsPerBeat, beatInfos, docName, instrumentName, pageName, pageNo,
+            barName, barNo, fileName, scoreName) {
             var isUpbeat = (blIndex < 0);
             var blPosition = beatLineItem.position;
             var nextBlPosition = this.getNextBeatlinePosition(beatLineItem, blIndex, beatLineItems, barIndex, bars, beatDistances);
@@ -3347,26 +3453,26 @@ var ZSCORE = function (Window) {
             var yStartPxl = DEFAULT_Y_POSITION; //Math.round(stavePosition[1] - blPosition[1]);
             var yEndPxl = DEFAULT_Y_POSITION;  //Math.round(yStartPxl + beatLineItem.height);
 
-            var unitsPerBeat = this.getUnitsPerBeat(blIndex, untsPerBeat);                    
+            var unitsPerBeat = this.getUnitsPerBeat(blIndex, untsPerBeat);
             var numberOfBaseUnits = this.caluclateNumberOfBaseUnits(beatUnit, unitsPerBeat, baseBeatUnit);
 
             var beatNo = metricTracker.beatNo;
             var startBaseBeatUnits = metricTracker.unitBeatNo;
             var endBaseBeatUnits = startBaseBeatUnits + numberOfBaseUnits;
 
-            var startMillis = metricTracker.timeMillis;      
+            var startMillis = metricTracker.timeMillis;
             var tempoBpm = metricTracker.tempoBpm;
             var tempoBeatValue = metricTracker.tempoBeatValue;
             var beatDurationMillis = this.calculateBeatDurationMillis(numberOfBaseUnits, tempoBpm, tempoBeatValue);
-            
-            if(isUpbeat && startMillis !== 0){
+
+            if (isUpbeat && startMillis !== 0) {
                 var upBeatDurationMillis = this.calculateBeatDurationMillis(noBaseUnitsInBeat, tempoBpm, tempoBeatValue);
                 startMillis -= upBeatDurationMillis;
             }
             var endMillis = startMillis + beatDurationMillis;
 
             var beatInfo = new BeatInfo();
-            if(scoreName){
+            if (scoreName) {
                 beatInfo.scoreName = scoreName;
             } else {
                 beatInfo.scoreName = docName;
@@ -3379,7 +3485,7 @@ var ZSCORE = function (Window) {
             beatInfo.timeSigNum = metricTracker.timeSigNum;
             beatInfo.timeSigDenom = metricTracker.timeSigDenom;
             beatInfo.tempoBpm = metricTracker.tempoBpm;
-            beatInfo.tempoBeatValue = metricTracker.tempoBeatValue;     
+            beatInfo.tempoBeatValue = metricTracker.tempoBeatValue;
             beatInfo.beatNo = beatNo;
             beatInfo.unitBeatNo = startBaseBeatUnits;
             beatInfo.startTimeMillis = startMillis;
@@ -3392,35 +3498,35 @@ var ZSCORE = function (Window) {
             beatInfo.xEndPxl = xEndPxl;
             beatInfo.yStartPxl = yStartPxl;
             beatInfo.yEndPxl = yEndPxl;
-            beatInfo.isUpbeat = (isUpbeat?1:0);
+            beatInfo.isUpbeat = (isUpbeat ? 1 : 0);
             beatInfo.resource = fileName;
 
             beatInfos.push(beatInfo);
 
             metricTracker.unitBeatNo = endBaseBeatUnits;
             metricTracker.beatNo = ++beatNo;
-//            if(!isUpbeat){
-            metricTracker.timeMillis = endMillis;   
-//            }
+            //            if(!isUpbeat){
+            metricTracker.timeMillis = endMillis;
+            //            }
         },
-        createEventBeatInfo: function(matchingBeatinfo, eventBeatInfos, resource){
-           
-            if(!matchingBeatinfo) {
+        createEventBeatInfo: function (matchingBeatinfo, eventBeatInfos, resource) {
+
+            if (!matchingBeatinfo) {
                 logError("Invalid Matching Beat Info, can not add event Beat Info");
                 return;
             }
-           
+
             var beatInfo = new BeatInfo();
             beatInfo.scoreName = matchingBeatinfo.scoreName;
             beatInfo.instrumentName = matchingBeatinfo.instrumentName;
             beatInfo.pageName = matchingBeatinfo.pageName;
             beatInfo.pageNo = matchingBeatinfo.pageNo;
             beatInfo.barName = matchingBeatinfo.barName;
-            beatInfo.barNo = matchingBeatinfo.barNo;        
+            beatInfo.barNo = matchingBeatinfo.barNo;
             beatInfo.timeSigNum = matchingBeatinfo.timeSigNum;
             beatInfo.timeSigDenom = matchingBeatinfo.timeSigDenom;
             beatInfo.tempoBpm = matchingBeatinfo.tempoBpm;
-            beatInfo.tempoBeatValue = matchingBeatinfo.tempoBeatValue;     
+            beatInfo.tempoBeatValue = matchingBeatinfo.tempoBeatValue;
             beatInfo.beatNo = matchingBeatinfo.beatNo;
             beatInfo.unitBeatNo = matchingBeatinfo.unitBeatNo;
             beatInfo.startTimeMillis = matchingBeatinfo.startTimeMillis;
@@ -3438,107 +3544,137 @@ var ZSCORE = function (Window) {
 
             eventBeatInfos.push(beatInfo);
         },
-        exportBeatlines: function(page, instrument, fileName, doc, scoreName, isExportDataAsFullScore){
+        exportBeatlines: function (page, instrument, fileName, doc, scoreName, isExportDataAsFullScore, isExportNoteInfo) {
             var docName = doc.name;
             var pageName = page.name;
             var pageNo = this.getPageNumber(page, doc);
-            
+
             var stavePosition = this.findStavePosition(instrument, doc);
-            if(!stavePosition){
-                stavePosition = [0,0];
+            if (!stavePosition) {
+                stavePosition = [0, 0];
             }
-            
+
             var bars = this.findAllBars(instrument);
             bars = sortLayersByName(bars);
             if (!bars) {
                 return false;
             }
             var instrumentName = instrument.name;
-            
+
             log("Doing Instrument: " + instrumentName);
             var metricTracker = getInstrumentMetricTracker(instrumentName);
-            
+
             //Leave space for upbeat
             metricTracker.unitBeatNo = metricTracker.unitBeatNo - noBaseUnitsInBeat;
             metricTracker.beatNo = metricTracker.beatNo - 1;
-                                 
+
             var beatInfos = [];
             var eventBeatInfos = [];
             var firstBarBeatIndex = 0;
-                
-            for(var i = 0; i < bars.length; i++){
+            var pageNoteNameInfos = [];
+
+            var isAv = instrumentName === NAME_AV;
+            isExportNoteInfo = isExportNoteInfo && !isAv;
+
+            for (var i = 0; i < bars.length; i++) {
                 var bar = bars[i];
-                if(!bar){
+                if (!bar) {
                     continue;
                 }
                 var barName = bar.name;
                 var barNo = getBarNoFromName(barName);
-                
+
                 this.initIntrumentMetric(bar, metricTracker, doc);
-                
+
                 var unitsPerBeat = this.calculateNoUnitsPerBeat(metricTracker.timeSigNum);
                 var beatUnit = this.parseBeatUnit(metricTracker.timeSigDenom);
                 var beatDistances = this.calculateBeatPositions(metricTracker.timeSigNum, metricTracker.timeSigDenom);
-                
+
                 var beatLineItems = this.findBeatlineItems(bar, doc);
                 beatLineItems = sortLayersByName(beatLineItems);
-                if(!beatLineItems){
+                if (!beatLineItems) {
                     continue;
                 }
-                
+
                 //Add upbeat info for first bar
-                if(i === 0){
+                if (i === 0) {
                     var blZero = this.findBeatLine(instrument, 0);
-                    if(blZero){
+                    if (blZero) {
                         var barZero = barNo - 1;
                         var barZeroName = createBarNameFromNo(barZero);
-                        this.createBeatInfo(blZero, beatLineItems, -1, bars, i, beatDistances, stavePosition, 
-                                                metricTracker, tempoBeatUnit, null, beatInfos, docName, instrumentName, 
-                                                pageName, pageNo, barZeroName, barZero, fileName, scoreName);
+                        this.createBeatInfo(blZero, beatLineItems, -1, bars, i, beatDistances, stavePosition,
+                            metricTracker, tempoBeatUnit, null, beatInfos, docName, instrumentName,
+                            pageName, pageNo, barZeroName, barZero, fileName, scoreName);
                     }
                 }
-                                    
+
                 firstBarBeatIndex = beatInfos.length;
-                for(var j = 0; j < beatLineItems.length; j++){
-                    this.createBeatInfo(beatLineItems[j], beatLineItems, j, bars, i, beatDistances, stavePosition, 
-                                                metricTracker, beatUnit, unitsPerBeat, beatInfos, docName, instrumentName, pageName, 
-                                                pageNo, barName, barNo, fileName, scoreName);                    
+                for (var j = 0; j < beatLineItems.length; j++) {
+                    this.createBeatInfo(beatLineItems[j], beatLineItems, j, bars, i, beatDistances, stavePosition,
+                        metricTracker, beatUnit, unitsPerBeat, beatInfos, docName, instrumentName, pageName,
+                        pageNo, barName, barNo, fileName, scoreName);
                 }
-                
+
                 // Add event objects (javascript), currently only first beat of bar        
                 var eventItems = this.findEventItems(bar, doc);
-                if(eventItems && firstBarBeatIndex >= 0){
-                    for(var j = 0; j < eventItems.length; j++){
+                if (eventItems && firstBarBeatIndex >= 0) {
+                    for (var j = 0; j < eventItems.length; j++) {
                         var eventItem = eventItems[j];
                         log("Have eventItem " + eventItem);
-                        if (isScriptEvent(eventItem)){  
+                        if (isScriptEvent(eventItem)) {
                             var scriptContent = eventItem.contents;
                             scriptContent = trimRegex(scriptContent);
                             scriptContent = replaceAll(scriptContent, COMMA, PIPE);
-//                            scriptContent = scriptContent.replace(new RegExp(COMMA, 'g'), PIPE);
+                            // scriptContent = scriptContent.replace(new RegExp(COMMA, 'g'), PIPE);
                             var matchingBeatInfo = beatInfos[firstBarBeatIndex];
                             this.createEventBeatInfo(matchingBeatInfo, eventBeatInfos, scriptContent);
-                        }      
+                        }
+                    }
+                }
+                if (isExportNoteInfo) {
+                    var noteNameItems = this.findNoteNameItems(bar, doc);
+                    var x0 = stavePosition[0] + NOTE_NAME_X_OFFSET;
+                    var y0 = stavePosition[1] + NOTE_NAME_Y_OFFSET;
+                    if (noteNameItems && firstBarBeatIndex >= 0) {
+                        for (var j = 0; j < noteNameItems.length; j++) {
+                            var noteNameItem = noteNameItems[j];
+                            var noteName = noteNameItem.contents;
+                            if(noteNameItem.name) {
+                                noteName = noteNameItem.name;
+                            }
+                            var pos = noteNameItem.position;
+                            var xPos = pos[0] - x0;
+                            if(xPos < 0) {
+                                xPos = 0;
+                            }
+                            var yPos = y0 - pos[1];
+                            var noteInfo = this.createNoteInfo(pageNo, noteName, xPos, yPos);
+                            pageNoteNameInfos.push(noteInfo);
+                            log("Have note name " + noteName + " x: " + xPos + " y: " + yPos + " inst: " + instrumentName + " pge: " + pageNo);
+                        }
                     }
                 }
             }
-            
-            if(isExportDataAsFullScore) {
-               this.exportBeatInfosAsFullScore(beatInfos, eventBeatInfos, instrument, fileName); 
+            if (isExportNoteInfo) {
+                this.exportNoteNameInfos(pageNoteNameInfos, pageNo, instrumentName);
             }
-            
+
+            if (isExportDataAsFullScore) {
+                this.exportBeatInfosAsFullScore(beatInfos, eventBeatInfos, instrument, fileName);
+            }
+
             this.exportBeatInfos(beatInfos, eventBeatInfos, fileName);
-            var barNo  = this.getBarNumber(bar, doc);
+            var barNo = this.getBarNumber(bar, doc);
             metricTracker.barNo = barNo;
         },
-        initMetricTrackers: function (pagesToDo){
-            if(!pagesToDo){
+        initMetricTrackers: function (pagesToDo) {
+            if (!pagesToDo) {
                 return;
             }
             var page0 = pagesToDo[0];
             var instruments = page0.layers;
-            if(instruments){
-                for(var i = 0; i < instruments.length; i++){
+            if (instruments) {
+                for (var i = 0; i < instruments.length; i++) {
                     var instrument = instruments[i];
                     var instrumentName = instrument.name;
                     var metricTracker = getInstrumentMetricTracker(instrumentName);
@@ -3547,7 +3683,7 @@ var ZSCORE = function (Window) {
                 }
             }
         },
-        exportFiles: function (propPages, propFormat, isExportScore, isExportParts, isExportBeatlines, dir, scoreName, doc) {
+        exportFiles: function (propPages, propFormat, isExportScore, isExportParts, isExportBeatlines, isExportNoteInfo, dir, scoreName, doc) {
             log("Exporting files ");
             var pages = this.findAllPages(doc);
             if (!pages) {
@@ -3559,110 +3695,124 @@ var ZSCORE = function (Window) {
                 return;
             }
             pagesToDo = sortLayersByName(pagesToDo);
-            
-            if(!dir){
+
+            if (!dir) {
                 dir = this.getScoreSaveDir(doc);
             }
 
             var path = dir;
-            if(!endsWith(path,SLASH)){
+            if (!endsWith(path, SLASH)) {
                 path += SLASH;
             }
-            
+
             resetInstrumentMap(InstrumentMetricTrackerMap);
             this.initMetricTrackers(pagesToDo);
-            
+
             scoreFile = null;
             scoreFileHeaderWritten = false;
-            
-            if(contains(scoreName, DOT)) {
-                scoreName = scoreName.replace(/\./g,UNDERSCORE)
+            noteInfoFile = null;
+
+            if (contains(scoreName, DOT)) {
+                scoreName = scoreName.replace(/\./g, UNDERSCORE)
             }
-            
-            if(isExportBeatlines){
+
+            if (isExportBeatlines) {
                 var name = createFileName(doc, false, false, scoreName);
                 name = path + name + NAME_BEAT_INFO_FILE_SUFFIX;
                 var sf = openFileForWrite(name);
-                if(sf){
+                if (sf) {
                     scoreFile = sf;
                 }
             }
-            
-            hideLayers(pages);         
-            
-            for(var i = 0; i < pagesToDo.length; i++){
+
+            if (isExportNoteInfo) {
+                var nifName = createFileName(doc, false, false, scoreName);
+                nifName = path + nifName + NAME_NOTE_INFO_FILE_SUFFIX;
+                var nif = openFileForWrite(nifName);
+                if (nif) {
+                    noteInfoFile = nif;
+                }
+            }
+
+            hideLayers(pages);
+
+            for (var i = 0; i < pagesToDo.length; i++) {
                 var page = pagesToDo[i];
-                if(!page){
+                if (!page) {
                     continue;
                 }
                 page.visible = true;
-                
-                if(isExportScore){
+
+                if (isExportScore) {
                     var iname = NAME_FULL_SCORE;
                     var name = createFileName(doc, page, iname, scoreName);
                     name = path + name;
                     this.exportLayerFile(name, propFormat, doc);
                 }
-                
-                if(isExportParts){
+
+                if (isExportParts) {
                     var instruments = page.layers;
-                    if(!instruments){
+                    if (!instruments) {
                         continue;
                     }
                     hideLayers(instruments);
-                    
-                    for(var j = 0; j < instruments.length; j++){
+
+                    for (var j = 0; j < instruments.length; j++) {
                         var instrument = instruments[j];
-                        if(!instrument){
+                        if (!instrument) {
                             continue;
                         }
                         instrument.visible = true;
                         var name = createFileName(doc, page, instrument.name, scoreName);
                         name = path + name;
                         this.exportLayerFile(name, propFormat, doc);
-                        
+
                         instrument.visible = false;
                     }
-                    
+
                     showLayers(instruments);
                 }
-                
-                if(isExportBeatlines){
+
+                if (isExportBeatlines) {
                     var instruments = page.layers;
-                    if(!instruments){
+                    if (!instruments) {
                         continue;
                     }
                     log("Doing page: " + page.name);
-                    for(var j = 0; j < instruments.length; j++){
+                    for (var j = 0; j < instruments.length; j++) {
                         var instrument = instruments[j];
-                        if(!instrument){
+                        if (!instrument) {
                             continue;
                         }
                         var name = createFileName(doc, page, instrument.name, scoreName);
                         name = path + name;
-                        
+
                         var isExportDataAsFullScore = false;
-                        if(j === 0) {
+                        if (j === 0) {
                             isExportDataAsFullScore = true;
                         }
-                        
-                        this.exportBeatlines(page, instrument, name, doc, scoreName, isExportDataAsFullScore);
+
+                        this.exportBeatlines(page, instrument, name, doc, scoreName, isExportDataAsFullScore, isExportNoteInfo);
                     }
                 }
-                
+
                 page.visible = false;
             }
-            
-            if(scoreFile){
+
+            if (scoreFile) {
                 closeFile(scoreFile);
             }
-            
+
+            if (noteInfoFile) {
+                closeFile(noteInfoFile);
+            }
+
             showLayers(pages);
 
-            $.gc();             
-            $.gc(); 
+            $.gc();
+            $.gc();
         },
-//################# BridgeTalk functions ####################################################
+        //################# BridgeTalk functions ####################################################
         btExportLayerXML: function () {
             var propXmlFilePath = getBtCallProp(BT_PROP_FILE_PATH);
             if (!propXmlFilePath) {
@@ -3808,7 +3958,7 @@ var ZSCORE = function (Window) {
             if (!propPageName) {
                 return BT_RESP_ERROR;
             }
-            
+
             var artboardName = getBtCallProp(BT_PROP_ARTB_NAME);
             if (!artboardName) {
                 artboardName = propPageName;
@@ -3828,7 +3978,7 @@ var ZSCORE = function (Window) {
             if (!relativePosition) {
                 relativePosition = NAME_RIGHT;
             }
-            
+
             var doc = getBtDocument();
             var ret = this.copyNewPageFromPage(propPageName, artboardName, srcDoc, destDoc, isUseFromPagePosition, fromPageName, spacer, relativePosition, doc);
             ret = appendBtMsgHeader(BT_HEADER_CALLER, BT_CALL_COPY_PAGE_FROM_PAGE, ret);
@@ -4002,15 +4152,17 @@ var ZSCORE = function (Window) {
             var propExportScore = getBtCallProp(BT_PROP_EXPORT_SCORE);
             var propExportParts = getBtCallProp(BT_PROP_EXPORT_PARTS);
             var propExportBeatlines = getBtCallProp(BT_PROP_EXPORT_BEATLINES);
+            var propExportNoteInfo = getBtCallProp(BT_PROP_EXPORT_NOTE_INFO);
             var scoreName = getBtCallProp(BT_PROP_SCORE_NAME);
-            
+
             var isExportScore = stringToBoolean(propExportScore);
             var isExportParts = stringToBoolean(propExportParts);
             var isExportBeatlines = stringToBoolean(propExportBeatlines);
+            var isExportNoteInfo = stringToBoolean(propExportNoteInfo);
 
             var doc = getBtDocument();
 
-            var ret = this.exportFiles(propPages, propFormat, isExportScore, isExportParts, isExportBeatlines, dir, scoreName, doc);
+            var ret = this.exportFiles(propPages, propFormat, isExportScore, isExportParts, isExportBeatlines, isExportNoteInfo, dir, scoreName, doc);
             ret = appendBtMsgHeader(BT_HEADER_CALLER, BT_CALL_EXPORT_FILES, ret);
             return ret;
         }
@@ -4064,7 +4216,7 @@ var ZSVIEW = function (zscorelib) {
     var modelTreeView;
     var activeLayerTxt;
     var copyToLyrNameTxt;
-    var copyDocTxt;    
+    var copyDocTxt;
     var activeDocTxt;
     var xOffsetTxt;
     var yOffsetTxt;
@@ -4113,6 +4265,7 @@ var ZSVIEW = function (zscorelib) {
     var exportDirTxt;
     var exportScoreNameTxt;
     var exportBeatlinesCb;
+    var exportNoteInfoCb;
     var useFromPagePositionCb;
 
     var winRefLayerTools;
@@ -4269,21 +4422,21 @@ var ZSVIEW = function (zscorelib) {
             logError("Failed to process XML: " + content);
         }
     };
-    
-    var getActiveDocDir = function(){
+
+    var getActiveDocDir = function () {
         var activeDoc = getActiveDoc();
-        if(!activeDoc){
+        if (!activeDoc) {
             return DOT;
         }
-        
+
         var file = activeDoc.fullName;
-        if(!file){
+        if (!file) {
             return DOT;
         }
-    
+
         var fs = file.fsName;
         var full = file.fullName;
-        
+
         var dir = full.substring(0, full.lastIndexOf(SLASH));
         return dir;
     };
@@ -4414,12 +4567,12 @@ var ZSVIEW = function (zscorelib) {
         if (format) {
             callProps[btProps.btPropFormat] = format;
         }
-        
+
         var path = getValueFromTxtBox(exportDirTxt);
         if (path) {
             callProps[btProps.btPropFilePath] = path;
         }
-        
+
         var scoreName = getValueFromTxtBox(exportScoreNameTxt);
         if (scoreName) {
             callProps[btProps.btPropScoreName] = scoreName;
@@ -4428,15 +4581,16 @@ var ZSVIEW = function (zscorelib) {
         callProps[btProps.btPropExportScore] = exportScoreCb.value;
         callProps[btProps.btPropExportParts] = exportPartsCb.value;
         callProps[btProps.btPropExportBeatlines] = exportBeatlinesCb.value;
+        callProps[btProps.btPropExportNoteInfo] = exportNoteInfoCb.value;
 
         scorelib.setBtCallProperties(callProps);
 
         executeCall(btCalls.btExportFilesCall);
     };
-    
+
     var selectExportDir = function () {
         var folder = Folder.selectDialog("Select Export Directory");
-        if(folder){
+        if (folder) {
             exportDirTxt.text = folder.fsName;
         }
     };
@@ -4855,12 +5009,12 @@ var ZSVIEW = function (zscorelib) {
         callProps[btProps.btPropArtbName] = artbName;
 
         var pageSrcDoc = getSelectedDocName(pageSrcDocsSel);
-        if(pageSrcDoc) {            
+        if (pageSrcDoc) {
             callProps[btProps.btPropSrcDoc] = pageSrcDoc;
         }
 
         var pageDestDoc = getSelectedDocName(pageDestDocsSel);
-        if(pageDestDoc) {            
+        if (pageDestDoc) {
             callProps[btProps.btPropPageDestDoc] = pageDestDoc;
         }
 
@@ -4871,7 +5025,7 @@ var ZSVIEW = function (zscorelib) {
             fromPageNo = parseInt(srcPageNoTxt.text);
         }
         var fromPageName = pagePrefix + fromPageNo;
-        callProps[btProps.btPropFromPageName] = fromPageName;        
+        callProps[btProps.btPropFromPageName] = fromPageName;
 
         var artbOffset;
         if (artboardOffsetTxt && artboardOffsetTxt.text) {
@@ -4942,7 +5096,7 @@ var ZSVIEW = function (zscorelib) {
     };
 
     var populateDocSel = function (docSel, docs) {
-        if(!docSel) {
+        if (!docSel) {
             return;
         }
         docSel.removeAll();
@@ -5035,7 +5189,6 @@ var ZSVIEW = function (zscorelib) {
         if (winRefExportTools) {
             winRefExportTools.close(2);
         }
-
     };
 
     var browseLayers = function (activeDocTxt, activeLayerTxt) {
@@ -5048,12 +5201,11 @@ var ZSVIEW = function (zscorelib) {
         populateOpenDocs();
 
         winRefLayerBrowser.show();
-
     };
 
     // Dialog window  resources;
     var layersViewRes =
-            "palette { \
+        "palette { \
             properties:{ closeButton:true, maximizeButton:false,  minimizeButton:false, resizeable:true}, \
             orientation:'column', spacing:2, margins:5,\
             alignChildren:['fill','top'], \
@@ -5116,7 +5268,7 @@ var ZSVIEW = function (zscorelib) {
         }";
 
     var layerBrowserViewRes =
-            "palette { \
+        "palette { \
             properties:{ closeButton:true, maximizeButton:false,  minimizeButton:false, resizeable:true}, \
             orientation:'column', spacing:2, margins:5,\
             alignChildren:['fill','top'], \
@@ -5138,7 +5290,7 @@ var ZSVIEW = function (zscorelib) {
         }";
 
     var pageToolsViewRes =
-            "palette { \
+        "palette { \
             properties:{ closeButton:true, maximizeButton:false,  minimizeButton:false, resizeable:true}, \
             orientation:'column', spacing:2, margins:5,\
             alignChildren:['fill','top'], \
@@ -5196,7 +5348,7 @@ var ZSVIEW = function (zscorelib) {
         }";
 
     var barToolsViewRes =
-            "palette { \
+        "palette { \
             properties:{ closeButton:true, maximizeButton:false,  minimizeButton:false, resizeable:true}, \
             orientation:'column', spacing:2, margins:2,\
             alignChildren:['fill','top'], \
@@ -5269,7 +5421,7 @@ var ZSVIEW = function (zscorelib) {
         }";
 
     var barToolsModelRes =
-            "palette { \
+        "palette { \
             properties:{ closeButton:true, maximizeButton:false,  minimizeButton:false, resizeable:true}, \
             orientation:'column', spacing:2, margins:2,\
             alignChildren:['fill','top'], \
@@ -5329,7 +5481,7 @@ var ZSVIEW = function (zscorelib) {
         }";
 
     var exportToolsRes =
-            "palette { \
+        "palette { \
             properties:{ closeButton:true, maximizeButton:false,  minimizeButton:false, resizeable:true}, \
             orientation:'column', spacing:2, margins:2,\
             alignChildren:['fill','top'], \
@@ -5350,7 +5502,8 @@ var ZSVIEW = function (zscorelib) {
                             exportScoreCb: Checkbox {preferredSize:[20,20]}, \
                         }, \
                         r4: Group { orientation:'row', alignChildren:['right', 'center'], \
-                            exportScoreTxt: StaticText { text: 'Export: ' }, \
+                            exportScoreTxt: StaticText { text: 'Export NoteInfo: ' }, \
+                            exportNoteInfoCb: Checkbox {preferredSize:[20,20]}, \
                         }, \
                     }, \
                     c2: Group { orientation:'column', alignChildren:['right', 'center'], \
@@ -5381,7 +5534,7 @@ var ZSVIEW = function (zscorelib) {
         }";
 
     var topViewRes =
-            "palette { \
+        "palette { \
             properties:{ closeButton:true, maximizeButton:false,  minimizeButton:false, resizeable:true}, \
             orientation:'column', spacing:2, margins:2,\
             alignChildren:['fill','top'], \
@@ -5466,7 +5619,7 @@ var ZSVIEW = function (zscorelib) {
         srcPageNoTxt = pt.create.srcPageNoEdtTxt;
         delPageNoTxt = pt.delete.pageNoEdtTxt;
         pageSrcDocsSel = pt.copySrc.pageSrcDocsSel;
-        pageDestDocsSel = pt.copyDest.pageDestDocsSel;        
+        pageDestDocsSel = pt.copyDest.pageDestDocsSel;
         useFromPagePositionCb = pt.copyPos.useFromPagePositionCb;
 
         pagePrefixTxt.text = NAME_PAGE;
@@ -5739,13 +5892,13 @@ var ZSVIEW = function (zscorelib) {
 
         return true;
     };
-    
+
     var createExportView = function () {
         // Create the dialog with the components
         if (!winRefExportTools) {
             winRefExportTools = new Window(exportToolsRes);
         }
-        
+
         var et = winRefExportTools.et;
         var btns = et.btns;
 
@@ -5754,29 +5907,33 @@ var ZSVIEW = function (zscorelib) {
 
         exportDirTxt = et.model.c1.r2.exportDirEdtTxt;
         exportScoreNameTxt = et.model.c2.r2.exportScoreNameEdtTxt;
-        
+
         exportScoreCb = et.model.c1.r3.exportScoreCb;
         exportPartsCb = et.model.c2.r3.exportPartsCb;
-        
+
+        exportNoteInfoCb = et.model.c1.r4.exportNoteInfoCb;
         exportBeatlinesCb = et.model.c2.r4.exportBeatlinesCb;
-        
+
         exportPartsCb.value = true;
         exportScoreCb.value = true;
-        exportBeatlinesCb.value=true;
+        exportBeatlinesCb.value = true;
+        exportNoteInfoCb.value = false;
         exportFormatSel.removeAll();
         var png = exportFormatSel.add(NAME_ITEM, NAME_PNG);
         var svg = exportFormatSel.add(NAME_ITEM, NAME_SVG);
         exportFormatSel.selection = png;
         exportDirTxt.text = getActiveDocDir();
         var activeDoc = getActiveDoc();
-        if(activeDoc){
-            exportScoreNameTxt.text = activeDoc.name;
+        if (activeDoc) {
+            var dName = activeDoc.name;
+            var sName = dName.substr(0, dName.lastIndexOf('.')) || dName;
+            exportScoreNameTxt.text = sName;
         }
 
         btns.cancelBtn.onClick = function () {
             winRefExportTools.hide();
         };
-        
+
         btns.chooseDirBtn.onClick = function () {
             selectExportDir();
         };
@@ -5812,7 +5969,7 @@ var ZSVIEW = function (zscorelib) {
             if (!winRefLayerBrowser) {
                 createLayerBrowserView();
             }
-            
+
             if (!winRefExportTools) {
                 createExportView();
             }

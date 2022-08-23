@@ -58,6 +58,15 @@ public class SequentalIntRange implements IntRange {
     }
 
     @Override
+    public int[] getFullRange() {
+        int[] out = new int[size];
+        for(int i = 0; i < size; i++) {
+            out[i] = getElement(i);
+        }
+        return out;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

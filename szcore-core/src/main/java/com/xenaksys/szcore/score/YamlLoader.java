@@ -99,6 +99,24 @@ public class YamlLoader {
         return (Integer) val;
     }
 
+    public static Double getDouble(String key, Map<String, Object> scoreMap) {
+        Object val = scoreMap.get(key);
+        if (val == null) {
+            LOG.warn("Could not find double value for key {}", key);
+            return null;
+        }
+
+        if (val instanceof Double) {
+            return (Double) val;
+        } else if(val instanceof String) {
+            return Double.valueOf((String)val);
+        } else if(val instanceof Number) {
+            return ((Number) val).doubleValue();
+        }
+
+        return null;
+    }
+
     public static Boolean getBoolean(String key, Map<String, Object> scoreMap) {
         Object val = scoreMap.get(key);
         if (val == null) {

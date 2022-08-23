@@ -5,6 +5,7 @@ import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.event.osc.PrecountBeatOffEvent;
 import com.xenaksys.szcore.event.osc.PrecountBeatOnEvent;
 import com.xenaksys.szcore.model.BeatTimeStrategy;
+import com.xenaksys.szcore.model.EventReceiver;
 import com.xenaksys.szcore.model.MutableClock;
 import com.xenaksys.szcore.model.OscPublisher;
 import com.xenaksys.szcore.model.Scheduler;
@@ -15,7 +16,7 @@ import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.net.osc.OSCPortOut;
 import com.xenaksys.szcore.publish.OscPublishProcessor;
 import com.xenaksys.szcore.publish.WebPublisherProcessor;
-import com.xenaksys.szcore.score.ScoreProcessorImpl;
+import com.xenaksys.szcore.score.ScoreProcessorDelegator;
 import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.BasicScheduler;
 import com.xenaksys.szcore.time.BasicTimer;
@@ -34,6 +35,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 
@@ -45,6 +47,7 @@ public class TestOscPublish {
     OscPublisher oscPublisher;
     WebPublisher webPublisher;
     WebProcessor webProcessor;
+    EventReceiver eventReceiver;
 
     boolean isSkip = true;
 
@@ -62,8 +65,9 @@ public class TestOscPublish {
 
         EventFactory eventFactory = new EventFactory();
         TaskFactory taskFactory = new TaskFactory();
+        Properties props  = new Properties();
 
-        scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory);
+        scoreProcessor = new ScoreProcessorDelegator(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, null, null, props);
     }
 
     @Test

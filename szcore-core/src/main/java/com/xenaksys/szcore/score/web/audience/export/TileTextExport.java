@@ -1,6 +1,6 @@
 package com.xenaksys.szcore.score.web.audience.export;
 
-import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
+import com.xenaksys.szcore.score.web.audience.WebTileText;
 
 public class TileTextExport {
     private String value;
@@ -14,7 +14,7 @@ public class TileTextExport {
         return isVisible;
     }
 
-    public void populate(WebAudienceScore.TileText from) {
+    public void populate(WebTileText from) {
         if (from == null) {
             return;
         }

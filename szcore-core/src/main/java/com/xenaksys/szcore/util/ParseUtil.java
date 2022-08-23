@@ -40,6 +40,10 @@ public class ParseUtil {
         return str.replaceAll(Consts.SLASH, EMPTY);
     }
 
+    public static String removeAllWhitespaces(String str) {
+        return str.replaceAll(Consts.ALL_WSPACE_REGEX, EMPTY);
+    }
+
     public static int getFirstDigitIndex(CharSequence cs) {
         if (isEmpty(cs)) {
             return -1;
@@ -143,5 +147,13 @@ public class ParseUtil {
         }
         return csvBuilder.toString();
     }
+
+    public static String convertToCsv(String[] values) {
+        if(values == null) {
+            return null;
+        }
+        return String.join(COMMA, values);
+    }
+
 }
 

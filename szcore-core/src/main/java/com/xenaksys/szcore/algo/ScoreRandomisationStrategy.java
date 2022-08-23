@@ -1,6 +1,7 @@
 package com.xenaksys.szcore.algo;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.algo.config.ScoreRandomisationStrategyConfig;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.Page;
@@ -20,7 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 
-public class ScoreRandomisationStrategy {
+public class ScoreRandomisationStrategy implements ScoreStrategy{
     static final Logger LOG = LoggerFactory.getLogger(ScoreRandomisationStrategy.class);
     private static final long RECALC_TIME_LIMIT = 1000 * 3;
 
@@ -35,6 +36,7 @@ public class ScoreRandomisationStrategy {
     private final Map<InstrumentId, Integer> instrumentPage = new HashMap<>();
     private final List<Integer> assignmentStrategy = new ArrayList<>();
     private final Random rnd = new Random();
+    private boolean isReady = false;
 
     public ScoreRandomisationStrategy(BasicScore szcore, ScoreRandomisationStrategyConfig config) {
         this.szcore = szcore;
@@ -54,9 +56,10 @@ public class ScoreRandomisationStrategy {
         }
 
         assignmentStrategy.add(2);
+        isReady = true;
     }
 
-    private void reset() {
+    public void reset() {
         instrumentPage.replaceAll((i, v) -> 0);
         optOutInstruments.clear();
     }
@@ -301,5 +304,20 @@ public class ScoreRandomisationStrategy {
         List<InstrumentId> ids = getAssignedInstruments();
         Collections.sort(ids);
         return ids;
+    }
+
+    @Override
+    public StrategyType getType() {
+        return StrategyType.RND;
+    }
+
+    @Override
+    public boolean isReady() {
+        return isReady;
+    }
+
+    @Override
+    public boolean isActive() {
+        return config.isActive();
     }
 }

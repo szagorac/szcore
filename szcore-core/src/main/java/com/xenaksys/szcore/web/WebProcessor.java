@@ -8,6 +8,7 @@ import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.osc.ElementSelectedAudienceEvent;
 import com.xenaksys.szcore.event.osc.OscEvent;
+import com.xenaksys.szcore.event.osc.VoteAudienceEvent;
 import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
 import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEventType;
 import com.xenaksys.szcore.event.web.audience.UpdateWebAudienceConnectionsEvent;
@@ -15,6 +16,7 @@ import com.xenaksys.szcore.event.web.audience.WebAudienceRequestLogEvent;
 import com.xenaksys.szcore.event.web.audience.WebPollAudienceEvent;
 import com.xenaksys.szcore.event.web.audience.WebStartAudienceEvent;
 import com.xenaksys.szcore.event.web.in.UpdateWebScoreConnectionsEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreClientHelloEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreInEventType;
@@ -22,6 +24,7 @@ import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreSelectInstrumentSlotEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreSelectSectionEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import com.xenaksys.szcore.model.Clock;
@@ -58,17 +61,21 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import static com.xenaksys.szcore.Consts.COMMA;
 import static com.xenaksys.szcore.Consts.EMPTY;
 import static com.xenaksys.szcore.Consts.SPACE;
+import static com.xenaksys.szcore.Consts.WEB_DATA_SCORE_STATE_DELTA;
+import static com.xenaksys.szcore.Consts.WEB_EVENT_CLIENT_ID;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_ELEMENT_ID;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_IS_POLL_NAME;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_IS_SELECTED;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_LAST_STATE_UPDATE_TIME;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_NAME;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_PART;
+import static com.xenaksys.szcore.Consts.WEB_EVENT_SECTION;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_SENT_TIME_NAME;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_SERVER_TIME;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_SLOT_INSTRUMENT;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_SLOT_NO;
 import static com.xenaksys.szcore.Consts.WEB_EVENT_TIME_NAME;
+import static com.xenaksys.szcore.Consts.WEB_EVENT_VALUE;
 import static com.xenaksys.szcore.Consts.WEB_RESPONSE_MESSAGE;
 import static com.xenaksys.szcore.Consts.WEB_RESPONSE_STATE;
 import static com.xenaksys.szcore.Consts.WEB_RESPONSE_SUBMITTED;
@@ -92,7 +99,6 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
     private final Map<String, WebClientInfo> scoreClientInfos = new ConcurrentHashMap<>();
 
     private volatile String currentWebAudienceScoreState;
-    private volatile String currentWebAudienceScoreStateDelta;
     private volatile long stateUpdateTime = 0;
     private volatile long stateDeltaUpdateTime = 0;
 
@@ -115,6 +121,7 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
 
             switch (type) {
                 case ELEMENT_SELECTED:
+                case VOTE:
                 case WEB_START:
                     processWebScoreEvent(webEvent);
                     break;
@@ -137,7 +144,11 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
                 case CONNECTIONS_REMOVE:
                 case CONNECTION:
                 case SELECT_ISLOT:
+                case SELECT_SECTION:
                     scoreService.onIncomingWebScoreEvent(webEvent);
+                    break;
+                case HELLO:
+                    processWebScoreClientHello((WebScoreClientHelloEvent) webEvent);
                     break;
                 case CONNECTIONS_UPDATE:
                     processWebScoreConnectionsUpdate((UpdateWebScoreConnectionsEvent) webEvent);
@@ -213,6 +224,27 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
     private void processWebScoreConnectionsUpdate(UpdateWebScoreConnectionsEvent connectionsEvent) {
         LOG.debug("processWebScoreConnectionsUpdate: ");
         updateWebScoreConnections(connectionsEvent.getClientConnections());
+    }
+
+    private void processWebScoreClientHello(WebScoreClientHelloEvent webEvent) {
+        LOG.debug("processWebScoreClientHello: ");
+        String addr = webEvent.getSourceAddr();
+        WebClientInfo clientInfo = scoreClientInfos.get(addr);
+        if (clientInfo == null) {
+            LOG.error("processWebScoreClientHello: Can not find client info for source addr: {}", addr);
+        } else {
+            String eventClientId = webEvent.getClientId();
+            if(eventClientId != null) {
+                String clientId = clientInfo.getClientId();
+                if(!eventClientId.equals(clientId)) {
+                    if(clientId != null) {
+                        LOG.warn("processWebScoreClientHello received clientId: {} expected: {}", eventClientId, clientId);
+                    }
+                    clientInfo.setClientId(eventClientId);
+                }
+            }
+        }
+        scoreService.onIncomingWebScoreEvent(webEvent);
     }
 
     private void processWebScoreRegisterPart(WebScorePartRegEvent webEvent) {
@@ -520,18 +552,25 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
         long creationTime = getClock().getSystemTimeMillis();
         long clientEventCreatedTime = Long.parseLong(zsRequest.getParam(WEB_EVENT_TIME_NAME));
         long clientEventSentTime = Long.parseLong(zsRequest.getParam(WEB_EVENT_SENT_TIME_NAME));
+        String clientId = zsRequest.getParam(WEB_EVENT_CLIENT_ID);
+        WebClientInfo webClientInfo = scoreClientInfos.get(sourceAddr);
 
         switch (type) {
+            case HELLO:
+                WebScoreClientHelloEvent clientHelloEvent = eventFactory.createWebScoreClientHelloEvent(clientId, eventId,
+                        sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
+                eventService.receive(clientHelloEvent);
+                return createOkWebString(WEB_RESPONSE_SUBMITTED);
             case PART_REG:
                 String part = zsRequest.getParam(WEB_EVENT_PART);
-                WebScorePartRegEvent partRegEvent = eventFactory.createWebScorePartRegEvent(eventId,
-                        sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+                WebScorePartRegEvent partRegEvent = eventFactory.createWebScorePartRegEvent(clientId, eventId,
+                        sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
                 eventService.receive(partRegEvent);
                 return createOkWebString(WEB_RESPONSE_SUBMITTED);
             case PART_READY:
                 part = zsRequest.getParam(WEB_EVENT_PART);
-                WebScorePartReadyEvent partReadyEvent = eventFactory.createWebScorePartReadyEvent(eventId,
-                        sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+                WebScorePartReadyEvent partReadyEvent = eventFactory.createWebScorePartReadyEvent(clientId, eventId,
+                        sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
                 eventService.receive(partReadyEvent);
                 return createOkWebString(WEB_RESPONSE_SUBMITTED);
             case PING:
@@ -543,9 +582,15 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
                 String slotNoStr = zsRequest.getParam(WEB_EVENT_SLOT_NO);
                 String slotInstrument = zsRequest.getParam(WEB_EVENT_SLOT_INSTRUMENT);
                 int slotNo = Integer.parseInt(slotNoStr);
-                WebScoreSelectInstrumentSlotEvent slotEvent = eventFactory.createWebScoreSelectInstrumentSlotEvent(eventId,
-                        sourceAddr, part, slotNo, slotInstrument, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+                WebScoreSelectInstrumentSlotEvent slotEvent = eventFactory.createWebScoreSelectInstrumentSlotEvent(clientId, eventId,
+                        sourceAddr, part, slotNo, slotInstrument, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
                 eventService.receive(slotEvent);
+                return createOkWebString(WEB_RESPONSE_SUBMITTED);
+            case SELECT_SECTION:
+                String section = zsRequest.getParam(WEB_EVENT_SECTION);
+                WebScoreSelectSectionEvent sectionEvent = eventFactory.createWebScoreSelectSectionEvent(clientId, eventId,
+                        sourceAddr, section, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
+                eventService.receive(sectionEvent);
                 return createOkWebString(WEB_RESPONSE_SUBMITTED);
             default:
                 return createErrorWebString("Invalid event type: " + type);
@@ -633,6 +678,12 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
 
                 eventService.receive(selectedEvent);
                 return createOkWebString(WEB_RESPONSE_SUBMITTED);
+            case VOTE:
+                String value = zsRequest.getParam(WEB_EVENT_VALUE);
+                VoteAudienceEvent voteEvent = eventFactory.createVoteEvent(value, audienceClientInfos.size(), eventId,
+                        sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+                eventService.receive(voteEvent);
+                return createOkWebString(WEB_RESPONSE_SUBMITTED);
             case WEB_START:
                 WebStartAudienceEvent webStartEvent = eventFactory.createWebAudienceStartEvent(eventId,
                         sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
@@ -660,7 +711,11 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
         if (webAudienceScoreStateExport == null) {
             return;
         }
-        String out = GSON.toJson(webAudienceScoreStateExport);
+        Map<String, Object> state = webAudienceScoreStateExport.getState();
+        if (state.isEmpty()) {
+            return;
+        }
+        String out = GSON.toJson(state);
         int stringLenBytes = Util.getStringLengthUtf8(out);
         long stringLenKb = stringLenBytes / 1024;
         LOG.debug("onWebScoreEvent: WebState size: {}Kb json: {}", stringLenKb, out);
@@ -673,18 +728,21 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
 
     @Override
     public void onWebAudienceScoreStateDeltaChange(WebAudienceScoreStateDeltaExport webAudienceScoreStateDeltaExport) {
+         LOG.error("onWebAudienceScoreStateDeltaChange: Unexpected call");
+    }
+
+    public static String createDeltaOut(WebAudienceScoreStateDeltaExport webAudienceScoreStateDeltaExport) {
         if (webAudienceScoreStateDeltaExport == null) {
-            return;
+            return null;
         }
         String out = GSON.toJson(webAudienceScoreStateDeltaExport);
         int stringLenBytes = Util.getStringLengthUtf8(out);
         long stringLenKb = stringLenBytes / 1024;
-        LOG.debug("onWebScoreStateDeltaChange: WebState size: {}Kb json: {}", stringLenKb, out);
+        LOG.debug("createDeltaOut: WebState size: {}Kb json: {}", stringLenKb, out);
         if (stringLenKb > 64) {
-            LOG.error("onWebScoreStateDeltaChange: ### WARNING ### WebState size {}Kb larger than 64Kb", stringLenKb);
+            LOG.error("createDeltaOut: ### WARNING ### WebState size {}Kb larger than 64Kb", stringLenKb);
         }
-        this.currentWebAudienceScoreStateDelta = out;
-        this.stateDeltaUpdateTime = getClock().getSystemTimeMillis();
+        return out;
     }
 
     public void onOutgoingWebEvent(OutgoingWebEvent webEvent) {
@@ -710,6 +768,7 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
                 pushScoreInfo(webEvent);
                 break;
             case PUSH_SCORE_STATE:
+            case PING:
                 pushScoreState(webEvent);
                 break;
         }
@@ -788,27 +847,33 @@ public class WebProcessor implements Processor, WebAudienceStateListener {
                 pushWebAudienceScoreState();
                 break;
             case PUSH_SERVER_STATE_DELTA:
-                pushWebAudienceScoreStateDelta();
+                pushWebAudienceScoreStateDelta(webEvent);
                 break;
         }
     }
 
     private void pushWebAudienceScoreState() {
-        if (currentWebAudienceScoreState == null) {
+        //crete volatile copy in case currentState updated on separate thread.
+        String state = currentWebAudienceScoreState;
+        if (state == null || state.isEmpty()) {
             return;
         }
-        String out = createStateWebString(currentWebAudienceScoreState);
+        String out = createStateWebString(state);
         scoreService.pushToWebAudience(out);
     }
 
-    private void pushWebAudienceScoreStateDelta() {
-        if (currentWebAudienceScoreStateDelta == null) {
+    private void pushWebAudienceScoreStateDelta(OutgoingWebEvent webEvent) {
+        Object stateDelta = webEvent.getDataMap().get(WEB_DATA_SCORE_STATE_DELTA);
+        if(!(stateDelta instanceof String)) {
+            LOG.error("pushWebAudienceScoreStateDelta: invalid stateDelta: {}", stateDelta);
             return;
         }
-        String delta = createAudienceStateDeltaWebString(currentWebAudienceScoreStateDelta);
+        String state = (String)stateDelta;
+        if(state.isEmpty()) {
+            return;
+        }
+        String delta = createAudienceStateDeltaWebString(state);
         scoreService.pushToWebAudience(delta);
-        //reset delta - is that smart?
-        currentWebAudienceScoreStateDelta = null;
     }
 
     public Clock getClock() {

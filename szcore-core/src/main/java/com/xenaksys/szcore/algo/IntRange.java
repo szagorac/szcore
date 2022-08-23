@@ -13,4 +13,6 @@ public interface IntRange extends Comparable<IntRange> {
     int getElement(int elementIndex);
 
     int getSize();
+
+    int[] getFullRange();
 }

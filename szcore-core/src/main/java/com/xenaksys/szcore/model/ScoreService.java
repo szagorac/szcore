@@ -3,9 +3,9 @@ package com.xenaksys.szcore.model;
 import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.event.web.audience.IncomingWebAudienceEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
+import com.xenaksys.szcore.score.OverlayType;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import com.xenaksys.szcore.score.web.WebScoreTargetType;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
 import com.xenaksys.szcore.web.WebAudienceStateListener;
 import com.xenaksys.szcore.web.WebClientInfo;
 import com.xenaksys.szcore.web.WebConnection;
@@ -15,15 +15,12 @@ import com.xenaksys.szcore.web.ZsWebResponse;
 import java.io.File;
 import java.net.InetAddress;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public interface ScoreService {
 
-    void loadScoreAndPrepare(String filePath);
-
     Score loadScore(File file);
-
-    WebAudienceScore loadWebScore(File file);
 
     boolean reset();
 
@@ -45,35 +42,13 @@ public interface ScoreService {
 
     void useContinuousPageChange(Boolean value);
 
-    void setDynamicsValue(long value, List<Id> instrumentIds);
+    void setOverlayValue(OverlayType type, long value, List<Id> instrumentIds);
 
-    void onUseDynamicsOverlay(Boolean value, List<Id> instrumentIds);
+    void setOverlayText(OverlayType type, String l1, String l2, String l3, boolean isVisible, List<Id> instrumentIds);
 
-    void onUseDynamicsLine(Boolean value, List<Id> instrumentIds);
+    void onUseOverlayLine(OverlayType type, Boolean value, List<Id> instrumentIds);
 
-    void setPressureValue(long value, List<Id> instrumentIds);
-
-    void onUsePressureOverlay(Boolean value, List<Id> instrumentIds);
-
-    void onUsePressureLine(Boolean value, List<Id> instrumentIds);
-
-    void setSpeedValue(long value, List<Id> instrumentIds);
-
-    void onUseSpeedOverlay(Boolean value, List<Id> instrumentIds);
-
-    void onUseSpeedLine(Boolean value, List<Id> instrumentIds);
-
-    void setPositionValue(long value, List<Id> instrumentIds);
-
-    void onUsePositionOverlay(Boolean value, List<Id> instrumentIds);
-
-    void onUsePositionLine(Boolean value, List<Id> instrumentIds);
-
-    void setContentValue(long value, List<Id> instrumentIds);
-
-    void onUseContentOverlay(Boolean value, List<Id> instrumentIds);
-
-    void onUseContentLine(Boolean value, List<Id> instrumentIds);
+    void onUseOverlay(OverlayType type, Boolean value, int alpha, List<Id> instrumentIds);
 
     void addBroadcastPort(InetAddress addr, int port);
 
@@ -133,4 +108,13 @@ public interface ScoreService {
 
     List<WebClientInfo> getWebScoreInstrumentClients(String instrument);
 
+    void setWebDelayMs(long delayMs);
+
+    void publishAudienceViewState(boolean isNotesEnabled, boolean isAudioEnabled, boolean isThumbsEnabled, boolean isMeterEnabled, boolean isVoteEnabled);
+
+    void sendMaxPreset(int preset);
+
+    void sendMaxEvent(String target, List<Object> args);
+
+    void sendAudienceConfig(String configName, int presetNo, Map<String, Object> overrides);
 }

@@ -14,7 +14,10 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 public class FileUtil {
@@ -61,7 +64,6 @@ public class FileUtil {
                 LOG.error("File does not exist for path: " + path);
                 return null;
             }
-
             return file;
         } catch (Exception e) {
             LOG.error("Failed to process file path: " + path);
@@ -81,7 +83,6 @@ public class FileUtil {
                 LOG.error("File does not exist for path: " + path);
                 return null;
             }
-
             return file;
         } catch (Exception e) {
             LOG.error("Failed to process file path: " + path);
@@ -93,6 +94,18 @@ public class FileUtil {
         Path path = Paths.get(filePath);
         try (BufferedWriter writer = Files.newBufferedWriter(path)) {
             writer.write(text);
+        } catch (IOException e) {
+            LOG.error("Failed to write to file {}", filePath, e);
+        }
+    }
+
+    public static void writeToFile(String[] lines, String filePath) {
+        Path path = Paths.get(filePath);
+        try (BufferedWriter writer = Files.newBufferedWriter(path)) {
+            for (String line : lines) {
+                writer.write(line);
+                writer.newLine();
+            }
         } catch (IOException e) {
             LOG.error("Failed to write to file {}", filePath, e);
         }
@@ -154,4 +167,60 @@ public class FileUtil {
             throw new RuntimeException(e);
         }
     }
+
+    public static boolean exists(String fileDir) {
+        Path path = Paths.get(fileDir);
+        return Files.exists(path);
+    }
+
+    public static File getOrCreateDir(String dir) {
+        File out = new File(dir);
+        out.mkdirs();
+        return out;
+    }
+
+    public static void copyFile(String from, String to) {
+        try {
+            File source = new File(from);
+            if(!source.exists()) {
+                return;
+            }
+            File dest = new File(to);
+            FileUtils.copyFile(source, dest);
+        } catch (IOException e) {
+            LOG.error("copyFile: failed to copy: {} to: {}", from, to);
+        }
+    }
+
+    public static void copyDirectory(String from, String to) {
+        try {
+            File source = new File(from);
+            if(!source.exists()) {
+                return;
+            }
+            File dest = new File(to);
+            FileUtils.copyDirectory(source, dest);
+        } catch (IOException e) {
+            LOG.error("copyDirectory: failed to copy: {} to: {}", from, to);
+        }
+    }
+
+    public static List<String> findFiles(String dir, String[] filterOutString, String[] fileExtensions) throws Exception {
+        Path path = Paths.get(dir);
+        if (!Files.isDirectory(path)) {
+            throw new IllegalArgumentException("Path must be a directory!");
+        }
+
+        List<String> result;
+        try (Stream<Path> walk = Files.walk(path, 1)) {
+            result = walk
+                    .filter(p -> !Files.isDirectory(p))
+                    .map(Path::toString)
+                    .filter(f -> Arrays.stream(filterOutString).noneMatch(f::contains))
+                    .filter(f -> Arrays.stream(fileExtensions).anyMatch(f::endsWith))
+                    .collect(Collectors.toList());
+        }
+        return result;
+    }
+
 }

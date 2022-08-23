@@ -55,4 +55,6 @@ public interface Transport extends Identifiable {
     void notifyListenersOnPositionChange(int beatNo);
 
     public int getCurrentBeatDuration();
+
+    void reset();
 }

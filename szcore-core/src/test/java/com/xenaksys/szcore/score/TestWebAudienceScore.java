@@ -8,19 +8,12 @@ import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.IntId;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
+import com.xenaksys.szcore.score.delegate.web.unionrose.UnionRoseWebAudienceProcessor;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
 import com.xenaksys.szcore.score.web.audience.config.WebEnvelopeConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
-import com.xenaksys.szcore.score.web.audience.export.TileExport;
-import com.xenaksys.szcore.score.web.audience.export.WebAudienceActionExport;
-import com.xenaksys.szcore.score.web.audience.export.WebAudienceInstructionsExport;
-import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
-import com.xenaksys.szcore.score.web.audience.export.WebElementStateExport;
-import com.xenaksys.szcore.score.web.audience.export.WebGranulatorConfigExport;
-import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthConfigExport;
-import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthStateExport;
+import com.xenaksys.szcore.score.web.audience.export.*;
 import com.xenaksys.szcore.time.TstClock;
 import com.xenaksys.szcore.web.WebAudienceActionType;
 import org.junit.Before;
@@ -32,28 +25,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_START;
-import static com.xenaksys.szcore.Consts.WEB_CONFIG_MASTER_GAIN_VAL;
-import static com.xenaksys.szcore.Consts.WEB_CONFIG_SPEECH_TEXT;
-import static com.xenaksys.szcore.Consts.WEB_CONFIG_VOLUME;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_ACTIONS;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_CENTRE_SHAPE;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRANULATOR;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_SPEECH_SYNTH;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_INSTRUCTIONS;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_STATE_SPEECH_SYNTH;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_TILES;
-import static com.xenaksys.szcore.Consts.WEB_OBJ_ZOOM_LEVEL;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static com.xenaksys.szcore.Consts.*;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 public class TestWebAudienceScore {
     private static final String TEST_SCRIPT_PREFIX = "Test script";
 
-    private WebAudienceScore webAudienceScore;
+    private UnionRoseWebAudienceProcessor webAudienceScore;
     private BeatId[] beatIds;
 
     @Before
@@ -73,7 +53,7 @@ public class TestWebAudienceScore {
         EventFactory eventFactory = new EventFactory();
         Clock clock = new TstClock();
 
-        webAudienceScore = new WebAudienceScore(scoreProcessor, eventFactory, clock);
+        webAudienceScore = new UnionRoseWebAudienceProcessor(scoreProcessor, eventFactory, clock);
         beatIds = new BeatId[10];
 
         addBeat(1, true);

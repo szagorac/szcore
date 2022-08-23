@@ -9,9 +9,12 @@ import com.xenaksys.szcore.gui.model.IpAddress;
 import com.xenaksys.szcore.model.EventService;
 import com.xenaksys.szcore.model.HistoBucketView;
 import com.xenaksys.szcore.model.ScoreService;
+import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.web.WebClientInfo;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
@@ -125,6 +128,10 @@ public class SettingsController {
     private Label webReqNoLbl;
     @FXML
     private CheckBox enableWebReqChartChb;
+    @FXML
+    private TextField webDelayTxt;
+    @FXML
+    private Button sendWebDelayBtn;
 
     private ToggleGroup audienceWebServerStatusTglGroup = new ToggleGroup();
     private IpAddress broadCastAddress = new IpAddress();
@@ -168,6 +175,17 @@ public class SettingsController {
         isChartEnabled = false;
         enableWebReqChartChb.setSelected(isChartEnabled);
         enableWebReqChartChb.selectedProperty().addListener((observable, oldValue, newValue) -> onEnableWebReqChart(newValue));
+
+        webDelayTxt.setEditable(true);
+        webDelayTxt.setText("0");
+        webDelayTxt.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if (!newValue.matches("\\d*")) {
+                    webDelayTxt.setText(newValue.replaceAll("[^\\d]", ""));
+                }
+            }
+        });
 
 //        String hostport = "6.6.6.6:666";
 //        String host = "6.6.6.6";
@@ -233,6 +251,20 @@ public class SettingsController {
         }
 
         detectedBroadcastAddrLbl.setText(bas.toString());
+    }
+
+    @FXML
+    private void sendWebDelay(ActionEvent event) {
+        try {
+            String webDelayStr = webDelayTxt.getText();
+            Integer out = MathUtil.toInt(webDelayStr);
+            if(out == null || out < 0) {
+                return;
+            }
+            scoreService.setWebDelayMs(out);
+        } catch (Exception e) {
+            LOG.error("Failed to play score", e);
+        }
     }
 
     @FXML

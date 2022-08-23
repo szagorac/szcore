@@ -9,6 +9,7 @@ public class WebScoreState {
     private WebScoreInfo scoreInfo;
     private WebPageInfo pageInfo;
     private WebPartInfo partInfo;
+    private WebStrategyInfo strategyInfo;
     private WebTimeSpaceMapInfo mapInfo;
     private List<WebScoreAction> actions;
     private String part;
@@ -89,5 +90,13 @@ public class WebScoreState {
 
     public void setBpm(int bpm) {
         this.bpm = bpm;
+    }
+
+    public WebStrategyInfo getStrategyInfo() {
+        return strategyInfo;
+    }
+
+    public void setStrategyInfo(WebStrategyInfo strategyInfo) {
+        this.strategyInfo = strategyInfo;
     }
 }

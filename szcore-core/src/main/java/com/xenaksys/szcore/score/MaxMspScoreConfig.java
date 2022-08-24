@@ -100,6 +100,10 @@ public class MaxMspScoreConfig {
             idx -= 1;
         }
 
+        if(idx < 0 || idx >= keys.length) {
+            return null;
+        }
+
         int outId = keys[idx];
         return presets.get(outId);
     }

@@ -17,12 +17,16 @@ public interface Consts {
     String ERROR_SCHEDULED_TASKS = " Failed to process scheduled tasks";
     String ERROR_TANSPORTS = " Failed to process transports";
     String RESULT_OK = "OK";
+    String READY = "READY";
+    String WAITING = "WAITING";
     String COMMA = ",";
     String DOT = ".";
+    String EQUALS = "=";
     String QUOTE = "'";
     String PLUS = "+";
     String PLUS_REGEX = "\\+";
     String DOT_REGEX = "\\.";
+    String ALL_WSPACE_REGEX = "\\s+";
     String EMPTY = "";
     String COLON = ":";
     String SEMI_COLON = ";";
@@ -46,7 +50,7 @@ public interface Consts {
     String YAML_FILE_EXTENSION = ".yml";
     String INSCORE_FILE_SUFFIX = "_InScoreMap";
     String STRATEGY_CONFIG_FILE_SUFFIX = "strategyConfig";
-    String WEBSCORE_PRESET_FILE_SUFFIX = "webscoreConfig";
+    String AUDIENCE_WEBSCORE_CONFIG_FILE_SUFFIX = "audienceScoreConfig";
     String SCRIPTING_ENGINE_PRESET_FILE_SUFFIX = "scriptingEngineConfig";
     String INSCORE_ADDR = "INScore";
     String SZCORE_ADDR = "/SZCORE";
@@ -57,14 +61,29 @@ public interface Consts {
     String ARG_PING = "PING";
     String ARG_SET_INSTRUMENT = "SET_INSTRUMENT";
     String ARG_SELECT_INST_SLOT = "SELECT_ISLOT";
+    String ARG_SELECT_SECTION = "SELECT_SECTION";
     String BLANK_PAGE_NAME = "blank";
     String BLANK_PAGE_FILE = "blankStave";
     String DEFAULT_FILE_NAME = "part" + INSCORE_FILE_EXTENSION;
     String INDEX_HTML = "index.html";
+    String BEAT_INFO_FILE_SUFFIX = "_BeatInfo.csv";
+    String NOTE_INFO_FILE_SUFFIX = "_NoteInfo.txt";
     String CSV_EXT = ".csv";
     String MINUTES_SHORT = "m";
     String SECONDS_SHORT = "s";
     String LOCALHOST = "localhost";
+    String SCORE_PROCESSOR_CLS_SUFFIX = "ScoreProcessor";
+    String SCORE_DELEGATE_CONFIG_PREFIX = "score.delegate.";
+    String SCORE_CONFIG_STOP_AHEAD_MILLIS = "score.stop.ahead.millis";
+    String SCORE_DELEGATE_PACKAGE = "com.xenaksys.szcore.score.delegate.";
+    String WEBSCORE_DIR_CONFIG_PREFIX = "webscore.dir.";
+    String WEBSCORE_PART_HTML_PREFIX = "webscore.part.html.";
+
+    String RESOURCE_JAVASCRIPT = "javascript";
+    String RESOURCE_WEB = "web";
+    String RESOURCE_MAXMSP = "max";
+    String RESOURCE_SCRIPT_ENGINE = "sce";
+    String RESOURCE_TRANSITION = "transition";
 
     char MINUS_CHAR = '-';
     char DOT_CHAR = '.';
@@ -107,6 +126,16 @@ public interface Consts {
     String OSC_ADDRESS_SCORE_CONTENT_BOX_STAVE2 = "/ITL/scene/contentStaveBox2";
     String OSC_ADDRESS_SCORE_CONTENT_LINE1 = "/ITL/scene/contentStaveValueLine";
     String OSC_ADDRESS_SCORE_CONTENT_LINE2 = "/ITL/scene/contentStaveValueLine2";
+    String OSC_ADDRESS_SCORE_TIMBRE_BOX_STAVE1 = "/ITL/scene/timbreStaveBox";
+    String OSC_ADDRESS_SCORE_TIMBRE_BOX_STAVE2 = "/ITL/scene/timbreStaveBox2";
+    String OSC_ADDRESS_SCORE_TIMBRE_LINE1 = "/ITL/scene/timbreStaveValueLine";
+    String OSC_ADDRESS_SCORE_TIMBRE_LINE2 = "/ITL/scene/timbreStaveValueLine2";
+    String OSC_ADDRESS_SCORE_TIMBRE_ORD_LINE1 = "/ITL/scene/timbreStaveOrdLine";
+    String OSC_ADDRESS_SCORE_TIMBRE_ORD_LINE2 = "/ITL/scene/timbreStaveOrdLine2";
+    String OSC_ADDRESS_SCORE_CONTENT_STAVE_BOX_STAVE1 = "/ITL/scene/contentStaveStaveBox";
+    String OSC_ADDRESS_SCORE_CONTENT_STAVE_BOX_STAVE2 = "/ITL/scene/contentStaveStaveBox2";
+    String OSC_ADDRESS_SCORE_CONTENT_STAVE_LINE1 = "/ITL/scene/contentStaveStaveValueLine";
+    String OSC_ADDRESS_SCORE_CONTENT_STAVE_LINE2 = "/ITL/scene/contentStaveStaveValueLine2";
 
     String OSC_ADDRESS_SCORE_JAVASCRIPT = "/ITL/scene/javascript";
     String OSC_ADDRESS_ZSCORE = "/zs/";
@@ -114,6 +143,7 @@ public interface Consts {
     String OSC_ADDR_BEAT_INFO = OSC_ADDRESS_JSUI;
     String OSC_CMD_BEAT_INFO = "beatInfo";
     String OSC_CMD_SET_TEMPO = "setTempo";
+    String OSC_CMD_PRESET = "preset";
 
     int OSC_UPDATE_BEAT_COMPLETE_PERC_THRESHOLD = 1;
 
@@ -146,6 +176,7 @@ public interface Consts {
     int MAX_ALLOWED_HIT_COUNT_10S = 50;
     int HISTOGRAM_MAX_BUCKETS_NO = 10;
     long HISTOGRAM_BUCKET_PERIOD_MS = 1000L;
+    long WEB_COUNTER_PERIOD_MS = 1000L;
 
     int MAX_WEB_REQ_CHART_SIZE_SEC = 60 * 10;
 
@@ -206,6 +237,8 @@ public interface Consts {
     String OSC_JS_RESET_SCORE = "resetScore()";
     String OSC_JS_RESET_STAVES = "resetStaves()";
     String OSC_JS_RESET_INSTRUMENT = "resetInstrument()";
+
+    String OSC_JS_VOTE = "vote()";
 
     double OSC_STAVE_BEATER_Y_MIN = -0.66;
     double OSC_STAV_BEATER_Y_MAX = -0.9;
@@ -288,6 +321,11 @@ public interface Consts {
     int WEB_BUFFER_SLICE_SIZE = 1000;
     int WEB_SLICES_PER_PAGE = 10;
     int WEB_MAX_MEMORY_SIZE = 1024 * 1024 * 100;
+    double WEB_SLIDER_MAX = 100.0;
+    double WEB_SLIDER_MIN = 0.0;
+    double WEB_AUDIO_MAX = 1.0;
+    double WEB_AUDIO_MIN = 0.0;
+    int WEB_AUDIO_ACTION_DURATION_MS = 200;
 
     double WEB_TILE_PLAY_PAGE_DURATION_FACTOR = 0.8;
 
@@ -307,9 +345,13 @@ public interface Consts {
     String WEB_EVENT_ELEMENT_ID = "elementId";
     String WEB_EVENT_IS_SELECTED = "selected";
     String WEB_EVENT_PART = "part";
+    String WEB_EVENT_CLIENT_ID = "clientId";
+    String WEB_EVENT_SECTION = "section";
     String WEB_EVENT_SERVER_TIME = "serverTime";
     String WEB_EVENT_SLOT_NO = "slotNo";
     String WEB_EVENT_SLOT_INSTRUMENT = "slotInstrument";
+    String WEB_EVENT_ID_PING = "PING";
+    String WEB_EVENT_VALUE = "value";
 
     String WEB_RESPONSE_TYPE = "type";
     String WEB_RESPONSE_MESSAGE = "msg";
@@ -319,6 +361,7 @@ public interface Consts {
     String WEB_RESPONSE_SUBMITTED = "Submitted";
 
     String WEB_TILE_PREFIX = "t";
+    String WEB_TILE_PLAYLINE_PREFIX = "lopl";
     String WEB_ELEMENT_NAME_DELIMITER = "-";
     String WEB_ELEMENT_GRID = "grid";
     String WEB_ZOOM_DEFAULT = "default";
@@ -330,6 +373,9 @@ public interface Consts {
     String WEB_GRANULATOR = "granulator";
     String WEB_STAGE = "stage";
     String WEB_SPEECH_SYNTH = "speechSynth";
+    String WEB_SYNTH = "synth";
+    String WEB_PLAYER = "player";
+    String WEB_VIEW = "view";
     String WEB_SPEECH_VOICE_RANDOM = "random";
     String WEB_SPEECH_VOICE_DEFAULT = "default";
     String WEB_TARGET_ALL = "all";
@@ -350,7 +396,12 @@ public interface Consts {
     String WEB_OBJ_ZOOM_LEVEL = "zoomLevel";
     String WEB_OBJ_CONFIG_GRANULATOR = "granulatorConfig";
     String WEB_OBJ_CONFIG_SPEECH_SYNTH = "speechSynthConfig";
+    String WEB_OBJ_CONFIG_SYNTH = "synthConfig";
+    String WEB_OBJ_CONFIG_PLAYER = "playerConfig";
     String WEB_OBJ_STATE_SPEECH_SYNTH = "speechSynthState";
+    String WEB_OBJ_COUNTER = "counter";
+    String WEB_OBJ_VIEW_STATE = "viewState";
+    String WEB_OBJ_VOTE = "vote";
     String WEB_OBJ_CONFIG_GRAIN = "grain";
     String WEB_OBJ_CONFIG_GRAIN_ENVELOPE = "envelope";
     String WEB_OBJ_CONFIG_GRAIN_PANNER = "panner";
@@ -366,17 +417,20 @@ public interface Consts {
     String WEB_ACTION_ID_RAMP_LINEAR = "rampLinear";
     String WEB_ACTION_ID_RAMP_SIN = "rampSin";
     String WEB_ACTION_VOLUME = "volume";
+    String WEB_ACTION_SECTION = "section";
 
     String WEB_ACTION_PARAM_LEVEL = "level";
     String WEB_ACTION_PARAM_TIME_MS = "timeMs";
     String WEB_ACTION_PARAM_SEND_TIME_MS = "sendTimeMs";
     String WEB_ACTION_PARAM_STAVE_ID = "staveId";
+    String WEB_ACTION_PARAM_ID = "id";
 
     int WEB_CONFIG_READY_PRESET = 0;
     int WEB_CONFIG_GO_PRESET = -1;
     int WEB_CONFIG_LOAD_PRESET = -2;
 
     String WEB_CONFIG_DURATION = "duration";
+    String WEB_CONFIG_ANGLE = "angle";
     String WEB_CONFIG_VALUE = "value";
     String WEB_CONFIG_GRAIN = "grain";
     String WEB_CONFIG_ENVELOPE = "envelope";
@@ -405,6 +459,7 @@ public interface Consts {
     String WEB_CONFIG_IS_USE_SIZE_OSCILLATOR = "isUseSizeOscillator";
     String WEB_CONFIG_IS_USE_POSITION_FREQ_MOD = "isUsePositionFrequencyMod";
     String WEB_CONFIG_IS_USE_POSITION_RANGE_MOD = "isUsePositionRangeMod";
+    String WEB_CONFIG_BPM = "bpm";
     String WEB_CONFIG_VOLUME = "volume";
     String WEB_CONFIG_PITCH = "pitch";
     String WEB_CONFIG_RATE = "rate";
@@ -431,10 +486,24 @@ public interface Consts {
     String WEB_CONFIG_MIN_VALUE = "minValue";
     String WEB_CONFIG_MAX_VALUE = "maxValue";
     String WEB_CONFIG_TYPE = "type";
+    String WEB_CONFIG_COUNTER = "counter";
+    String WEB_CONFIG_AUDIO_FILES = "audioFiles";
+    String WEB_CONFIG_AUDIO_FILE_INDEX_MAP = "audioFilesIndexMap";
+    String WEB_CONFIG_ACTIVE_VIEWS = "activeViews";
+    String WEB_CONFIG_SECTION_NAME = "sectionName";
+    String WEB_CONFIG_IS_SECTION_ACTIVE = "isSectionActive";
+    String WEB_CONFIG_OSC1_FREQ = "osc1Freq";
+    String WEB_CONFIG_OSC2_FREQ = "osc2Freq";
+    String WEB_CONFIG_OSC3_FREQ = "osc3Freq";
+    String WEB_CONFIG_DUR_MULTIPLIER = "durMultiplier";
+    String WEB_CONFIG_FREQ_MULTIPLIER = "freqMultiplier";
+
+    int WEB_CONFIG_MAX_VOTE_COUNT = 5;
     double WEB_CONFIG_DOUBLE_CHANGE_THRESHOLD = 10E-3;
 
     String WEB_DATA_SCORE_INFO = "SCORE_INFO";
     String WEB_DATA_SCORE_STATE = "SCORE_STATE";
+    String WEB_DATA_SCORE_STATE_DELTA = "SCORE_STATE_DELTA";
     String WEB_DATA_TARGET = "TARGET";
     String WEB_DATA_TARGET_TYPE = "TARGET_TYPE";
     String WEB_DATA_TARGET_ALL = "ALL";
@@ -451,6 +520,18 @@ public interface Consts {
     String WEB_PARAM_IS_ENABLED = "isEnabled";
     String WEB_PARAM_COLOUR = "colour";
     String WEB_PARAM_OPACITY = "opacity";
+    String WEB_PARAM_TEXT = "text";
+    String WEB_PARAM_TEXT_L1 = "l1";
+    String WEB_PARAM_TEXT_L2 = "l2";
+    String WEB_PARAM_TEXT_L3 = "l3";
+    String WEB_PARAM_VOTE_COUNT = "voteCount";
+    String WEB_PARAM_VOTER_NO = "voterNo";
+
+    String WEB_VIEW_THUMBS = "thumbs";
+    String WEB_VIEW_NOTES = "notes";
+    String WEB_VIEW_METER = "meter";
+    String WEB_VIEW_VOTE = "vote";
+    String WEB_VIEW_AUDIO = "audio";
 
     String WEB_SCORE_ROOT_DIR = "/score/";
     String WEB_SCORE_STAVE_TOP = "topStave";
@@ -460,26 +541,6 @@ public interface Consts {
     String WEB_SCORE_PAGE_NO_TOKEN = "@PgNo@";
 
     String WEB_WS_CLOSE_REASON_NORMAL = "Closed by the server";
-
-    double WEB_OVRL_DYNAMICS_Y_SIZE = 22;
-    double WEB_OVRL_DYNAMICS_TOP_Y_MIN = 259;
-    double WEB_OVRL_DYNAMICS_BOT_Y_MIN = 480;
-
-    double WEB_OVRL_PRESSURE_Y_SIZE = 15;
-    double WEB_OVRL_PRESSURE_TOP_Y_MIN = 171;
-    double WEB_OVRL_PRESSURE_BOT_Y_MIN = 392;
-
-    double WEB_OVRL_SPEED_Y_SIZE = 15;
-    double WEB_OVRL_SPEED_TOP_Y_MIN = 154;
-    double WEB_OVRL_SPEED_BOT_Y_MIN = 375;
-
-    double WEB_OVRL_POS_Y_SIZE = 38.0;
-    double WEB_OVRL_POS_TOP_Y_MIN = 115.0;
-    double WEB_OVRL_POS_BOT_Y_MIN = 336.0;
-
-    double WEB_OVRL_PITCH_Y_SIZE = 69;
-    double WEB_OVRL_PITCH_TOP_Y_MIN = 188;
-    double WEB_OVRL_PITCH_BOT_Y_MIN = 409;
 
     String NAME_FULL_SCORE = "FullScore";
 
@@ -513,6 +574,8 @@ public interface Consts {
     String PRESET_ALL_ON_CONTENT_OFF = "All ON Content OFF";
     String PRESET_ALL_ON_CONTENT_POSITION_OFF = "All ON Cnt/Pos OFF";
     String[] PRESETS = {PRESET_ALL_OFF, PRESET_ALL_ON, PRESET_ALL_LINES_ON, PRESET_ALL_OFF_CONTENT_ON, PRESET_ALL_ON_CONTENT_OFF, PRESET_ALL_ON_CONTENT_POSITION_OFF};
+    String[] DIALOGS_OVERLAY_PRESETS = {PRESET_ALL_OFF, PRESET_ALL_ON, PRESET_ALL_LINES_ON, PRESET_ALL_OFF_CONTENT_ON, PRESET_ALL_ON_CONTENT_OFF};
+    Double[] DIALOGS_SYNTH_FREQ_VAlUES = {0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0};
 
     String DISRUPTOR_THREAD_FACTORY = "SZCore_Dsrptr";
     String DISRUPTOR_OSC_OUT_THREAD_FACTORY = "SZCore_OSC_Out_Dsrptr";
@@ -522,65 +585,35 @@ public interface Consts {
     String SCHEDULER_THREAD_FACTORY = "SZCore_Schedlr";
     String DEFAULT_THREAD_SUFFIX = "-Thread-";
 
-    double DYNAMICS_LINE_Y_MAX = 0.074;      //half  0.037
-    double DYNAMICS_LINE_Y_MIN = 0.0;
-    double DYNAMICS_LINE1_Y_MID_POSITION = -0.077;
-    double DYNAMICS_LINE1_Y_MIN_POSITION = -0.04;
-    double DYNAMICS_LINE1_Y_MAX_POSITION = -0.114;
-    double DYNAMICS_LINE2_Y_MID_POSITION = 0.713;
-    double DYNAMICS_LINE2_Y_MAX_POSITION = 0.676;
-    double DYNAMICS_LINE2_Y_MIN_POSITION = 0.75;
-
-    double PRESSURE_LINE_Y_MAX = 0.055;  //half 0.0275
-    double PRESSURE_LINE_Y_MIN = 0.0;
-    double PRESSURE_LINE1_Y_MID_POSITION = -0.4;
-    double PRESSURE_LINE1_Y_MIN_POSITION = -0.3725;
-    double PRESSURE_LINE1_Y_MAX_POSITION = -0.4275;
-    double PRESSURE_LINE2_Y_MID_POSITION = 0.391;
-    double PRESSURE_LINE2_Y_MAX_POSITION = 0.3635;
-    double PRESSURE_LINE2_Y_MIN_POSITION = 0.4185;
-
-    double SPEED_LINE_Y_MAX = 0.045;      //half  0.0275
-    double SPEED_LINE_Y_MIN = 0.0;
-    double SPEED_LINE1_Y_MID_POSITION = -0.457;
-    double SPEED_LINE1_Y_MIN_POSITION = -0.435;
-    double SPEED_LINE1_Y_MAX_POSITION = -0.48;
-    double SPEED_LINE2_Y_MID_POSITION = 0.334;
-    double SPEED_LINE2_Y_MAX_POSITION = 0.308;
-    double SPEED_LINE2_Y_MIN_POSITION = 0.355;
-
-    double POSITION_LINE_Y_MAX = 0.128;      //half 0.0675
-    double POSITION_LINE_Y_MIN = 0.0;
-    double POSITION_LINE1_Y_MID_POSITION = -0.555;
-    double POSITION_LINE1_Y_MIN_POSITION = -0.492;
-    double POSITION_LINE1_Y_MAX_POSITION = -0.62;
-    double POSITION_LINE2_Y_MID_POSITION = 0.236;
-    double POSITION_LINE2_Y_MAX_POSITION = 0.17;
-    double POSITION_LINE2_Y_MIN_POSITION = 0.298;
-
-    double CONTENT_LINE_Y_MAX = 0.244;      //half 0.125
-    double CONTENT_LINE_Y_MIN = 0.0;
-    double CONTENT_LINE1_Y_MID_POSITION = -0.245;
-    double CONTENT_LINE1_Y_MIN_POSITION = -0.125;
-    double CONTENT_LINE1_Y_MAX_POSITION = -0.365;
-    double CONTENT_LINE2_Y_MID_POSITION = 0.545;
-    double CONTENT_LINE2_Y_MAX_POSITION = 0.425;
-    double CONTENT_LINE2_Y_MIN_POSITION = 0.665;
-
     String CONFIG_SCORE_NAME = "scoreName";
+    String CONFIG_SCORE_TITLE = "scoreTitle";
     String CONFIG_RND_STRATEGY = "rndStrategy";
+    String CONFIG_BUILDER_STRATEGY = "builderStrategy";
+    String CONFIG_DYNAMIC_MOVEMENT_STRATEGY = "dynamicMovementStrategy";
+    String CONFIG_TRANSPOSITION_STRATEGY = "transpositionStrategy";
+    String CONFIG_IS_ACTIVE = "isActive";
     String CONFIG_ACTIVE_RANGES = "activePageRanges";
     String CONFIG_PAGE_RANGE_MAPPING = "pageRangeMapping";
     String CONFIG_PAGE_RANGE = "pageRange";
     String CONFIG_PAGE_RANGES = "pageRanges";
+    String CONFIG_PAGES = "pages";
+    String CONFIG_SECTIONS = "sections";
+    String CONFIG_MOVEMENTS = "movements";
+    String CONFIG_PARTS= "parts";
+    String CONFIG_MAX= "max";
+    String CONFIG_WEB= "web";
+    String CONFIG_MAX_CONFIGS = "maxConfigs";
+    String CONFIG_WEB_CONFIGS = "webConfigs";
     String CONFIG_INSTRUMENTS = "instruments";
     String CONFIG_ACTIVE_RANGE = "activeRange";
     String CONFIG_RANGE = "range";
+    String CONFIG_NAME = "name";
     String CONFIG_IS_RND_ACTIVE = "isRndActive";
     String CONFIG_SELECTION_RANGE = "selectionRange";
     String CONFIG_START = "start";
     String CONFIG_END = "end";
     String CONFIG_ALL = "all";
+    String CONFIG_PRESET = "preset";
     String CONFIG_PRESETS = "presets";
     String CONFIG_SCRIPTS = "scripts";
     String CONFIG_WEB_CONFIG = "config";
@@ -588,10 +621,47 @@ public interface Consts {
     String CONFIG_TILE_ROW = "tileRow";
     String CONFIG_TILE_COLS = "tileCols";
     String CONFIG_ASSIGNMENT_TYPE = "assignmentType";
+    String CONFIG_STOP_ON_SECTION_END = "isStopOnSectionEnd";
+    String CONFIG_STOP_ON_MOVEMENT_END = "isStopOnMovementEnd";
+    String CONFIG_BUFFER1 = "b1";
+    String CONFIG_BUFFER2 = "b2";
+    String CONFIG_BUFFER3 = "b3";
+    String CONFIG_BUFFER4 = "b4";
+    String CONFIG_GRANULATOR = "grn";
+    String CONFIG_GROOVE = "grv";
+    String CONFIG_START_PAGE = "  startPage";
+
+    String CONFIG_PAGE_NO = "pageNo";
+    String CONFIG_PART = "part";
+    String CONFIG_TEXT_ELEMENTS = "textElements";
+    String CONFIG_DX = "dx";
+    String CONFIG_DY = "dy";
+    String CONFIG_TXT = "txt";
+    String CONFIG_TOP_STAVE_Y_REF = "topStaveYRef";
+    String CONFIG_TOP_STAVE_X_REF = "topStaveXRef";
+    String CONFIG_BOTTOM_STAVE_Y_REF = "botStaveYRef";
+    String CONFIG_BOTTOM_STAVE_X_REF = "botStaveXRef";
+    String CONFIG_MIN_Y_DISTANCE = "minYdistance";
+    String CONFIG_MIN_X_DISTANCE = "minXdistance";
+    String CONFIG_TOP_STAVE_START_X = "topStaveStartX";
+    String CONFIG_BOTTOM_STAVE_START_X = "botStaveStartX";
+    String CONFIG_EXT_RECT_DX = "extRectDx";
+    String CONFIG_EXT_RECT_DY = "extRectDy";
+    String CONFIG_EXT_RECT_WIDTH = "extRectWidth";
+    String CONFIG_EXT_RECT_HEIGHT = "extRectHeight";
+    String CONFIG_EXT_RECT_MOD_WIDTH = "extRectModWidth";
+    String CONFIG_EXT_RECT_MOD_HEIGHT = "extRectModHeight";
 
     String MAXMSP_ID = "max";
     String MAXMSP_CMD_SET_FILE = "setFile";
     String MAXMSP_CMD_PLAY = "play";
+    String MAXMSP_GRANULATOR = "granulator";
+    String MAXMSP_GRANULATOR_CONT = "granulatorCont";
+    String MAXMSP_GRANULATOR_CONT_STOP = "granulatorContStop";
+    String MAXMSP_GROOVE = "groove";
+    String MAXMSP_GROOVE_CONT = "grooveCont";
+    String MAXMSP_GROOVE_CONT_STOP = "grooveContStop";
+
 
     String MAXMSP_BAR_PREFIX = "b";
 

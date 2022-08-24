@@ -16,17 +16,18 @@ public class OutgoingWebEvent implements SzcoreEvent {
     private EventType eventType = EventType.WEB_OUT;
     private OutgoingWebEventType outEventType;
     private Map<String, Object> dataMap = new HashMap<>();
+    private boolean isSendNow = false;
 
     public OutgoingWebEvent() {
-        System.currentTimeMillis();
     }
 
-    public OutgoingWebEvent(String eventId, BeatId beatId, EventType eventType, OutgoingWebEventType outEventType, long creationTime) {
+    public OutgoingWebEvent(String eventId, BeatId beatId, EventType eventType, OutgoingWebEventType outEventType, boolean isSendNow, long creationTime) {
         this.eventId = eventId;
         this.beatId = beatId;
         this.creationTime = creationTime;
         this.eventType = eventType;
         this.outEventType = outEventType;
+        this.isSendNow = isSendNow;
     }
 
     @Override
@@ -81,6 +82,10 @@ public class OutgoingWebEvent implements SzcoreEvent {
 
     public void setEventId(String eventId) {
         this.eventId = eventId;
+    }
+
+    public boolean isSendNow() {
+        return isSendNow;
     }
 
     @Override

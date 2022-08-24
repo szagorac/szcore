@@ -34,6 +34,8 @@ public interface Score extends Identifiable {
 
     String getName();
 
+    String getTitle();
+
     Collection<Instrument> getInstruments();
 
     Collection<Instrument> getScoreInstruments();
@@ -100,5 +102,7 @@ public interface Score extends Identifiable {
 
     List<Script> getBeatScripts(BeatId beatId);
 
-    void resetOnStop();
+    void reset();
+
+    boolean isReady();
 }

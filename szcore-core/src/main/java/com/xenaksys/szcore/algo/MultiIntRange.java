@@ -30,6 +30,7 @@ public class MultiIntRange implements IntRange {
                 intList.add(i);
             }
         }
+        intList.sort();
     }
 
     public int getStart() {
@@ -62,6 +63,15 @@ public class MultiIntRange implements IntRange {
     @Override
     public int getSize() {
         return intList.size();
+    }
+
+    @Override
+    public int[] getFullRange() {
+        int[] out = new int[intList.size()];
+        for(int i = 0; i < intList.size(); i++) {
+            out[i] = intList.get(i);
+        }
+        return out;
     }
 
     @Override

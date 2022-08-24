@@ -7,13 +7,13 @@ import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.Clock;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Instrument;
+import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.SzcoreEvent;
 import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.id.BarId;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.score.InstrumentBeatTracker;
-import com.xenaksys.szcore.score.ScoreProcessorImpl;
 import com.xenaksys.szcore.score.SzcoreEngineEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,13 +32,13 @@ public class OscDestinationEventListener implements SzcoreEngineEventListener {
     static final String ADDR_BEAT_INFO = Consts.OSC_ADDR_BEAT_INFO;
     static final String OSC_CMD_BEAT_INFO = Consts.OSC_CMD_BEAT_INFO;
 
-    private final ScoreProcessorImpl processor;
+    private final ScoreProcessor processor;
     private final EventFactory eventFactory;
     private final Clock clock;
 
     private CopyOnWriteArrayList<Instrument> destinations = new CopyOnWriteArrayList<>();
 
-    public OscDestinationEventListener(ScoreProcessorImpl processor, EventFactory eventFactory, Clock clock) {
+    public OscDestinationEventListener(ScoreProcessor processor, EventFactory eventFactory, Clock clock) {
         this.processor = processor;
         this.eventFactory = eventFactory;
         this.clock = clock;

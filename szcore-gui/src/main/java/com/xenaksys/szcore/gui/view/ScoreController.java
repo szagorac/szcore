@@ -5,6 +5,8 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.osc.AddPartsEvent;
 import com.xenaksys.szcore.event.osc.SendServerIpBroadcastEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEventType;
 import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
 import com.xenaksys.szcore.gui.model.Participant;
@@ -23,7 +25,9 @@ import com.xenaksys.szcore.model.TempoModifier;
 import com.xenaksys.szcore.model.id.BarId;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.PageId;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
+import com.xenaksys.szcore.score.OverlayType;
+import com.xenaksys.szcore.score.web.audience.AudioComponentType;
+import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.Util;
 import javafx.application.Platform;
@@ -46,7 +50,9 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
@@ -63,17 +69,14 @@ import java.util.List;
 import java.util.Map;
 
 import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.Consts.WEB_AUDIO_ACTION_DURATION_MS;
 
 public class ScoreController {
     static final Logger LOG = LoggerFactory.getLogger(ScoreController.class);
 
-    private final static String NL = "\n";
-    private final static int UNSET_VALUE = 0;
-
     private ScoreService scoreService;
 
     private Score score;
-    private WebAudienceScore webAudienceScore;
 
     @FXML
     private Label scoreNameLbl;
@@ -101,6 +104,8 @@ public class ScoreController {
     private ListView<String> instrumentsListView;
     @FXML
     private TableView<Participant> participantsTableView;
+    @FXML
+    private TableColumn<Participant, String> clientIdColumn;
     @FXML
     private TableColumn<Participant, String> hostAddressColumn;
     @FXML
@@ -193,6 +198,22 @@ public class ScoreController {
     private Button sendWebscoreInstructionsBtn;
     @FXML
     private Button clearWebscoreInstructionsBtn;
+    @FXML
+    private Slider adncVolMasterSldr;
+    @FXML
+    private Slider adncVolPlayerSldr;
+    @FXML
+    private Slider adncVolGranulatorSldr;
+    @FXML
+    private Slider adncVolSpeechSldr;
+    @FXML
+    private Circle semaphore1Crc;
+    @FXML
+    private Circle semaphore2Crc;
+    @FXML
+    private Circle semaphore3Crc;
+    @FXML
+    private Circle semaphore4Crc;
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -215,7 +236,8 @@ public class ScoreController {
     private ObservableList<Participant> selectedParticipants = FXCollections.observableArrayList();
     private ObservableList<Participant> participants;
     private WebscoreInstructions webscoreInstructions;
-    private int tempo;
+
+    private Circle[] semaphore;
 
     private long positionMillis = 0L;
 
@@ -502,9 +524,72 @@ public class ScoreController {
             contentValLbl.setText(out);
         });
 
+        dynamicsValLbl.setOnMouseClicked(mouseEvent -> {
+            if(mouseEvent.getButton().equals(MouseButton.PRIMARY)){
+                if(mouseEvent.getClickCount() == 2){
+                    setDynamicsDefaultValue();
+                }
+            }
+        });
+
+        pressureValLbl.setOnMouseClicked(mouseEvent -> {
+            if(mouseEvent.getButton().equals(MouseButton.PRIMARY)){
+                if(mouseEvent.getClickCount() == 2){
+                    setPressureDefaultValue();
+                }
+            }
+        });
+
+        speedValLbl.setOnMouseClicked(mouseEvent -> {
+            if(mouseEvent.getButton().equals(MouseButton.PRIMARY)){
+                if(mouseEvent.getClickCount() == 2){
+                    setSpeedDefaultValue();
+                }
+            }
+        });
+
+        positionValLbl.setOnMouseClicked(mouseEvent -> {
+            if(mouseEvent.getButton().equals(MouseButton.PRIMARY)){
+                if(mouseEvent.getClickCount() == 2){
+                    setPositionDefaultValue();
+                }
+            }
+        });
+
+        contentValLbl.setOnMouseClicked(mouseEvent -> {
+            if(mouseEvent.getButton().equals(MouseButton.PRIMARY)){
+                if(mouseEvent.getClickCount() == 2){
+                    setPitchDefaultValue();
+                }
+            }
+        });
+
         webscoreInstructions.setLine1(EMPTY);
         webscoreInstructions.setLine2(EMPTY);
         webscoreInstructions.setLine3(EMPTY);
+
+        adncVolMasterSldr.valueProperty().addListener((ov, old_val, new_val) -> {
+            long newVal = Math.round(new_val.doubleValue());
+            long oldVal = Math.round(old_val.doubleValue());
+            onAudienceMasterVolumeChange(newVal, oldVal);
+        });
+        adncVolPlayerSldr.valueProperty().addListener((ov, old_val, new_val) -> {
+            long newVal = Math.round(new_val.doubleValue());
+            long oldVal = Math.round(old_val.doubleValue());
+            onAudiencePlayerVolumeChange(newVal, oldVal);
+        });
+        adncVolGranulatorSldr.valueProperty().addListener((ov, old_val, new_val) -> {
+            long newVal = Math.round(new_val.doubleValue());
+            long oldVal = Math.round(old_val.doubleValue());
+            onAudienceGranulatorVolumeChange(newVal, oldVal);
+        });
+        adncVolSpeechSldr.valueProperty().addListener((ov, old_val, new_val) -> {
+            long newVal = Math.round(new_val.doubleValue());
+            long oldVal = Math.round(old_val.doubleValue());
+            onAudienceSpeechVolumeChange(newVal, oldVal);
+        });
+
+        semaphore = new Circle[]{semaphore1Crc, semaphore2Crc, semaphore3Crc, semaphore4Crc};
     }
 
     public void setScoreService(ScoreService scoreService) {
@@ -523,6 +608,7 @@ public class ScoreController {
         participantsTableView.setSelectionModel(null);
         participantsTableView.setEditable(true);
 
+        clientIdColumn.setCellValueFactory(cellData -> cellData.getValue().clientIdProperty());
         hostAddressColumn.setCellValueFactory(cellData -> cellData.getValue().getHostAddressProperty());
         inPortColumn.setCellValueFactory(cellData -> cellData.getValue().getPortInProperty().asObject());
         pingColumn.setCellValueFactory(cellData -> cellData.getValue().getPingProperty().asObject());
@@ -622,6 +708,20 @@ public class ScoreController {
         instL1Txt.textProperty().bindBidirectional(webscoreInstructions.line1Property());
         instL2Txt.textProperty().bindBidirectional(webscoreInstructions.line2Property());
         instL3Txt.textProperty().bindBidirectional(webscoreInstructions.line3Property());
+
+        adncVolMasterSldr.setValue(100.0);
+        adncVolPlayerSldr.setValue(100.0);
+        adncVolGranulatorSldr.setValue(100.0);
+        adncVolSpeechSldr.setValue(100.0);
+
+        semaphore1Crc.setFill(Color.RED);
+        semaphore1Crc.setStroke(Color.BLACK);
+        semaphore2Crc.setFill(Color.TRANSPARENT);
+        semaphore2Crc.setStroke(Color.BLACK);
+        semaphore3Crc.setFill(Color.TRANSPARENT);
+        semaphore3Crc.setStroke(Color.BLACK);
+        semaphore4Crc.setFill(Color.TRANSPARENT);
+        semaphore4Crc.setStroke(Color.BLACK);
     }
 
     @FXML
@@ -763,7 +863,7 @@ public class ScoreController {
         if (pagesList.isEmpty()) {
             return;
         }
-
+        LOG.info("setPageValue ####");
         Object selected = pageNoCbx.getSelectionModel().getSelectedItem();
         if (selected == null) {
             return;
@@ -997,6 +1097,10 @@ public class ScoreController {
         pageNoCbx.getSelectionModel().select(minPageNo);
     }
 
+    public void sendPosition(){
+        sendPosition(null);
+    }
+
     @FXML
     private void sendPosition(ActionEvent event) {
         if (beatNoCbx == null || beatNoCbx.getSelectionModel() == null || beatNoCbx.getSelectionModel().isEmpty()) {
@@ -1109,7 +1213,7 @@ public class ScoreController {
 
     private void openFile(File file) {
         try {
-            reset();
+            resetScoreViewOnLoad();
             this.score = scoreService.loadScore(file);
             viewScore();
         } catch (Exception e) {
@@ -1117,27 +1221,15 @@ public class ScoreController {
         }
     }
 
-
-    private void openWebScore(File file) {
-        try {
-            String dir = file.getParent();
-            String name = file.getName();
-            int end = name.indexOf(Consts.DOT);
-            String webName = name.substring(0, end) + Consts.WEB_SCORE_SUFFIX +  Consts.CSV_EXT;
-            String webPath = dir + File.separator + webName;
-            File webFile = new File(webPath);
-            this.webAudienceScore = scoreService.loadWebScore(webFile);
-            viewWebScore();
-        } catch (Exception e) {
-            LOG.error("Failed to open score", e);
-        }
-    }
-
-    private void reset() {
+    public void resetScoreViewOnLoad() {
         if (!scoreService.reset()) {
             LOG.warn("Sever failed to reset");
             return;
         }
+        mainApp.resetScore();
+    }
+
+    public void reset() {
         this.score = null;
         instrumentsList.clear();
         pagesList.clear();
@@ -1151,11 +1243,6 @@ public class ScoreController {
         for (Participant participant : participants) {
             participant.setInstrument(Consts.NAME_NA);
         }
-
-    }
-
-    public void viewWebScore() {
-
     }
 
     public void viewScore() {
@@ -1218,20 +1305,43 @@ public class ScoreController {
 
         usePageRandomisationChb.setSelected(true);
         useContinousPageChb.setSelected(false);
-//        useDynamicsOverlayChb.setSelected(false);
-//        usePressureOverlayChb.setSelected(false);
-//        useSpeedOverlayChb.setSelected(false);
-//        usePositionOverlayChb.setSelected(false);
-//        useContentOverlayChb.setSelected(false);
-        dynamicsSldr.setValue(50.0);
-        pressureSldr.setValue(50.0);
-        speedSldr.setValue(50.0);
-        positionSldr.setValue(72.0);
-        contentSldr.setValue(50.0);
+
+        resetOverlays();
         tempoModifierSldr.setValue(1.0);
+
+        if(mainApp != null) {
+            mainApp.onScoreLoad(score);
+        }
+    }
+
+    public void resetOverlays() {
+        setDynamicsDefaultValue();
+        setPressureDefaultValue();
+        setSpeedDefaultValue();
+        setPositionDefaultValue();
+        setPitchDefaultValue();
         presetsChob.getSelectionModel().select(Consts.PRESET_ALL_OFF);
     }
 
+    public void setDynamicsDefaultValue() {
+        dynamicsSldr.setValue(50.0);
+    }
+
+    public void setPressureDefaultValue() {
+        pressureSldr.setValue(50.0);
+    }
+
+    public void setSpeedDefaultValue() {
+        speedSldr.setValue(50.0);
+    }
+
+    public void setPositionDefaultValue() {
+        positionSldr.setValue(72.0);
+    }
+
+    public void setPitchDefaultValue() {
+        contentSldr.setValue(50.0);
+    }
 
     private void updateBeatInfo(Id transportId, int pageNo, int barNo, int beatNo, int baseBeatNo) {
         if (this.score == null) {
@@ -1256,46 +1366,29 @@ public class ScoreController {
             LOG.info("BeatIds are NULL");
             return;
         }
-        int pageNo = 0;
-        int barNo = 0;
-        for (BeatId beatId : beatIds) {
-            if (beatId.getBaseBeatNo() == baseBeatNo) {
-                PageId pageId = (PageId) beatId.getPageId();
-                pageNo = pageId.getPageNo();
-                BarId barId = (BarId) beatId.getBarId();
-                barNo = barId.getBarNo();
-                break;
-            }
-        }
-
-        Platform.runLater(new TransportBeatUpdater(transportId, pageNo, barNo, beatNo, baseBeatNo));
+        Platform.runLater(new TransportBeatUpdater(transportId, beatNo, baseBeatNo, beatIds));
     }
 
-    public void onTransportPoisitionChange(Id transportId, int baseBeatNo) {
+    public void onTransportPositionChange(Id transportId, int baseBeatNo) {
         List<BeatId> beatIds = score.findBeatIds(transportId, baseBeatNo);
         if (beatIds == null) {
-            LOG.info("BeatIds are NULL");
             return;
         }
-        int pageNo = 0;
-        int barNo = 0;
-        int beatNo = 0;
-        for (BeatId beatId : beatIds) {
-            if (beatId.getBaseBeatNo() == baseBeatNo) {
-                PageId pageId = (PageId) beatId.getPageId();
-                pageNo = pageId.getPageNo();
-                BarId barId = (BarId) beatId.getBarId();
-                barNo = barId.getBarNo();
-                beatNo = beatId.getBeatNo();
-                break;
-            }
-        }
-
-        Platform.runLater(new TransportBeatUpdater(transportId, pageNo, barNo, beatNo, baseBeatNo));
+        Platform.runLater(new TransportPositionUpdater(transportId, baseBeatNo, beatIds));
     }
 
     public void onTempoEvent(Id transportId, Tempo tempo) {
         Platform.runLater(new TempoUpdater(transportId, tempo.getBpm()));
+    }
+
+    public void showSemaphore(int lightNo, Color fill) {
+        for (int i = 1; i <= lightNo; i++) {
+            if(i > semaphore.length) {
+                continue;
+            }
+            Circle circ = semaphore[i -1];
+            circ.setFill(fill);
+        }
     }
 
     private Double[] getTempoMultiplierValues() {
@@ -1478,8 +1571,13 @@ public class ScoreController {
         if(!newValue) {
             useDynamicsLineChb.setSelected(false);
         }
+        int alpha = calcOverlayAlpha(newValue);
         sendDynamicsValueChange(Math.round(dynamicsSldr.getValue()), instrumentIds);
-        sendUseDynamicsOverlay(newValue, instrumentIds);
+        sendUseDynamicsOverlay(newValue, alpha, instrumentIds);
+    }
+
+    private int calcOverlayAlpha(Boolean isEnabled) {
+        return isEnabled ? 255 : 0;
     }
 
     private void onUseDynamicsLine(Boolean newValue) {
@@ -1513,8 +1611,9 @@ public class ScoreController {
         if(!newValue) {
             usePressureLineChb.setSelected(false);
         }
+        int alpha = calcOverlayAlpha(newValue);
         sendPressureValueChange(Math.round(pressureSldr.getValue()), instrumentIds);
-        sendUsePressureOverlay(newValue, instrumentIds);
+        sendUsePressureOverlay(newValue, alpha, instrumentIds);
     }
 
     private void onUsePressureLine(Boolean newValue) {
@@ -1548,8 +1647,9 @@ public class ScoreController {
         if(!newValue) {
             useSpeedLineChb.setSelected(false);
         }
+        int alpha = calcOverlayAlpha(newValue);
         sendSpeedValueChange(Math.round(speedSldr.getValue()), instrumentIds);
-        sendUseSpeedOverlay(newValue, instrumentIds);
+        sendUseSpeedOverlay(newValue, alpha, instrumentIds);
     }
 
     private void onUseSpeedLine(Boolean newValue) {
@@ -1583,8 +1683,9 @@ public class ScoreController {
         if(!newValue) {
             usePositionLineChb.setSelected(false);
         }
+        int alpha = calcOverlayAlpha(newValue);
         sendPositionValueChange(Math.round(positionSldr.getValue()), instrumentIds);
-        sendUsePositionOverlay(newValue, instrumentIds);
+        sendUsePositionOverlay(newValue, alpha, instrumentIds);
     }
 
     private void onUsePositionLine(Boolean newValue) {
@@ -1618,8 +1719,9 @@ public class ScoreController {
         if(!newValue) {
             useContentLineChb.setSelected(false);
         }
+        int alpha = calcOverlayAlpha(newValue);
         sendContentValueChange(Math.round(contentSldr.getValue()), instrumentIds);
-        sendUseContentOverlay(newValue, instrumentIds);
+        sendUseContentOverlay(newValue, alpha, instrumentIds);
     }
 
     private void onUseContentLine(Boolean newValue) {
@@ -1645,6 +1747,27 @@ public class ScoreController {
         sendContentValueChange(newVal, instrumentIds);
     }
 
+    private void onAudienceMasterVolumeChange(long newVal, long oldVal) {
+        publishAudienceAudioVolumeChange(AudioComponentType.MASTER, convertAudioVolumeToWeb(newVal));
+    }
+    private void onAudiencePlayerVolumeChange(long newVal, long oldVal) {
+        publishAudienceAudioVolumeChange(AudioComponentType.PLAYER, convertAudioVolumeToWeb(newVal));
+    }
+    private void onAudienceGranulatorVolumeChange(long newVal, long oldVal) {
+        publishAudienceAudioVolumeChange(AudioComponentType.GRANULATOR, convertAudioVolumeToWeb(newVal));
+    }
+    private void onAudienceSpeechVolumeChange(long newVal, long oldVal) {
+        publishAudienceAudioVolumeChange(AudioComponentType.SPEECH, convertAudioVolumeToWeb(newVal));
+    }
+    private double convertAudioVolumeToWeb(long value) {
+        return MathUtil.convertToRange(1.0*value, Consts.WEB_SLIDER_MIN, Consts.WEB_SLIDER_MAX, Consts.WEB_AUDIO_MIN, Consts.WEB_AUDIO_MAX);
+    }
+    private void publishAudienceAudioVolumeChange(AudioComponentType componentType, double value) {
+        EventFactory eventFactory = publisher.getEventFactory();
+        WebAudienceAudioEvent instructionsEvent = eventFactory.createWebAudienceAudioEvent(componentType, WebAudienceAudioEventType.VOLUME, value, WEB_AUDIO_ACTION_DURATION_MS, clock.getSystemTimeMillis());
+        publisher.receive(instructionsEvent);
+    }
+
     private List<Id> getInstrumentsToSend() {
         List<Id> instrumentIds;
         if(sendToAllChb.isSelected()) {
@@ -1655,67 +1778,87 @@ public class ScoreController {
         return instrumentIds;
     }
 
-    private void sendUseDynamicsOverlay(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUseDynamicsOverlay(newVal, instrumentIds);
+    public void sendUseDynamicsOverlay(Boolean newVal, int alpha, List<Id> instrumentIds) {
+        scoreService.onUseOverlay(OverlayType.DYNAMICS, newVal, alpha, instrumentIds);
     }
 
-    private void sendUseDynamicsLine(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUseDynamicsLine(newVal, instrumentIds);
+    public void sendUseDynamicsLine(Boolean newVal, List<Id> instrumentIds) {
+        scoreService.onUseOverlayLine(OverlayType.DYNAMICS, newVal, instrumentIds);
     }
 
-    private void sendDynamicsValueChange(long newVal, List<Id> instrumentIds) {
-        scoreService.setDynamicsValue(newVal, instrumentIds);
+    public void sendDynamicsValueChange(long newVal, List<Id> instrumentIds) {
+        scoreService.setOverlayValue(OverlayType.DYNAMICS, newVal, instrumentIds);
     }
 
-    private void sendUsePressureOverlay(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUsePressureOverlay(newVal, instrumentIds);
+    private void sendUsePressureOverlay(Boolean newVal, int alpha, List<Id> instrumentIds) {
+        scoreService.onUseOverlay(OverlayType.PRESSURE, newVal, alpha, instrumentIds);
     }
 
     private void sendUsePressureLine(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUsePressureLine(newVal, instrumentIds);
+        scoreService.onUseOverlayLine(OverlayType.PRESSURE, newVal, instrumentIds);
     }
 
     private void sendPressureValueChange(long newVal, List<Id> instrumentIds) {
-        scoreService.setPressureValue(newVal, instrumentIds);
+        scoreService.setOverlayValue(OverlayType.PRESSURE, newVal, instrumentIds);
     }
 
-    private void sendUseSpeedOverlay(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUseSpeedOverlay(newVal, instrumentIds);
+    private void sendUseSpeedOverlay(Boolean newVal, int alpha, List<Id> instrumentIds) {
+        scoreService.onUseOverlay(OverlayType.SPEED, newVal, alpha, instrumentIds);
     }
 
     private void sendUseSpeedLine(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUseSpeedLine(newVal, instrumentIds);
+        scoreService.onUseOverlayLine(OverlayType.SPEED, newVal, instrumentIds);
     }
 
     private void sendSpeedValueChange(long newVal, List<Id> instrumentIds) {
-        scoreService.setSpeedValue(newVal, instrumentIds);
+        scoreService.setOverlayValue(OverlayType.SPEED, newVal, instrumentIds);
     }
 
-    private void sendUsePositionOverlay(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUsePositionOverlay(newVal, instrumentIds);
+    private void sendUsePositionOverlay(Boolean newVal, int alpha, List<Id> instrumentIds) {
+        scoreService.onUseOverlay(OverlayType.POSITION, newVal, alpha, instrumentIds);
     }
 
     private void sendUsePositionLine(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUsePositionLine(newVal, instrumentIds);
+        scoreService.onUseOverlayLine(OverlayType.POSITION, newVal, instrumentIds);
     }
 
     private void sendPositionValueChange(long newVal, List<Id> instrumentIds) {
-        scoreService.setPositionValue(newVal, instrumentIds);
+        scoreService.setOverlayValue(OverlayType.POSITION, newVal, instrumentIds);
     }
 
-    private void sendUseContentOverlay(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUseContentOverlay(newVal, instrumentIds);
+    public void sendUseContentOverlay(Boolean newVal, int alpha, List<Id> instrumentIds) {
+        scoreService.onUseOverlay(OverlayType.PITCH, newVal, alpha, instrumentIds);
     }
 
-    private void sendUseContentLine(Boolean newVal, List<Id> instrumentIds) {
-        scoreService.onUseContentLine(newVal, instrumentIds);
+    public void sendUsePitchStaveOverlay(Boolean newValue, int alpha, List<Id> instrumentIds) {
+        scoreService.onUseOverlay(OverlayType.PITCH_STAVE, newValue, alpha, instrumentIds);
     }
 
-    private void sendContentValueChange(long newVal, List<Id> instrumentIds) {
-        scoreService.setContentValue(newVal, instrumentIds);
+    public void sendUseContentLine(Boolean newVal, List<Id> instrumentIds) {
+        scoreService.onUseOverlayLine(OverlayType.PITCH, newVal, instrumentIds);
     }
 
-    private List<Id> getSelectedInstruments() {
+    public void sendContentValueChange(long newVal, List<Id> instrumentIds) {
+        scoreService.setOverlayValue(OverlayType.PITCH, newVal, instrumentIds);
+    }
+
+    public void sendOverlayText(OverlayType type, String l1, String l2, String l3, boolean isVisible, List<Id> instrumentIds) {
+        scoreService.setOverlayText(type, l1, l2, l3, isVisible, instrumentIds);
+    }
+
+    public void sendTimbreValueChange(long value, List<Id> instrumentIds) {
+        scoreService.setOverlayValue(OverlayType.TIMBRE, value, instrumentIds);
+    }
+
+    public void sendUseTimbreOverlay(Boolean newValue, int alpha, List<Id> instrumentIds) {
+        scoreService.onUseOverlay(OverlayType.TIMBRE, newValue, alpha, instrumentIds);
+    }
+
+    public void sendUseTimbreLine(Boolean newValue, List<Id> instrumentIds) {
+        scoreService.onUseOverlayLine(OverlayType.TIMBRE, newValue, instrumentIds);
+    }
+
+    public List<Id> getSelectedInstruments() {
         List<Id> instrumentIds = new ArrayList<>();
         ObservableList<Participant> participants = getSelectedParticipants();
         if(participants == null) {
@@ -1732,7 +1875,7 @@ public class ScoreController {
         return  instrumentIds;
     }
 
-    private List<Id> getAllInstruments() {
+    public List<Id> getAllInstruments() {
         List<Id> instrumentIds = new ArrayList<>();
         ObservableList<Participant> participants = getAllParticipants();
         if(participants == null) {
@@ -1765,32 +1908,89 @@ public class ScoreController {
         return String.format("%1$" + length + "s", string);
     }
 
+    public String getScoreName() {
+        if(score == null) {
+            return null;
+        }
+        return score.getName();
+    }
+
+    public void setPage(int startPage) {
+        Integer selection = startPage;
+        pageNoCbx.getSelectionModel().select(selection);
+        setPageNo(null);
+    }
+
+    public void playSection() {
+        playScore(null);
+    }
+
+    public void stopSection() {
+        stopScore(null);
+    }
+
     class TransportBeatUpdater implements Runnable {
-        private Id transportId;
-        private int pageNo;
-        private int barNo;
-        private int beatNo;
-        private int baseBeatNo;
+        private final Id transportId;
+        private final int beatNo;
+        private final int baseBeatNo;
+        private final List<BeatId> beatIds;
 
-        public TransportBeatUpdater(Id transportId, int pageNo, int barNo, int beatNo, int baseBeatNo) {
-
+        public TransportBeatUpdater(Id transportId, int beatNo, int baseBeatNo, List<BeatId> beatIds) {
             this.transportId = transportId;
             this.beatNo = beatNo;
             this.baseBeatNo = baseBeatNo;
-            this.pageNo = pageNo;
-            this.barNo = barNo;
+            this.beatIds = beatIds;
         }
 
         @Override
         public void run() {
-//LOG.info("Client receieved baseBeatNoBeatNo: " + baseBeatNo);
+            int pageNo = 0;
+            int barNo = 0;
+            for (BeatId beatId : beatIds) {
+                if (beatId.getBaseBeatNo() == baseBeatNo) {
+                    PageId pageId = (PageId) beatId.getPageId();
+                    pageNo = pageId.getPageNo();
+                    BarId barId = (BarId) beatId.getBarId();
+                    barNo = barId.getBarNo();
+                    break;
+                }
+            }
+            updateBeatInfo(transportId, pageNo, barNo, beatNo, baseBeatNo);
+        }
+    }
+
+    class TransportPositionUpdater implements Runnable {
+        private final Id transportId;
+        private final int baseBeatNo;
+        private final List<BeatId> beatIds;
+
+        public TransportPositionUpdater(Id transportId, int baseBeatNo, List<BeatId> beatIds) {
+            this.transportId = transportId;
+            this.baseBeatNo = baseBeatNo;
+            this.beatIds = beatIds;
+        }
+        @Override
+        public void run() {
+            int pageNo = 0;
+            int barNo = 0;
+            int beatNo = 0;
+            for (BeatId beatId : beatIds) {
+                if (beatId.getBaseBeatNo() == baseBeatNo) {
+                    PageId pageId = (PageId) beatId.getPageId();
+                    pageNo = pageId.getPageNo();
+                    BarId barId = (BarId) beatId.getBarId();
+                    barNo = barId.getBarNo();
+                    beatNo = beatId.getBeatNo();
+                    break;
+                }
+            }
             updateBeatInfo(transportId, pageNo, barNo, beatNo, baseBeatNo);
         }
     }
 
     class TempoUpdater implements Runnable {
-        private Id transportId;
-        private int tempo;
+        private final Id transportId;
+        private final int tempo;
 
         public TempoUpdater(Id transportId, int tempo) {
             this.transportId = transportId;
@@ -1799,10 +1999,8 @@ public class ScoreController {
 
         @Override
         public void run() {
-//LOG.info("Client receieved tempo: " + tempo);
             updateTempo(transportId, tempo);
         }
     }
-
 }
 

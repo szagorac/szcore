@@ -28,8 +28,23 @@
     -fx-padding: 3 6 6 6;
 }
 
+.button-orange{
+    -fx-text-fill: rgb(0, 0, 0);
+    -fx-border-color: rgb(49, 89, 23);
+    -fx-background-color: rgb(255, 153, 0);
+    -fx-border-radius: 5;
+    -fx-padding: 3 6 6 6;
+}
+
 .borders{
     -fx-border-color: rgb(103, 100, 78);
+    -fx-border-style: dotted;
+    -fx-border-width: 1.5;
+    -fx-border-insets: -5;
+}
+
+.borders-red{
+    -fx-border-color: red;
     -fx-border-style: dotted;
     -fx-border-width: 1.5;
     -fx-border-insets: -5;
@@ -63,28 +78,67 @@
     -fx-opacity: 1;
 }
 
-.label-ord-bold {
+.label-ord {
     -fx-font-size: 10pt;
-    -fx-font-family: "System";
+    -fx-font-family: "Verdana";
+    -fx-text-fill: black;
+    -fx-opacity: 1;
+}
+
+.label-ord-bold {
+    -fx-font-size: 11pt;
+    -fx-font-family: "Segoe UI Semibold";
     -fx-font-weight: bold;
     -fx-text-fill: black;
     -fx-opacity: 1;
 }
 
 .label-green {
-    -fx-text-fill: rgb(49, 89, 23);
+    -fx-text-fill: white;
     -fx-border-color: rgb(49, 89, 23);
-    -fx-background-color: rgb(102, 255, 51);
+    -fx-background-color: green;
     -fx-border-radius: 5;
     -fx-padding: 3 6 6 6;
 }
 
+.label-green-txt {
+    -fx-text-fill: green;
+    -fx-font-weight: bold;
+    -fx-font-size: 11pt;
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-opacity: 1;
+}
+.label-red-txt {
+    -fx-text-fill: red;
+    -fx-font-weight: bold;
+    -fx-font-size: 11pt;
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-opacity: 1;
+}
+
 .label-red {
-    -fx-text-fill: rgb(49, 89, 23);
+    -fx-text-fill: white;
     -fx-border-color: rgb(49, 89, 23);
-    -fx-background-color: rgb(255, 102, 102);
+    -fx-background-color: red;
     -fx-border-radius: 5;
     -fx-padding: 3 6 6 6;
+}
+
+.vbox-black{
+    -fx-border-color: black;
+    -fx-border-radius: 2 2 2 2;
+}
+
+.vbox-red{
+    -fx-border-color: red;
+    -fx-border-radius: 2 2 2 2;
+    -fx-background-color: red;
+}
+
+.vbox-green{
+    -fx-border-color: green;
+    -fx-border-radius: 2 2 2 2;
+    -fx-background-color: green;
 }
 
 .chart-series-line {

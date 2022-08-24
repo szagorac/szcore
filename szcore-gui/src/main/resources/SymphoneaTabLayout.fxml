@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+<BorderPane prefHeight="729.0" prefWidth="870.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.xenaksys.szcore.gui.view.SymphoneaScoreController">
+    <center>
+        <AnchorPane BorderPane.alignment="CENTER">
+            <children>
+                <VBox layoutX="10.0" layoutY="10.0" spacing="10.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+                    <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <children>
+                                <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Movements" />
+                                <Label fx:id="sectionsStatusLbl" styleClass="label-red" stylesheets="@css/szcoreStyle.css" text="WAITING" />
+                                <Separator orientation="VERTICAL" />
+                                <Button fx:id="setNextSectionBtn" minWidth="30.0" mnemonicParsing="false" onAction="#setMovement" prefWidth="55.0" styleClass="button-orange" stylesheets="@css/szcoreStyle.css" text="Set" />
+                                <Button fx:id="playNextSectionBtn" layoutX="539.0" layoutY="11.0" minWidth="30.0" mnemonicParsing="false" onAction="#playMovement" prefWidth="55.0" styleClass="button-green" stylesheets="@css/szcoreStyle.css" text="Play" />
+                                <Button fx:id="stopNextSectionBtn" layoutX="586.0" layoutY="11.0" minWidth="30.0" mnemonicParsing="false" onAction="#stopSection" prefWidth="55.0" styleClass="button-red" stylesheets="@css/szcoreStyle.css" text="Stop" />
+                                <Circle fx:id="semaphore4Crc" fill="#ff212100" radius="10.0" stroke="BLACK" strokeType="INSIDE" />
+                                <Circle fx:id="semaphore3Crc" fill="#21ff3400" radius="10.0" stroke="BLACK" strokeType="INSIDE" />
+                                <Circle fx:id="semaphore2Crc" fill="#1f93ff00" radius="10.0" stroke="BLACK" strokeType="INSIDE" />
+                                <Circle fx:id="semaphore1Crc" fill="#1f93ff00" radius="10.0" stroke="BLACK" strokeType="INSIDE" />
+                            </children>
+                        </HBox>
+                        <HBox spacing="10.0">
+                            <children>
+                                <VBox alignment="TOP_CENTER" stylesheets="@css/szcoreStyle.css">
+                                    <children>
+                                        <ListView fx:id="movementOrderLvw" prefHeight="100.0" prefWidth="100.0" />
+                              <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="110.0" spacing="10.0">
+                                 <children>
+                                            <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Current:" />
+                                            <Label fx:id="playingSectionLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="N/A" />
+                                 </children>
+                              </HBox>
+                              <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="209.0" spacing="10.0">
+                                 <children>
+                                            <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Next :" />
+                                            <Label fx:id="nextSectionLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="N/A" />
+                                 </children>
+                              </HBox>
+                                    </children>
+                                </VBox>
+                                <TableView fx:id="sectionsTableView" prefHeight="150.0" prefWidth="250.0">
+                                    <columns>
+                                        <TableColumn fx:id="sectionColumn" maxWidth="200.0" minWidth="50.0" prefWidth="70.0" text="Section" />
+                                        <TableColumn fx:id="voteNoColumn" maxWidth="200.0" minWidth="30.0" prefWidth="40.0" text="Vote" />
+                                        <TableColumn fx:id="startPageColumn" maxWidth="120.0" minWidth="30.0" prefWidth="45.0" text="StartP" />
+                                        <TableColumn fx:id="endPageColumn" maxWidth="120.0" minWidth="29.0" prefWidth="45.0" text="EndP" />
+                                    </columns>
+                                </TableView>
+                                <VBox alignment="TOP_CENTER">
+                                    <children>
+                                        <Label text="Vote" />
+                                        <VBox fx:id="voteVbox" alignment="CENTER" prefHeight="130.0" styleClass="vbox-black" stylesheets="@css/szcoreStyle.css">
+                                            <children>
+                                                <VBox alignment="BOTTOM_CENTER" prefHeight="65.0">
+                                                    <children>
+                                                        <VBox fx:id="voteUpVbox" prefHeight="0.0" styleClass="vbox-green" stylesheets="@css/szcoreStyle.css" />
+                                                    </children>
+                                                </VBox>
+                                                <VBox alignment="TOP_CENTER" prefHeight="65.0">
+                                                    <children>
+                                                        <VBox fx:id="voteDownVbox" alignment="TOP_CENTER" prefHeight="0.0" styleClass="vbox-red" stylesheets="@css/szcoreStyle.css" />
+                                                    </children>
+                                                </VBox>
+                                            </children>
+                                        </VBox>
+                                    </children>
+                                </VBox>
+                            </children>
+                        </HBox>
+                        <Separator />
+                        <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="372.0" spacing="6.0">
+                            <children>
+                                <Label styleClass="label-subtitle" stylesheets="@css/szcoreStyle.css" text="Overlays " />
+                        <Separator orientation="VERTICAL" />
+                                <ChoiceBox fx:id="presetsChob" />
+                                <CheckBox fx:id="sendToAllChb" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" />
+                                <Label layoutX="36.0" layoutY="10.0" text="Send To All" />
+                            </children>
+                        </HBox>
+                        <HBox>
+                            <children>
+                                <VBox spacing="3.0">
+                                    <children>
+                                        <HBox alignment="CENTER_LEFT" spacing="5.0">
+                                            <children>
+                                                <Label prefHeight="20.0" prefWidth="69.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Dynamics" />
+                                                <CheckBox fx:id="useDynamicsOverlayChb" mnemonicParsing="false" text="Ovl" />
+                                                <CheckBox fx:id="useDynamicsLineChb" mnemonicParsing="false" text="Ln" />
+                                                <Label fx:id="dynamicsValLbl" minWidth="40.0" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___" />
+                                                <Slider fx:id="dynamicsSldr" showTickLabels="true" showTickMarks="true" />
+                                                <Separator orientation="VERTICAL" />
+                                            </children>
+                                        </HBox>
+                                        <HBox alignment="CENTER_LEFT" spacing="5.0">
+                                            <children>
+                                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Pitch            " />
+                                                <CheckBox fx:id="usePitchOverlayChb" mnemonicParsing="false" text="Ovl" />
+                                                <CheckBox fx:id="usePitchLineChb" mnemonicParsing="false" text="Ln" />
+                                                <Label fx:id="pitchValLbl" minWidth="40.0" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___" />
+                                                <Slider fx:id="pitchSldr" showTickLabels="true" showTickMarks="true" />
+                                            </children>
+                                        </HBox>
+                                    </children>
+                           <padding>
+                              <Insets right="3.0" />
+                           </padding>
+                                </VBox>
+                                <VBox spacing="3.0">
+                                    <children>
+                                        <HBox alignment="CENTER_LEFT" spacing="6.0">
+                                            <children>
+                                                <Label layoutX="36.0" layoutY="21.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Timbre  " />
+                                                <CheckBox fx:id="useTimbreOverlayChb" layoutX="10.0" layoutY="21.0" mnemonicParsing="false" text="Ovl" />
+                                                <CheckBox fx:id="useTimbreLineChb" layoutX="396.0" layoutY="21.0" mnemonicParsing="false" text="Ln" />
+                                                <Label fx:id="timbreValLbl" layoutX="100.0" layoutY="12.0" minWidth="40.0" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___" />
+                                                <Slider fx:id="timbreSldr" showTickLabels="true" showTickMarks="true" />
+                                            </children>
+                                        </HBox>
+                                        <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="10.0" spacing="6.0">
+                                            <children>
+                                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="noteInfo" />
+                                                <CheckBox fx:id="usePitchStaveOverlayChb" mnemonicParsing="false" text="Ovl" />
+                                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Transparency" />
+                                                <Slider fx:id="pitchOverlayTransparencySldr" showTickLabels="true" showTickMarks="true" />
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </VBox>
+                            </children>
+                        </HBox>
+                        <Separator layoutX="10.0" layoutY="533.0" />
+                        <HBox alignment="CENTER_LEFT" spacing="7.0">
+                            <children>
+                        <Label layoutX="10.0" layoutY="15.0" styleClass="label-subtitle" stylesheets="@css/szcoreStyle.css" text="Text" />
+                        <Separator orientation="VERTICAL" />
+                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="L1:" />
+                                <TextField fx:id="instPitchLn1Txt" />
+                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="L2:" />
+                                <TextField fx:id="instPitchLn2Txt" layoutX="58.0" layoutY="10.0" />
+                                <Label layoutX="219.0" layoutY="15.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="L3:" />
+                                <TextField fx:id="instPitchLn3Txt" layoutX="235.0" layoutY="10.0" />
+                                <Button fx:id="sendPitchTextInstructionsBtn" mnemonicParsing="false" onAction="#sendPitchTextInstructions" styleClass="css/szcoreStyle.css" text="Send" />
+                                <Button fx:id="clearPitchTextInstructionsBtn" mnemonicParsing="false" onAction="#clearPitchTextInstructions" text="Clear" />
+                            </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <children>
+
+                                <VBox spacing="3.0" styleClass="borders" stylesheets="@css/szcoreStyle.css">
+                                    <children>
+                                        <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Send To:" />
+                                        <CheckBox fx:id="selectAllInstrumentsTxtChb" mnemonicParsing="false" text="Instruments" />
+                                        <CheckBox fx:id="selectAudienceTxtChb" layoutX="10.0" layoutY="30.0" mnemonicParsing="false" text="Audience" />
+                                        <CheckBox fx:id="selectAllTxtRecipientsChb" mnemonicParsing="false" text="All" />
+                                    </children>
+                                </VBox>
+                                <VBox id="borders" prefWidth="130.0" spacing="3.0" styleClass="borders" stylesheets="@css/szcoreStyle.css" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <CheckBox fx:id="sendTxtToPresentChb" mnemonicParsing="false" text="Instruments" />
+                                        <Label fx:id="presentL1Lbl" layoutX="10.0" layoutY="10.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
+                                        <Label fx:id="presentL2Lbl" layoutX="10.0" layoutY="27.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
+                                        <Label fx:id="presentL3Lbl" layoutX="10.0" layoutY="44.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
+                                    </children>
+                                </VBox>
+                                <VBox prefWidth="130.0" spacing="3.0" styleClass="borders-red" stylesheets="@css/szcoreStyle.css" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <CheckBox fx:id="sendTxtToAudienceChb" mnemonicParsing="false" text="Audience" />
+                                        <Label fx:id="audienceL1Lbl" layoutX="10.0" layoutY="10.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
+                                        <Label fx:id="audienceL2Lbl" layoutX="10.0" layoutY="27.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
+                                        <Label fx:id="audienceL3Lbl" layoutX="10.0" layoutY="44.0" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" />
+                                    </children>
+                                </VBox>
+                            </children>
+                        </HBox>
+                        <Separator />
+                  <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="357.0" spacing="7.0">
+                     <children>
+                        <Label layoutX="10.0" layoutY="15.0" styleClass="label-subtitle" stylesheets="@css/szcoreStyle.css" text="Audience" />
+                        <Separator orientation="VERTICAL" />
+                        <VBox alignment="CENTER_LEFT" spacing="7.0">
+                           <children>
+                              <CheckBox fx:id="adncNotesChb" mnemonicParsing="false" text="Notes" />
+                              <CheckBox fx:id="adncAudioChb" mnemonicParsing="false" text="Audio" />
+                           </children>
+                        </VBox>
+                        <VBox alignment="CENTER_LEFT" layoutX="99.0" layoutY="10.0" spacing="7.0" />
+                        <VBox alignment="CENTER_LEFT" layoutX="163.0" layoutY="10.0" spacing="7.0" />
+                        <Button fx:id="adncSendViewBtn" mnemonicParsing="false" onAction="#sendAudienceViewState" styleClass="css/szcoreStyle.css" text="Send" />
+                        <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Notes" />
+                        <VBox alignment="CENTER_LEFT" spacing="3.0">
+                           <children>
+                              <HBox alignment="CENTER_LEFT" spacing="7.0">
+                                 <children>
+                                    <Label fx:id="synthFreqLbl" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Freq" />
+                                    <ChoiceBox fx:id="synthFreqChob" />
+                                    <RadioButton fx:id="presetFreqDurMfRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="mf " />
+                                    <RadioButton fx:id="presetFreqDurFRdb" layoutX="104.0" layoutY="15.0" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="f" />
+                                    <RadioButton fx:id="presetFreqDurFfRdb" layoutX="143.0" layoutY="15.0" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="ff" />
+                                 </children>
+                              </HBox>
+                              <HBox alignment="CENTER_LEFT" spacing="7.0">
+                                 <children>
+                                    <Label fx:id="synthDurLbl" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Dur " />
+                                    <ChoiceBox fx:id="synthDurChob" />
+                                    <RadioButton fx:id="presetFreqDurMpRdb" layoutX="104.0" layoutY="15.0" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="mp" />
+                                    <RadioButton fx:id="presetFreqDurPRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="p" />
+                                    <RadioButton fx:id="presetFreqDurPpRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="pp" />
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
+                        <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Vol" />
+                        <VBox alignment="CENTER_LEFT" spacing="7.0">
+                           <children>
+                              <HBox alignment="CENTER_LEFT" spacing="7.0">
+                                 <children>
+                                    <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Master" />
+                                    <Slider fx:id="adncMasterVolSldr" stylesheets="@css/szcoreStyle.css" />
+                                 </children>
+                                 <padding>
+                                    <Insets right="5.0" />
+                                 </padding>
+                              </HBox>
+                              <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="10.0" spacing="7.0">
+                                 <children>
+                                    <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Synth " />
+                                    <Slider fx:id="adncSynthVolSldr" stylesheets="@css/szcoreStyle.css" />
+                                 </children>
+                                 <padding>
+                                    <Insets top="5.0" />
+                                 </padding>
+                              </HBox>
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+                  <Separator layoutX="10.0" layoutY="485.0" />
+                  <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="498.0" spacing="7.0">
+                     <children>
+                        <Label layoutX="10.0" layoutY="15.0" styleClass="label-subtitle" stylesheets="@css/szcoreStyle.css" text="Presets    " />
+                        <Separator orientation="VERTICAL" />
+                        <VBox spacing="5.0">
+                           <children>
+                              <HBox alignment="CENTER_LEFT" spacing="7.0">
+                                 <children>
+                                    <RadioButton fx:id="presetScoreRdb" mnemonicParsing="false" text="Score    " />
+                                    <RadioButton fx:id="presetFreeRdb" mnemonicParsing="false" text="Free" />
+                                    <Separator layoutX="72.0" layoutY="10.0" orientation="VERTICAL" stylesheets="@css/szcoreStyle.css" />
+                                    <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Audience" />
+                                    <RadioButton fx:id="presetAudienceNotesRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="NOTES" />
+                                    <RadioButton fx:id="presetWelcomeRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="Welcome" />
+                                    <RadioButton fx:id="presetIntroRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="Intro  " />
+                                 </children>
+                                 <padding>
+                                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                 </padding>
+                              </HBox>
+                              <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="10.0" spacing="7.0">
+                                 <children>
+                                    <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Impro All:" />
+                                    <RadioButton fx:id="presetImproCurrentRdb" mnemonicParsing="false" text="Current " />
+                                 </children>
+                                 <padding>
+                                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                 </padding>
+                              </HBox>
+                           </children>
+                        </VBox>
+                        <RadioButton fx:id="presetEndRdb" mnemonicParsing="false" stylesheets="@css/szcoreStyle.css" text="END" />
+                        <Separator layoutX="72.0" layoutY="10.0" orientation="VERTICAL" />
+                        <Button fx:id="presetSendBtn" layoutX="289.0" layoutY="10.0" mnemonicParsing="false" onAction="#sendPreset" styleClass="css/szcoreStyle.css" text="Send" />
+                     </children>
+                  </HBox>
+                    </children>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+                </VBox>
+            </children>
+        </AnchorPane>
+    </center>
+</BorderPane>

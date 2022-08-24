@@ -1,17 +1,7 @@
 package com.xenaksys.szcore.time;
 
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.model.BeatTimeStrategy;
-import com.xenaksys.szcore.model.Clock;
-import com.xenaksys.szcore.model.Id;
-import com.xenaksys.szcore.model.NoteDuration;
-import com.xenaksys.szcore.model.Scheduler;
-import com.xenaksys.szcore.model.Tempo;
-import com.xenaksys.szcore.model.TempoImpl;
-import com.xenaksys.szcore.model.TimeSignature;
-import com.xenaksys.szcore.model.TimeSignatureImpl;
-import com.xenaksys.szcore.model.Transport;
-import com.xenaksys.szcore.model.TransportListener;
+import com.xenaksys.szcore.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,12 +53,6 @@ public class BasicTransport implements Transport {
 
     public void init() {
         calculatePublishIntervals();
-//        if (publishTickTime != 0l) {
-//            caluclateNextTickTime(publishTickTime);
-//        }
-//        if (publishBeatTime != 0l) {
-//            caluclateNextBeatTime(publishBeatTime);
-//        }
     }
 
     public void init(long position) {
@@ -79,7 +63,6 @@ public class BasicTransport implements Transport {
         publishBeatTime = position;
         nextBeatTime = position;
         startPositionMilllis = position;
-//LOG.info("Set nextBeatTime: " + nextBeatTime);
     }
 
     @Override
@@ -88,12 +71,6 @@ public class BasicTransport implements Transport {
             return;
         }
         long elapsedStart = clock.getElapsedTimeMillis();
-//        long currentTime = clock.getSystemTimeMillis();
-//        long diffCurrent = currentTime - systemStartTime;
-//        long diff = diffCurrent - elapsedStart;
-//        if (Math.abs(diff) > 1) {
-//            LOG.debug("DIff between system and elapsed: " + diff + " diffCurrent: " + diffCurrent + " elapsed: " + elapsedStart);
-//        }
 
         if (isTransportTickTime()) {
             tick();
@@ -162,6 +139,11 @@ public class BasicTransport implements Transport {
         return MILLIS_IN_MINUTE / bpm;
     }
 
+    @Override
+    public void reset() {
+        listeners.clear();
+    }
+
     private void caluclateNextBeatTime(long previousPublishBeatTime) {
         if (baseBeatIntervalMillis == 0) {
             LOG.error("Invalid beat interval millis");
@@ -177,7 +159,7 @@ public class BasicTransport implements Transport {
         if(isTempoChange){
             this.isTempoChange = false;
         }
-//LOG.info("Calculated nextBeatTime: " + nextBeatTime);
+        //LOG.info("Calculated nextBeatTime: " + nextBeatTime);
     }
 
     private void caluclateNextTickTime(long previousPublishTickTime) {
@@ -208,7 +190,7 @@ public class BasicTransport implements Transport {
     }
 
     private void publishTick() {
-//        LOG.info("Publishing tick: ");
+        //        LOG.info("Publishing tick: ");
         for (TransportListener listener : listeners) {
             listener.onClockTick(beatNo, tickNo);
         }
@@ -217,7 +199,7 @@ public class BasicTransport implements Transport {
     }
 
     private void publishBeat() {
-//        LOG.debug("Publishing base beat: " + beatNo + " ElapsedTimeMillis: " + clock.getElapsedTimeMillis());
+        //        LOG.debug("Publishing base beat: " + beatNo + " ElapsedTimeMillis: " + clock.getElapsedTimeMillis());
         for (TransportListener listener : listeners) {
             listener.onBaseBeat(beatNo);
         }
@@ -237,9 +219,9 @@ public class BasicTransport implements Transport {
             LOG.warn("Beat Time late millis : " + -1.0 * diff);
         }
         boolean isBeatTime = diff <= 0L;
-if( playTime > 0) {
-//    LOG.info("Is Beat Time: " + isBeatTime + " playTime: " + playTime + " nextBeatTime: " + nextBeatTime + " diff: " + diff);
-}
+        if( playTime > 0) {
+        //    LOG.info("Is Beat Time: " + isBeatTime + " playTime: " + playTime + " nextBeatTime: " + nextBeatTime + " diff: " + diff);
+        }
 
         return isBeatTime;
     }

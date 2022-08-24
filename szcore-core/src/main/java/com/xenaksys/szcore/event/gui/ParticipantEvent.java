@@ -6,6 +6,7 @@ import java.net.InetAddress;
 
 public class ParticipantEvent extends ClientEvent {
 
+    private final String clientId;
     private final InetAddress inetAddress;
     private final String hostAddress;
     private final int portIn;
@@ -16,8 +17,9 @@ public class ParticipantEvent extends ClientEvent {
     private final boolean isReady;
     private final boolean isBanned;
 
-    public ParticipantEvent(InetAddress inetAddress, String hostAddress, int portIn, int portOut, int portErr, int ping, String instrument, boolean isReady, boolean isBanned, long time) {
+    public ParticipantEvent(String clientId, InetAddress inetAddress, String hostAddress, int portIn, int portOut, int portErr, int ping, String instrument, boolean isReady, boolean isBanned, long time) {
         super(time);
+        this.clientId = clientId;
         this.inetAddress = inetAddress;
         this.hostAddress = hostAddress;
         this.portIn = portIn;
@@ -27,6 +29,10 @@ public class ParticipantEvent extends ClientEvent {
         this.instrument = instrument;
         this.isReady = isReady;
         this.isBanned = isBanned;
+    }
+
+    public String getClientId() {
+        return clientId;
     }
 
     public InetAddress getInetAddress() {
@@ -74,6 +80,7 @@ public class ParticipantEvent extends ClientEvent {
     public String toString() {
         return "ParticipantEvent{" +
                 " time='" + TimeUtil.formatTime(getCreationTime()) + '\'' +
+                ", clientId=" + clientId +
                 ", inetAddress=" + inetAddress +
                 ", hostAddress='" + hostAddress + '\'' +
                 ", portIn=" + portIn +

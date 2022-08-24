@@ -1,10 +1,12 @@
 package com.xenaksys.szcore.event.web.in;
 
+import com.xenaksys.szcore.web.WebClientInfo;
+
 public class WebScorePartRegEvent extends WebScoreInEvent {
     private final String part;
 
-    public WebScorePartRegEvent(String eventId, String sourceAddr, String part, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        super(eventId, sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public WebScorePartRegEvent(String clientId, String eventId, String sourceAddr, String part, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime, WebClientInfo webClientInfo) {
+        super(clientId, eventId, sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
         this.part = part;
     }
 
@@ -18,7 +20,7 @@ public class WebScorePartRegEvent extends WebScoreInEvent {
 
     @Override
     public String toString() {
-        return "WebScoreConnectionEvent{" +
+        return "WebScorePartRegEvent{" +
                 "part=" + part +
                 '}';
     }

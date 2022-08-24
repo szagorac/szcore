@@ -1,12 +1,13 @@
 package com.xenaksys.szcore.score;
 
+import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.ValueScaler;
 import com.xenaksys.szcore.util.MathUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static com.xenaksys.szcore.Consts.DYNAMICS_LINE_Y_MAX;
-import static com.xenaksys.szcore.Consts.DYNAMICS_LINE_Y_MIN;
+import static com.xenaksys.szcore.score.overlay.OverlayProcessor.DYNAMICS_LINE_Y_MAX;
+import static com.xenaksys.szcore.score.overlay.OverlayProcessor.DYNAMICS_LINE_Y_MIN;
 
 public class TestValueScaler {
 
@@ -91,5 +92,20 @@ public class TestValueScaler {
 
         out = vt.scaleValue(10L);
         Assert.assertEquals( 229.5, out, 10E-5);
+    }
+
+    @Test
+    public void testWebAudioScale(){
+        double value = 50.0;
+        double out = MathUtil.convertToRange(value, Consts.WEB_SLIDER_MIN, Consts.WEB_SLIDER_MAX, Consts.WEB_AUDIO_MIN, Consts.WEB_AUDIO_MAX);
+        Assert.assertEquals(0.5, out, 10E-5);
+
+        value = 88.0;
+        out = MathUtil.convertToRange(value, Consts.WEB_SLIDER_MIN, Consts.WEB_SLIDER_MAX, Consts.WEB_AUDIO_MIN, Consts.WEB_AUDIO_MAX);
+        Assert.assertEquals(0.88, out, 10E-5);
+
+        value = 12.0;
+        out = MathUtil.convertToRange(value, Consts.WEB_SLIDER_MIN, Consts.WEB_SLIDER_MAX, Consts.WEB_AUDIO_MIN, Consts.WEB_AUDIO_MAX);
+        Assert.assertEquals(0.12, out, 10E-5);
     }
 }

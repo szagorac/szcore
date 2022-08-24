@@ -2,14 +2,14 @@ package com.xenaksys.szcore.task;
 
 import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
 import com.xenaksys.szcore.model.SzcoreEvent;
-import com.xenaksys.szcore.score.web.audience.WebAudienceScore;
+import com.xenaksys.szcore.score.web.audience.WebAudienceScoreProcessor;
 
 public class WebAudienceEventTask extends EventMusicTask {
-    private WebAudienceScore webAudienceScore;
+    private WebAudienceScoreProcessor webAudienceScoreProcessor;
 
-    public WebAudienceEventTask(long playTime, WebAudienceEvent event, WebAudienceScore webAudienceScore) {
+    public WebAudienceEventTask(long playTime, WebAudienceEvent event, WebAudienceScoreProcessor webAudienceScoreProcessor) {
         super(playTime, event);
-        this.webAudienceScore = webAudienceScore;
+        this.webAudienceScoreProcessor = webAudienceScoreProcessor;
     }
 
     @Override
@@ -20,6 +20,6 @@ public class WebAudienceEventTask extends EventMusicTask {
         }
 
         WebAudienceEvent webAudienceEvent = (WebAudienceEvent) event;
-        webAudienceScore.processWebAudienceEvent(webAudienceEvent);
+        webAudienceScoreProcessor.processWebAudienceEvent(webAudienceEvent);
     }
 }

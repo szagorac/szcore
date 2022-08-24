@@ -8,6 +8,8 @@ import com.xenaksys.szcore.event.gui.ErrorEvent;
 import com.xenaksys.szcore.event.gui.InstrumentEvent;
 import com.xenaksys.szcore.event.gui.ParticipantEvent;
 import com.xenaksys.szcore.event.gui.ParticipantStatsEvent;
+import com.xenaksys.szcore.event.gui.ScoreInfoEvent;
+import com.xenaksys.szcore.event.gui.ScoreSectionInfoEvent;
 import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.music.MusicEvent;
@@ -58,7 +60,7 @@ public class ClientEventProcessor implements Processor {
                     processScoreOscEvent((OscEvent) event);
                 }
                 break;
-            case CLIENT:
+            case ADMIN_OUT:
                 if ((event instanceof ClientEvent)) {
                     processClientEvent((ClientEvent) event);
                 }
@@ -110,7 +112,14 @@ public class ClientEventProcessor implements Processor {
             case WEB_SCORE_OUT:
                 processWebScoreOutEvent((OutgoingWebEvent) event);
                 break;
+            case ADMIN_OUT:
+                if ((event instanceof ClientEvent)) {
+                    processClientEvent((ClientEvent) event);
+                }
+                break;
+            case ADMIN_IN:
             case SCRIPTING_ENGINE:
+            case DELAYED_WEB_OUT:
                 //TODO
                 break;
             default:
@@ -140,7 +149,7 @@ public class ClientEventProcessor implements Processor {
     }
 
     private void processWebScoreEvent(WebAudienceEvent event) {
-        LOG.debug("Received WebAudienceScore MUSIC event: " + event);
+        LOG.debug("Received WebAudienceScoreProcessor MUSIC event: " + event);
     }
 
     private void processWebScoreInEvent(WebScoreInEvent event) {
@@ -176,6 +185,12 @@ public class ClientEventProcessor implements Processor {
             case WEB_SCORE_CLIENT_INFOS:
                 processWebScoreClientInfoEvent((WebScoreClientInfoUpdateEvent) event);
                 break;
+            case SECTION_INFO:
+                processSectionInfoEvent((ScoreSectionInfoEvent) event);
+                break;
+            case SCORE_INFO:
+                processScoreInfoEVent((ScoreInfoEvent) event);
+                break;
             default:
                 LOG.error("processClientEvent: Unknown event type: " + type);
         }
@@ -193,6 +208,20 @@ public class ClientEventProcessor implements Processor {
             return;
         }
         client.processWebScoreClientInfos(event);
+    }
+
+    private void processSectionInfoEvent(ScoreSectionInfoEvent event) {
+        if (event == null) {
+            return;
+        }
+        client.processScoreSectionInfos(event);
+    }
+
+    private void processScoreInfoEVent(ScoreInfoEvent event) {
+        if (event == null) {
+            return;
+        }
+        client.processScoreInfo(event);
     }
 
     private void processErrorEvent(ErrorEvent event) {
@@ -246,6 +275,7 @@ public class ClientEventProcessor implements Processor {
         }
 
         Participant participant = new Participant();
+        participant.setClientId(event.getClientId());
         participant.setInetAddress(event.getInetAddress());
         participant.setHostAddress(event.getHostAddress());
         participant.setPortIn(event.getPortIn());

@@ -125,8 +125,13 @@ public class AudienceWebServer extends BaseZsWebServer {
             Path indexPath = Paths.get(path.toAbsolutePath().toString(), INDEX_HTML);
 
             if (Files.exists(path) && Files.exists(indexPath)) {
+                LOG.info("Audience web server using root: {}", path.toAbsolutePath());
                 staticDataHandler = createStaticDataHandler(path);
+            } else {
+                LOG.error("Could not initialise Audience web root: {}", getStaticDataPath());
             }
+        } else {
+            LOG.error("Failed to initialise staticDataHandler for Audience root: {}, using default", getStaticDataPath());
         }
 
         udtowAudience = Undertow.builder()

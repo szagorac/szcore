@@ -3,6 +3,9 @@ package com.xenaksys.szcore.gui;
 
 import com.aquafx_project.AquaFx;
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.event.gui.PrecountInfo;
+import com.xenaksys.szcore.event.gui.ScoreInfoEvent;
+import com.xenaksys.szcore.event.gui.ScoreSectionInfoEvent;
 import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
 import com.xenaksys.szcore.gui.event.ClientIncomingEventReceiver;
@@ -10,12 +13,22 @@ import com.xenaksys.szcore.gui.event.ClientScoreEngineEventReceiver;
 import com.xenaksys.szcore.gui.model.Participant;
 import com.xenaksys.szcore.gui.processor.ClientEventProcessor;
 import com.xenaksys.szcore.gui.processor.GuiLoggerProcessor;
+import com.xenaksys.szcore.gui.view.DialogsScoreController;
 import com.xenaksys.szcore.gui.view.LoggerController;
 import com.xenaksys.szcore.gui.view.RootLayoutController;
 import com.xenaksys.szcore.gui.view.ScoreController;
 import com.xenaksys.szcore.gui.view.SettingsController;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.gui.view.SymphoneaScoreController;
+import com.xenaksys.szcore.model.EventService;
+import com.xenaksys.szcore.model.Id;
+import com.xenaksys.szcore.model.Score;
+import com.xenaksys.szcore.model.ScoreService;
+import com.xenaksys.szcore.model.SectionInfo;
+import com.xenaksys.szcore.model.SzcoreEvent;
+import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.id.OscListenerId;
+import com.xenaksys.szcore.model.id.StrId;
+import com.xenaksys.szcore.score.OverlayType;
 import com.xenaksys.szcore.server.SzcoreServer;
 import com.xenaksys.szcore.time.clock.SimpleClock;
 import com.xenaksys.szcore.web.WebClientInfo;
@@ -31,6 +44,7 @@ import javafx.scene.control.Tab;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,10 +53,16 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class SzcoreClient extends Application {
     static final Logger LOG = LoggerFactory.getLogger(SzcoreClient.class);
+
+    private final ScheduledExecutorService scheduleExecutor = Executors.newSingleThreadScheduledExecutor();
 
     private Stage primaryStage;
     private BorderPane rootLayout;
@@ -57,6 +77,8 @@ public class SzcoreClient extends Application {
     private ClientEventProcessor clientEventProcessor;
     private GuiLoggerProcessor loggerProcessor;
 
+    private SymphoneaScoreController symphoneaScoreController;
+    private DialogsScoreController dialogsScoreController;
     private ScoreController scoreController;
     private SettingsController settingsController;
 
@@ -64,12 +86,16 @@ public class SzcoreClient extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        this.primaryStage = primaryStage;
-        this.primaryStage.setTitle("ZSCORE");
-        this.primaryStage.getIcons().add(new Image("file:resources/images/Address_Book.png"));
-        AquaFx.style();
+        try {
+            this.primaryStage = primaryStage;
+            this.primaryStage.setTitle("ZSCORE");
+            this.primaryStage.getIcons().add(new Image("file:resources/images/Address_Book.png"));
+            AquaFx.style();
 
-        bootstrap();
+            bootstrap();
+        } catch (Exception e) {
+            LOG.error("start: Failed to start application", e);
+        }
     }
 
     private void bootstrap(){
@@ -78,6 +104,8 @@ public class SzcoreClient extends Application {
         initRootLayout();
         initLoggerTab();
         initSettingsTab();
+        initDialogTab();
+        initSymphoneaTab();
         initScoreTab();
 
         initProcessors();
@@ -189,6 +217,49 @@ public class SzcoreClient extends Application {
         }
     }
 
+    public void initDialogTab() {
+        try {
+
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(SzcoreClient.class.getResource("/DialogsTabLayout.fxml"));
+            BorderPane scorePane = (BorderPane) loader.load();
+
+            Tab scoreTab = rootController.getDialogsScoreTab();
+
+            scoreTab.setContent(scorePane);
+            dialogsScoreController = loader.getController();
+
+            dialogsScoreController.setMainApp(this);
+            dialogsScoreController.setScoreService(scoreService);
+            dialogsScoreController.setPublisher(eventService);
+
+            dialogsScoreController.populate();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void initSymphoneaTab() {
+        try {
+
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(SzcoreClient.class.getResource("/SymphoneaTabLayout.fxml"));
+            BorderPane scorePane = (BorderPane) loader.load();
+
+            Tab symphoneaTab = rootController.getSymphoneaScoreTab();
+
+            symphoneaTab.setContent(scorePane);
+            symphoneaScoreController = loader.getController();
+
+            symphoneaScoreController.setMainApp(this);
+            symphoneaScoreController.setScoreService(scoreService);
+            symphoneaScoreController.setPublisher(eventService);
+
+            symphoneaScoreController.populate();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public void show() {
         if(primaryStage == null){
@@ -219,6 +290,7 @@ public class SzcoreClient extends Application {
             return;
         }
         Platform.runLater(() -> {
+            checkSectionOwner(participant, false);
             if (participants.contains(participant)) {
                 updateParticipant(participant);
                 return;
@@ -235,7 +307,8 @@ public class SzcoreClient extends Application {
             return;
         }
         Platform.runLater(() -> {
-            LOG.info("Updating Participant: " + toUpdate);
+//            LOG.info("Updating Participant: " + toUpdate);
+            toUpdate.setClientId(participant.getClientId());
             toUpdate.setInstrument(participant.getInstrument());
             toUpdate.setPing(participant.getPing());
             toUpdate.setPortErr(participant.getPortErr());
@@ -244,7 +317,6 @@ public class SzcoreClient extends Application {
             toUpdate.setIsReady(participant.getIsReady());
             toUpdate.setBanned(participant.isBanned());
         });
-
     }
 
     public Participant getParticipant(String hostAddress, int port) {
@@ -257,7 +329,6 @@ public class SzcoreClient extends Application {
                 return participant;
             }
         }
-
         return null;
     }
 
@@ -279,11 +350,12 @@ public class SzcoreClient extends Application {
     }
 
     public void onTransportPositionChange(Id transportId, int beatNo) {
-        scoreController.onTransportPoisitionChange(transportId, beatNo);
+        scoreController.onTransportPositionChange(transportId, beatNo);
     }
 
     public void onTempoEvent(Id transportId, Tempo tempo) {
         scoreController.onTempoEvent(transportId, tempo);
+        dialogsScoreController.onTempoEvent(tempo);
     }
 
     public void processWebAudienceClientInfos(WebAudienceClientInfoUpdateEvent event) {
@@ -317,6 +389,7 @@ public class SzcoreClient extends Application {
         for (WebClientInfo clientInfo : webClientInfos) {
             Participant participant = new Participant();
             InetAddress addr = null;
+            participant.setClientId(clientInfo.getClientId());
             try {
                 addr = InetAddress.getByName(clientInfo.getHost());
             } catch (UnknownHostException e) {
@@ -337,10 +410,253 @@ public class SzcoreClient extends Application {
 
         if (isFullUpdate) {
             for (Participant participant : toRemove) {
-                if (participants.contains(participant)) {
-                    participants.remove(participant);
-                }
+                Platform.runLater(new ParticipantRemover(participant));
             }
         }
     }
+
+    private void checkSectionOwner(Participant participant, boolean isRemove) {
+        if(isRemove) {
+            dialogsScoreController.onParticipantRemove(participant);
+        } else {
+            dialogsScoreController.onParticipantUpdate(participant);
+        }
+    }
+
+    public void processScoreSectionInfos(ScoreSectionInfoEvent event) {
+        StrId scoreId = (StrId)event.getScoreId();
+        String currentScore = scoreController.getScoreName();
+        if(!scoreId.getName().equals(currentScore)) {
+            return;
+        }
+        List<String> sectionOrder = event.getSectionOrder();
+        List<SectionInfo> sectionInfos = event.getSectionInfos();
+        boolean isReady = event.isReady();
+        String currentSection = event.getCurrentSection();
+        String nextSection = event.getNextSection();
+        dialogsScoreController.onSectionInfo(sectionInfos, sectionOrder, isReady, currentSection, nextSection);
+    }
+
+    public void processScoreInfo(ScoreInfoEvent event) {
+        PrecountInfo precountInfo = event.getPrecountInfo();
+        if(precountInfo != null) {
+            processPrecountInfo(precountInfo);
+        }
+        boolean isStop = event.isStop();
+        if(isStop) {
+            Platform.runLater(this::onStop);
+        }
+
+    }
+
+
+    public void processPrecountInfo(PrecountInfo precountInfo) {
+        Platform.runLater(new PrecountUpdater(precountInfo));
+    }
+
+    private void onStop() {
+        scoreController.showSemaphore(1, Color.RED);
+        dialogsScoreController.showSemaphore(1, Color.RED);
+        symphoneaScoreController.showSemaphore(1, Color.RED);
+    }
+
+    private void updatePrecount(PrecountInfo precountInfo) {
+        int beaterNo = precountInfo.getBeaterNo();
+        int colId = precountInfo.getColourId();
+        boolean isOn = precountInfo.isPrecountOn();
+        if(isOn) {
+            scoreController.showSemaphore(beaterNo, resolveColour(colId));
+            dialogsScoreController.showSemaphore(beaterNo, resolveColour(colId));
+            symphoneaScoreController.showSemaphore(beaterNo, resolveColour(colId));
+        } else {
+            scoreController.showSemaphore(4, Color.TRANSPARENT);
+            dialogsScoreController.showSemaphore(4, Color.TRANSPARENT);
+            symphoneaScoreController.showSemaphore(4, Color.TRANSPARENT);
+        }
+    }
+
+    private Color resolveColour(int colId) {
+        switch (colId) {
+            case Consts.OSC_COLOUR_GREEN:
+                return Color.GREEN;
+            case Consts.OSC_COLOUR_YELLOW:
+                return Color.YELLOW;
+            case Consts.OSC_COLOUR_ORANGE:
+                return Color.ORANGE;
+            case Consts.OSC_COLOUR_RED:
+                return Color.RED;
+        }
+        return null;
+    }
+
+    public void setPage(int startPage) {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.setPage(startPage);
+    }
+
+    public void resetScore() {
+        if(scoreController != null) {
+            scoreController.reset();
+        }
+        if(dialogsScoreController != null) {
+            dialogsScoreController.reset();
+        }
+        if(symphoneaScoreController != null) {
+            symphoneaScoreController.reset();
+        }
+    }
+
+    public void onScoreLoad(Score score) {
+        if(dialogsScoreController != null) {
+            dialogsScoreController.onScoreLoad(score);
+        }
+        if(symphoneaScoreController != null) {
+            symphoneaScoreController.onScoreLoad(score);
+        }
+    }
+
+    public void sendPosition() {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.sendPosition();
+    }
+
+    public void playSection() {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.playSection();
+    }
+
+    public void stopSection() {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.stopSection();
+    }
+
+    public List<Id> getAllInstruments() {
+        if(scoreController == null) {
+            return null;
+        }
+        return scoreController.getAllInstruments();
+    }
+
+    public List<Id> getSelectedInstruments() {
+        if(scoreController == null) {
+            return null;
+        }
+        return scoreController.getSelectedInstruments();
+    }
+
+    public void sendDynamicsValueChange(long newVal, List<Id> instrumentIds) {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.sendDynamicsValueChange(newVal , instrumentIds);
+    }
+
+    public void sendUseDynamicsOverlay(Boolean newValue, int alpha, List<Id> instrumentIds) {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.sendUseDynamicsOverlay(newValue, alpha, instrumentIds);
+    }
+
+    public void sendUseDynamicsLine(Boolean newValue, List<Id> instrumentIds) {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.sendUseDynamicsLine(newValue, instrumentIds);
+    }
+
+    public void sendPitchValueChange(long value, List<Id> instrumentIds) {
+        if (scoreController == null) {
+            return;
+        }
+        scoreController.sendContentValueChange(value, instrumentIds);
+    }
+
+    public void sendPitchText(String l1, String l2, String l3, boolean isVisible, List<Id> instrumentIds) {
+        if (scoreController == null) {
+            return;
+        }
+        scoreController.sendOverlayText(OverlayType.PITCH, l1, l2, l3, isVisible, instrumentIds);
+    }
+
+    public void sendUsePitchOverlay(Boolean newValue, int alpha, List<Id> instrumentIds) {
+        if (scoreController == null) {
+            return;
+        }
+        scoreController.sendUseContentOverlay(newValue, alpha, instrumentIds);
+    }
+
+    public void sendUsePitchStaveOverlay(Boolean newValue, int alpha, List<Id> instrumentIds) {
+        if (scoreController == null) {
+            return;
+        }
+        scoreController.sendUsePitchStaveOverlay(newValue, alpha, instrumentIds);
+    }
+
+    public void sendUsePitchLine(Boolean newValue, List<Id> instrumentIds) {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.sendUseContentLine(newValue , instrumentIds);
+    }
+
+    public void sendTimbreValueChange(long value, List<Id> instrumentIds) {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.sendTimbreValueChange(value , instrumentIds);
+    }
+
+    public void sendUseTimbreOverlay(Boolean newValue, int alpha, List<Id> instrumentIds) {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.sendUseTimbreOverlay(newValue, alpha, instrumentIds);
+    }
+
+    public void sendUseTimbreLine(Boolean newValue, List<Id> instrumentIds) {
+        if(scoreController == null) {
+            return;
+        }
+        scoreController.sendUseTimbreLine(newValue , instrumentIds);
+    }
+
+    public void scheduleTask(Runnable task, long delay, TimeUnit tu) {
+        scheduleExecutor.schedule(task, delay, tu);
+    }
+
+    class PrecountUpdater implements Runnable {
+        private final PrecountInfo precountInfo;
+        public PrecountUpdater(PrecountInfo precountInfo) {
+            this.precountInfo = precountInfo;
+        }
+        @Override
+        public void run() {
+            updatePrecount(precountInfo);
+        }
+    }
+
+    class ParticipantRemover implements Runnable {
+        private final Participant participant;
+        public ParticipantRemover(Participant participant) {
+            this.participant = participant;
+        }
+
+        @Override
+        public void run() {
+            if (participants.contains(this.participant)) {
+                participants.remove(this.participant);
+            }
+            checkSectionOwner(participant, true);
+        }
+    }
+
 }

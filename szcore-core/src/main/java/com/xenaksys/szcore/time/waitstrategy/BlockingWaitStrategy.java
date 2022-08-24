@@ -7,12 +7,10 @@ import java.util.concurrent.locks.LockSupport;
 
 public class BlockingWaitStrategy implements WaitStrategy {
 
-    private long interval;
+    private final long interval;
 
     public BlockingWaitStrategy(long interval, TimeUnit timeUnit) {
-        long nanos = TimeUnit.NANOSECONDS.convert(interval, timeUnit);
-        this.interval = nanos;
-
+        this.interval = TimeUnit.NANOSECONDS.convert(interval, timeUnit);
     }
 
     public void doWait() {

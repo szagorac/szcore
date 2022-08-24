@@ -11,6 +11,7 @@ public class WebPartInfo {
     private String imgPageNameToken;
     private String imgContPageName;
     private int contPageNo;
+    private String currentSection;
 
     public String getName() {
         return name;
@@ -58,5 +59,13 @@ public class WebPartInfo {
 
     public void setContPageNo(int contPageNo) {
         this.contPageNo = contPageNo;
+    }
+
+    public String getCurrentSection() {
+        return currentSection;
+    }
+
+    public void setCurrentSection(String currentSection) {
+        this.currentSection = currentSection;
     }
 }

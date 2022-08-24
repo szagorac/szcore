@@ -1,10 +1,13 @@
 package com.xenaksys.szcore.server;
 
+import com.xenaksys.szcore.util.FileUtil;
 import com.xenaksys.szcore.util.NetUtil;
 import com.xenaksys.szcore.util.PropertyUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,7 +24,7 @@ public class Server implements Runnable {
     private static final String PROP_INSTANCE = "instance";
 
     protected static volatile Server instance;
-    protected static volatile Properties properties = loadProperties();
+    protected static volatile Properties properties = null;
     protected static volatile String location = loadLocation();
     protected static volatile int instanceId = loadInstanceId();
 
@@ -242,19 +245,22 @@ public class Server implements Runnable {
 
     protected static Properties loadProperties() {
         Properties props = new Properties();
+        String propFileName = System.getProperty("propertyFile");
+        if (propFileName == null) {
+            propFileName = "zscore.properties";
+        }
         try {
-            String propFileName = System.getProperty("propertyFile");
-            if (propFileName == null) {
-                propFileName = "zscore.properties";
-            }
-
             InputStream inputStream = Server.class.getClassLoader().getResourceAsStream(propFileName);
             if (inputStream == null) {
-                throw new FileNotFoundException("property file '" + propFileName + "' not found in the classpath");
+                LOG.info("Could not find properties file on classpath, trying full path: {}", propFileName);
+                File propFile = FileUtil.getFileFromPath(propFileName);
+                if(propFile != null && propFile.isFile() && propFile.canRead()) {
+                    inputStream = new FileInputStream(propFile);
+                } else {
+                    throw new FileNotFoundException("property file '" + propFileName + "' not found");
+                }
             }
-
             props.load(inputStream);
-
             return props;
         } catch (IOException e) {
             LOG.error("Failed to load Properties file: " + e);

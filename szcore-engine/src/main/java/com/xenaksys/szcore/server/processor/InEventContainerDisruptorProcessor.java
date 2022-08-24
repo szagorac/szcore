@@ -5,6 +5,7 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.EventContainer;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.EventType;
+import com.xenaksys.szcore.event.gui.ClientInEvent;
 import com.xenaksys.szcore.event.gui.InstrumentEvent;
 import com.xenaksys.szcore.event.gui.ParticipantEvent;
 import com.xenaksys.szcore.event.gui.ParticipantStatsEvent;
@@ -75,12 +76,17 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
                 case WEB_SCORE_IN:
                     processWebScoreInEvent((WebScoreInEvent) event);
                     break;
-
+                case ADMIN_IN:
+                    processClientInEvent((ClientInEvent) event);
             }
 
         } catch (Exception e) {
             LOG.error("Failed to process event: " + eventContainer, e);
         }
+    }
+
+    private void processClientInEvent(ClientInEvent event) {
+        server.getScoreProcessor().process(event);
     }
 
     private void processWebScoreInEvent(WebScoreInEvent event) {
@@ -172,7 +178,7 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
 
         server.sendServerHelloEvent(clientId);
 
-        ParticipantEvent participantEvent = eventFactory.createParticipantEvent(inetAddress, inetAddress.getHostAddress(), remoteInPort, remoteOutPort,
+        ParticipantEvent participantEvent = eventFactory.createParticipantEvent(clientId, inetAddress, inetAddress.getHostAddress(), remoteInPort, remoteOutPort,
                 remoteErrPort, 0, Consts.NAME_NA, false, false, clock.getSystemTimeMillis());
 
         notifyListeners(participantEvent);
@@ -266,7 +272,7 @@ public class InEventContainerDisruptorProcessor extends AbstractContainerEventRe
 
         server.sendHello(clientId);
 
-        ParticipantEvent participantEvent = eventFactory.createParticipantEvent(inetAddress, inetAddress.getHostAddress(), clientInPort, clientOutPort,
+        ParticipantEvent participantEvent = eventFactory.createParticipantEvent(clientId, inetAddress, inetAddress.getHostAddress(), clientInPort, clientOutPort,
                 0, 0, Consts.NAME_NA, false, false, clock.getSystemTimeMillis());
 
         notifyListeners(participantEvent);

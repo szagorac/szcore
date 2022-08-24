@@ -1,8 +1,13 @@
 package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
+import com.xenaksys.szcore.algo.DynamicMovementStrategy;
+import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
-import com.xenaksys.szcore.algo.ScoreRandomisationStrategyConfig;
+import com.xenaksys.szcore.algo.ScoreStrategy;
+import com.xenaksys.szcore.algo.ScoreStrategyContainer;
+import com.xenaksys.szcore.algo.TranspositionStrategy;
+import com.xenaksys.szcore.algo.config.StrategyConfig;
 import com.xenaksys.szcore.model.Bar;
 import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.Id;
@@ -42,75 +47,48 @@ public class BasicScore implements Score {
     static final Logger LOG = LoggerFactory.getLogger(BasicScore.class);
 
     private final StrId id;
+    private String title;
 
-    private List<SzcoreEvent> initEvents = new ArrayList<>();
-    private Set<Id> transportIds = new HashSet<>();
-    private List<Instrument> scoreInstruments = new ArrayList<>();
-    private List<Instrument> avInstruments = new ArrayList<>();
-    private Map<Id, Instrument> instruments = new HashMap<>();
-    private Map<Id, Page> pages = new HashMap<>();
-    private Map<Id, Bar> bars = new HashMap<>();
-    private Map<Id, Beat> beats = new HashMap<>();
-    private Map<Id, List<Script>> beatScripts = new HashMap<>();
-    private Map<Id, List<BeatId>> instrumentBeats = new HashMap<>();
-    private Map<Id, Id> instrumentTransports = new HashMap<>();
-    private Map<Id, List<Id>> transportInstruments = new HashMap<>();
-    private Map<Id, Transport> transports = new HashMap<>();
-    private Map<Id, TransportContext> transportSpecificData = new HashMap<>();
-    private Map<Id, Long> beatToTimeMap = new HashMap<>();
-    private Map<Long, List<Id>> timeToBeatMap = new HashMap<>();
-    private Map<Id, OSCPortOut> instrumentOscPortMap = new HashMap<>();
-    private Map<Id, Stave> staves = new HashMap<>();
-    private Map<Id, List<Stave>> instrumentStaves = new HashMap<>();
-    private Map<Id, Instrument> oscPlayers = new HashMap<>();
+    private final List<SzcoreEvent> initEvents = new ArrayList<>();
+    private final Set<Id> transportIds = new HashSet<>();
+    private final List<Instrument> scoreInstruments = new ArrayList<>();
+    private final List<Instrument> avInstruments = new ArrayList<>();
+    private final Map<Id, Instrument> instruments = new HashMap<>();
+    private final Map<Id, Page> pages = new HashMap<>();
+    private final Map<Id, Bar> bars = new HashMap<>();
+    private final Map<Id, Beat> beats = new HashMap<>();
+    private final Map<Id, List<Script>> beatScripts = new HashMap<>();
+    private final Map<Id, List<BeatId>> instrumentBeats = new HashMap<>();
+    private final Map<Id, Id> instrumentTransports = new HashMap<>();
+    private final Map<Id, List<Id>> transportInstruments = new HashMap<>();
+    private final Map<Id, Transport> transports = new HashMap<>();
+    private final Map<Id, TransportContext> transportSpecificData = new HashMap<>();
+    private final Map<Id, Long> beatToTimeMap = new HashMap<>();
+    private final Map<Long, List<Id>> timeToBeatMap = new HashMap<>();
+    private final Map<Id, OSCPortOut> instrumentOscPortMap = new HashMap<>();
+    private final Map<Id, Stave> staves = new HashMap<>();
+    private final Map<Id, List<Stave>> instrumentStaves = new HashMap<>();
+    private final Map<Id, Instrument> oscPlayers = new HashMap<>();
+    private final Map<Id, Page> instrumentContinuousPage = new HashMap<>();
+    private final Map<Id, Page> instrumentEndPage = new HashMap<>();
+    private final ScoreStrategyContainer scoreStrategyContainer = new ScoreStrategyContainer();
 
     private boolean isPrecount = true;
     private int precountBeatNo = 4;
     private int precountMillis = 5 * 1000;
-    private int precountBeaterInterval = 250;
+    private final int precountBeaterInterval = 250;
 
     private final MutablePageId tempPageId = new MutablePageId(0, null, null);
     private final MutableBeatId tempBeatId = new MutableBeatId(0, null, null, null, null, 0);
 
     private Page blankPage;
-    private Map<Id, Page> instrumentContinuousPage = new HashMap<>();
-    private Map<Id, Page> instrumentEndPage = new HashMap<>();
-
     private boolean isUseContinuousPage = false;
     public int noContinuousPages = 10;
     private boolean isRandomizeContinuousPageContent = true;
 
-    private ScoreRandomisationStrategyConfig randomisationStrategyConfig;
-    private ScoreRandomisationStrategy randomisationStrategy;
-
-    private String workingDir;
-
-    public BasicScore(StrId id) {
+    public BasicScore(StrId id, String title) {
         this.id = id;
-    }
-
-    public void initRandomisation() {
-        if (randomisationStrategyConfig == null) {
-            LOG.info("initRandomisation: no config, ignoring ...");
-            return;
-        }
-        randomisationStrategy = new ScoreRandomisationStrategy(this, randomisationStrategyConfig);
-        randomisationStrategy.init();
-    }
-
-    public void setRandomisationStrategy(List<Integer> strategy) {
-        if (randomisationStrategy == null || strategy == null) {
-            return;
-        }
-
-        randomisationStrategy.setAssignmentStrategy(strategy);
-    }
-
-    public boolean isRandomisePage(Page nextPage) {
-        int pageNo = nextPage.getPageNo();
-        boolean out = pageNo > 3;
-        LOG.info("isRandomisePage: {} {} ", out, nextPage);
-        return out;
+        this.title = title;
     }
 
     public boolean isUseContinuousPage() {
@@ -127,10 +105,6 @@ public class BasicScore implements Score {
 
     public void setRandomizeContinuousPageContent(boolean randomizeContinuousPageContent) {
         isRandomizeContinuousPageContent = randomizeContinuousPageContent;
-    }
-
-    public void addInitEvent(SzcoreEvent initEvent) {
-        initEvents.add(initEvent);
     }
 
     public void addInstrument(Instrument instrument) {
@@ -178,38 +152,23 @@ public class BasicScore implements Score {
         }
     }
 
-    public void addClockTickEvent(Id transportId, SzcoreEvent clockTickEvent) {
-
+    public TransportContext getOrCreateTransportContext(Id transportId) {
         TransportContext transportContext = transportSpecificData.get(transportId);
         if (transportContext == null) {
             transportContext = new TransportContext(transportId);
             transportSpecificData.put(transportId, transportContext);
             addTransportId(transportId);
         }
+        return transportContext;
+    }
 
+    public void addClockTickEvent(Id transportId, SzcoreEvent clockTickEvent) {
+        TransportContext transportContext = getOrCreateTransportContext(transportId);
         transportContext.addClockTickEvent(clockTickEvent);
     }
 
-    public void addOneOffClockTickEvent(Id transportId, SzcoreEvent clockTickEvent) throws Exception {
-
-        TransportContext transportContext = transportSpecificData.get(transportId);
-        if (transportContext == null) {
-            transportContext = new TransportContext(transportId);
-            transportSpecificData.put(transportId, transportContext);
-            addTransportId(transportId);
-        }
-
-        transportContext.addOneOffClockTickEvent(clockTickEvent);
-    }
-
     public void addClockBaseBeatTickEvent(Id transportId, SzcoreEvent clockBaseBeatEvent) {
-        TransportContext transportContext = transportSpecificData.get(transportId);
-        if (transportContext == null) {
-            transportContext = new TransportContext(transportId);
-            transportSpecificData.put(transportId, transportContext);
-            addTransportId(transportId);
-        }
-
+        TransportContext transportContext = getOrCreateTransportContext(transportId);
         transportContext.addClockBaseBeatTickEvent(clockBaseBeatEvent);
     }
 
@@ -218,26 +177,13 @@ public class BasicScore implements Score {
     }
 
     public void addScoreBaseBeatEvent(Id transportId, SzcoreEvent scoreBaseBeatEvent) {
-
-        TransportContext transportContext = transportSpecificData.get(transportId);
-        if (transportContext == null) {
-            transportContext = new TransportContext(transportId);
-            transportSpecificData.put(transportId, transportContext);
-            addTransportId(transportId);
-        }
-
+        TransportContext transportContext = getOrCreateTransportContext(transportId);
         transportContext.addScoreBaseBeatEvent(scoreBaseBeatEvent);
     }
 
     public void addOneOffBaseBeatEvent(Id transportId, SzcoreEvent scoreBaseBeatEvent) {
-
-        TransportContext transportContext = transportSpecificData.get(transportId);
-        if (transportContext == null) {
-            transportContext = new TransportContext(transportId);
-            transportSpecificData.put(transportId, transportContext);
-            addTransportId(transportId);
-        }
-//LOG.debug("Adding OneOffBaseBeatEvent: " + scoreBaseBeatEvent);
+        TransportContext transportContext = getOrCreateTransportContext(transportId);
+        //LOG.debug("Adding OneOffBaseBeatEvent: " + scoreBaseBeatEvent);
         transportContext.addOneOffBaseBeatEvent(scoreBaseBeatEvent);
     }
 
@@ -335,6 +281,15 @@ public class BasicScore implements Score {
     @Override
     public String getName() {
         return id.getName();
+    }
+
+    @Override
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     @Override
@@ -610,6 +565,13 @@ public class BasicScore implements Score {
         return null;
     }
 
+    public Page getPageNo(int pageNo, InstrumentId instrumentId) {
+        tempPageId.setInstrumentId(instrumentId);
+        tempPageId.setScoreId(getId());
+        tempPageId.setPageNo(pageNo);
+        return getPage(tempPageId);
+    }
+
     @Override
     public long getBeatTime(BeatId beatId) {
         if (beatId == null) {
@@ -743,8 +705,6 @@ public class BasicScore implements Score {
         return next;
     }
 
-
-
     @Override
     public List<BeatId> getBeatIds(Id transportId, int beatNo) {
         TransportContext transportContext = transportSpecificData.get(transportId);
@@ -853,12 +813,17 @@ public class BasicScore implements Score {
     }
 
     @Override
-    public void resetOnStop() {
-        LOG.info("Reset Score on stop");
+    public void reset() {
+        LOG.info("Reset Score");
         Collection<TransportContext> transportContexts = transportSpecificData.values();
         for (TransportContext tc : transportContexts) {
-            tc.resetOnStop();
+            tc.reset();
         }
+    }
+
+    @Override
+    public boolean isReady() {
+        return scoreStrategyContainer.isReady();
     }
 
     public void setIsPrecount(boolean isPrecount) {
@@ -911,15 +876,39 @@ public class BasicScore implements Score {
         return beats.get(offsetBeatId);
     }
 
+    public void setRandomisationStrategy(List<Integer> strategy) {
+        scoreStrategyContainer.setRandomisationStrategy(strategy);
+    }
+
     public ScoreRandomisationStrategy getRandomisationStrategy() {
-        return randomisationStrategy;
+        return scoreStrategyContainer.getRandomisationStrategy();
     }
 
-    public void setRandomisationStrategyConfig(ScoreRandomisationStrategyConfig config) {
-        this.randomisationStrategyConfig = config;
+    public ScoreBuilderStrategy getScoreBuilderStrategy() {
+        return scoreStrategyContainer.getScoreBuilderStrategy();
     }
 
-    public ScoreRandomisationStrategyConfig getRandomisationStrategyConfig() {
-        return randomisationStrategyConfig;
+    public DynamicMovementStrategy getDynamicScoreStrategy() {
+        return scoreStrategyContainer.getDynamicScoreStrategy();
+    }
+
+    public List<ScoreStrategy> getStrategies() {
+        return scoreStrategyContainer.getStrategies();
+    }
+
+    public TranspositionStrategy getTranspositionStrategy() {
+        return scoreStrategyContainer.getTranspositionStrategy();
+    }
+
+    public void addStrategy(ScoreStrategy strategy) {
+        scoreStrategyContainer.addStrategy(strategy);
+    }
+
+    public void addStrategyConfig(StrategyConfig strategyConfig) {
+        scoreStrategyContainer.addStrategyConfig(strategyConfig);
+    }
+
+    public void initScoreStrategies() {
+        scoreStrategyContainer.init(this);
     }
 }

@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 public class TestScoreProcessorRun {
@@ -58,8 +59,9 @@ public class TestScoreProcessorRun {
 
         EventFactory eventFactory = new EventFactory();
         TaskFactory taskFactory = new TaskFactory();
+        Properties props  = new Properties();
 
-        scoreProcessor = new ScoreProcessorImpl(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory);
+        scoreProcessor = new ScoreProcessorDelegator(transportFactory, clock, oscPublisher, webPublisher, scheduler, eventFactory, taskFactory, null, null, props);
     }
 
     @Test

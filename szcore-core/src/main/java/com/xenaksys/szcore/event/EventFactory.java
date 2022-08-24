@@ -3,11 +3,18 @@ package com.xenaksys.szcore.event;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.gui.ParticipantEvent;
 import com.xenaksys.szcore.event.gui.ParticipantStatsEvent;
+import com.xenaksys.szcore.event.gui.PrecountInfo;
+import com.xenaksys.szcore.event.gui.ScoreInfoEvent;
+import com.xenaksys.szcore.event.gui.ScoreSectionInfoEvent;
+import com.xenaksys.szcore.event.gui.StrategyEvent;
+import com.xenaksys.szcore.event.gui.StrategyEventType;
 import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.music.ModWindowEvent;
 import com.xenaksys.szcore.event.music.PrecountBeatSetupEvent;
 import com.xenaksys.szcore.event.music.PrepStaveChangeEvent;
+import com.xenaksys.szcore.event.music.ScoreSectionEvent;
+import com.xenaksys.szcore.event.music.ScoreSectionEventType;
 import com.xenaksys.szcore.event.music.StopEvent;
 import com.xenaksys.szcore.event.music.TimeSigChangeEvent;
 import com.xenaksys.szcore.event.music.TransitionEvent;
@@ -27,6 +34,7 @@ import com.xenaksys.szcore.event.osc.OscScriptEvent;
 import com.xenaksys.szcore.event.osc.OscStaveActivateEvent;
 import com.xenaksys.szcore.event.osc.OscStaveTempoEvent;
 import com.xenaksys.szcore.event.osc.OscStopEvent;
+import com.xenaksys.szcore.event.osc.OverlayTextEvent;
 import com.xenaksys.szcore.event.osc.PageDisplayEvent;
 import com.xenaksys.szcore.event.osc.PageMapDisplayEvent;
 import com.xenaksys.szcore.event.osc.PartEvent;
@@ -47,9 +55,13 @@ import com.xenaksys.szcore.event.osc.StaveYPositionEvent;
 import com.xenaksys.szcore.event.osc.TempoChangeEvent;
 import com.xenaksys.szcore.event.osc.TitleEvent;
 import com.xenaksys.szcore.event.osc.TransitionScriptEvent;
+import com.xenaksys.szcore.event.osc.VoteAudienceEvent;
+import com.xenaksys.szcore.event.osc.WebscoreVoteEvent;
 import com.xenaksys.szcore.event.script.ScriptingEngineEvent;
 import com.xenaksys.szcore.event.script.ScriptingEngineResetEvent;
 import com.xenaksys.szcore.event.web.audience.UpdateWebAudienceConnectionsEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEventType;
 import com.xenaksys.szcore.event.web.audience.WebAudienceEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudiencePlayTilesEvent;
@@ -59,19 +71,24 @@ import com.xenaksys.szcore.event.web.audience.WebAudienceResetEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceSelectTilesEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceStateUpdateEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceStopEvent;
+import com.xenaksys.szcore.event.web.audience.WebAudienceVoteEvent;
 import com.xenaksys.szcore.event.web.audience.WebPollAudienceEvent;
 import com.xenaksys.szcore.event.web.audience.WebStartAudienceEvent;
 import com.xenaksys.szcore.event.web.in.UpdateWebScoreConnectionsEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreClientHelloEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
 import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
 import com.xenaksys.szcore.event.web.in.WebScoreSelectInstrumentSlotEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreSelectSectionEvent;
+import com.xenaksys.szcore.event.web.out.DelayedOutgoingWebEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import com.xenaksys.szcore.model.HistoBucketView;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.SectionInfo;
 import com.xenaksys.szcore.model.Stave;
 import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.TimeSignature;
@@ -82,6 +99,7 @@ import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.score.InscoreMapElement;
 import com.xenaksys.szcore.score.OverlayElementType;
 import com.xenaksys.szcore.score.OverlayType;
+import com.xenaksys.szcore.score.web.audience.AudioComponentType;
 import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
 import com.xenaksys.szcore.scripting.ScriptingEngineScript;
 import com.xenaksys.szcore.web.WebClientInfo;
@@ -140,6 +158,10 @@ public class EventFactory {
         return new StopEvent(lastEvent, transportId, creationTime);
     }
 
+    public ScoreSectionEvent createScoreSectionEvent(BeatId lastEvent, String section, ScoreSectionEventType sectionEventType, Id transportId, long creationTime) {
+        return new ScoreSectionEvent(lastEvent, section, sectionEventType, transportId, creationTime);
+    }
+
     public ModWindowEvent createModWindowEvent(BeatId beatId, Page nextPage, PageId currentPageId, Stave stave, boolean isOpen, long creationTime) {
         return new ModWindowEvent(beatId, nextPage, currentPageId, stave, isOpen, creationTime);
     }
@@ -169,8 +191,12 @@ public class EventFactory {
         return new PrepStaveChangeEvent(executeOnBaseBeat, activateOnBaseBeat, deactivateOnBaseBeat, pageChangeOnBaseBeat, nextPageId, creationTime);
     }
 
-    public ParticipantEvent createParticipantEvent(InetAddress inetAddress, String hostAddress, int portIn, int portOut, int portErr, int ping, String instrument, boolean isReady, boolean isBanned, long creationTime) {
-        return new ParticipantEvent(inetAddress, hostAddress, portIn, portOut, portErr, ping, instrument, isReady, isBanned, creationTime);
+    public ParticipantEvent createParticipantEvent(String clientId, InetAddress inetAddress, String hostAddress, int portIn, int portOut, int portErr, int ping, String instrument, boolean isReady, boolean isBanned, long creationTime) {
+        return new ParticipantEvent(clientId, inetAddress, hostAddress, portIn, portOut, portErr, ping, instrument, isReady, isBanned, creationTime);
+    }
+
+    public StrategyEvent createStrategyEvent(StrategyEventType strategyEventType, long creationTime) {
+        return new StrategyEvent(strategyEventType, creationTime);
     }
 
     public WebAudienceClientInfoUpdateEvent createWebAudienceClientInfoUpdateEvent(ArrayList<WebClientInfo> webClientInfos, List<HistoBucketView> histoBucketViews, int totalWebHits, long creationTime) {
@@ -183,6 +209,14 @@ public class EventFactory {
 
     public ParticipantStatsEvent createParticipantStatsEvent(InetAddress inetAddress, String hostAddress, int port, double pingLatencyMillis, double halfPingLatencyMillis, boolean isExpired, long lastPingLatency, long creationTime) {
         return new ParticipantStatsEvent(inetAddress, hostAddress, port, pingLatencyMillis, halfPingLatencyMillis, isExpired, lastPingLatency, creationTime);
+    }
+
+    public ScoreSectionInfoEvent createScoreSectionInfoEvent(Id scoreId, List<SectionInfo> sectionInfos, List<String> sectionOrder, boolean isReady, String currentSection, String nextSection, long creationTime) {
+        return new ScoreSectionInfoEvent(scoreId, sectionInfos, sectionOrder, isReady, currentSection, nextSection, creationTime);
+    }
+
+    public ScoreInfoEvent createScoreInfoEvent(Id scoreId, boolean isStop, PrecountInfo precountInfo, long creationTime) {
+        return new ScoreInfoEvent(scoreId, isStop, precountInfo, creationTime);
     }
 
     public OscEvent createOscEvent(String address, List<Object> args, String destination, long creationTime) {
@@ -225,6 +259,10 @@ public class EventFactory {
         return new ElementAlphaEvent(staveId, isEnabled, overlayType, overlayElementType, address, oscAlphaArgs, destination, creationTime);
     }
 
+    public OverlayTextEvent createOverlayTextEvent(StaveId staveId, String l1, String l2, String l3, boolean isVisible, OverlayType overlayType, String destination, long creationTime) {
+        return new OverlayTextEvent(staveId, l1, l2, l3, isVisible, overlayType, destination, creationTime);
+    }
+
     public ElementAlphaEvent createElementPenAlphaEvent(StaveId staveId, boolean isEnabled, OverlayType overlayType, OverlayElementType overlayElementType, String address, String destination, long creationTime) {
         return new ElementAlphaEvent(staveId, isEnabled, overlayType, overlayElementType, address, oscPenAlphaArgs, destination, creationTime);
     }
@@ -263,6 +301,10 @@ public class EventFactory {
 
     public PrecountBeatOffEvent createPrecountBeatOffEvent(String destination, long creationTime) {
         return new PrecountBeatOffEvent(createJavaScriptArgs(), destination, creationTime);
+    }
+
+    public WebscoreVoteEvent createWebscoreVoteEvent(int voteCount, int min, int max, int avg, int voterNo, String destination, long creationTime) {
+        return new WebscoreVoteEvent(voteCount, min, max, avg, voterNo, createJavaScriptArgs(), destination, creationTime);
     }
 
     public TitleEvent createTitleEvent(String destination, String title, long creationTime) {
@@ -356,6 +398,11 @@ public class EventFactory {
         return new ElementSelectedAudienceEvent(elementId, isSelected, sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
     }
 
+    public VoteAudienceEvent createVoteEvent(String value, int usersNo, String eventId, String sourceAddr, String requestPath,
+                                             long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
+        return new VoteAudienceEvent(value, usersNo, sourceAddr, requestPath, eventId, creationTime, clientEventCreatedTime, clientEventSentTime);
+    }
+
     public UpdateWebAudienceConnectionsEvent createUpdateWebAudienceConnectionsEvent(Set<WebConnection> clientConnections, long creationTime) {
         return new UpdateWebAudienceConnectionsEvent(clientConnections, creationTime);
     }
@@ -389,6 +436,10 @@ public class EventFactory {
         return new WebAudienceInstructionsEvent(l1, l2, l3, isVisible, creationTime);
     }
 
+    public WebAudienceAudioEvent createWebAudienceAudioEvent(AudioComponentType componentType, WebAudienceAudioEventType eventType, double value, int durationMs, long creationTime) {
+        return new WebAudienceAudioEvent(componentType, eventType, value, durationMs, creationTime);
+    }
+
     public WebAudienceStateUpdateEvent createWebAudienceStateUpdateEvent(WebScoreStateType propertyName, Object propertyValue, long creationTime) {
         return new WebAudienceStateUpdateEvent(propertyName, propertyValue, creationTime);
     }
@@ -413,12 +464,20 @@ public class EventFactory {
         return new WebAudienceSelectTilesEvent(null, null, tileIds, creationTime);
     }
 
-    public OutgoingWebEvent createOutgoingWebAudienceEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, long creationTime) {
-        return new OutgoingWebEvent(eventId, beatId, EventType.WEB_AUDIENCE_OUT, eventType, creationTime);
+    public WebAudienceVoteEvent createWebAudienceVoteEvent(String value, int usersNo, long creationTime) {
+        return new WebAudienceVoteEvent(null, null, value, usersNo, creationTime);
     }
 
-    public OutgoingWebEvent createWebScoreOutEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, long creationTime) {
-        return new OutgoingWebEvent(eventId, beatId, EventType.WEB_SCORE_OUT, eventType, creationTime);
+    public OutgoingWebEvent createOutgoingWebAudienceEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, boolean isSendNow, long creationTime) {
+        return new OutgoingWebEvent(eventId, beatId, EventType.WEB_AUDIENCE_OUT, eventType, isSendNow, creationTime);
+    }
+
+    public OutgoingWebEvent createWebScoreOutEvent(BeatId beatId, String eventId, OutgoingWebEventType eventType, boolean isSendNow, long creationTime) {
+        return new OutgoingWebEvent(eventId, beatId, EventType.WEB_SCORE_OUT, eventType, isSendNow, creationTime);
+    }
+
+    public DelayedOutgoingWebEvent createDelayedWebScoreOutEvent(OutgoingWebEvent outgoingWebEvent, long creationTime) {
+        return new DelayedOutgoingWebEvent(outgoingWebEvent, creationTime);
     }
 
     public UpdateWebScoreConnectionsEvent createUpdateWebScoreConnectionsEvent(Set<WebConnection> clientConnections, long creationTime) {
@@ -433,17 +492,26 @@ public class EventFactory {
         return new WebScoreConnectionEvent(webClientInfo, creationTime);
     }
 
-    public WebScorePartRegEvent createWebScorePartRegEvent(String eventId, String sourceAddr, String part, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        return new WebScorePartRegEvent(eventId, sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public WebScoreClientHelloEvent createWebScoreClientHelloEvent(String clientId, String eventId, String sourceAddr, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime, WebClientInfo webClientInfo) {
+        return new WebScoreClientHelloEvent(clientId, eventId, sourceAddr, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
     }
 
-    public WebScorePartReadyEvent createWebScorePartReadyEvent(String eventId, String sourceAddr, String part, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        return new WebScorePartReadyEvent(eventId, sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public WebScorePartRegEvent createWebScorePartRegEvent(String clientId, String eventId, String sourceAddr, String part, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime, WebClientInfo webClientInfo) {
+        return new WebScorePartRegEvent(clientId, eventId, sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
     }
 
-    public WebScoreSelectInstrumentSlotEvent createWebScoreSelectInstrumentSlotEvent(String eventId, String sourceAddr, String part, int slotNo, String slotInstrument, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime) {
-        return new WebScoreSelectInstrumentSlotEvent(eventId, sourceAddr, part, slotNo, slotInstrument, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime);
+    public WebScorePartReadyEvent createWebScorePartReadyEvent(String clientId, String eventId, String sourceAddr, String part, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime, WebClientInfo webClientInfo) {
+        return new WebScorePartReadyEvent(clientId, eventId, sourceAddr, part, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
     }
+
+    public WebScoreSelectInstrumentSlotEvent createWebScoreSelectInstrumentSlotEvent(String clientId, String eventId, String sourceAddr, String part, int slotNo, String slotInstrument, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime, WebClientInfo webClientInfo) {
+        return new WebScoreSelectInstrumentSlotEvent(clientId, eventId, sourceAddr, part, slotNo, slotInstrument, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
+    }
+
+    public WebScoreSelectSectionEvent createWebScoreSelectSectionEvent(String clientId, String eventId, String sourceAddr, String section, String requestPath, long creationTime, long clientEventCreatedTime, long clientEventSentTime, WebClientInfo webClientInfo) {
+        return new WebScoreSelectSectionEvent(clientId, eventId, sourceAddr, section, requestPath, creationTime, clientEventCreatedTime, clientEventSentTime, webClientInfo);
+    }
+
     public List<Object> createJavaScriptArgs() {
         List<Object> jsArgs = new ArrayList<>();
         jsArgs.add(Consts.RUN);

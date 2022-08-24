@@ -1,43 +1,23 @@
 package com.xenaksys.szcore.score.web;
 
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.algo.IntRange;
-import com.xenaksys.szcore.algo.SequentalIntRange;
+import com.xenaksys.szcore.algo.*;
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.osc.DateTickEvent;
-import com.xenaksys.szcore.event.osc.ElementAlphaEvent;
-import com.xenaksys.szcore.event.osc.ElementColorEvent;
-import com.xenaksys.szcore.event.osc.ElementYPositionEvent;
-import com.xenaksys.szcore.event.osc.InstrumentResetSlotsEvent;
-import com.xenaksys.szcore.event.osc.InstrumentSlotsEvent;
-import com.xenaksys.szcore.event.osc.OscEvent;
-import com.xenaksys.szcore.event.osc.OscEventType;
-import com.xenaksys.szcore.event.osc.OscStaveActivateEvent;
-import com.xenaksys.szcore.event.osc.OscStaveTempoEvent;
-import com.xenaksys.szcore.event.osc.OscStopEvent;
-import com.xenaksys.szcore.event.osc.PageDisplayEvent;
-import com.xenaksys.szcore.event.osc.PageMapDisplayEvent;
-import com.xenaksys.szcore.event.osc.PrecountBeatOffEvent;
-import com.xenaksys.szcore.event.osc.PrecountBeatOnEvent;
-import com.xenaksys.szcore.event.osc.ResetStavesEvent;
-import com.xenaksys.szcore.event.osc.StaveStartMarkEvent;
-import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
-import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
-import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
-import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
-import com.xenaksys.szcore.event.web.in.WebScoreSelectInstrumentSlotEvent;
-import com.xenaksys.szcore.model.Clock;
-import com.xenaksys.szcore.model.Instrument;
-import com.xenaksys.szcore.model.Page;
-import com.xenaksys.szcore.model.Tempo;
-import com.xenaksys.szcore.model.Transport;
+import com.xenaksys.szcore.event.osc.*;
+import com.xenaksys.szcore.event.web.in.*;
+import com.xenaksys.szcore.model.*;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.score.InscoreMapElement;
 import com.xenaksys.szcore.score.OverlayElementType;
 import com.xenaksys.szcore.score.OverlayType;
-import com.xenaksys.szcore.score.ScoreProcessorImpl;
+import com.xenaksys.szcore.score.web.overlay.WebOverlayFactory;
+import com.xenaksys.szcore.score.web.overlay.WebOverlayProcessor;
+import com.xenaksys.szcore.score.web.strategy.WebBuilderStrategy;
+import com.xenaksys.szcore.score.web.strategy.WebDynamicScoreStrategy;
+import com.xenaksys.szcore.score.web.strategy.WebStrategy;
+import com.xenaksys.szcore.util.ParseUtil;
 import com.xenaksys.szcore.util.WebUtil;
 import com.xenaksys.szcore.web.WebClientInfo;
 import com.xenaksys.szcore.web.WebScoreAction;
@@ -45,36 +25,38 @@ import com.xenaksys.szcore.web.WebScoreActionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WebScore {
     static final Logger LOG = LoggerFactory.getLogger(WebScore.class);
 
-    private final ScoreProcessorImpl scoreProcessor;
+    private final ScoreProcessor scoreProcessor;
     private final EventFactory eventFactory;
     private final BasicScore score;
     private final Clock clock;
     private final Map<String, List<WebClientInfo>> instrumentClients = new ConcurrentHashMap<>();
-    private final Map<String, WebClientInfo> clients = new ConcurrentHashMap<>();
-    private final Map<StaveId, OverlayProcessor> overlayProcessors = new ConcurrentHashMap<>();
+    private final Map<String, WebClientInfo> allClients = new ConcurrentHashMap<>();
+    private final Map<String, WebClientInfo> playerClients = new ConcurrentHashMap<>();
+    private final Map<StaveId, WebOverlayProcessor> overlayProcessors = new ConcurrentHashMap<>();
+    private final Properties props;
 
     private WebScoreInfo scoreInfo;
+    private WebStrategyInfo webStrategyInfo;
+    private WebOverlayFactory webOverlayFactory;
 
-    public WebScore(ScoreProcessorImpl scoreProcessor, EventFactory eventFactory, Clock clock) {
+    public WebScore(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock, Properties props, WebOverlayFactory webOverlayFactory) {
         this.scoreProcessor = scoreProcessor;
         this.eventFactory = eventFactory;
         this.clock = clock;
         this.score = (BasicScore) scoreProcessor.getScore();
+        this.props = props;
+        this.webOverlayFactory = webOverlayFactory;
     }
 
     public void init() {
         this.scoreInfo = initScoreInfo();
+        initWebStrategyInfo();
         try {
             sendScoreInfo();
         } catch (Exception e) {
@@ -84,7 +66,8 @@ public class WebScore {
 
     private WebScoreInfo initScoreInfo() {
         WebScoreInfo info = new WebScoreInfo();
-        info.setTitle(score.getName());
+        info.setName(score.getName());
+        info.setTitle(score.getTitle());
 
         Tempo tempo = null;
         List<String> instNames = new ArrayList<>();
@@ -101,14 +84,61 @@ public class WebScore {
         if (tempo != null) {
             info.setBpm(tempo.getBpm());
         }
-        String scoreNameDir = info.getTitle().replaceAll("\\s+", "");
+
+        String scoreConfigName = ParseUtil.removeAllWhitespaces(info.getName()).toLowerCase(Locale.ROOT);
+        String configName = Consts.WEBSCORE_DIR_CONFIG_PREFIX + scoreConfigName;
+        String scoreNameDir = props.getProperty(configName);
+        if(scoreNameDir == null) {
+            scoreNameDir = info.getName().replaceAll("\\s+", "");
+        }
         String scoreDir = Consts.WEB_SCORE_ROOT_DIR + scoreNameDir + Consts.SLASH;
         info.setScoreDir(scoreDir);
+
+        String partPageConfigName = Consts.WEBSCORE_PART_HTML_PREFIX + scoreConfigName;
+        String partPageName = props.getProperty(partPageConfigName);
+        if(partPageName == null) {
+            partPageName = "zsPart.html";
+        }
+        info.setPartPageName(partPageName);
 
         return info;
     }
 
+    private void initWebStrategyInfo() {
+        webStrategyInfo = new WebStrategyInfo();
+
+        List<ScoreStrategy> strategies = score.getStrategies();
+        for(ScoreStrategy strategy : strategies) {
+            switch (strategy.getType()) {
+                case BUILDER:
+                    ScoreBuilderStrategy builderStrategy = (ScoreBuilderStrategy)strategy;
+                    if(!builderStrategy.isActive()) {
+                        break;
+                    }
+                    for(String clientId : playerClients.keySet()) {
+                        builderStrategy.addClientId(clientId);
+                    }
+                    createOrUpdateWebBuilderStrategy(builderStrategy);
+                    break;
+                case DYNAMIC:
+                    DynamicMovementStrategy dynamicStrategy = (DynamicMovementStrategy)strategy;
+                    if(!dynamicStrategy.isActive()) {
+                        break;
+                    }
+                    for(String clientId : playerClients.keySet()) {
+                        dynamicStrategy.addClientId(clientId);
+                    }
+                    createOrUpdateWebDynamicScoreStrategy(dynamicStrategy);
+                    break;
+            }
+        }
+    }
+
     public void resetState() {
+    }
+
+    public void resetInstrumentClients() {
+        this.instrumentClients.clear();
     }
 
     public void processInterceptedOscEvent(OscEvent event) {
@@ -160,6 +190,15 @@ public class WebScore {
                 case ELEMENT_COLOR:
                     processElementColour((ElementColorEvent) event);
                     break;
+                case RESET_SCORE:
+                    processResetScore((ResetScoreEvent)event);
+                    break;
+                case OVERLAY_TEXT:
+                    processOverlayText((OverlayTextEvent)event);
+                    break;
+                case VOTE:
+                    processVote((WebscoreVoteEvent)event);
+                    break;
                 case STAVE_TICK_DY:
                 case HELLO:
                 case SERVER_HELLO:
@@ -174,7 +213,35 @@ public class WebScore {
         }
     }
 
-    private void processElementColour(ElementColorEvent event) {
+    private void processVote(WebscoreVoteEvent event) throws Exception  {
+        int voteCount = event.getVoteCount();
+        int voterNo = event.getVoterNo();
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
+        Map<String, Object> params = new HashMap<>(2);
+        params.put(Consts.WEB_PARAM_VOTE_COUNT, voteCount);
+        params.put(Consts.WEB_PARAM_VOTER_NO, voterNo);
+        WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.VOTE, null, params);
+        scoreState.addAction(action);
+        sendToDestination(Consts.ALL_DESTINATIONS, scoreState);
+    }
+
+    private void processResetScore(ResetScoreEvent event) {
+        instrumentClients.clear();
+    }
+
+    private void processOverlayText(OverlayTextEvent event) throws Exception {
+        String destination = event.getDestination();
+        OverlayType overlayType = event.getOverlayType();
+        String l1 = event.getL1();
+        String l2 = event.getL2();
+        String l3 = event.getL3();
+        StaveId staveId = event.getStaveId();
+        boolean isVisible = event.isVisible();
+        String webStaveId = WebUtil.getWebStaveId(staveId);
+        sendOverlayText(destination, l1, l2, l3, overlayType, isVisible, webStaveId);
+    }
+
+    private void processElementColour(ElementColorEvent event) throws Exception {
         String destination = event.getDestination();
         OverlayType overlayType = event.getOverlayType();
         StaveId staveId = event.getStaveId();
@@ -186,7 +253,7 @@ public class WebScore {
         sendOverlayColour(destination, overlayType, webStaveId, colHex);
     }
 
-    private void processElementAlpha(ElementAlphaEvent event) {
+    private void processElementAlpha(ElementAlphaEvent event) throws Exception {
         String destination = event.getDestination();
         OverlayType overlayType = event.getOverlayType();
         OverlayElementType overlayElementType = event.getOverlayElementType();
@@ -197,7 +264,7 @@ public class WebScore {
         String webStaveId = WebUtil.getWebStaveId(staveId);
         sendOverlayElementInfo(destination, overlayType, overlayElementType, isEnabled, webStaveId, opacity);
     }
-    private void processElementYPosition(ElementYPositionEvent event) {
+    private void processElementYPosition(ElementYPositionEvent event) throws Exception {
         String destination = event.getDestination();
         OverlayType overlayType = event.getOverlayType();
         StaveId staveId = event.getStaveId();
@@ -205,9 +272,9 @@ public class WebScore {
         processElementYPosition(destination, staveId, overlayType,unscaledValue);
     }
 
-    private void processElementYPosition(String destination, StaveId staveId, OverlayType overlayType, long unscaledValue) {
-        OverlayProcessor overlayProcessor = overlayProcessors.computeIfAbsent(staveId, s -> new OverlayProcessor());
-        Double y = overlayProcessor.calculateValue(staveId, overlayType, unscaledValue);
+    private void processElementYPosition(String destination, StaveId staveId, OverlayType overlayType, long unscaledValue) throws Exception {
+        WebOverlayProcessor webOverlayProcessor = overlayProcessors.computeIfAbsent(staveId, s -> createWebProcessor());
+        Double y = webOverlayProcessor.calculateValue(staveId, overlayType, unscaledValue);
         if(y == null) {
             return;
         }
@@ -215,23 +282,27 @@ public class WebScore {
         sendOverlayLinePosition(destination, overlayType, webStaveId, y);
     }
 
-    private void processResetStaves(ResetStavesEvent event) {
+    private WebOverlayProcessor createWebProcessor() {
+        return webOverlayFactory.createOverlayProcessor();
+    }
+
+    private void processResetStaves(ResetStavesEvent event) throws Exception {
         String destination = event.getDestination();
         sendResetStaves(destination);
     }
 
-    private void processInstrumentSlots(InstrumentSlotsEvent event) {
+    private void processInstrumentSlots(InstrumentSlotsEvent event) throws Exception {
         String destination = event.getDestination();
         String instrumentsCsv = event.getInstrumentsCsv();
         sendInstrumentSlots(destination, instrumentsCsv);
     }
 
-    private void processInstrumentResetSlots(InstrumentResetSlotsEvent event) {
+    private void processInstrumentResetSlots(InstrumentResetSlotsEvent event) throws Exception {
         String destination = event.getDestination();
         sendResetInstrumentSlots(destination);
     }
 
-    private void processStaveStartMark(StaveStartMarkEvent event) {
+    private void processStaveStartMark(StaveStartMarkEvent event) throws Exception {
         String destination = event.getDestination();
         StaveId staveId = event.getStaveId();
         String webStaveId = WebUtil.getWebStaveId(staveId);
@@ -239,7 +310,7 @@ public class WebScore {
         sendStaveStartMark(destination, webStaveId, beatNo);
     }
 
-    private void processDateTick(DateTickEvent event) {
+    private void processDateTick(DateTickEvent event) throws Exception {
         String destination = event.getDestination();
         StaveId staveId = event.getStaveId();
         String webStaveId = WebUtil.getWebStaveId(staveId);
@@ -247,7 +318,7 @@ public class WebScore {
         sendBeat(destination, webStaveId, beatNo);
     }
 
-    private void processActivateStave(OscStaveActivateEvent event) {
+    private void processActivateStave(OscStaveActivateEvent event) throws Exception {
         String destination = event.getDestination();
         StaveId staveId = event.getStaveId();
         String webStaveId = WebUtil.getWebStaveId(staveId);
@@ -256,28 +327,28 @@ public class WebScore {
         sendActivateStave(destination, webStaveId, isActive, isPlayStave);
     }
 
-    private void processStopEvent(OscStopEvent event) {
+    private void processStopEvent(OscStopEvent event) throws Exception {
         sendStop();
     }
 
-    private void processPrecountBeatOff(PrecountBeatOffEvent event) {
+    private void processPrecountBeatOff(PrecountBeatOffEvent event) throws Exception {
         int beaterNo = event.getBeaterNo();
         sendPrecountBeatOff(beaterNo);
     }
 
-    private void processPrecountBeatOn(PrecountBeatOnEvent event) {
+    private void processPrecountBeatOn(PrecountBeatOnEvent event) throws Exception {
         int beaterNo = event.getBeaterNo();
         int colourId = event.getColourId();
         sendPrecountBeatOn(beaterNo, colourId);
     }
 
-    private void processTempoEvent(OscStaveTempoEvent event) {
+    private void processTempoEvent(OscStaveTempoEvent event) throws Exception {
         String destination = event.getDestination();
         int bpm = event.getTempo();
         sendTempo(destination, bpm);
     }
 
-    private void processPageMapEvent(PageMapDisplayEvent event) {
+    private void processPageMapEvent(PageMapDisplayEvent event) throws Exception {
         String destination = event.getDestination();
         List<InscoreMapElement> mapElements = event.getMapElements();
         if(mapElements == null) {
@@ -289,7 +360,7 @@ public class WebScore {
         sendTimeSpaceMapInfo(destination, webPageId, webStaveId, mapElements);
     }
 
-    private void processPageDisplayEvent(PageDisplayEvent event) {
+    private void processPageDisplayEvent(PageDisplayEvent event) throws Exception {
         String destination = event.getDestination();
         String fileName = event.getFilename();
         StaveId staveId = event.getStaveId();
@@ -300,13 +371,19 @@ public class WebScore {
         if(rndPageId != null) {
             webRndPageId = getWebPageId(rndPageId);
         }
-        sendPageInfo(destination, webPageId, webRndPageId, fileName, webStaveId);
+        WebTranspositionInfo transpositionInfo = null;
+        TranspositionStrategy transpositionStrategy = score.getTranspositionStrategy();
+        if(transpositionStrategy != null) {
+            PageId pageId = event.getPageId();
+            transpositionInfo = transpositionStrategy.getWebTranspositionInfo(pageId, staveId);
+        }
+
+        sendPageInfo(destination, webPageId, webRndPageId, fileName, webStaveId, transpositionInfo);
     }
 
     public String getWebPageId(PageId pageId) {
         return Consts.WEB_SCORE_PAGE_PREFIX + pageId.getPageNo();
     }
-
 
     public void processConnectionEvent(WebScoreConnectionEvent event) {
         if (event == null) {
@@ -314,7 +391,7 @@ public class WebScore {
         }
         try {
             WebClientInfo clientInfo = event.getWebClientInfo();
-            boolean isRegistered = clients.containsKey(clientInfo.getClientAddr());
+            boolean isRegistered = allClients.containsKey(clientInfo.getClientAddr());
             addOrUpdateClientInfo(clientInfo);
             if (!isRegistered) {
                 sendScoreInfo(clientInfo);
@@ -324,20 +401,108 @@ public class WebScore {
         }
     }
 
-    private void addOrUpdateClientInfo(WebClientInfo clientInfo)  {
+    private void addOrUpdateClientInfo(WebClientInfo clientInfo) throws Exception {
         if (clientInfo == null) {
             return;
         }
-        clients.put(clientInfo.getClientAddr(), clientInfo);
+        allClients.put(clientInfo.getClientAddr(), clientInfo);
+        addClientIdClient(clientInfo);
         addInstrumentClient(clientInfo);
     }
 
-    private void addInstrumentClient(WebClientInfo clientInfo) {
+    private void addClientIdClient(WebClientInfo clientInfo) {
+        String clientId = clientInfo.getClientId();
+        if(clientId == null) {
+            return;
+        }
+        addOrUpdateClient(clientInfo, clientId);
+        ScoreBuilderStrategy builderStrategy = score.getScoreBuilderStrategy();
+        if(builderStrategy != null) {
+            builderStrategy.addClientId(clientId);
+        }
+    }
+
+    private void addOrUpdateClient(WebClientInfo clientInfo, String clientId) {
+        if(clientId == null) {
+            return;
+        }
+        if(playerClients.containsKey(clientId)) {
+            WebClientInfo currentClientInfo = playerClients.get(clientId);
+            String addr = clientInfo.getClientAddr();
+            if(addr != null && addr.equals(currentClientInfo.getClientAddr())) {
+                return;
+            }
+        }
+        playerClients.put(clientId, clientInfo);
+    }
+
+    public void addInstrumentClient(WebClientInfo clientInfo) throws Exception {
         String instrument = clientInfo.getInstrument();
+        if (instrument == null) {
+            instrument = getDefaultStrategyInstrument();
+        }
         if (instrument == null) {
             return;
         }
+        addInstrumentClient(instrument, clientInfo);
+    }
 
+    public String getDefaultStrategyInstrument() {
+        String out = null;
+        List<ScoreStrategy> strategies = score.getStrategies();
+        for(ScoreStrategy strategy : strategies) {
+            switch (strategy.getType()) {
+                case BUILDER:
+                    ScoreBuilderStrategy builderStrategy = (ScoreBuilderStrategy)strategy;
+                    if(!builderStrategy.isActive()) {
+                        break;
+                    }
+                    out = builderStrategy.getDefaultInstrument();
+                    break;
+                case DYNAMIC:
+                    DynamicMovementStrategy dynamicStrategy = (DynamicMovementStrategy)strategy;
+                    if(!dynamicStrategy.isActive()) {
+                        break;
+                    }
+                    out = dynamicStrategy.getDefaultPart();
+                    break;
+            }
+            if(out != null) {
+                return out;
+            }
+        }
+        return out;
+    }
+
+    public void replaceInstrumentClient(String instrument, WebClientInfo clientInfo) throws Exception {
+        removeClientFromInstruments(clientInfo);
+        addInstrumentClient(instrument, clientInfo);
+    }
+
+    public void removeClientFromInstruments(WebClientInfo clientInfo) throws Exception {
+        for(String instrument : instrumentClients.keySet()) {
+            List<WebClientInfo> remaining = new ArrayList<>();
+            List<WebClientInfo> clientInfos = instrumentClients.get(instrument);
+            if(clientInfos == null) {
+                continue;
+            }
+            for(WebClientInfo client : clientInfos) {
+                if(!client.getClientAddr().equals(clientInfo.getClientAddr())) {
+                    remaining.add(client);
+                }
+            }
+            instrumentClients.put(instrument, remaining);
+            LOG.debug("removeInstrumentClient: have remaining: {} clients for instrument: {}", remaining.size(), instrument);
+        }
+    }
+
+    public void addInstrumentClient(String instrument, WebClientInfo clientInfo) throws Exception {
+        if (instrument == null || clientInfo == null) {
+            return;
+        }
+        if(!instrument.equals(clientInfo.getInstrument())) {
+            clientInfo.setInstrument(instrument);
+        }
         List<WebClientInfo> clientInfos = instrumentClients.computeIfAbsent(instrument, k -> new ArrayList<>());
         if (!clientInfos.contains(clientInfo)) {
             clientInfos.add(clientInfo);
@@ -347,51 +512,61 @@ public class WebScore {
         }
     }
 
-    public void sendScoreInfo() {
-        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
-        scoreState.setScoreInfo(scoreInfo);
-        scoreProcessor.sendWebScoreState(WebScoreTargetType.ALL.name(), WebScoreTargetType.ALL, scoreState);
+    public void sendScoreInfo() throws Exception {
+        sendScoreInfo(WebScoreTargetType.ALL.name(), WebScoreTargetType.ALL);
     }
 
-    public void sendScoreInfo(WebClientInfo clientInfo) {
+    public void sendScoreInfo(WebClientInfo clientInfo) throws Exception {
+        sendScoreInfo(clientInfo.getClientAddr(), WebScoreTargetType.HOST);
+    }
+
+    public void sendScoreInfo(String addr, WebScoreTargetType targetType) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         scoreState.setScoreInfo(scoreInfo);
+        scoreState.setStrategyInfo(webStrategyInfo);
+        scoreProcessor.sendWebScoreState(addr, targetType, scoreState);
+    }
+
+    public void sendPartInfo(WebClientInfo clientInfo) throws Exception {
+        WebScoreState scoreState = createPartInfoUpdate(clientInfo);
         scoreProcessor.sendWebScoreState(clientInfo.getClientAddr(), WebScoreTargetType.HOST, scoreState);
     }
 
-    public void sendPartInfo(WebClientInfo clientInfo) {
+    public WebScoreState createPartInfoUpdate(WebClientInfo clientInfo) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         String instrumentName = clientInfo.getInstrument();
         Instrument instrument = score.getInstrument(instrumentName);
         if (instrument == null) {
-            LOG.error("sendPartInfo: unknown instrument: {}", instrumentName);
-            return;
-        }
-        int firstPageNo = 1;
-        int lastPageNo = 1;
-        Page lastPage = score.getLastInstrumentPage(instrument.getId());
-        if (lastPage != null) {
-            lastPageNo = lastPage.getPageNo();
+            LOG.warn("createPartInfoUpdate: unknown instrument: {}", instrumentName);
+            return null;
         }
 
-        SequentalIntRange pageRange = new SequentalIntRange(firstPageNo, lastPageNo);
+        SequentalIntRange pageRange = getInstrumentPageRange(instrument);
+        boolean isNoScoreInstrument = scoreProcessor.isNoScoreInstrument(instrumentName);
         ArrayList<IntRange> pageRanges = new ArrayList<>();
         pageRanges.add(pageRange);
         String imgDir = scoreInfo.getScoreDir() + Consts.RSRC_DIR;
-        // ligetiTest6_Cello_page19.png
-        String scoreNameToken = scoreInfo.getTitle().replaceAll("\\s+", "_");
-        String imgPageNameToken = scoreNameToken
-                + Consts.UNDERSCORE
-                + instrumentName
-                + Consts.UNDERSCORE
-                + Consts.DEFAULT_PAGE_PREFIX
-                + Consts.WEB_SCORE_PAGE_NO_TOKEN
-                + Consts.PNG_FILE_EXTENSION;
 
         String imgContPageName = instrumentName
                 + Consts.UNDERSCORE
                 + Consts.CONTINUOUS_PAGE_NAME
                 + Consts.PNG_FILE_EXTENSION;
+
+        String imgPageNameToken;
+        if(isNoScoreInstrument) {
+            imgPageNameToken = imgContPageName;
+        } else {
+            String scoreNameToken = scoreInfo.getName().replaceAll("\\s+", "_");
+            imgPageNameToken = scoreNameToken
+                    + Consts.UNDERSCORE
+                    + instrumentName
+                    + Consts.UNDERSCORE
+                    + Consts.DEFAULT_PAGE_PREFIX
+                    + Consts.WEB_SCORE_PAGE_NO_TOKEN
+                    + Consts.PNG_FILE_EXTENSION;
+        }
+
+        String section = getCurrentSection();
 
         WebPartInfo partInfo = new WebPartInfo();
         partInfo.setName(instrumentName);
@@ -400,23 +575,105 @@ public class WebScore {
         partInfo.setImgPageNameToken(imgPageNameToken);
         partInfo.setImgContPageName(imgContPageName);
         partInfo.setContPageNo(Consts.CONTINUOUS_PAGE_NO);
+        partInfo.setCurrentSection(section);
         scoreState.setPartInfo(partInfo);
-        scoreProcessor.sendWebScoreState(clientInfo.getClientAddr(), WebScoreTargetType.HOST, scoreState);
+
+        scoreState.setScoreInfo(scoreInfo);
+        return scoreState;
     }
 
-    public void sendPageInfo(String destination, String pageId, String webRndPageId, String filename, String staveId) {
+    private SequentalIntRange getInstrumentPageRange(Instrument instrument) {
+        int firstPageNo = 1;
+        int lastPageNo = 1;
+        Page lastPage = score.getLastInstrumentPage(instrument.getId());
+        if (lastPage != null) {
+            lastPageNo = lastPage.getPageNo();
+        }
+        SequentalIntRange  out = new SequentalIntRange(firstPageNo, lastPageNo);
+
+        String section = getCurrentSection();
+        List<ScoreStrategy> strategies = score.getStrategies();
+        for(ScoreStrategy strategy : strategies) {
+            switch (strategy.getType()) {
+                case BUILDER:
+                    ScoreBuilderStrategy scoreBuilderStrategy = (ScoreBuilderStrategy) strategy;
+                    if(!scoreBuilderStrategy.isActive()) {
+                        break;
+                    }
+                    SectionInfo sectionInfo = scoreBuilderStrategy.getSectionInfo(section);
+                    if(sectionInfo != null) {
+                        IntRange pageRange = sectionInfo.getPageRange();
+                        if(pageRange != null) {
+                            firstPageNo = pageRange.getStart();
+                            lastPageNo = pageRange.getEnd();
+                            out = new SequentalIntRange(firstPageNo, lastPageNo);
+                        }
+                    }
+                    break;
+                case DYNAMIC:
+                    DynamicMovementStrategy dynamicStrategy = (DynamicMovementStrategy)strategy;
+                    if(!dynamicStrategy.isActive()) {
+                        break;
+                    }
+                    MovementInfo movementInfo = dynamicStrategy.getMovement(section);
+                    if(movementInfo != null) {
+                        out = movementInfo.getPageRange();
+                    }
+                    break;
+            }
+        }
+        return out;
+    }
+
+    private String getCurrentSection() {
+        String section = null;
+        List<ScoreStrategy> strategies = score.getStrategies();
+        for(ScoreStrategy strategy : strategies) {
+            switch (strategy.getType()) {
+                case BUILDER:
+                    ScoreBuilderStrategy scoreBuilderStrategy = (ScoreBuilderStrategy) strategy;
+                    if (!scoreBuilderStrategy.isActive()) {
+                        break;
+                    }
+                    section = scoreBuilderStrategy.getCurrentSection();
+                    break;
+                case DYNAMIC:
+                    DynamicMovementStrategy dynamicStrategy = (DynamicMovementStrategy) strategy;
+                    if (!dynamicStrategy.isActive()) {
+                        break;
+                    }
+                    section = dynamicStrategy.getCurrentMovement();
+                    break;
+            }
+        }
+        return section;
+    }
+
+    public void sendPageInfo(String destination, String pageId, String webRndPageId, String filename, String staveId, WebTranspositionInfo transpositionInfo) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         WebPageInfo webPageInfo = new WebPageInfo();
         webPageInfo.setFilename(filename);
         webPageInfo.setStaveId(staveId);
         webPageInfo.setPageId(pageId);
         webPageInfo.setRndPageId(webRndPageId);
+        if(transpositionInfo != null) {
+            webPageInfo.setTranspositionInfo(transpositionInfo);
+        }
         scoreState.setPageInfo(webPageInfo);
         sendToDestination(destination, scoreState);
     }
 
+    public void sendStrategyInfo() throws Exception {
+        sendStrategyInfo(WebScoreTargetType.ALL.name(), WebScoreTargetType.ALL);
+    }
 
-    private void sendTimeSpaceMapInfo(String destination, String webPageId, String webStaveId, List<InscoreMapElement> mapElements) {
+    public void sendStrategyInfo(String addr, WebScoreTargetType targetType) throws Exception {
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
+        scoreState.setStrategyInfo(webStrategyInfo);
+        scoreProcessor.sendWebScoreState(addr, targetType, scoreState);
+    }
+
+    private void sendTimeSpaceMapInfo(String destination, String webPageId, String webStaveId, List<InscoreMapElement> mapElements) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         WebTimeSpaceMapInfo mapInfo = new WebTimeSpaceMapInfo();
         mapInfo.setPageId(webPageId);
@@ -426,13 +683,13 @@ public class WebScore {
         sendToDestination(destination, scoreState);
     }
 
-    private void sendTempo(String destination, int bpm)  {
+    private void sendTempo(String destination, int bpm) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         scoreState.setBpm(bpm);
         sendToDestination(destination, scoreState);
     }
 
-    private void sendPrecountBeatOn(int beaterNo, int colourId) {
+    private void sendPrecountBeatOn(int beaterNo, int colourId) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         Map<String, Object> params = new HashMap<>(2);
         params.put(Consts.WEB_PARAM_LIGHT_NO, beaterNo);
@@ -442,7 +699,7 @@ public class WebScore {
         sendToDestination(Consts.ALL_DESTINATIONS, scoreState);
     }
 
-    private void sendPrecountBeatOff(int beaterNo) {
+    private void sendPrecountBeatOff(int beaterNo) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         Map<String, Object> params = new HashMap<>(2);
         params.put(Consts.WEB_PARAM_LIGHT_NO, beaterNo);
@@ -451,13 +708,14 @@ public class WebScore {
         sendToDestination(Consts.ALL_DESTINATIONS, scoreState);
     }
 
-    private void sendStop() {
+    private void sendStop() throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.STOP, null, null);
         scoreState.addAction(action);
         sendToDestination(Consts.ALL_DESTINATIONS, scoreState);
     }
-    private void sendActivateStave(String destination, String webStaveId, boolean isActive, boolean isPlayStave) {
+
+    private void sendActivateStave(String destination, String webStaveId, boolean isActive, boolean isPlayStave) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         List<String> targets = Collections.singletonList(webStaveId);
         Map<String, Object> params = new HashMap<>(2);
@@ -468,7 +726,7 @@ public class WebScore {
         sendToDestination(destination, scoreState);
     }
 
-    private void sendBeat(String destination, String webStaveId, int beatNo) {
+    private void sendBeat(String destination, String webStaveId, int beatNo) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         List<String> targets = Collections.singletonList(webStaveId);
         Map<String, Object> params = Collections.singletonMap(Consts.WEB_PARAM_BEAT_NO, beatNo);
@@ -477,7 +735,7 @@ public class WebScore {
         sendToDestination(destination, scoreState);
     }
 
-    private void sendStaveStartMark(String destination, String webStaveId, int beatNo) {
+    private void sendStaveStartMark(String destination, String webStaveId, int beatNo) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         List<String> targets = Collections.singletonList(webStaveId);
         Map<String, Object> params = Collections.singletonMap(Consts.WEB_PARAM_BEAT_NO, beatNo);
@@ -486,7 +744,7 @@ public class WebScore {
         sendToDestination(destination, scoreState);
     }
 
-    private void sendInstrumentSlots(String destination, String instrumentsCsv) {
+    private void sendInstrumentSlots(String destination, String instrumentsCsv) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         Map<String, Object> params = Collections.singletonMap(Consts.WEB_PARAM_CSV_INSTRUMENTS, instrumentsCsv);
         WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.INSTRUMENT_SLOTS, null, params);
@@ -494,21 +752,21 @@ public class WebScore {
         sendToDestination(destination, scoreState);
     }
 
-    private void sendResetInstrumentSlots(String destination) {
+    private void sendResetInstrumentSlots(String destination) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.RESET_INSTRUMENT_SLOTS, null, null);
         scoreState.addAction(action);
         sendToDestination(destination, scoreState);
     }
 
-    private void sendResetStaves(String destination) {
+    private void sendResetStaves(String destination) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.RESET_STAVES, null, null);
         scoreState.addAction(action);
         sendToDestination(destination, scoreState);
     }
 
-    private void sendOverlayLinePosition(String destination, OverlayType overlayType, String webStaveId, Double lineY) {
+    private void sendOverlayLinePosition(String destination, OverlayType overlayType, String webStaveId, Double lineY) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         List<String> targets = Collections.singletonList(webStaveId);
         Map<String, Object> params = new HashMap<>(2);
@@ -519,7 +777,7 @@ public class WebScore {
         sendToDestination(destination, scoreState);
     }
 
-    private void sendOverlayElementInfo(String destination, OverlayType overlayType, OverlayElementType overlayElementType, boolean isEnabled, String webStaveId, Double opacity) {
+    private void sendOverlayElementInfo(String destination, OverlayType overlayType, OverlayElementType overlayElementType, boolean isEnabled, String webStaveId, Double opacity) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         List<String> targets = Collections.singletonList(webStaveId);
         Map<String, Object> params = new HashMap<>(4);
@@ -532,7 +790,22 @@ public class WebScore {
         sendToDestination(destination, scoreState);
     }
 
-    private void sendOverlayColour(String destination, OverlayType overlayType, String webStaveId, String colHex) {
+    private void sendOverlayText(String destination, String l1, String l2, String l3, OverlayType overlayType, boolean isVisible, String webStaveId) throws Exception {
+        WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
+        List<String> targets = Collections.singletonList(webStaveId);
+        Map<String, Object> params = new HashMap<>(4);
+        params.put(Consts.WEB_PARAM_OVERLAY_TYPE, overlayType.name());
+        params.put(Consts.WEB_PARAM_OVERLAY_ELEMENT, OverlayElementType.PITCH_TEXT.name());
+        params.put(Consts.WEB_PARAM_IS_ENABLED, isVisible);
+        params.put(Consts.WEB_PARAM_TEXT_L1, l1);
+        params.put(Consts.WEB_PARAM_TEXT_L2, l2);
+        params.put(Consts.WEB_PARAM_TEXT_L3, l3);
+        WebScoreAction action = scoreProcessor.getOrCreateWebScoreAction(WebScoreActionType.OVERLAY_TEXT, targets, params);
+        scoreState.addAction(action);
+        sendToDestination(destination, scoreState);
+    }
+
+    private void sendOverlayColour(String destination, OverlayType overlayType, String webStaveId, String colHex) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         List<String> targets = Collections.singletonList(webStaveId);
         Map<String, Object> params = new HashMap<>(4);
@@ -543,7 +816,7 @@ public class WebScore {
         sendToDestination(destination, scoreState);
     }
 
-    private void sendToDestination(String destination, WebScoreState scoreState) {
+    private void sendToDestination(String destination, WebScoreState scoreState) throws Exception {
         if (Consts.ALL_DESTINATIONS.equals(destination)) {
             scoreProcessor.sendWebScoreState(Consts.ALL_DESTINATIONS, WebScoreTargetType.ALL, scoreState);
             return;
@@ -562,20 +835,64 @@ public class WebScore {
             return;
         }
 
-        if (clients.containsKey(destination)) {
-            WebClientInfo client = clients.get(destination);
+        if (playerClients.containsKey(destination)) {
+            WebClientInfo client = playerClients.get(destination);
+            scoreProcessor.sendWebScoreState(client.getClientAddr(), WebScoreTargetType.HOST, scoreState);
+        }
+
+        if (allClients.containsKey(destination)) {
+            WebClientInfo client = allClients.get(destination);
             scoreProcessor.sendWebScoreState(client.getClientAddr(), WebScoreTargetType.HOST, scoreState);
         }
     }
 
     public void processRemoveConnectionEvent(WebScoreRemoveConnectionEvent webEvent) {
         LOG.info("processRemoveConnectionEvent");
+        if(webEvent == null || webEvent.getConnectionIds() == null || webEvent.getConnectionIds().isEmpty()) {
+            return;
+        }
+        List<String> toRemove = webEvent.getConnectionIds();
+        for(String connId : toRemove) {
+            WebClientInfo removed = allClients.remove(connId);
+            if(removed != null) {
+                playerClients.remove(connId);
+                for(String instrument : instrumentClients.keySet()) {
+                    List<WebClientInfo> instClients = instrumentClients.get(instrument);
+                    instClients.remove(removed);
+                }
+            }
+        }
+    }
+
+    public void processInEvent(WebScoreInEvent event) {
+        try {
+            String sourceAddr = event.getSourceAddr();
+            if(sourceAddr == null) {
+                return;
+            }
+            WebClientInfo clientInfo = allClients.get(sourceAddr);
+            if (clientInfo == null) {
+                LOG.debug("processInEvent: Unknown client: {}", sourceAddr);
+                return;
+            }
+            String eventClientId = event.getClientId();
+            if (eventClientId == null) {
+                LOG.debug("processInEvent: invalid client ID");
+                return;
+            }
+            if(!eventClientId.equals(clientInfo.getClientId())) {
+                clientInfo.setClientId(eventClientId);
+            }
+            addOrUpdateClient(clientInfo, eventClientId);
+        } catch (Exception e) {
+            LOG.error("processInEvent: failed to process web in event", e);
+        }
     }
 
     public void processPartRegistration(WebScorePartRegEvent event) {
         try {
             String clientId = event.getSourceAddr();
-            WebClientInfo clientInfo = clients.get(clientId);
+            WebClientInfo clientInfo = allClients.get(clientId);
             if (clientInfo == null) {
                 LOG.error("processPartRegistration: Unknown client: {}", clientId);
                 return;
@@ -598,7 +915,7 @@ public class WebScore {
     public void processPartReady(WebScorePartReadyEvent event) {
         try {
             String clientId = event.getSourceAddr();
-            WebClientInfo clientInfo = clients.get(clientId);
+            WebClientInfo clientInfo = allClients.get(clientId);
             if (clientInfo == null) {
                 LOG.error("processPartReady: Unknown client: {}", clientId);
                 return;
@@ -625,10 +942,128 @@ public class WebScore {
             int slotNo = webEvent.getSlotNo();
             String slotInstrument = webEvent.getSlotInstrument();
             String sourceInst = webEvent.getPart();
-            scoreProcessor.processSelectInstrumentSlot(slotNo, slotInstrument, sourceInst);
+            WebClientInfo clientInfo = getClientInfo(webEvent);
+            scoreProcessor.processSelectInstrumentSlot(slotNo, slotInstrument, sourceInst, clientInfo);
         } catch (Exception e) {
             LOG.error("processSelectInstrumentSlot: failed to process select intrument slot", e);
         }
+    }
+
+    public void processSelectSection(WebScoreSelectSectionEvent event) {
+        try {
+            WebClientInfo clientInfo = getClientInfo(event);
+            if (clientInfo == null) {
+                clientInfo = getClientInfo(event);
+                if (clientInfo == null) {
+                    LOG.error("processSelectSection: Unknown client source: {} id: {}", event.getSourceAddr(), event.getClientId());
+                    return;
+                }
+            }
+            String section = event.getSection();
+            scoreProcessor.processSelectSection(section, clientInfo);
+            ScoreBuilderStrategy scoreBuilderStrategy = score.getScoreBuilderStrategy();
+            createOrUpdateWebBuilderStrategy(scoreBuilderStrategy);
+            sendStrategyInfo();
+        } catch (Exception e) {
+            LOG.error("processSelectInstrumentSlot: failed to process select intrument slot", e);
+        }
+    }
+
+    public void createOrUpdateWebBuilderStrategy(ScoreBuilderStrategy scoreBuilderStrategy) {
+        if(scoreBuilderStrategy == null) {
+            return;
+        }
+        WebBuilderStrategy webBuilderStrategy = getOrCreateWebBuilderStrategy();
+        webBuilderStrategy.setName(StrategyType.BUILDER.name());
+        webBuilderStrategy.setReady(scoreBuilderStrategy.isReady());
+        SectionAssignmentType assignmentType = scoreBuilderStrategy.getConfig().getAssignmentType();
+        if (assignmentType != null) {
+            webBuilderStrategy.setAssignmentType(assignmentType.name());
+        }
+        List<String> sections = scoreBuilderStrategy.getSections();
+        webBuilderStrategy.clearSectionOwners();
+        if(sections != null) {
+            webBuilderStrategy.setSections(sections);
+            for(String section : sections) {
+                String owner = scoreBuilderStrategy.getSectionOwner(section);
+                if(owner != null) {
+                    webBuilderStrategy.addSectionOwner(section, owner);
+                }
+            }
+        }
+    }
+
+    public void createOrUpdateWebDynamicScoreStrategy(DynamicMovementStrategy dynamicMovementStrategy) {
+        if (dynamicMovementStrategy == null) {
+            return;
+        }
+        WebDynamicScoreStrategy webDynamicScoreStrategy = getOrCreateWebDynamicScoreStrategy();
+        webDynamicScoreStrategy.setName(StrategyType.DYNAMIC.name());
+        webDynamicScoreStrategy.setReady(dynamicMovementStrategy.isReady());
+//        List<String> sections = dynamicMovementStrategy.getSections();
+//        webDynamicScoreStrategy.clearSectionOwners();
+//        if(sections != null) {
+//            webDynamicScoreStrategy.setSections(sections);
+//            for(String section : sections) {
+//                String owner = dynamicMovementStrategy.getSectionOwner(section);
+//                if(owner != null) {
+//                    webDynamicScoreStrategy.addSectionOwner(section, owner);
+//                }
+//            }
+//        }
+    }
+
+    private WebBuilderStrategy getWebBuilderStrategy() {
+        List<WebStrategy> webStrategies = webStrategyInfo.getStrategies();
+        if(webStrategies == null) {
+            return null;
+        }
+        for (WebStrategy strategy : webStrategies) {
+            if (strategy instanceof WebBuilderStrategy) {
+                return (WebBuilderStrategy) strategy;
+            }
+        }
+        return null;
+    }
+
+    private WebDynamicScoreStrategy getWebDynamicScoreStrategy() {
+        List<WebStrategy> webStrategies = webStrategyInfo.getStrategies();
+        if(webStrategies == null) {
+            return null;
+        }
+        for (WebStrategy strategy : webStrategies) {
+            if (strategy instanceof WebDynamicScoreStrategy) {
+                return (WebDynamicScoreStrategy) strategy;
+            }
+        }
+        return null;
+    }
+
+    private WebBuilderStrategy getOrCreateWebBuilderStrategy() {
+        WebBuilderStrategy webBuilderStrategy = getWebBuilderStrategy();
+        if(webBuilderStrategy != null) {
+            return webBuilderStrategy;
+        }
+        webBuilderStrategy = new WebBuilderStrategy();
+        webStrategyInfo.addStrategy(webBuilderStrategy);
+        return webBuilderStrategy;
+    }
+
+    private WebDynamicScoreStrategy getOrCreateWebDynamicScoreStrategy() {
+        WebDynamicScoreStrategy webDynamicScoreStrategy = getWebDynamicScoreStrategy();
+        if(webDynamicScoreStrategy != null) {
+            return webDynamicScoreStrategy;
+        }
+        webDynamicScoreStrategy = new WebDynamicScoreStrategy();
+        webStrategyInfo.addStrategy(webDynamicScoreStrategy);
+        return webDynamicScoreStrategy;
+    }
+
+
+
+    private void setBuilderWebStrategyReady(boolean isReady) {
+        WebBuilderStrategy webBuilderStrategy = getOrCreateWebBuilderStrategy();
+        webBuilderStrategy.setReady(isReady);
     }
 
     public WebClientInfo getInstrumentClient(String instrument, String addr) {
@@ -652,7 +1087,50 @@ public class WebScore {
     }
 
     public boolean isDestination(String destination) {
-        return clients.containsKey(destination) || instrumentClients.containsKey(destination) || Consts.ALL_DESTINATIONS.equals(destination);
+        return allClients.containsKey(destination) ||
+                playerClients.containsKey(destination) ||
+                instrumentClients.containsKey(destination) ||
+                Consts.ALL_DESTINATIONS.equals(destination);
+    }
+
+    public WebClientInfo getClientInfo(WebScoreInEvent webEvent) {
+        String clientId = webEvent.getClientId();
+        if(clientId != null) {
+            WebClientInfo clientInfo = playerClients.get(clientId);
+            if(clientInfo != null) {
+                return clientInfo;
+            }
+        }
+
+        tryPopulateMissingClient(webEvent);
+        WebClientInfo clientInfo = playerClients.get(clientId);
+        if(clientInfo != null) {
+            return clientInfo;
+        }
+
+        clientId = webEvent.getSourceAddr();
+        return allClients.get(clientId);
+    }
+    public void tryPopulateMissingClient(WebScoreInEvent webEvent) {
+        WebClientInfo webClientInfo = webEvent.getWebClientInfo();
+        if(webClientInfo == null) {
+            return;
+        }
+        try {
+            addOrUpdateClientInfo(webClientInfo);
+        } catch (Exception e) {
+            LOG.error("tryPopulateMissingClient error", e);
+        }
+    }
+
+    public List<WebClientInfo> getScoreClients() {
+        List<WebClientInfo> scoreClients = new ArrayList<>();
+        for(WebClientInfo player : playerClients.values()) {
+            if(player.isScoreClient()) {
+                scoreClients.add(player);
+            }
+        }
+        return scoreClients;
     }
 
     public boolean isReady() {
@@ -665,5 +1143,32 @@ public class WebScore {
             }
         }
         return true;
+    }
+
+    public void setSectionInstrumentClients(Map<String, List<String>> instrumentClients){
+        try {
+            if(instrumentClients == null) {
+                return;
+            }
+            resetInstrumentClients();
+            for(String instrument : instrumentClients.keySet()) {
+                List<String> clients = instrumentClients.get(instrument);
+                for(String client : clients) {
+                    WebClientInfo clientInfo = playerClients.get(client);
+                    if(clientInfo == null) {
+                        clientInfo = allClients.get(client);
+                    }
+                    if(clientInfo == null) {
+                        continue;
+                    }
+                    if(!instrument.equals(clientInfo.getInstrument())) {
+                        clientInfo.setInstrument(instrument);
+                    }
+                    addOrUpdateClientInfo(clientInfo);
+                }
+            }
+        } catch (Exception e) {
+            LOG.error("setSectionInstrumentClients: failed to add section instrument clients", e);
+        }
     }
 }

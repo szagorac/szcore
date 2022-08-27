@@ -3,14 +3,22 @@ package com.xenaksys.szcore.model;
 import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.algo.SequentalIntRange;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 public class MovementInfo {
     private final String movementId;
     private final Map<String, MovementSectionInfo> sections = new HashMap<>();
     private final Set<String> activeSections = new HashSet<>();
+    private final List<List<String>> sectionsOrder = new ArrayList<>();
 
     private SequentalIntRange pageRange;
+    private Set<String> parts = new HashSet<>();
     private int startPage;
     private volatile boolean isActive;
 
@@ -50,6 +58,19 @@ public class MovementInfo {
         }
         sections.put(section.getSectionId(), section);
         recalcPageRange();
+        resetParts();
+    }
+
+    public void addSectionOrder(List<List<String>> sections) {
+        if (sections == null) {
+            return;
+        }
+        sectionsOrder.clear();
+        sectionsOrder.addAll(sections);
+    }
+
+    public List<List<String>> getSectionsOrder() {
+        return sectionsOrder;
     }
 
     public void activateSection(String sectionId) {
@@ -94,6 +115,13 @@ public class MovementInfo {
         return pageRange;
     }
 
+    public void resetParts() {
+        for (MovementSectionInfo sectionInfo : sections.values()) {
+            List<String> sectionParts = sectionInfo.getParts();
+            parts.addAll(sectionParts);
+        }
+    }
+
     public void recalcPageRange() {
         int firstPage = Integer.MAX_VALUE;
         int lastPage = 0;
@@ -123,6 +151,10 @@ public class MovementInfo {
 
     public int getStartPage() {
         return startPage;
+    }
+
+    public Set<String> getParts() {
+        return parts;
     }
 
     @Override

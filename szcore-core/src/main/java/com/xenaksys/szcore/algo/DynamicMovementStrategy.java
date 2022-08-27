@@ -66,6 +66,7 @@ public class DynamicMovementStrategy implements ScoreStrategy {
             MovementSectionInfo sectionInfo = new MovementSectionInfo(sectionConfig.getName());
             sectionInfo.setPageRange(sectionConfig.getRange());
             sectionInfo.setActive(false);
+            sectionInfo.setParts(sectionConfig.getParts());
             movementInfo.addSection(sectionInfo);
 
             List<ExtScoreInfo> maxInfos = new ArrayList<>();
@@ -99,7 +100,7 @@ public class DynamicMovementStrategy implements ScoreStrategy {
             }
             sectionInfo.setWebConfigs(webInfos);
         }
-
+        movementInfo.addSectionOrder(movementConfig.getSectionsOrder());
         movementInfo.setStartPage(movementConfig.getStartPage());
 
         movementInfos.put(movementInfo.getMovementId(), movementInfo);

@@ -1,10 +1,16 @@
 package com.xenaksys.szcore.gui.model;
 
 import com.xenaksys.szcore.Consts;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ListProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import java.util.Objects;
 
@@ -17,6 +23,8 @@ public class MovementSection {
     private IntegerProperty maxVote = new SimpleIntegerProperty(0);
     private IntegerProperty avgVote = new SimpleIntegerProperty(0);
     private IntegerProperty voterNo = new SimpleIntegerProperty(0);
+    private BooleanProperty isActive = new SimpleBooleanProperty(false);
+    private ListProperty<String> parts = new SimpleListProperty<>(FXCollections.observableArrayList());
 
     public String getSection() {
         return section.get();
@@ -112,6 +120,34 @@ public class MovementSection {
 
     public void setVoterNo(int voterNo) {
         this.voterNo.set(voterNo);
+    }
+
+    public ObservableList<String> getParts() {
+        return parts.get();
+    }
+
+    public ListProperty<String> partsProperty() {
+        return parts;
+    }
+
+    public void addPart(String part) {
+        this.parts.add(part);
+    }
+
+    public void setParts(ObservableList<String> parts) {
+        this.parts.set(parts);
+    }
+
+    public boolean isIsActive() {
+        return isActive.get();
+    }
+
+    public BooleanProperty isActiveProperty() {
+        return isActive;
+    }
+
+    public void setIsActive(boolean isActive) {
+        this.isActive.set(isActive);
     }
 
     @Override

@@ -598,6 +598,7 @@ public interface Consts {
     String CONFIG_PAGE_RANGES = "pageRanges";
     String CONFIG_PAGES = "pages";
     String CONFIG_SECTIONS = "sections";
+    String CONFIG_SECTIONS_ORDER = "sectionsOrder";
     String CONFIG_MOVEMENTS = "movements";
     String CONFIG_PARTS= "parts";
     String CONFIG_MAX= "max";

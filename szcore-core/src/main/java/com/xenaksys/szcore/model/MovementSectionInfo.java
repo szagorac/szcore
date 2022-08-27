@@ -14,6 +14,7 @@ public class MovementSectionInfo {
     private IntRange pageRange;
     private volatile boolean isActive;
     private volatile int currentPage;
+    private final List<String> parts = new ArrayList<>();
     private final Map<String, String> clientPart = new HashMap<>();
     private final Map<String, List<String>> partClients = new HashMap<>();
     private final VoteInfo voteInfo = new VoteInfo();
@@ -141,6 +142,17 @@ public class MovementSectionInfo {
             return;
         }
         this.webConfigs.addAll(webConfigs);
+    }
+
+    public void setParts(List<String> parts) {
+        if(parts == null) {
+            return;
+        }
+        this.parts.addAll(parts);
+    }
+
+    public List<String> getParts() {
+        return parts;
     }
 
     @Override

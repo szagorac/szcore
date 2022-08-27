@@ -31,17 +31,17 @@
                             <children>
                                 <VBox alignment="TOP_CENTER" stylesheets="@css/szcoreStyle.css">
                                     <children>
-                                        <ListView fx:id="movementOrderLvw" prefHeight="100.0" prefWidth="100.0" />
+                                        <ListView fx:id="movementOrderLvw" prefHeight="113.0" prefWidth="100.0" />
                               <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="110.0" spacing="10.0">
                                  <children>
                                             <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Current:" />
-                                            <Label fx:id="playingSectionLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="N/A" />
+                                            <Label fx:id="currentMovementLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="N/A" />
                                  </children>
                               </HBox>
                               <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="209.0" spacing="10.0">
                                  <children>
                                             <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Next :" />
-                                            <Label fx:id="nextSectionLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="N/A" />
+                                            <Label fx:id="nextMovementLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="N/A" />
                                  </children>
                               </HBox>
                                     </children>
@@ -73,6 +73,29 @@
                                         </VBox>
                                     </children>
                                 </VBox>
+                        <VBox alignment="TOP_CENTER" layoutX="10.0" layoutY="10.0" stylesheets="@css/szcoreStyle.css">
+                           <children>
+                              <ListView fx:id="sectionOrderLvw" prefHeight="113.0" prefWidth="100.0" />
+                              <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="110.0" spacing="10.0">
+                                 <children>
+                                    <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Current:" />
+                                    <Label fx:id="currentSectionLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="N/A" />
+                                 </children>
+                              </HBox>
+                              <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="209.0" spacing="10.0">
+                                 <children>
+                                    <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Next :" />
+                                    <Label fx:id="nextSectionLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="N/A" />
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
+                        <VBox layoutX="416.0" layoutY="10.0" spacing="20.0" stylesheets="@css/szcoreStyle.css">
+                           <children>
+                              <Button fx:id="previousSectionBtn" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" onAction="#setPreviousSection" styleClass="css/szcoreStyle.css" text="&lt; Prev" />
+                              <Button fx:id="nextSectionBtn" mnemonicParsing="false" onAction="#setNextSection" styleClass="css/szcoreStyle.css" text="Next  &gt;" />
+                           </children>
+                        </VBox>
                             </children>
                         </HBox>
                         <Separator />

@@ -2,6 +2,7 @@ package com.xenaksys.szcore.gui.view;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.DynamicMovementStrategy;
+import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.algo.SequentalIntRange;
 import com.xenaksys.szcore.algo.ValueScaler;
 import com.xenaksys.szcore.event.EventFactory;
@@ -11,8 +12,19 @@ import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEventType;
 import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
-import com.xenaksys.szcore.gui.model.*;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.gui.model.AudienceVote;
+import com.xenaksys.szcore.gui.model.Movement;
+import com.xenaksys.szcore.gui.model.MovementSection;
+import com.xenaksys.szcore.gui.model.Section;
+import com.xenaksys.szcore.gui.model.WebscoreInstructions;
+import com.xenaksys.szcore.model.Clock;
+import com.xenaksys.szcore.model.EventService;
+import com.xenaksys.szcore.model.Id;
+import com.xenaksys.szcore.model.MovementInfo;
+import com.xenaksys.szcore.model.MovementSectionInfo;
+import com.xenaksys.szcore.model.Score;
+import com.xenaksys.szcore.model.ScoreService;
+import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.score.web.audience.AudioComponentType;
@@ -24,7 +36,18 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.Slider;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -33,9 +56,27 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
-import static com.xenaksys.szcore.Consts.*;
+import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.Consts.MAXMSP_CMD_PLAY;
+import static com.xenaksys.szcore.Consts.MAXMSP_CMD_SET_FILE;
+import static com.xenaksys.szcore.Consts.MAXMSP_GRANULATOR;
+import static com.xenaksys.szcore.Consts.MAXMSP_GRANULATOR_CONT;
+import static com.xenaksys.szcore.Consts.MAXMSP_GRANULATOR_CONT_STOP;
+import static com.xenaksys.szcore.Consts.MAXMSP_GROOVE;
+import static com.xenaksys.szcore.Consts.MAXMSP_GROOVE_CONT;
+import static com.xenaksys.szcore.Consts.MAXMSP_GROOVE_CONT_STOP;
+import static com.xenaksys.szcore.Consts.NAME_NA;
+import static com.xenaksys.szcore.Consts.OSC_ADDRESS_ZSCORE;
+import static com.xenaksys.szcore.Consts.WEB_AUDIO_ACTION_DURATION_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_DUR_MULTIPLIER;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_FREQ_MULTIPLIER;
+import static com.xenaksys.szcore.Consts.WEB_SYNTH;
 import static com.xenaksys.szcore.gui.view.ScoreController.fixedLengthString;
 
 public class SymphoneaScoreController {
@@ -76,9 +117,9 @@ public class SymphoneaScoreController {
     @FXML
     private Label sectionsStatusLbl;
     @FXML
-    private Label nextSectionLbl;
+    private Label nextMovementLbl;
     @FXML
-    private Label playingSectionLbl;
+    private Label currentMovementLbl;
     @FXML
     private Slider dynamicsSldr;
     @FXML
@@ -195,12 +236,17 @@ public class SymphoneaScoreController {
     private RadioButton presetFreqDurPRdb;
     @FXML
     private RadioButton presetFreqDurPpRdb;
+    @FXML
+    private ListView<String> sectionOrderLvw;
+    @FXML
+    private Label currentSectionLbl;
+    @FXML
+    private Label nextSectionLbl;
 
     private SzcoreClient mainApp;
     private EventService publisher;
     private ScoreService scoreService;
     private Clock clock;
-    private String currentMovement;
 
     private WebscoreInstructions txtInstructions;
     private WebscoreInstructions presentInstructions;
@@ -209,8 +255,9 @@ public class SymphoneaScoreController {
     private final ObservableList<Movement> movements = FXCollections.observableArrayList();
     private final ObservableList<MovementSection> sections = FXCollections.observableArrayList();
     private final ObservableList<String> movementOrder = FXCollections.observableArrayList();
+    private final ObservableList<String> sectionOrder = FXCollections.observableArrayList();
     private final StringProperty nextMovementProp = new SimpleStringProperty("N/A");
-    private final StringProperty playingMovementProp = new SimpleStringProperty("N/A");
+    private final StringProperty currentMovementProp = new SimpleStringProperty("N/A");
     private final ObservableList<String> overlayPresets = FXCollections.observableArrayList();
     private final ObservableList<Double> synthFreq = FXCollections.observableArrayList();
     private final ObservableList<Double> synthDur = FXCollections.observableArrayList();
@@ -233,6 +280,7 @@ public class SymphoneaScoreController {
     public void populate() {
         sectionsTableView.setItems(sections);
         movementOrderLvw.setItems(movementOrder);
+        sectionOrderLvw.setItems(sectionOrder);
 
         useDynamicsOverlayChb.setSelected(false);
         useDynamicsLineChb.setSelected(false);
@@ -439,13 +487,24 @@ public class SymphoneaScoreController {
             onMovementSelect(out);
         });
 
+        sectionOrderLvw.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        sectionOrderLvw.setEditable(false);
+        sectionOrderLvw.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            String out = newSelection;
+            if (newSelection == null) {
+                out = oldSelection;
+            }
+            int selectedIndex = sectionOrderLvw.getSelectionModel().getSelectedIndex();
+            onSectionSelect(out, selectedIndex);
+        });
+
         sectionColumn.setCellValueFactory(cellData -> cellData.getValue().sectionProperty());
         startPageColumn.setCellValueFactory(cellData -> cellData.getValue().startPageProperty().asObject());
         endPageColumn.setCellValueFactory(cellData -> cellData.getValue().endPageProperty().asObject());
         voteNoColumn.setCellValueFactory(cellData -> cellData.getValue().avgVoteProperty().asObject());
 
-        nextSectionLbl.textProperty().bind(nextMovementProp);
-        playingSectionLbl.textProperty().bind(playingMovementProp);
+        nextMovementLbl.textProperty().bind(nextMovementProp);
+        currentMovementLbl.textProperty().bind(currentMovementProp);
 
         txtInstructions = new WebscoreInstructions();
         instPitchLn1Txt.textProperty().bindBidirectional(txtInstructions.line1Property());
@@ -539,6 +598,16 @@ public class SymphoneaScoreController {
 //            default:
 //                LOG.error("Unkonwn preset: {}", preset);
 //        }
+    }
+
+    @FXML
+    private void setPreviousSection(ActionEvent event) {
+
+    }
+
+    @FXML
+    private void setNextSection(ActionEvent event) {
+
     }
 
     private void disableAllTxtRecipients() {
@@ -724,12 +793,20 @@ public class SymphoneaScoreController {
         return instruction;
     }
 
+    private void onSectionSelect(String sections, int selectedIndex) {
+
+    }
+
     private void onMovementSelect(String movementName) {
         Movement movement = getMovement(movementName);
         if (movement == null) {
             return;
         }
         onMovementSelect(movement);
+    }
+
+    private int getCurrentMovementIndex() {
+        return movementOrder.indexOf(currentMovementProp.get());
     }
 
     private void onPlayAudioOnNewSection(Boolean newValue) {
@@ -743,18 +820,43 @@ public class SymphoneaScoreController {
         if (movement == null) {
             return;
         }
-        setCurrentMovementLabel(movement.getMovement());
+        String prev = this.currentMovementProp.get();
+        setCurrentMovementLabel(movement.getId());
+
+        String nextMovement = NAME_NA;
+        int currentIndex = getCurrentMovementIndex();
+        if(currentIndex >= 0 && currentIndex < ( movementOrder.size() - 1 )) {
+            nextMovement = movementOrder.get(currentIndex + 1);
+        }
+        setNextMovementsLabel(nextMovement);
+
+        if(prev != null && !prev.equals(movement.getId())) {
+            onCurrentMovementChange();
+        }
+    }
+
+    private void onCurrentMovementChange() {
+        Movement mov = getMovement(currentMovementProp.get());
+        if(mov == null) {
+            return;
+        }
+        ObservableList<MovementSection> movementSections = mov.getSections();
+        sections.clear();
+        if(movementSections == null) {
+            return;
+        }
+        sections.addAll(movementSections);
     }
 
     private void setCurrentMovementLabel(String value) {
         if (value == null) {
             value = Consts.NAME_NA;
         }
-        String old = playingMovementProp.getValue();
+        String old = currentMovementProp.getValue();
         if (value.equals(old)) {
             return;
         }
-        playingMovementProp.setValue(value);
+        currentMovementProp.setValue(value);
         selectMovement(value);
     }
 
@@ -810,13 +912,30 @@ public class SymphoneaScoreController {
         List<Movement> guiMovements = new ArrayList<>();
         for(MovementInfo movementInfo : movementInfos) {
             Movement movement = new Movement();
-            movement.setMovement(movementInfo.getMovementId());
+            movement.setId(movementInfo.getMovementId());
             SequentalIntRange range = movementInfo.getPageRange();
             if(range != null) {
                 movement.setFirstPage(range.getStart());
                 movement.setLastPage(range.getEnd());
             }
             movement.setStartPage(movementInfo.getStartPage());
+            List<MovementSectionInfo> sectionInfos = movementInfo.getSections();
+            for(MovementSectionInfo sectionInfo : sectionInfos) {
+                MovementSection movementSection = new MovementSection();
+                movementSection.setSection(sectionInfo.getSectionId());
+                IntRange pageRange = sectionInfo.getPageRange();
+                if(pageRange != null) {
+                    movementSection.setStartPage(pageRange.getStart());
+                    movementSection.setEndPage(pageRange.getEnd());
+                }
+                List<String> sectionParts = sectionInfo.getParts();
+                for(String part : sectionParts) {
+                    movementSection.addPart(part);
+                }
+                movement.addSection(movementSection);
+            }
+            List<String> sectionsOrder = convertSectionsOrder(movementInfo.getSectionsOrder());
+            movement.addSectionOrder(sectionsOrder);
             guiMovements.add(movement);
         }
 
@@ -828,29 +947,31 @@ public class SymphoneaScoreController {
         if(movementNames.size() > 0) {
             curMovement = movementNames.get(0);
         }
-        String nextMovement = NAME_NA;
-        if(movementNames.size() > 1) {
-            nextMovement = movementNames.get(1);
-        }
-        setMovementOrderInfo(movementNames, curMovement, nextMovement);
-        Platform.runLater(() -> {
-            resetOverlays();
-            movements.addAll(guiMovements);
-        });
+
+        setMovementsInfo(guiMovements, movementNames, curMovement);
     }
 
-    private void setMovementOrderInfo(final List<String> movements, final String curMovement, final String nextMovement) {
-        String prev = this.currentMovement;
-        this.currentMovement = curMovement;
+    private List<String> convertSectionsOrder(List<List<String>> sectionsOrder) {
+        List<String> out = new ArrayList<>();
+        if(sectionsOrder == null) {
+            return out;
+        }
+
+        for(List<String> sectionOrder : sectionsOrder) {
+            String ord = String.join(",", sectionOrder);
+            out.add(ord);
+        }
+        return out;
+    }
+
+    private void setMovementsInfo(final List<Movement> guiMovements, final List<String> guiMovementOrder, final String curMovement) {
         Platform.runLater(() -> {
-            String selectedItem = movementOrderLvw.getSelectionModel().getSelectedItem();
-            movementOrder.clear();
-            movementOrder.addAll(movements);
-            if (movements.contains(selectedItem)) {
-                movementOrderLvw.getSelectionModel().select(selectedItem);
-            }
-            setCurrentMovementLabel(curMovement);
-            setNextMovementsLabel(nextMovement);
+            resetOverlays();
+            this.movements.addAll(guiMovements);
+            this.movementOrder.clear();
+            this.movementOrder.addAll(guiMovementOrder);
+            movementOrderLvw.getSelectionModel().select(curMovement);
+//            onMovementSelect(curMovement);
         });
     }
 
@@ -904,7 +1025,7 @@ public class SymphoneaScoreController {
             return null;
         }
         for (Movement movement : movements) {
-            if (name.equals(movement.getMovement())) {
+            if (name.equals(movement.getId())) {
                 return movement;
             }
         }
@@ -913,7 +1034,7 @@ public class SymphoneaScoreController {
 
     public void setMovement(ActionEvent actionEvent) {
         presetsChob.getSelectionModel().select(Consts.PRESET_ALL_ON);
-        String playMovName = playingMovementProp.getValue();
+        String playMovName = currentMovementProp.getValue();
         if (playMovName == null) {
             return;
         }
@@ -923,9 +1044,21 @@ public class SymphoneaScoreController {
             return;
         }
         int startPage = nextMovement.getStartPage();
+        setSectionOrder(nextMovement);
         mainApp.setPage(startPage);
         mainApp.sendPosition();
         updateOverlays();
+    }
+
+    private void setSectionOrder(Movement movement) {
+        if(movement == null) {
+            return;
+        }
+
+        Platform.runLater(() -> {
+            sectionOrder.clear();
+            sectionOrder.addAll(movement.getSectionOrder());
+        });
     }
 
     public void playMovement(ActionEvent actionEvent) {
@@ -1227,7 +1360,7 @@ public class SymphoneaScoreController {
         movements.clear();
         movementOrder.clear();
         nextMovementProp.setValue(Consts.NAME_NA);
-        playingMovementProp.setValue(Consts.NAME_NA);
+        currentMovementProp.setValue(Consts.NAME_NA);
         setSectionStatusStyle(Consts.READY, LABEL_GREEN, LABEL_RED);
     }
 

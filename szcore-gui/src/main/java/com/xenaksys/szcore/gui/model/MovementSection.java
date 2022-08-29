@@ -25,6 +25,8 @@ public class MovementSection {
     private IntegerProperty voterNo = new SimpleIntegerProperty(0);
     private BooleanProperty isActive = new SimpleBooleanProperty(false);
     private ListProperty<String> parts = new SimpleListProperty<>(FXCollections.observableArrayList());
+    private final AudienceVote audienceVote = new AudienceVote();
+
 
     public String getSection() {
         return section.get();
@@ -148,6 +150,10 @@ public class MovementSection {
 
     public void setIsActive(boolean isActive) {
         this.isActive.set(isActive);
+    }
+
+    public AudienceVote getAudienceVote() {
+        return audienceVote;
     }
 
     @Override

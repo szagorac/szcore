@@ -12,7 +12,6 @@ import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEventType;
 import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
-import com.xenaksys.szcore.gui.model.AudienceVote;
 import com.xenaksys.szcore.gui.model.Movement;
 import com.xenaksys.szcore.gui.model.MovementSection;
 import com.xenaksys.szcore.gui.model.Section;
@@ -43,19 +42,20 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Slider;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseButton;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -103,17 +103,7 @@ public class SymphoneaScoreController {
     private final ValueScaler transparencyValueScaler = new ValueScaler(0.0, 100.0, 255.0, 0.0);
 
     @FXML
-    private TableView<MovementSection> sectionsTableView;
-    @FXML
     private ListView<String> movementOrderLvw;
-    @FXML
-    private TableColumn<MovementSection, String> sectionColumn;
-    @FXML
-    private TableColumn<MovementSection, Integer> startPageColumn;
-    @FXML
-    private TableColumn<MovementSection, Integer> endPageColumn;
-    @FXML
-    private TableColumn<MovementSection, Integer> voteNoColumn;
     @FXML
     private Label sectionsStatusLbl;
     @FXML
@@ -181,12 +171,6 @@ public class SymphoneaScoreController {
     @FXML
     private Slider pitchOverlayTransparencySldr;
     @FXML
-    private VBox voteVbox;
-    @FXML
-    private VBox voteUpVbox;
-    @FXML
-    private VBox voteDownVbox;
-    @FXML
     private Circle semaphore1Crc;
     @FXML
     private Circle semaphore2Crc;
@@ -239,9 +223,57 @@ public class SymphoneaScoreController {
     @FXML
     private ListView<String> sectionOrderLvw;
     @FXML
-    private Label currentSectionLbl;
+    private Label curSectionIdLbl;
     @FXML
-    private Label nextSectionLbl;
+    private Label curSectionStartPageLbl;
+    @FXML
+    private Label curSectionEndPageLbl;
+    @FXML
+    private Label nextSectionIdLbl;
+    @FXML
+    private Label nextSectionStartPageLbl;
+    @FXML
+    private Label nextSectionEndPageLbl;
+    @FXML
+    private Region voteSection1IdRgn;
+    @FXML
+    private Label voteSection1IdLbl;
+    @FXML
+    private Label voteSection1VoteLbl;
+    @FXML
+    private Label voteSection1StartPageLbl;
+    @FXML
+    private Label voteSection1EndPageLbl;
+    @FXML
+    private Region voteSection2IdRgn;
+    @FXML
+    private Label voteSection2IdLbl;
+    @FXML
+    private Label voteSection2VoteLbl;
+    @FXML
+    private Label voteSection2StartPageLbl;
+    @FXML
+    private Label voteSection2EndPageLbl;
+    @FXML
+    private Region voteSection3IdRgn;
+    @FXML
+    private Label voteSection3IdLbl;
+    @FXML
+    private Label voteSection3VoteLbl;
+    @FXML
+    private Label voteSection3StartPageLbl;
+    @FXML
+    private Label voteSection3EndPageLbl;
+    @FXML
+    private Region voteSection4IdRgn;
+    @FXML
+    private Label voteSection4IdLbl;
+    @FXML
+    private Label voteSection4VoteLbl;
+    @FXML
+    private Label voteSection4StartPageLbl;
+    @FXML
+    private Label voteSection4EndPageLbl;
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -268,17 +300,17 @@ public class SymphoneaScoreController {
 
     private Circle[] semaphore;
 
-    private final AudienceVote audienceVote = new AudienceVote();
-
     private double lastSythFreqValue = 0.0;
     private double lastSythDurationValue = 8.0;
+
+    private BackgroundFill regionCellOrdFill = new BackgroundFill( , null, null);
+    private BackgroundFill regionCellSelectedFill = new BackgroundFill( Color.valueOf("#ff00ff"), null, null);
 
     public void setMainApp(SzcoreClient mainApp) {
         this.mainApp = mainApp;
     }
 
     public void populate() {
-        sectionsTableView.setItems(sections);
         movementOrderLvw.setItems(movementOrder);
         sectionOrderLvw.setItems(sectionOrder);
 
@@ -470,13 +502,37 @@ public class SymphoneaScoreController {
             long oldVal = Math.round(old_val.doubleValue());
             onAudienceSynthVolumeChange(newVal, oldVal);
         });
+
+        curSectionIdLbl.setText("");
+        curSectionStartPageLbl.setText("");
+        curSectionEndPageLbl.setText("");
+        nextSectionIdLbl.setText("");;
+        nextSectionStartPageLbl.setText("");;
+        nextSectionEndPageLbl.setText("");;
+        voteSection1IdRgn;
+        voteSection1IdLbl.setText("");;
+        voteSection1VoteLbl.setText("");;
+        voteSection1StartPageLbl.setText("");;
+        voteSection1EndPageLbl.setText("");;
+        voteSection2IdRgn;
+        voteSection2IdLbl.setText("");;
+        voteSection2VoteLbl.setText("");;
+        voteSection2StartPageLbl.setText("");;
+        voteSection2EndPageLbl.setText("");;
+        voteSection3IdRgn;
+        voteSection3IdLbl.setText("");
+        voteSection3VoteLbl.setText("");;
+        voteSection3StartPageLbl.setText("");;
+        voteSection3EndPageLbl.setText("");;
+        voteSection4IdRgn;
+        voteSection4IdLbl.setText("");;
+        voteSection4VoteLbl.setText("");;
+        voteSection4StartPageLbl.setText("");;
+        voteSection4EndPageLbl.setText("");;
     }
 
     @FXML
     private void initialize() {
-        sectionsTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-        sectionsTableView.setEditable(false);
-
         movementOrderLvw.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         movementOrderLvw.setEditable(false);
         movementOrderLvw.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
@@ -497,11 +553,6 @@ public class SymphoneaScoreController {
             int selectedIndex = sectionOrderLvw.getSelectionModel().getSelectedIndex();
             onSectionSelect(out, selectedIndex);
         });
-
-        sectionColumn.setCellValueFactory(cellData -> cellData.getValue().sectionProperty());
-        startPageColumn.setCellValueFactory(cellData -> cellData.getValue().startPageProperty().asObject());
-        endPageColumn.setCellValueFactory(cellData -> cellData.getValue().endPageProperty().asObject());
-        voteNoColumn.setCellValueFactory(cellData -> cellData.getValue().avgVoteProperty().asObject());
 
         nextMovementLbl.textProperty().bind(nextMovementProp);
         currentMovementLbl.textProperty().bind(currentMovementProp);
@@ -524,9 +575,6 @@ public class SymphoneaScoreController {
         selectAllInstrumentsTxtChb.selectedProperty().addListener((observable, oldValue, newValue) -> selectTxtToAllInstruments(newValue));
         selectAudienceTxtChb.selectedProperty().addListener((observable, oldValue, newValue) -> selectTxtToAudience(newValue));
         selectAllTxtRecipientsChb.selectedProperty().addListener((observable, oldValue, newValue) -> selectTxtToAll(newValue));
-
-        voteUpVbox.setPrefHeight(0.0);
-        voteDownVbox.setPrefHeight(0.0);
 
         semaphore1Crc.setFill(Color.RED);
         semaphore1Crc.setStroke(Color.BLACK);
@@ -608,6 +656,22 @@ public class SymphoneaScoreController {
     @FXML
     private void setNextSection(ActionEvent event) {
 
+    }
+
+    private void setCellRegionBkg(Region region, boolean isSelected) {
+        region.set
+
+        BackgroundFill backgroundFill =
+                new BackgroundFill(
+                        Color.valueOf("#ff00ff"),
+                        new CornerRadii(10),
+                        new Insets(10)
+                );
+
+        Background background =
+                new Background(backgroundFill);
+
+        pane.setBackground(background);
     }
 
     private void disableAllTxtRecipients() {
@@ -977,12 +1041,12 @@ public class SymphoneaScoreController {
 
     private void processSectionVote(Section section) {
         Platform.runLater(() -> {
-            audienceVote.setVoteNo(section.getVoteNo());
-            audienceVote.setMinVote(section.getMinVote());
-            audienceVote.setMaxVote(section.getMaxVote());
-            audienceVote.setAvgVote(section.getAvgVote());
-            audienceVote.setVoterNo(section.getVoterNo());
-            updateVoteBar();
+//            audienceVote.setVoteNo(section.getVoteNo());
+//            audienceVote.setMinVote(section.getMinVote());
+//            audienceVote.setMaxVote(section.getMaxVote());
+//            audienceVote.setAvgVote(section.getAvgVote());
+//            audienceVote.setVoterNo(section.getVoterNo());
+//            updateVoteBar();
         });
     }
 
@@ -995,29 +1059,6 @@ public class SymphoneaScoreController {
                 styleClass.add(style);
             }
         });
-    }
-
-    public void updateVoteBar() {
-        int voteNo = audienceVote.getVoteNo();
-        if (voteNo == 0) {
-            voteUpVbox.setPrefHeight(0.0);
-            voteDownVbox.setPrefHeight(0.0);
-            return;
-        }
-        int voterNo = audienceVote.getVoterNo();
-        if(voterNo < MIN_VOTER_NO) {
-            voterNo = MIN_VOTER_NO;
-        }
-        double maxHeight = voteVbox.getHeight() / 2.0;
-        ValueScaler vs = new ValueScaler(0.0, voterNo, 0.0, maxHeight);
-        double h = vs.scaleValue(Math.abs(voteNo) * 1.0);
-        if (voteNo > 0) {
-            voteDownVbox.setPrefHeight(0.0);
-            voteUpVbox.setPrefHeight(h);
-        } else if (voteNo < 0) {
-            voteUpVbox.setPrefHeight(0.0);
-            voteDownVbox.setPrefHeight(h);
-        }
     }
 
     public Movement getMovement(String name) {

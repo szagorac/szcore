@@ -79,18 +79,34 @@
 }
 
 .label-ord {
-    -fx-font-size: 10pt;
+    -fx-font-size: 9pt;
     -fx-font-family: "Verdana";
     -fx-text-fill: black;
     -fx-opacity: 1;
 }
 
 .label-ord-bold {
-    -fx-font-size: 11pt;
-    -fx-font-family: "Segoe UI Semibold";
+    -fx-font-size: 9pt;
+    -fx-font-family: "Verdana";
     -fx-font-weight: bold;
     -fx-text-fill: black;
     -fx-opacity: 1;
+}
+
+.label-gray-bold {
+    -fx-font-size: 9pt;
+    -fx-font-family: "Verdana";
+    -fx-font-weight: bold;
+    -fx-text-fill: gray;
+    -fx-opacity: 1;
+}
+
+.cell-spacer {
+    -fx-background-color: blue;
+}
+
+.cell-selected {
+    -fx-background-color: palegreen;
 }
 
 .label-green {

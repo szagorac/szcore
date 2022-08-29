@@ -156,6 +156,19 @@ public class MovementSection {
         return audienceVote;
     }
 
+    public void copy(MovementSection from) {
+        setSection(from.getSection());
+        setStartPage(from.getStartPage());
+        setEndPage(from.getEndPage());
+        setIsActive(from.isIsActive());
+        setParts(from.getParts());
+        setAvgVote(from.getAvgVote());
+        setMaxVote(from.getMaxVote());
+        setMinVote(from.getMinVote());
+        setVoteNo(from.getVoteNo());
+        setVoterNo(from.getVoterNo());
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

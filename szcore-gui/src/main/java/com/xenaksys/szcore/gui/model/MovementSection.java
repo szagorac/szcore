@@ -1,6 +1,5 @@
 package com.xenaksys.szcore.gui.model;
 
-import com.xenaksys.szcore.Consts;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ListProperty;
@@ -14,8 +13,10 @@ import javafx.collections.ObservableList;
 
 import java.util.Objects;
 
+import static com.xenaksys.szcore.Consts.EMPTY;
+
 public class MovementSection {
-    private StringProperty section = new SimpleStringProperty(Consts.EMPTY);
+    private StringProperty section = new SimpleStringProperty(EMPTY);
     private IntegerProperty startPage = new SimpleIntegerProperty(0);
     private IntegerProperty endPage = new SimpleIntegerProperty(0);
     private IntegerProperty voteNo = new SimpleIntegerProperty(0);
@@ -169,6 +170,20 @@ public class MovementSection {
         setVoterNo(from.getVoterNo());
     }
 
+
+    public void reset() {
+        setSection(EMPTY);
+        setStartPage(0);
+        setEndPage(0);
+        setIsActive(false);
+        parts.clear();
+        setAvgVote(0);
+        setMaxVote(0);
+        setMinVote(0);
+        setVoteNo(0);
+        setVoterNo(0);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -194,4 +209,5 @@ public class MovementSection {
                 ", avgVote=" + avgVote +
                 '}';
     }
+
 }

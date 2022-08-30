@@ -74,7 +74,8 @@
                                     </GridPane>
                                  </children>
                               </HBox>
-                              <Region prefHeight="25.0" prefWidth="138.0" />
+                              <Region prefHeight="7.0" prefWidth="180.0" />
+                              <CheckBox fx:id="overrideNextSectionChb" mnemonicParsing="false" text="Override Next" />
                               <ChoiceBox fx:id="mvtSectionsChob" prefHeight="27.0" prefWidth="180.0" />
                            </children>
                         </VBox>

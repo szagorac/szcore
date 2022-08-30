@@ -678,12 +678,22 @@ public class SymphoneaScoreController {
 
     @FXML
     private void setPreviousSectionOrder(ActionEvent event) {
-
+        int selected = sectionOrderLvw.getSelectionModel().getSelectedIndex();
+        if(selected <= 0 ) {
+            return;
+        }
+        selected--;
+        sectionOrderLvw.getSelectionModel().select(selected);
     }
 
     @FXML
     private void setNextSectionOrder(ActionEvent event) {
-
+        int selected = sectionOrderLvw.getSelectionModel().getSelectedIndex();
+        if(selected >= sectionOrder.size() - 1 ) {
+            return;
+        }
+        selected++;
+        sectionOrderLvw.getSelectionModel().select(selected);
     }
 
     private void setCellRegionBkg(Region region, boolean isSelected) {

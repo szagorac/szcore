@@ -45,6 +45,7 @@ import static com.xenaksys.szcore.Consts.CONFIG_GROOVE;
 import static com.xenaksys.szcore.Consts.CONFIG_ID;
 import static com.xenaksys.szcore.Consts.CONFIG_INSTRUMENTS;
 import static com.xenaksys.szcore.Consts.CONFIG_IS_ACTIVE;
+import static com.xenaksys.szcore.Consts.CONFIG_IS_INTERRUPT_ON_PAGE_END;
 import static com.xenaksys.szcore.Consts.CONFIG_IS_RND_ACTIVE;
 import static com.xenaksys.szcore.Consts.CONFIG_MAX;
 import static com.xenaksys.szcore.Consts.CONFIG_MAX_CONFIGS;
@@ -528,7 +529,13 @@ public class StrategyConfigLoader extends YamlLoader {
                 if (startPage != null) {
                     movement.setStartPage(startPage);
                 }
-                movement.addSectionConfig(sectionName, pageRange, parts, max, web);
+                boolean isInterrupt = false;
+                Boolean isInterruptOnPageEnd = getBoolean(CONFIG_IS_INTERRUPT_ON_PAGE_END, sectionConfig);
+                if (isInterruptOnPageEnd != null) {
+                    isInterrupt = isInterruptOnPageEnd;
+                }
+
+                movement.addSectionConfig(sectionName, pageRange, parts, max, web, isInterrupt);
             }
             List<List<String>> sectionsOrderConfigs = getListOfStrList(CONFIG_SECTIONS_ORDER, movementConfig);
             movement.addSectionsOrder(sectionsOrderConfigs);

@@ -2,6 +2,8 @@ package com.xenaksys.szcore.model;
 
 import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.algo.SequentalIntRange;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,6 +14,8 @@ import java.util.Objects;
 import java.util.Set;
 
 public class MovementInfo {
+    static final Logger LOG = LoggerFactory.getLogger(MovementInfo.class);
+
     private final String movementId;
     private final Map<String, MovementSectionInfo> sections = new HashMap<>();
     private final Set<String> activeSections = new HashSet<>();
@@ -21,6 +25,9 @@ public class MovementInfo {
     private Set<String> parts = new HashSet<>();
     private int startPage;
     private volatile boolean isActive;
+    private volatile int currentSectionOrderIndex;
+    private volatile String currentSection;
+    private volatile String nextSection;
 
     public MovementInfo(String movementId) {
         this.movementId = movementId;
@@ -71,6 +78,25 @@ public class MovementInfo {
 
     public List<List<String>> getSectionsOrder() {
         return sectionsOrder;
+    }
+
+    public String getHighestVoteSection() {
+        if(currentSectionOrderIndex < 0 || currentSectionOrderIndex >= sectionsOrder.size()) {
+            LOG.error("getHighestVoteSection: invalid currentSectionOrderIndex: {}", currentSectionOrderIndex);
+            return currentSection;
+        }
+        List<String> voteSections = sectionsOrder.get(currentSectionOrderIndex);
+        int maxVote = Integer.MIN_VALUE;
+        String maxVoteSection = null;
+        for(String voteSection : voteSections) {
+            MovementSectionInfo sectionInfo = getSection(voteSection);
+            int sectionVote = sectionInfo.getVoteInfo().getCurrent();
+            if(sectionVote > maxVote) {
+                maxVoteSection = voteSection;
+                maxVote = sectionVote;
+            }
+        }
+        return maxVoteSection;
     }
 
     public void activateSection(String sectionId) {
@@ -155,6 +181,124 @@ public class MovementInfo {
 
     public Set<String> getParts() {
         return parts;
+    }
+
+    public String getCurrentSection() {
+        return currentSection;
+    }
+
+    public MovementSectionInfo getCurrentSectionInfo() {
+        if(currentSection == null) {
+            return null;
+        }
+        return sections.get(currentSection);
+    }
+
+    public MovementSectionInfo getNextSectionInfo() {
+        if(nextSection == null) {
+            return null;
+        }
+        return sections.get(nextSection);
+    }
+
+    public void setCurrentSection(String sectionName) {
+        MovementSectionInfo sectionInfo = getSection(sectionName);
+        if(sectionInfo == null) {
+            LOG.error("setCurrentSection: invalid sectionInfo for section: {}", sectionName);
+            return;
+        }
+        this.currentSection = sectionName;
+    }
+
+    public int getCurrentSectionOrderIndex() {
+        return currentSectionOrderIndex;
+    }
+
+    public void setCurrentSectionOrderIndex(int sectionOrderIndex) {
+        if(sectionOrderIndex < 0 || sectionOrderIndex >= sectionsOrder.size()) {
+            LOG.error("setCurrentSectionOrderIndex: invalid index: {}", sectionOrderIndex);
+            return;
+        }
+        this.currentSectionOrderIndex = sectionOrderIndex;
+    }
+
+    public String getNextSection() {
+        return nextSection;
+    }
+
+    public void setNextSection(String nextSection, int sectionStartPageNo) {
+        this.nextSection = nextSection;
+        MovementSectionInfo nextSectionInfo = getNextSectionInfo();
+        if(nextSectionInfo != null) {
+            nextSectionInfo.recalculatePlayPageRange(sectionStartPageNo);
+        }
+    }
+
+    public int getNextSectionStartPage() {
+        if(nextSection == null) {
+            LOG.error("getNextSectionStartPage: invalid next section");
+            return -1;
+        }
+        MovementSectionInfo sectionInfo = getNextSectionInfo();
+        if(sectionInfo == null) {
+            LOG.error("getNextSectionStartPage: invalid next section info");
+            return -1;
+        }
+        return sectionInfo.getStartPageNo();
+    }
+
+    public int getCurrentSectionNextPage() {
+        MovementSectionInfo sectionInfo = getCurrentSectionInfo();
+        if(sectionInfo == null) {
+            return -1;
+        }
+
+        return sectionInfo.getNextPage();
+    }
+
+    public void onPageStart(int currentPage) {
+        MovementSectionInfo sectionInfo = getCurrentSectionInfo();
+        if(sectionInfo == null) {
+            LOG.error("onPageStart: invalid current section");
+            return;
+        }
+        boolean isSectionPage = sectionInfo.isSectionPage(currentPage);
+        if(isSectionPage) {
+            sectionInfo.setCurrentPlayPage(currentPage);
+        }
+    }
+
+    public void setSectionStartPage() {
+        MovementSectionInfo currentSectionInfo = getCurrentSectionInfo();
+        if(currentSectionInfo == null) {
+            LOG.error("setSectionStartPage: invalid current movement section");
+            setDefaultSection();
+        }
+        currentSectionInfo = getCurrentSectionInfo();
+        if(currentSectionInfo == null) {
+            LOG.error("setSectionStartPage: failed to set default section, ignoring ...");
+            return;
+        }
+        currentSectionInfo.setCurrentPlayPage(startPage);
+    }
+
+    public void setDefaultSection() {
+        List<List<String>>  sectionsOrder = getSectionsOrder();
+        if(sectionsOrder == null || sectionsOrder.isEmpty()) {
+            LOG.info("setDefaultSection: invalid sectionsOrder");
+            return;
+        }
+        List<String> first = sectionsOrder.get(0);
+        if(first == null || first.isEmpty()) {
+            LOG.info("setDefaultSection: invalid first section in sections order");
+            return;
+        }
+        String defaultSection = first.get(0);
+        if(defaultSection == null) {
+            LOG.info("setDefaultSection: invalid default section");
+            return;
+        }
+        setCurrentSection(defaultSection);
     }
 
     @Override

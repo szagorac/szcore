@@ -5,6 +5,7 @@ public class StrategyEvent extends ClientInEvent {
 
     private String sectionName;
     private String movementName;
+    private Integer orderIndex;
 
     public StrategyEvent(StrategyEventType strategyEventType, long time) {
         super(time);
@@ -29,6 +30,14 @@ public class StrategyEvent extends ClientInEvent {
 
     public void setMovementName(String movementName) {
         this.movementName = movementName;
+    }
+
+    public Integer getOrderIndex() {
+        return orderIndex;
+    }
+
+    public void setOrderIndex(int orderIndex) {
+        this.orderIndex = orderIndex;
     }
 
     @Override

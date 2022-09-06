@@ -88,12 +88,51 @@ public class TransportContext {
 
     }
 
-    public List<BeatId> getBeatIds(int beatNo) {
-        return beatNoToId.get(beatNo);
+    public void removeBeatId(BeatId beatId) {
+        if(beatId == null) {
+            return;
+        }
+        int baseBeatNo = beatId.getBaseBeatNo();
+        List<BeatId> beatIds = beatNoToId.get(baseBeatNo);
+        if (beatIds != null) {
+            beatIds.remove(beatId);
+        }
+
+        List<SzcoreEvent> events = scoreBaseBeatEvents.get(baseBeatNo);
+        if (events != null) {
+            List<SzcoreEvent> filterEvents = new ArrayList<>();
+            boolean replaceEvents = false;
+            for(SzcoreEvent event : events) {
+                if(beatId.equals(event.getEventBaseBeat())) {
+                    replaceEvents = true;
+                } else {
+                    filterEvents.add(event);
+                }
+            }
+            if(replaceEvents) {
+                scoreBaseBeatEvents.put(baseBeatNo, filterEvents);
+            }
+        }
+
+        events = oneOffBaseBeatEvents.get(baseBeatNo);
+        if (events != null) {
+            List<SzcoreEvent> filterEvents = new ArrayList<>();
+            boolean replaceEvents = false;
+            for(SzcoreEvent event : events) {
+                if(beatId.equals(event.getEventBaseBeat())) {
+                    replaceEvents = true;
+                } else {
+                    filterEvents.add(event);
+                }
+            }
+            if(replaceEvents) {
+                oneOffBaseBeatEvents.put(baseBeatNo, filterEvents);
+            }
+        }
     }
 
-    public List<SzcoreEvent> getInitEvents() {
-        return initEvents;
+    public List<BeatId> getBeatIds(int beatNo) {
+        return beatNoToId.get(beatNo);
     }
 
 

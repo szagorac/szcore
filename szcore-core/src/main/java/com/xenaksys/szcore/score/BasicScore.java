@@ -196,6 +196,15 @@ public class BasicScore implements Score {
         transportContext.addBeatId(beat.getBeatId());
     }
 
+    public void removeTransportBeatId(BeatId beatId, Id transportId) {
+        TransportContext transportContext = transportSpecificData.get(transportId);
+        if (transportContext == null) {
+            transportContext = new TransportContext(transportId);
+            transportSpecificData.put(transportId, transportContext);
+        }
+        transportContext.removeBeatId(beatId);
+    }
+
     @Override
     public List<SzcoreEvent> getInitEvents() {
         return initEvents;
@@ -372,7 +381,62 @@ public class BasicScore implements Score {
     }
 
     public boolean containsPage(Page page) {
-        return pages.containsKey(page.getId());
+        return containsPage(page.getPageId());
+    }
+
+    public void deletePage(PageId pageId) {
+        deletePage(getPage(pageId));
+    }
+
+    public void deletePage(Page page) {
+        //Rally messy
+        if(page == null) {
+            return;
+        }
+        Collection<Bar> bars = page.getBars();
+        for(Bar bar : bars) {
+            deleteBar(bar);
+        }
+        pages.remove(page.getPageId());
+    }
+
+    public void deleteBar(Bar bar) {
+        if(bar == null) {
+            return;
+        }
+        Collection<Beat> beats = bar.getBeats();
+        for(Beat beat : beats) {
+            deleteBeat(beat);
+        }
+        bars.remove(bar.getId());
+    }
+
+    public void deleteBeat(Beat beat) {
+        if(beat == null) {
+            return;
+        }
+        BeatId beatId = beat.getBeatId();
+        Id instrumentId = beat.getInstrumentId();
+        beatScripts.remove(beatId);
+
+        List<BeatId> instBeats = instrumentBeats.get(instrumentId);
+        if(instBeats != null) {
+            instBeats.remove(beatId);
+        }
+
+        Long time = beatToTimeMap.get(beatId);
+        beatToTimeMap.remove(beatId);
+        if(time != null) {
+            List<Id> timeBeats = timeToBeatMap.get(time);
+            if(timeBeats != null) {
+                timeBeats.remove(beatId);
+            }
+        }
+
+        Transport transport = getInstrumentTransport(instrumentId);
+        removeTransportBeatId(beat.getBeatId(), transport.getId());
+
+        beats.remove(beat.getId());
     }
 
     public boolean containsPage(PageId pageId) {
@@ -453,6 +517,10 @@ public class BasicScore implements Score {
 
     public boolean doesNotcontainBar(Bar bar) {
         return !bars.containsKey(bar.getId());
+    }
+
+    public boolean containsBar(Bar bar) {
+        return bars.containsKey(bar.getId());
     }
 
     @Override

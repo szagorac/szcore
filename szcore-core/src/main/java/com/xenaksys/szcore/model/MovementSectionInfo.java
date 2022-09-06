@@ -1,6 +1,9 @@
 package com.xenaksys.szcore.model;
 
 import com.xenaksys.szcore.algo.IntRange;
+import com.xenaksys.szcore.algo.SequentalIntRange;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,16 +13,22 @@ import java.util.Objects;
 import java.util.Set;
 
 public class MovementSectionInfo {
+    static final Logger LOG = LoggerFactory.getLogger(MovementSectionInfo.class);
+
     private final String sectionId;
-    private IntRange pageRange;
-    private volatile boolean isActive;
-    private volatile int currentPage;
     private final List<String> parts = new ArrayList<>();
+    private final VoteInfo voteInfo = new VoteInfo();
     private final Map<String, String> clientPart = new HashMap<>();
     private final Map<String, List<String>> partClients = new HashMap<>();
-    private final VoteInfo voteInfo = new VoteInfo();
     private final List<ExtScoreInfo> maxConfigs = new ArrayList<>();
     private final List<ExtScoreInfo> webConfigs = new ArrayList<>();
+
+    private IntRange pageRange;
+    private IntRange playPageRange;
+    private volatile boolean isActive;
+    private volatile int currentPage;
+    private volatile int currentPlayPage;
+    private boolean isInterruptOnPageEnd;
 
     public MovementSectionInfo(String sectionId) {
         this.sectionId = sectionId;
@@ -78,6 +87,14 @@ public class MovementSectionInfo {
         return pageRange;
     }
 
+    public void setPlayPageRange(IntRange sectionPageRange) {
+        this.playPageRange = sectionPageRange;
+    }
+
+    public IntRange getPlayPageRange() {
+        return playPageRange;
+    }
+
     public int getEndPageNo() {
         IntRange intRange = getPageRange();
         if (intRange == null) {
@@ -88,6 +105,22 @@ public class MovementSectionInfo {
 
     public int getStartPageNo() {
         IntRange intRange = getPageRange();
+        if (intRange == null) {
+            return -1;
+        }
+        return intRange.getStart();
+    }
+
+    public int getPlayEndPageNo() {
+        IntRange intRange = getPlayPageRange();
+        if (intRange == null) {
+            return -1;
+        }
+        return intRange.getEnd();
+    }
+
+    public int getPlayStartPageNo() {
+        IntRange intRange = getPlayPageRange();
         if (intRange == null) {
             return -1;
         }
@@ -122,6 +155,31 @@ public class MovementSectionInfo {
         this.currentPage = currentPage;
     }
 
+    public int getCurrentPlayPage() {
+        return currentPlayPage;
+    }
+
+    public void setCurrentPlayPage(int currentPlayPage) {
+        if(this.currentPlayPage == currentPlayPage) {
+            return;
+        }
+        if(!playPageRange.isInRange(currentPlayPage)) {
+            LOG.error("setCurrentPlayPage: page is not in range {}", playPageRange);
+        }
+        this.currentPlayPage = currentPlayPage;
+        LOG.error("onPageStart: currentPlayPage {}", currentPlayPage);
+        recalcCurrentPage();
+    }
+
+    private void recalcCurrentPage() {
+        int diff = currentPlayPage - playPageRange.getStart();
+        int nextCurrent = pageRange.getStart() + diff;
+        if(nextCurrent != (currentPage + 1)) {
+            LOG.error("recalcCurrentPage: Unexpected next page {}", nextCurrent);
+        }
+        currentPage = nextCurrent;
+    }
+
     public List<ExtScoreInfo> getMaxConfigs() {
         return maxConfigs;
     }
@@ -153,6 +211,43 @@ public class MovementSectionInfo {
 
     public List<String> getParts() {
         return parts;
+    }
+
+    public boolean isInterruptOnPageEnd() {
+        return isInterruptOnPageEnd;
+    }
+
+    public void setInterruptOnPageEnd(boolean interruptOnPageEnd) {
+        isInterruptOnPageEnd = interruptOnPageEnd;
+    }
+
+    public void recalculatePlayPageRange(int sectionStartPageNo) {
+        int pageNo = getNumberOfPages();
+        int end = sectionStartPageNo + pageNo - 1;
+        this.playPageRange = new SequentalIntRange(sectionStartPageNo, end);
+    }
+
+    private int getNumberOfPages() {
+        if(pageRange == null) {
+            return 0;
+        }
+        return pageRange.getSize();
+    }
+
+    public int getNextPage() {
+        int current = getCurrentPage();
+        int next = current + 1;
+        if(next > getEndPageNo()) {
+            next = getStartPageNo() + (next % pageRange.getSize());
+        }
+        return next;
+    }
+
+    public boolean isSectionPage(int currentPage) {
+        if(playPageRange == null) {
+            return false;
+        }
+        return playPageRange.isInRange(currentPage);
     }
 
     @Override

@@ -106,8 +106,6 @@ public class SymphoneaScoreController {
     @FXML
     private ListView<String> movementOrderLvw;
     @FXML
-    private Label sectionsStatusLbl;
-    @FXML
     private Label nextMovementLbl;
     @FXML
     private Label currentMovementLbl;
@@ -294,8 +292,8 @@ public class SymphoneaScoreController {
     private final ObservableList<String> sectionIds = FXCollections.observableArrayList();
     private final ObservableList<String> movementOrder = FXCollections.observableArrayList();
     private final ObservableList<String> sectionOrder = FXCollections.observableArrayList();
-    private final StringProperty nextMovementProp = new SimpleStringProperty(NAME_NA);
-    private final StringProperty currentMovementProp = new SimpleStringProperty(NAME_NA);
+    private final StringProperty nextMovementProp = new SimpleStringProperty(EMPTY);
+    private final StringProperty currentMovementProp = new SimpleStringProperty(EMPTY);
     private final ObservableList<String> overlayPresets = FXCollections.observableArrayList();
     private final ObservableList<Double> synthFreq = FXCollections.observableArrayList();
     private final ObservableList<Double> synthDur = FXCollections.observableArrayList();
@@ -604,6 +602,10 @@ public class SymphoneaScoreController {
             }
         });
 
+        curSectionIdLbl.textProperty().bind(currentSection.sectionProperty());
+        curSectionStartPageLbl.textProperty().bind(currentSection.startPageProperty().asString());
+        curSectionEndPageLbl.textProperty().bind(currentSection.endPageProperty().asString());
+
         nextSectionIdLbl.textProperty().bind(nextSection.sectionProperty());
         nextSectionStartPageLbl.textProperty().bind(nextSection.startPageProperty().asString());
         nextSectionEndPageLbl.textProperty().bind(nextSection.endPageProperty().asString());
@@ -906,23 +908,23 @@ public class SymphoneaScoreController {
 
     private void onMvtSectionChobChange(String out) {
         if(isOverrideNextSection) {
-            setNextSection(out);
+            setNextMovementSection(out);
         }
     }
 
-    private void setNextSection(String sectionId) {
-        MovementSection section = getSection(sectionId);
-        if(section == null || !section.getSection().equals(sectionId)) {
-            LOG.error("setNextSection: invalid sectionId: {}", sectionId);
-            return;
-        }
-
-        nextSection.copy(section);
-    }
+//    private void setNextSection(String sectionId) {
+//        MovementSection section = getSection(sectionId);
+//        if(section == null || !section.getSection().equals(sectionId)) {
+//            LOG.error("setNextSection: invalid sectionId: {}", sectionId);
+//            return;
+//        }
+//        nextSection.copy(section);
+//        sendSetMovementSection(sectionId, currentMovementProp.get());
+//    }
 
     private MovementSection getSection(int selectedIndex) {
         if(selectedIndex < 0 || selectedIndex >= sections.size()) {
-            LOG.error("setNextSection: invalid section Index: {}", selectedIndex);
+            LOG.error("getSection: invalid section Index: {}", selectedIndex);
             return null;
         }
         return sections.get(selectedIndex);
@@ -956,8 +958,8 @@ public class SymphoneaScoreController {
             }
         }
         if(first != null && !isOverrideNextSection) {
-            setNextSection(first);
-            mvtSectionsChob.getSelectionModel().select(first);
+//            setNextSection(first);
+//            mvtSectionsChob.getSelectionModel().select(first);
         }
         processSectionVote();
     }
@@ -1018,18 +1020,22 @@ public class SymphoneaScoreController {
             return;
         }
         String prev = this.currentMovementProp.get();
-        setCurrentMovementLabel(movement.getId());
+        setCurrentMovement(movement.getId());
 
+        setNextMovement();
+
+        if(prev != null && !prev.equals(movement.getId())) {
+            onCurrentMovementChange();
+        }
+    }
+
+    private void setNextMovement() {
         String nextMovement = NAME_NA;
         int currentIndex = getCurrentMovementIndex();
         if(currentIndex >= 0 && currentIndex < ( movementOrder.size() - 1 )) {
             nextMovement = movementOrder.get(currentIndex + 1);
         }
         setNextMovementsLabel(nextMovement);
-
-        if(prev != null && !prev.equals(movement.getId())) {
-            onCurrentMovementChange();
-        }
     }
 
     private void onCurrentMovementChange() {
@@ -1040,7 +1046,7 @@ public class SymphoneaScoreController {
 
     }
 
-    private void setCurrentMovementLabel(String value) {
+    private void setCurrentMovement(String value) {
         if (value == null) {
             value = Consts.NAME_NA;
         }
@@ -1050,6 +1056,35 @@ public class SymphoneaScoreController {
         }
         currentMovementProp.setValue(value);
         selectMovement(value);
+    }
+
+    private void setCurrentMovementSection(String name) {
+        if (name == null) {
+            return;
+        }
+        if(currentSection.getSection().equals(name)) {
+            return;
+        }
+        MovementSection section = getSection(name);
+        if(section == null) {
+            return;
+        }
+        currentSection.copy(section);
+        sendMovementInfo(currentMovementProp.get(), name, sectionOrderLvw.getSelectionModel().getSelectedIndex());
+    }
+
+    private void setNextMovementSection(String name) {
+        if (name == null) {
+            return;
+        }
+        if(nextSection.getSection().equals(name)) {
+            return;
+        }
+        MovementSection section = getSection(name);
+        if(section == null) {
+            return;
+        }
+        nextSection.copy(section);
     }
 
     public void showSemaphore(int lightNo, Color fill) {
@@ -1110,13 +1145,16 @@ public class SymphoneaScoreController {
                 movement.setFirstPage(range.getStart());
                 movement.setLastPage(range.getEnd());
             }
-            movement.setStartPage(movementInfo.getStartPage());
             List<MovementSectionInfo> sectionInfos = movementInfo.getSections();
+            Integer startPage = null;
             for(MovementSectionInfo sectionInfo : sectionInfos) {
                 MovementSection movementSection = new MovementSection();
                 movementSection.setSection(sectionInfo.getSectionId());
                 IntRange pageRange = sectionInfo.getPageRange();
                 if(pageRange != null) {
+                    if(startPage == null) {
+                        startPage = pageRange.getStart();
+                    }
                     movementSection.setStartPage(pageRange.getStart());
                     movementSection.setEndPage(pageRange.getEnd());
                 }
@@ -1128,6 +1166,11 @@ public class SymphoneaScoreController {
             }
             List<String> sectionsOrder = convertSectionsOrder(movementInfo.getSectionsOrder());
             movement.addSectionOrder(sectionsOrder);
+            if(startPage == null) {
+                startPage = movementInfo.getStartPage();
+            }
+            movement.setStartPage(startPage);
+
             guiMovements.add(movement);
         }
 
@@ -1140,7 +1183,7 @@ public class SymphoneaScoreController {
             curMovementName = movementOrderNames.get(0);
         }
 
-        setMovementsInfo(guiMovements, movementOrderNames, curMovementName);
+        initMovementsInfo(guiMovements, movementOrderNames, curMovementName);
     }
 
     private List<String> convertSectionsOrder(List<List<String>> sectionsOrder) {
@@ -1156,24 +1199,15 @@ public class SymphoneaScoreController {
         return out;
     }
 
-    private void setMovementsInfo(final List<Movement> guiMovements, final List<String> guiMovementOrder, final String curMovement) {
+    private void initMovementsInfo(final List<Movement> guiMovements, final List<String> guiMovementOrder, final String curMovement) {
         Platform.runLater(() -> {
             resetOverlays();
             this.movements.addAll(guiMovements);
             this.movementOrder.clear();
             this.movementOrder.addAll(guiMovementOrder);
+            setCurrentMovement(curMovement);
+            setNextMovement();
             movementOrderLvw.getSelectionModel().select(curMovement);
-        });
-    }
-
-    private void setSectionStatusStyle(final String text, final String style, final String styleToRemove) {
-        Platform.runLater(() -> {
-            sectionsStatusLbl.setText(text);
-            ObservableList<String> styleClass = sectionsStatusLbl.getStyleClass();
-            styleClass.remove(styleToRemove);
-            if (!styleClass.contains(style)) {
-                styleClass.add(style);
-            }
         });
     }
 
@@ -1195,7 +1229,7 @@ public class SymphoneaScoreController {
         if (playMovName == null) {
             return;
         }
-        sendSetMovement(playMovName);
+        sendMovementInfo(playMovName, currentSection.getSection(), sectionOrderLvw.getSelectionModel().getSelectedIndex());
         Movement nextMovement = getMovement(playMovName);
         if (nextMovement == null) {
             return;
@@ -1233,6 +1267,11 @@ public class SymphoneaScoreController {
             sectionOrder.clear();
             sectionOrder.addAll(movement.getSectionOrder());
             if(sectionOrder.size() > 0) {
+                String first = sectionOrder.get(0);
+                setCurrentMovementSection(first);
+                setNextMovementSection(first);
+            }
+            if(sectionOrder.size() > 0) {
                 sectionOrderLvw.getSelectionModel().select(0);
             }
         });
@@ -1247,10 +1286,12 @@ public class SymphoneaScoreController {
         mainApp.stopSection();
     }
 
-    private void sendSetMovement(String movementName) {
+    private void sendMovementInfo(String movementName, String movementSectionName, Integer sectionOrderIndex) {
         EventFactory eventFactory = publisher.getEventFactory();
-        StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.SET_MOVEMENT, clock.getSystemTimeMillis());
+        StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.SET_MOVEMENT_INFO, clock.getSystemTimeMillis());
         strategyEvent.setMovementName(movementName);
+        strategyEvent.setSectionName(movementSectionName);
+        strategyEvent.setOrderIndex(sectionOrderIndex);
         publisher.receive(strategyEvent);
     }
 
@@ -1538,7 +1579,6 @@ public class SymphoneaScoreController {
         movementOrder.clear();
         nextMovementProp.setValue(Consts.NAME_NA);
         currentMovementProp.setValue(Consts.NAME_NA);
-        setSectionStatusStyle(Consts.READY, LABEL_GREEN, LABEL_RED);
     }
 
     public void resetOverlays() {

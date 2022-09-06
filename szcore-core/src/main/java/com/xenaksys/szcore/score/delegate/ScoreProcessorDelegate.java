@@ -4,6 +4,7 @@ import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.DynamicMovementStrategy;
 import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
 import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
+import com.xenaksys.szcore.algo.ScoreStrategy;
 import com.xenaksys.szcore.algo.config.DynamicMovementStrategyConfig;
 import com.xenaksys.szcore.algo.config.ScoreBuilderStrategyConfig;
 import com.xenaksys.szcore.algo.config.ScoreRandomisationStrategyConfig;
@@ -74,6 +75,8 @@ import com.xenaksys.szcore.model.Beat;
 import com.xenaksys.szcore.model.EventReceiver;
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Instrument;
+import com.xenaksys.szcore.model.MovementInfo;
+import com.xenaksys.szcore.model.MovementSectionInfo;
 import com.xenaksys.szcore.model.MusicTask;
 import com.xenaksys.szcore.model.MutableClock;
 import com.xenaksys.szcore.model.OscPublisher;
@@ -891,25 +894,54 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         }
 
         LOG.debug("processPrepStaveChange: nextPage: {}", nextPage);
+        boolean isCloseOnMidPage =  getIsCloseOnMidPage((InstrumentId) instrument.getId(), nextPage);
+        addOneOffNewPageEvents(nextPage, isCloseOnMidPage, currentStave, pageChangeBeatId, deactivateBeatId, transportId);
+    }
+
+    private boolean getIsCloseOnMidPage(InstrumentId instrumentId, Page nextPage) {
         boolean isCloseOnMidPage = false;
-        ScoreRandomisationStrategy rndStrategy = szcore.getRandomisationStrategy();
-        if(rndStrategy != null && rndStrategy.isActive()) {
-            isCloseOnMidPage = rndStrategy.isInActiveRange((InstrumentId) instrument.getId(), nextPage);
-            if (!szcore.isRandomizeContinuousPageContent()) {
-                isCloseOnMidPage = false;
+        List<ScoreStrategy> strategies = szcore.getStrategies();
+        for(ScoreStrategy strategy : strategies) {
+            switch (strategy.getType()) {
+                case RND:
+                    ScoreRandomisationStrategy rndStrategy = (ScoreRandomisationStrategy)strategy;
+                    if(!rndStrategy.isActive()) {
+                        break;
+                    }
+                    isCloseOnMidPage = rndStrategy.isInActiveRange(instrumentId, nextPage);
+                    if (!szcore.isRandomizeContinuousPageContent()) {
+                        isCloseOnMidPage = false;
+                    }
+                    break;
+                case BUILDER:
+                    ScoreBuilderStrategy builderStrategy = (ScoreBuilderStrategy)strategy;
+                    if(!builderStrategy.isActive()) {
+                        break;
+                    }
+                    isCloseOnMidPage = true;
+                    break;
+                case DYNAMIC:
+                    DynamicMovementStrategy dynamicStrategy = (DynamicMovementStrategy)strategy;
+                    if(!dynamicStrategy.isActive()) {
+                        break;
+                    }
+                    isCloseOnMidPage = true;
+                    break;
             }
         }
-
-        ScoreBuilderStrategy builderStrategy = szcore.getScoreBuilderStrategy();
-        if(builderStrategy != null && builderStrategy.isActive()) {
-            isCloseOnMidPage = true;
-        }
-
-        addOneOffNewPageEvents(nextPage, isCloseOnMidPage, currentStave, pageChangeBeatId, deactivateBeatId, transportId);
+        return isCloseOnMidPage;
     }
 
     private Page prepareContinuousPage(Id instrumentId, PageId currentPageId) {
         Page continuousPage = szcore.getContinuousPage(instrumentId);
+        return prepareNextPage(instrumentId, currentPageId, continuousPage);
+    }
+
+    private Page prepareNextPage(Id instrumentId, PageId currentPageId, Page fromPage) {
+        if(fromPage == null) {
+            fromPage = szcore.getContinuousPage(instrumentId);
+        }
+
         Page currentPage = szcore.getPage(currentPageId);
         Transport transport = szcore.getInstrumentTransport(instrumentId);
 
@@ -921,70 +953,74 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         int lastBeatNo = lastBeat.getBeatNo();
 
         Id scoreId = currentPageId.getScoreId();
-        int cPageNo = currentPageId.getPageNo() + 1;
-        PageId newPageId = new PageId(cPageNo, instrumentId, scoreId);
+        int nextPageNo = currentPageId.getPageNo() + 1;
+        PageId nextPageId = new PageId(nextPageNo, instrumentId, scoreId);
 
-        InscorePageMap continuousInscorePageMap = continuousPage.getInscorePageMap();
-        InscorePageMap newInscorePageMap = new InscorePageMap(newPageId);
-        List<BasicBeat> newBeats = new ArrayList<>();
+        InscorePageMap continuousInscorePageMap = fromPage.getInscorePageMap();
+        InscorePageMap nextInscorePageMap = new InscorePageMap(nextPageId);
+        List<BasicBeat> nextBeats = new ArrayList<>();
 
-        BasicPage newPage = new BasicPage(newPageId, continuousPage.getPageName(), continuousPage.getFileName(), newInscorePageMap, true);
-        if (!szcore.containsPage(newPage)) {
-            szcore.addPage(newPage);
+        BasicPage nextPage = new BasicPage(nextPageId, fromPage.getPageName(), fromPage.getFileName(), nextInscorePageMap, true);
+        if (szcore.containsPage(nextPage)) {
+            LOG.warn("prepareNextPage: page exists, deleting page {}", nextPage.getPageId());
+            szcore.deletePage(nextPage);
         }
+        szcore.addPage(nextPage);
 
-        bars = (List<Bar>) continuousPage.getBars();
+        bars = (List<Bar>) fromPage.getBars();
         BeatId firstBeatId = null;
         for (Bar bar : bars) {
-            BarId newBarId = new BarId(lastBarNo, instrumentId, newPageId, scoreId);
+            BarId nextBarId = new BarId(lastBarNo, instrumentId, nextPageId, scoreId);
             lastBarNo++;
-            BasicBar newBar = new BasicBar(newBarId, bar.getBarName(), bar.getTempo(), bar.getTimeSignature());
-            if (szcore.doesNotcontainBar(newBar)) {
-                szcore.addBar(newBar);
+            BasicBar nextBar = new BasicBar(nextBarId, bar.getBarName(), bar.getTempo(), bar.getTimeSignature());
+            if (szcore.containsBar(nextBar)) {
+                LOG.warn("prepareNextPage: bar exists, deleting bar {}", nextBar.getId());
+                szcore.deleteBar(nextBar);
             }
-
+            szcore.addBar(nextBar);
             beats = (List<Beat>) bar.getBeats();
-
             for (Beat beat : beats) {
-                BeatId newBeatId;
+                BeatId nextBeatId;
                 if (beat.isUpbeat()) {
-                    newBeatId = new BeatId(lastBeatNo, instrumentId, newPageId, scoreId, newBarId, lastBeat.getBaseBeatUnitsNoAtStart());
+                    nextBeatId = new BeatId(lastBeatNo, instrumentId, nextPageId, scoreId, nextBarId, lastBeat.getBaseBeatUnitsNoAtStart());
                     if (firstBeatId == null) {
-                        firstBeatId = newBeatId;
+                        firstBeatId = nextBeatId;
                     }
-                    BasicBeat newBeat = new BasicBeat(newBeatId, lastBeat.getStartTimeMillis(), beat.getDurationMillis(), lastBeat.getEndTimeMillis(),
+                    BasicBeat nextBeat = new BasicBeat(nextBeatId, lastBeat.getStartTimeMillis(), beat.getDurationMillis(), lastBeat.getEndTimeMillis(),
                             lastBeat.getBaseBeatUnitsNoAtStart(), lastBeat.getBaseBeatUnitsDuration(), lastBeat.getBaseBeatUnitsNoOnEnd(),
                             beat.getPositionXStartPxl(), beat.getPositionXEndPxl(), beat.getPositionYStartPxl(), beat.getPositionYEndPxl(), beat.isUpbeat());
 
-                    newBeats.add(newBeat);
-                    szcore.addTransportBeatId(newBeat, transport.getId());
-
-                    if (!szcore.containsBeat(newBeat)) {
-                        szcore.addBeat(newBeat);
+                    nextBeats.add(nextBeat);
+                    if (szcore.containsBeat(nextBeat)) {
+                        LOG.warn("prepareNextPage: beat exists, deleting beat {}", nextBeat.getId());
+                        szcore.deleteBeat(nextBeat);
                     }
-                    lastBeat = newBeat;
+                    szcore.addTransportBeatId(nextBeat, transport.getId());
+                    szcore.addBeat(nextBeat);
+                    lastBeat = nextBeat;
                 } else {
                     lastBeatNo++;
                     long startTimeMillis = lastBeat.getEndTimeMillis();
                     int baseBeatUnitsNoAtStart = lastBeat.getBaseBeatUnitsNoOnEnd();
-                    newBeatId = new BeatId(lastBeatNo, instrumentId, newPageId, scoreId, newBarId, baseBeatUnitsNoAtStart);
+                    nextBeatId = new BeatId(lastBeatNo, instrumentId, nextPageId, scoreId, nextBarId, baseBeatUnitsNoAtStart);
                     if (firstBeatId == null) {
-                        firstBeatId = newBeatId;
+                        firstBeatId = nextBeatId;
                     }
 
                     long durationMillis = beat.getDurationMillis();
                     int baseBeatUnitsDuration = beat.getBaseBeatUnitsDuration();
                     long endTimeMillis = startTimeMillis + durationMillis;
                     int baseBeatUnitsNoOnEnd = baseBeatUnitsNoAtStart + baseBeatUnitsDuration;
-                    BasicBeat newBeat = new BasicBeat(newBeatId, startTimeMillis, durationMillis, endTimeMillis, baseBeatUnitsNoAtStart,
+                    BasicBeat nextBeat = new BasicBeat(nextBeatId, startTimeMillis, durationMillis, endTimeMillis, baseBeatUnitsNoAtStart,
                             baseBeatUnitsDuration, baseBeatUnitsNoOnEnd, beat.getPositionXStartPxl(), beat.getPositionXEndPxl(),
                             beat.getPositionYStartPxl(), beat.getPositionYEndPxl(), beat.isUpbeat());
-                    newBeats.add(newBeat);
-                    szcore.addTransportBeatId(newBeat, transport.getId());
-                    if (!szcore.containsBeat(newBeat)) {
-                        szcore.addBeat(newBeat);
+                    nextBeats.add(nextBeat);
+                    if (szcore.containsBeat(nextBeat)) {
+                        LOG.warn("prepareNextPage: beat exists, deleting beat {}", nextBeat.getId());
+                        szcore.deleteBeat(nextBeat);
                     }
-                    lastBeat = newBeat;
+                    szcore.addTransportBeatId(nextBeat, transport.getId());
+                    lastBeat = nextBeat;
                 }
 
                 //copy scripts
@@ -992,7 +1028,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                 List<Script> scripts = szcore.getBeatScripts(beatId);
                 if (scripts != null) {
                     for (Script script : scripts) {
-                        Script newScript = script.copy(newBeatId);
+                        Script newScript = script.copy(nextBeatId);
                         szcore.addScript(newScript);
                     }
                 }
@@ -1001,22 +1037,22 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
 
         Instrument instrument = szcore.getInstrument(instrumentId);
         if (instrument.isAv()) {
-            return newPage;
+            return nextPage;
         }
 
         //Add stave changes only for score instruments
         List<InscoreMapElement> continuousInscoreMapElements = continuousInscorePageMap.getMapElements();
-        for (int i = 0; i < newBeats.size(); i++) {
-            BasicBeat newBeat = newBeats.get(i);
+        for (int i = 0; i < nextBeats.size(); i++) {
+            BasicBeat nextBeat = nextBeats.get(i);
             InscoreMapElement continuousMapElement = continuousInscoreMapElements.get(i);
-            InscoreMapElement newInscoreMapElement = new InscoreMapElement(
-                    newBeat.getPositionXStartPxl(), newBeat.getPositionXEndPxl(),
-                    newBeat.getPositionYStartPxl(), newBeat.getPositionYEndPxl(),
-                    newBeat.getBaseBeatUnitsNoAtStart(), continuousMapElement.getBeatStartDenom(), newBeat.getBaseBeatUnitsNoOnEnd(), continuousMapElement.getBeatEndDenom());
-            newInscorePageMap.addElement(newInscoreMapElement);
+            InscoreMapElement nextInscoreMapElement = new InscoreMapElement(
+                    nextBeat.getPositionXStartPxl(), nextBeat.getPositionXEndPxl(),
+                    nextBeat.getPositionYStartPxl(), nextBeat.getPositionYEndPxl(),
+                    nextBeat.getBaseBeatUnitsNoAtStart(), continuousMapElement.getBeatStartDenom(), nextBeat.getBaseBeatUnitsNoOnEnd(), continuousMapElement.getBeatEndDenom());
+            nextInscorePageMap.addElement(nextInscoreMapElement);
         }
-        newInscorePageMap.createWebStr();
-        newInscorePageMap.createInscoreStr();
+        nextInscorePageMap.createWebStr();
+        nextInscorePageMap.createInscoreStr();
 
         Beat executeBeat = szcore.getOffsetBeat(firstBeatId, -1);
         Beat deactivateBeat = szcore.getOffsetBeat(firstBeatId, 1);
@@ -1024,7 +1060,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
 
         addPrepStaveChangeEvent(executeBeat.getBeatId(), firstBeatId, deactivateBeat.getBeatId(), pageChangeBeat.getBeatId(), null, transport.getId());
 
-        return newPage;
+        return nextPage;
     }
 
     protected void createInstrumentStaves(Instrument instrument) {
@@ -1049,15 +1085,71 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     }
 
     protected void processStrategiesOnOpenModWindow(InstrumentId instId, Page nextPage, PageId currentPageId) {
-        ScoreRandomisationStrategy rndStrategy = szcore.getRandomisationStrategy();
-        if(rndStrategy != null) {
-            processRndStrategyOnOpenModWindow(rndStrategy, instId, nextPage, currentPageId);
+        List<ScoreStrategy> strategies = szcore.getStrategies();
+        for(ScoreStrategy strategy : strategies) {
+            switch (strategy.getType()) {
+                case RND:
+                    ScoreRandomisationStrategy rndStrategy = (ScoreRandomisationStrategy) strategy;
+                    if(!rndStrategy.isActive()) {
+                        break;
+                    }
+                    processRndStrategyOnOpenModWindow(rndStrategy, instId, nextPage, currentPageId);
+                    break;
+                case BUILDER:
+                    ScoreBuilderStrategy scoreBuilderStrategy = (ScoreBuilderStrategy) strategy;
+                    if(!scoreBuilderStrategy.isActive()) {
+                        break;
+                    }
+                    processBuilderStrategyOnOpenModWindow(scoreBuilderStrategy, instId);
+                    break;
+                case DYNAMIC:
+                    DynamicMovementStrategy dynamicStrategy = (DynamicMovementStrategy)strategy;
+                    if(!dynamicStrategy.isActive()) {
+                        break;
+                    }
+                    processDynamicStrategyOnOpenModWindow(dynamicStrategy, instId, currentPageId);
+                    break;
+            }
+        }
+    }
+
+    private void processDynamicStrategyOnOpenModWindow(DynamicMovementStrategy dynamicStrategy, InstrumentId instId, PageId currentPageId) {
+        if(!dynamicStrategy.isActive()) {
+            return;
         }
 
-        ScoreBuilderStrategy builderStrategy = szcore.getScoreBuilderStrategy();
-        if(builderStrategy != null) {
-            processBuilderStrategyOnOpenModWindow(builderStrategy, instId);
+        processDynamicSectionOnOpenModWindow(dynamicStrategy, instId, currentPageId);
+
+        List<String> parts = dynamicStrategy.getCurrentSectionParts();
+        if(parts == null || parts.isEmpty()) {
+            return;
         }
+        String instSlotsCsv = ParseUtil.convertListToCsv(parts);
+        MovementSectionInfo sectionInfo = dynamicStrategy.getCurrentMovementSection();
+        if(sectionInfo == null) {
+            return;
+        }
+        String inst = instId.getName();
+        List<String> clients = dynamicStrategy.getPartClients(inst);
+        boolean isSendSlotEvent = isSendInstrumentSlotsEvent(inst);
+        if(clients == null || clients.isEmpty()) {
+            LOG.debug("processBuilderStrategy OpenModWindow, no clients for instrument: {}", inst);
+        } else {
+            for(String client : clients) {
+                OscEvent instrumentSlotsEvent;
+                if(isSendSlotEvent) {
+                    instrumentSlotsEvent = createInstrumentSlotsEvent(client, instSlotsCsv);
+                } else {
+                    instrumentSlotsEvent = createInstrumentResetSlotsEvent(client);
+                }
+                publishOscEvent(instrumentSlotsEvent);
+            }
+        }
+    }
+
+    private void processDynamicSectionOnOpenModWindow(DynamicMovementStrategy dynamicStrategy, InstrumentId instId, PageId currentPageId) {
+        int currentPage = currentPageId.getPageNo();
+        dynamicStrategy.onPageStart(currentPage);
     }
 
     private void processBuilderStrategyOnOpenModWindow(ScoreBuilderStrategy builderStrategy, InstrumentId instId) {
@@ -1141,15 +1233,100 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     }
 
     protected void processStrategiesOnCloseModWindow(InstrumentId instId, Stave stave, Page nextPage, PageId currentPageId) {
-        ScoreRandomisationStrategy rndStrategy = szcore.getRandomisationStrategy();
-        if(rndStrategy != null) {
-            processRndStrategyOnCloseModWindow(rndStrategy, stave, instId, nextPage, currentPageId);
+        List<ScoreStrategy> strategies = szcore.getStrategies();
+        for(ScoreStrategy strategy : strategies) {
+            switch (strategy.getType()) {
+                case RND:
+                    ScoreRandomisationStrategy rndStrategy = (ScoreRandomisationStrategy) strategy;
+                    if(!rndStrategy.isActive()) {
+                        break;
+                    }
+                    processRndStrategyOnCloseModWindow(rndStrategy, stave, instId, nextPage, currentPageId);
+                    break;
+                case BUILDER:
+                    ScoreBuilderStrategy scoreBuilderStrategy = (ScoreBuilderStrategy) strategy;
+                    if(!scoreBuilderStrategy.isActive()) {
+                        break;
+                    }
+                    processBuilderStrategyOnCloseModWindow(scoreBuilderStrategy, instId, nextPage, stave);
+                    break;
+                case DYNAMIC:
+                    DynamicMovementStrategy dynamicStrategy = (DynamicMovementStrategy)strategy;
+                    if(!dynamicStrategy.isActive()) {
+                        break;
+                    }
+                    processDynamicStrategyOnCloseModWindow(dynamicStrategy,  instId, nextPage, stave, currentPageId);
+                    break;
+            }
+        }
+    }
+
+    private void processDynamicStrategyOnCloseModWindow(DynamicMovementStrategy dynamicStrategy, InstrumentId instId, Page nextPage, Stave stave, PageId currentPageId) {
+        if(!dynamicStrategy.isActive()) {
+            return;
+        }
+        List<String> clients = dynamicStrategy.getPartClients(instId.getName());
+        if(clients == null || clients.isEmpty()) {
+            String destination = szcore.getOscDestination(instId);
+            LOG.debug("processBuilderStrategyOn  CloseModWindow: Invalid instrumentSlotsEvent, isInRndRange: true, destination: {}", destination);
+            OscEvent instrumentSlotsEvent =  createInstrumentResetSlotsEvent(destination);
+            publishOscEvent(instrumentSlotsEvent);
+        } else {
+            if(dynamicStrategy.isStop()) {
+                Page currentPage = szcore.getPage(currentPageId);
+                Beat sectionLastBeat = currentPage.getLastBeat();
+                Transport transport = szcore.getInstrumentTransport(instId);
+                addOneOffStopEvent(sectionLastBeat.getBeatId(), transport.getId());
+                addProcessSectionsEvent(sectionLastBeat.getBeatId(), dynamicStrategy.getCurrentMovement(), ScoreSectionEventType.STOP, transport.getId());
+                nextPage = szcore.getEndPage(instId);
+            } else {
+                nextPage = prepareNextDynamicStrategyPage(dynamicStrategy, instId, currentPageId);
+            }
+            if (nextPage == null) {
+                //Last page should be blank
+                nextPage = szcore.getEndPage(instId);
+            }
+            LOG.debug("processBuilderStrategyOn CloseModWindow: instrument {} next page: {} stave: {} ", instId.getName(), nextPage.getPageNo(), stave.getStaveId().getStaveNo());
+            sendPageFileUpdate(nextPage, stave);
+            for(String client : clients) {
+                OscEvent instrumentSlotsEvent = createInstrumentResetSlotsEvent(client);
+                publishOscEvent(instrumentSlotsEvent);
+            }
+        }
+    }
+
+    private Page prepareNextDynamicStrategyPage(DynamicMovementStrategy dynamicStrategy, InstrumentId instId, PageId currentPageId) {
+        MovementSectionInfo sectionInfo = dynamicStrategy.getCurrentMovementSection();
+        int currentPage = currentPageId.getPageNo();
+        int sectionPlayStartPage = sectionInfo.getPlayStartPageNo();
+        int sectionPlayEndPage = sectionInfo.getPlayEndPageNo();
+        int sectionPageDuration = sectionPlayEndPage - sectionPlayStartPage;
+        if(sectionPageDuration < 0) {
+            LOG.error("Unexpected section page duration: {}", sectionPageDuration);
+        }
+        int sourcePageNo = 0;
+        int nextPageNo = currentPageId.getPageNo() + 1;
+        if(currentPage < sectionPlayStartPage) {
+            LOG.error("prepareNextDynamicStrategyPage: Unexpected current page: {} before current section start {}", currentPage, sectionPlayStartPage);
+            sourcePageNo = sectionInfo.getStartPageNo();
+        } else if(currentPage == sectionPlayStartPage ) {
+            if(sectionPageDuration == 0) {
+                dynamicStrategy.setNextSection(nextPageNo);
+                sourcePageNo = dynamicStrategy.getNextSectionStartPage();
+            } else {
+                sourcePageNo = dynamicStrategy.getCurrentSectionNextPage();
+            }
+        } else {
+            // currentPage > sectionPlayStartPage
+            sourcePageNo = dynamicStrategy.getCurrentSectionNextPage();
         }
 
-        ScoreBuilderStrategy builderStrategy = szcore.getScoreBuilderStrategy();
-        if(builderStrategy != null) {
-            processBuilderStrategyOnCloseModWindow(builderStrategy, instId, nextPage, stave);
+        Page fromPage = szcore.getPageNo(sourcePageNo, instId);
+        if(fromPage == null) {
+            LOG.error("prepareNextDynamicStrategyPage: invalid fromPage {} inst {}", sourcePageNo, instId);
         }
+        LOG.info("prepareNextDynamicStrategyPage: fromPage {} inst {}", sourcePageNo, instId);
+        return prepareNextPage(instId, currentPageId, fromPage);
     }
 
     private void processRndStrategyOnCloseModWindow(ScoreRandomisationStrategy strategy, Stave stave, InstrumentId instId, Page nextPage, PageId currentPageId) {
@@ -2065,18 +2242,40 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             return;
         }
         PageId startPageId = (PageId)startBeatId.getPageId();
-        ScoreBuilderStrategy strategy = szcore.getScoreBuilderStrategy();
-        if (strategy == null || !strategy.isActive() || !strategy.isReady()) {
-            return;
+        List<ScoreStrategy> strategies = szcore.getStrategies();
+        for(ScoreStrategy strategy : strategies) {
+            switch (strategy.getType()) {
+                case BUILDER:
+                    ScoreBuilderStrategy builderStrategy = (ScoreBuilderStrategy)strategy;
+                    if(!builderStrategy.isActive() || !strategy.isReady()) {
+                        break;
+                    }
+                    String currentSection = builderStrategy.getCurrentSection();
+                    List<String> pageSections = builderStrategy.getSectionsForPageNo(startPageId.getPageNo());
+                    if(!pageSections.contains(currentSection)) {
+                        currentSection = pageSections.get(0);
+                        builderStrategy.setCurrentSection(currentSection);
+                    }
+                    Map<String, List<String>> instrumentClients = builderStrategy.getInstrumentClientsMap(currentSection);
+                    webScore.setSectionInstrumentClients(instrumentClients);
+                    break;
+                case DYNAMIC:
+                    DynamicMovementStrategy dynamicStrategy = (DynamicMovementStrategy)strategy;
+                    if(!dynamicStrategy.isActive()) {
+                        break;
+                    }
+                    MovementInfo movementInfo = dynamicStrategy.getCurrentMovementInfo();
+                    if(movementInfo == null) {
+                        LOG.error("processStrategyOnPosition: invalid current movement");
+                        break;
+                    }
+                    movementInfo.setSectionStartPage();
+
+                    Map<String, List<String>> partClients = dynamicStrategy.getPartClientsMap();
+                    webScore.setSectionInstrumentClients(partClients);
+                    break;
+            }
         }
-        String currentSection = strategy.getCurrentSection();
-        List<String> pageSections = strategy.getSectionsForPageNo(startPageId.getPageNo());
-        if(!pageSections.contains(currentSection)) {
-            currentSection = pageSections.get(0);
-            strategy.setCurrentSection(currentSection);
-        }
-        Map<String, List<String>> instrumentClients = strategy.getInstrumentClientsMap(currentSection);
-        webScore.setSectionInstrumentClients(instrumentClients);
     }
 
     private void resetTasks() {
@@ -2584,8 +2783,8 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             case SET_SECTION:
                 setSectionName(event.getSectionName());
                 break;
-            case SET_MOVEMENT:
-                setMovementName(event.getMovementName());
+            case SET_MOVEMENT_INFO:
+                setMovementInfo(event.getMovementName(), event.getSectionName(), event.getOrderIndex());
                 break;
             case SHUFFLE_ORDER:
                 shuffleSectionOrder();
@@ -2608,22 +2807,36 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         if(sectionName == null) {
             return;
         }
-        ScoreBuilderStrategy strategy = szcore.getScoreBuilderStrategy();
-        if(strategy == null) {
-            return;
+
+        List<ScoreStrategy> strategies = szcore.getStrategies();
+        for(ScoreStrategy strategy : strategies) {
+            switch (strategy.getType()) {
+                case BUILDER:
+                    ScoreBuilderStrategy builderStrategy = (ScoreBuilderStrategy)strategy;
+                    if(!builderStrategy.isActive()) {
+                        break;
+                    }
+                    builderStrategy.setCurrentSection(sectionName);
+                    break;
+                case DYNAMIC:
+                    DynamicMovementStrategy dynamicStrategy = (DynamicMovementStrategy)strategy;
+                    if(!dynamicStrategy.isActive()) {
+                        break;
+                    }
+                    dynamicStrategy.setCurrentSection(sectionName);
+                    break;
+            }
         }
-        strategy.setCurrentSection(sectionName);
     }
 
-    private void setMovementName(String movementName) {
-        if(movementName == null) {
-            return;
-        }
+    private void setMovementInfo(String movementName, String sectionName, Integer orderIndex) {
         DynamicMovementStrategy strategy = szcore.getDynamicScoreStrategy();
         if(strategy == null) {
             return;
         }
         strategy.setCurrentMovement(movementName);
+        strategy.setCurrentSection(sectionName);
+        strategy.setCurrentSectionOrderIndex(orderIndex);
     }
 
     protected void resetStrategy() throws Exception {

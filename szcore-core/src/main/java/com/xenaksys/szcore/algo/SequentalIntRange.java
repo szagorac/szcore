@@ -84,4 +84,13 @@ public class SequentalIntRange implements IntRange {
     public int compareTo(IntRange o) {
         return Integer.compare(getStart(), o.getStart());
     }
+
+    @Override
+    public String toString() {
+        return "SequentalIntRange{" +
+                "start=" + start +
+                ", end=" + end +
+                ", size=" + size +
+                '}';
+    }
 }

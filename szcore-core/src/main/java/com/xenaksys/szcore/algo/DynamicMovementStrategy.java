@@ -30,6 +30,9 @@ public class DynamicMovementStrategy implements ScoreStrategy {
     private boolean isReady = false;
     private String currentMovement;
     private String nextMovement;
+    private volatile String nextSectionOverride;
+    private volatile boolean isStop;
+    private volatile SelectionStrategy selectionStrategy;
 
     public DynamicMovementStrategy(BasicScore szcore, DynamicMovementStrategyConfig config) {
         this.szcore = szcore;
@@ -99,6 +102,7 @@ public class DynamicMovementStrategy implements ScoreStrategy {
                 }
             }
             sectionInfo.setWebConfigs(webInfos);
+            sectionInfo.setInterruptOnPageEnd(sectionConfig.isInterruptOnPageEnd());
         }
         movementInfo.addSectionOrder(movementConfig.getSectionsOrder());
         movementInfo.setStartPage(movementConfig.getStartPage());
@@ -163,6 +167,14 @@ public class DynamicMovementStrategy implements ScoreStrategy {
         return instruments;
     }
 
+    public List<String> getCurrentSectionParts() {
+        MovementSectionInfo sectionInfo = getCurrentMovementSection();
+        if(sectionInfo == null) {
+            return null;
+        }
+        return sectionInfo.getParts();
+    }
+
     public void setDynamicParts(String[] instruments) {
         this.dynamicParts = instruments;
     }
@@ -217,11 +229,40 @@ public class DynamicMovementStrategy implements ScoreStrategy {
         return config.isStopOnMovementEnd();
     }
 
+
+    public MovementSectionInfo getCurrentMovementSection() {
+        if(currentMovement == null) {
+            return  null;
+        }
+        MovementInfo movementInfo = getMovement(currentMovement);
+        return movementInfo.getCurrentSectionInfo();
+    }
+
+    public List<String> getPartClients(String instrument) {
+        MovementSectionInfo sectionInfo = getCurrentMovementSection();
+        return sectionInfo.getPartClients().get(instrument);
+    }
+
+    public Map<String, List<String>> getPartClientsMap() {
+        MovementSectionInfo sectionInfo = getCurrentMovementSection();
+        return sectionInfo.getPartClients();
+    }
+
     public String getCurrentMovement() {
         return currentMovement;
     }
 
+    public MovementInfo getCurrentMovementInfo() {
+        if(currentMovement == null) {
+            return null;
+        }
+        return movementInfos.get(currentMovement);
+    }
+
     public void setCurrentMovement(String currentMovement) {
+        if(currentMovement == null || currentMovement.isEmpty()) {
+            return;
+        }
         this.currentMovement = currentMovement;
         setNextMovement();
     }
@@ -271,7 +312,139 @@ public class DynamicMovementStrategy implements ScoreStrategy {
         movementOrder.clear();
     }
 
-    public MovementInfo getMovement(String section) {
-        return movementInfos.get(section);
+    public MovementInfo getMovement(String mvtName) {
+        return movementInfos.get(mvtName);
+    }
+
+    public void setCurrentSection(String sectionName) {
+        if(sectionName == null || sectionName.isEmpty()) {
+            return;
+        }
+        String currentMov = getCurrentMovement();
+        if(currentMov == null) {
+            LOG.error("setCurrentSection: invalid current movement for section: {}", sectionName);
+            return;
+        }
+        MovementInfo movementInfo = movementInfos.get(currentMov);
+        if(movementInfo == null) {
+            LOG.error("setCurrentSection: invalid movement info for section: {}", sectionName);
+            return;
+        }
+        movementInfo.setCurrentSection(sectionName);
+    }
+
+    public void setCurrentSectionOrderIndex(Integer orderIndex) {
+        if(orderIndex == null || orderIndex < 0) {
+            return;
+        }
+        String currentMov = getCurrentMovement();
+        if(currentMov == null) {
+            LOG.error("setCurrentSectionOrderIndex: invalid current movement");
+            return;
+        }
+        MovementInfo movementInfo = movementInfos.get(currentMov);
+        if(movementInfo == null) {
+            LOG.error("setCurrentSectionOrderIndex: invalid movement info");
+            return;
+        }
+        movementInfo.setCurrentSectionOrderIndex(orderIndex);
+    }
+
+    public void setStopMovement(boolean isStop) {
+        MovementInfo movementInfo = getCurrentMovementInfo();
+        if(movementInfo == null) {
+            return;
+        }
+        setStop(isStop);
+    }
+
+    public int getSectionEndPage() {
+        MovementSectionInfo sectionInfo = getCurrentMovementSection();
+        if(sectionInfo == null) {
+            return -1;
+        }
+        return sectionInfo.getPlayEndPageNo();
+    }
+
+    public void setNextSection(int sectionStartPageNo) {
+        MovementInfo mvt = getCurrentMovementInfo();
+        if(mvt == null) {
+            LOG.error("setNextSection: invalid current movement");
+            return;
+        }
+
+        if(selectionStrategy == null) {
+            selectionStrategy = SelectionStrategy.HIGHEST_VOTE;
+        }
+        switch (selectionStrategy) {
+            case HIGHEST_VOTE:
+                String highestVoteSection = mvt.getHighestVoteSection();
+                mvt.setNextSection(highestVoteSection, sectionStartPageNo);
+                break;
+            case OVERRIDE:
+                if(nextSectionOverride == null) {
+                    LOG.error("setNextSection: OVERRIDE, invalid next section override, using current section {}", mvt.getCurrentSection());
+                    nextSectionOverride = mvt.getCurrentSection();
+                }
+                mvt.setNextSection(nextSectionOverride, sectionStartPageNo);
+                break;
+            default:
+                LOG.error("setNextSection: Unknown selection strategy {}", selectionStrategy);
+        }
+    }
+
+    public String getNextSectionOverride() {
+        return nextSectionOverride;
+    }
+
+    public void setNextSectionOverride(String nextSectionOverride) {
+        this.nextSectionOverride = nextSectionOverride;
+    }
+
+    public SelectionStrategy getSelectionStrategy() {
+        return selectionStrategy;
+    }
+
+    public void setSelectionStrategy(SelectionStrategy selectionStrategy) {
+        this.selectionStrategy = selectionStrategy;
+    }
+
+    public boolean isStop() {
+        return isStop;
+    }
+
+    public void setStop(boolean stop) {
+        isStop = stop;
+    }
+
+    public int getNextSectionStartPage() {
+        MovementInfo mvtInfo = getCurrentMovementInfo();
+        if(mvtInfo == null) {
+            LOG.error("getNextSectionStartPage: Invalid current movement");
+            return -1;
+        }
+        return mvtInfo.getNextSectionStartPage();
+    }
+
+    public int getCurrentSectionNextPage() {
+        MovementInfo mvtInfo = getCurrentMovementInfo();
+        if(mvtInfo == null) {
+            LOG.error("getCurrentSectionNextPage: Invalid current movement");
+            return -1;
+        }
+        return mvtInfo.getCurrentSectionNextPage();
+    }
+
+    public void onPageStart(int currentPage) {
+        MovementInfo mvtInfo = getCurrentMovementInfo();
+        if(mvtInfo == null) {
+            LOG.error("onPageStart: Invalid current movement");
+            return;
+        }
+        mvtInfo.onPageStart(currentPage);
+    }
+
+    enum SelectionStrategy {
+        OVERRIDE, HIGHEST_VOTE
     }
 }

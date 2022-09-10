@@ -79,6 +79,18 @@ public class MovementSectionInfo {
         return partClients;
     }
 
+    public List<String> getPartClients(String part) {
+        return partClients.get(part);
+    }
+
+    public boolean isPartTaken(String part) {
+        List<String> clients = getPartClients(part);
+        if(clients == null || clients.isEmpty()) {
+            return false;
+        }
+        return true;
+    }
+
     public void setPageRange(IntRange sectionPageRange) {
         this.pageRange = sectionPageRange;
     }
@@ -163,20 +175,24 @@ public class MovementSectionInfo {
         if(this.currentPlayPage == currentPlayPage) {
             return;
         }
+        if(playPageRange == null) {
+            int start = currentPlayPage;
+            int end = start + pageRange.getSize() - 1;
+            playPageRange = new SequentalIntRange(start, end);
+            LOG.info("setCurrentPlayPage: playPageRange start: {} end: {}", start, end);
+        }
         if(!playPageRange.isInRange(currentPlayPage)) {
             LOG.error("setCurrentPlayPage: page is not in range {}", playPageRange);
         }
         this.currentPlayPage = currentPlayPage;
-        LOG.error("onPageStart: currentPlayPage {}", currentPlayPage);
+        LOG.info("setCurrentPlayPage: currentPlayPage {}", currentPlayPage);
         recalcCurrentPage();
     }
 
     private void recalcCurrentPage() {
         int diff = currentPlayPage - playPageRange.getStart();
         int nextCurrent = pageRange.getStart() + diff;
-        if(nextCurrent != (currentPage + 1)) {
-            LOG.error("recalcCurrentPage: Unexpected next page {}", nextCurrent);
-        }
+        LOG.info("recalcCurrentPage: setting current page: {} currentPlayPage: {} diff: {} ", nextCurrent, currentPlayPage, diff);
         currentPage = nextCurrent;
     }
 
@@ -225,6 +241,7 @@ public class MovementSectionInfo {
         int pageNo = getNumberOfPages();
         int end = sectionStartPageNo + pageNo - 1;
         this.playPageRange = new SequentalIntRange(sectionStartPageNo, end);
+        LOG.info("recalculatePlayPageRange: playPageRange start: {} end: {}", sectionStartPageNo, end);
     }
 
     private int getNumberOfPages() {
@@ -238,7 +255,10 @@ public class MovementSectionInfo {
         int current = getCurrentPage();
         int next = current + 1;
         if(next > getEndPageNo()) {
-            next = getStartPageNo() + (next % pageRange.getSize());
+//            next = getStartPageNo() + (next % pageRange.getSize());
+            int count = next;
+            next = getStartPageNo();
+            LOG.info("getNextPage: next > getEndPageNo() calculated next page: {} count: {} current: {}  currentPlay: {} endPage: {} startPage: {}", next, count, current, getCurrentPlayPage(), getEndPageNo(),getStartPageNo());
         }
         return next;
     }
@@ -248,6 +268,14 @@ public class MovementSectionInfo {
             return false;
         }
         return playPageRange.isInRange(currentPage);
+    }
+
+    public void resetOnNewPosition() {
+        playPageRange = null;
+        isActive = false;
+        currentPage = 0;
+        currentPlayPage = 0;
+        voteInfo.reset();
     }
 
     @Override
@@ -265,10 +293,14 @@ public class MovementSectionInfo {
 
     @Override
     public String toString() {
-        return "SectionInfo{" +
+        return "MovementSectionInfo{" +
                 "sectionId='" + sectionId + '\'' +
-                ", clientInstrument=" + clientPart +
-                ", voteInfo=" + voteInfo +
+                ", pageRange=" + pageRange +
+                ", playPageRange=" + playPageRange +
+                ", isActive=" + isActive +
+                ", currentPage=" + currentPage +
+                ", currentPlayPage=" + currentPlayPage +
+                ", isInterruptOnPageEnd=" + isInterruptOnPageEnd +
                 '}';
     }
 }

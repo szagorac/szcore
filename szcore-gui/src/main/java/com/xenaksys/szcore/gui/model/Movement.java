@@ -117,6 +117,25 @@ public class Movement {
         this.sectionOrder.set(sectionOrder);
     }
 
+    public MovementSection getSection(String name) {
+        if(name == null) {
+            return null;
+        }
+        for(MovementSection section : sections) {
+            if(name.equals(section.getSection())) {
+                return section;
+            }
+        }
+        return null;
+    }
+
+    public String getFirstSection() {
+        if(sectionOrder.size() > 0) {
+            return sectionOrder.get(0);
+        }
+        return null;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -84,8 +84,9 @@ public class TransportContext {
             beatNoToId.put(baseBeatNo, beatIds);
         }
 
-        beatIds.add(beatId);
-
+        if(!beatIds.contains(beatId)) {
+            beatIds.add(beatId);
+        }
     }
 
     public void removeBeatId(BeatId beatId) {

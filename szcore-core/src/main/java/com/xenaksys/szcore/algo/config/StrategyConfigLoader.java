@@ -63,6 +63,7 @@ import static com.xenaksys.szcore.Consts.CONFIG_PRESET;
 import static com.xenaksys.szcore.Consts.CONFIG_RANGE;
 import static com.xenaksys.szcore.Consts.CONFIG_RND_STRATEGY;
 import static com.xenaksys.szcore.Consts.CONFIG_SCORE_NAME;
+import static com.xenaksys.szcore.Consts.CONFIG_SCORE_PARTS;
 import static com.xenaksys.szcore.Consts.CONFIG_SCRIPTS;
 import static com.xenaksys.szcore.Consts.CONFIG_SECTIONS;
 import static com.xenaksys.szcore.Consts.CONFIG_SECTIONS_ORDER;
@@ -525,10 +526,6 @@ public class StrategyConfigLoader extends YamlLoader {
                 if (webConfigs != null) {
                     web.addAll(webConfigs);
                 }
-                Integer startPage = getInteger(CONFIG_START_PAGE, sectionConfig);
-                if (startPage != null) {
-                    movement.setStartPage(startPage);
-                }
                 boolean isInterrupt = false;
                 Boolean isInterruptOnPageEnd = getBoolean(CONFIG_IS_INTERRUPT_ON_PAGE_END, sectionConfig);
                 if (isInterruptOnPageEnd != null) {
@@ -539,6 +536,10 @@ public class StrategyConfigLoader extends YamlLoader {
             }
             List<List<String>> sectionsOrderConfigs = getListOfStrList(CONFIG_SECTIONS_ORDER, movementConfig);
             movement.addSectionsOrder(sectionsOrderConfigs);
+            Integer startPage = getInteger(CONFIG_START_PAGE, movementConfig);
+            if (startPage != null) {
+                movement.setStartPage(startPage);
+            }
 
             movements.add(movement);
         }
@@ -549,13 +550,27 @@ public class StrategyConfigLoader extends YamlLoader {
             List<String> parts = new ArrayList<>();
             for (Object partConfig : partsConfig) {
                 if (!(partConfig instanceof String)) {
-                    LOG.error("loadBuilderStrategyConfig: invalid section name config");
+                    LOG.error("loadBuilderStrategyConfig: invalid part config");
                     continue;
                 }
                 String partName = (String) partConfig;
                 parts.add(partName.trim());
             }
             config.addParts(parts);
+        }
+
+        List<Object> scorePartsConfig = getList(CONFIG_SCORE_PARTS, movementStrategyConfig);
+        if(scorePartsConfig != null) {
+            List<String> scoreParts = new ArrayList<>();
+            for (Object partConfig : scorePartsConfig) {
+                if (!(partConfig instanceof String)) {
+                    LOG.error("loadBuilderStrategyConfig: invalid score part config");
+                    continue;
+                }
+                String partName = (String) partConfig;
+                scoreParts.add(partName.trim());
+            }
+            config.addScoreParts(scoreParts);
         }
 
         Boolean isStopOnMovementEnd = getBoolean(CONFIG_STOP_ON_MOVEMENT_END, movementStrategyConfig);

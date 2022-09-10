@@ -352,7 +352,7 @@ public class BasicScore implements Score {
             return;
         }
         if (pages.containsKey(page.getId())) {
-            LOG.warn("Page Already exists, replacing");
+            LOG.debug("Page Already exists, replacing");
         }
 
         pages.put(page.getId(), page);
@@ -449,7 +449,7 @@ public class BasicScore implements Score {
             return;
         }
         if (bars.containsKey(bar.getId())) {
-            LOG.warn("Bar Already exists, replacing");
+            LOG.debug("Bar Already exists, replacing");
         }
 
         bars.put(bar.getId(), bar);
@@ -472,7 +472,7 @@ public class BasicScore implements Score {
             return;
         }
         if (beats.containsKey(beat.getId())) {
-            LOG.warn("Beat Already exists, replacing");
+            LOG.debug("Beat Already exists, replacing");
         }
 
         beats.put(beat.getId(), beat);
@@ -487,10 +487,14 @@ public class BasicScore implements Score {
         Id beatId = beat.getBeatId();
         beatToTimeMap.put(beatId, time);
         List<Id> timeBeats = timeToBeatMap.computeIfAbsent(time, k -> new ArrayList<>());
-        timeBeats.add(beatId);
+        if(!timeBeats.contains(beatId)) {
+            timeBeats.add(beatId);
+        }
         List<BeatId> iBeats = instrumentBeats.computeIfAbsent(beat.getInstrumentId(), k -> new ArrayList<>());
-        iBeats.add(beat.getBeatId());
-        Collections.sort(iBeats);
+        if(!iBeats.contains(beat.getBeatId())) {
+            iBeats.add(beat.getBeatId());
+            Collections.sort(iBeats);
+        }
     }
 
     public void addScript(Script script) {

@@ -1020,7 +1020,7 @@ public class SymphoneaScoreController {
             return;
         }
         String prev = this.currentMovementProp.get();
-        setCurrentMovement(movement.getId());
+        setCurrentMovementLabel(movement.getId());
 
         setNextMovement();
 
@@ -1043,10 +1043,12 @@ public class SymphoneaScoreController {
         if(mov == null) {
             return;
         }
+        setMovementSections(mov);
+        setSectionOrder(mov);
 
     }
 
-    private void setCurrentMovement(String value) {
+    private void setCurrentMovementLabel(String value) {
         if (value == null) {
             value = Consts.NAME_NA;
         }
@@ -1141,35 +1143,48 @@ public class SymphoneaScoreController {
             Movement movement = new Movement();
             movement.setId(movementInfo.getMovementId());
             SequentalIntRange range = movementInfo.getPageRange();
-            if(range != null) {
+            if (range != null) {
                 movement.setFirstPage(range.getStart());
                 movement.setLastPage(range.getEnd());
             }
             List<MovementSectionInfo> sectionInfos = movementInfo.getSections();
-            Integer startPage = null;
-            for(MovementSectionInfo sectionInfo : sectionInfos) {
+            for (MovementSectionInfo sectionInfo : sectionInfos) {
                 MovementSection movementSection = new MovementSection();
                 movementSection.setSection(sectionInfo.getSectionId());
                 IntRange pageRange = sectionInfo.getPageRange();
-                if(pageRange != null) {
-                    if(startPage == null) {
-                        startPage = pageRange.getStart();
-                    }
+                if (pageRange != null) {
                     movementSection.setStartPage(pageRange.getStart());
                     movementSection.setEndPage(pageRange.getEnd());
                 }
                 List<String> sectionParts = sectionInfo.getParts();
-                for(String part : sectionParts) {
+                for (String part : sectionParts) {
                     movementSection.addPart(part);
                 }
                 movement.addSection(movementSection);
             }
-            List<String> sectionsOrder = convertSectionsOrder(movementInfo.getSectionsOrder());
-            movement.addSectionOrder(sectionsOrder);
-            if(startPage == null) {
-                startPage = movementInfo.getStartPage();
+            List<List<String>> sectionsOrder = movementInfo.getSectionsOrder();
+            int firstSectionPage = 0;
+            if (!sectionsOrder.isEmpty()) {
+                List<String> firstOrder = sectionsOrder.get(0);
+                if (firstOrder != null && !firstOrder.isEmpty()) {
+                    String firstSection = firstOrder.get(0);
+                    if(firstSection != null) {
+                        MovementSection movementSection = movement.getSection(firstSection);
+                        firstSectionPage = movementSection.getStartPage();
+                    }
+                }
+            }
+            int startPage = movementInfo.getStartPage();
+            if(startPage != firstSectionPage) {
+                LOG.error("onScoreLoad: Unequal startPage {}, section page {}", startPage, firstSectionPage);
+                if(firstSectionPage > 0) {
+                    startPage = firstSectionPage;
+                }
             }
             movement.setStartPage(startPage);
+
+            List<String> sectionsOrderCsv = convertSectionsOrder(sectionsOrder);
+            movement.addSectionOrder(sectionsOrderCsv);
 
             guiMovements.add(movement);
         }
@@ -1205,8 +1220,6 @@ public class SymphoneaScoreController {
             this.movements.addAll(guiMovements);
             this.movementOrder.clear();
             this.movementOrder.addAll(guiMovementOrder);
-            setCurrentMovement(curMovement);
-            setNextMovement();
             movementOrderLvw.getSelectionModel().select(curMovement);
         });
     }
@@ -1235,8 +1248,6 @@ public class SymphoneaScoreController {
             return;
         }
         int startPage = nextMovement.getStartPage();
-        setMovementSections(nextMovement);
-        setSectionOrder(nextMovement);
         mainApp.setPage(startPage);
         mainApp.sendPosition();
         updateOverlays();
@@ -1254,6 +1265,10 @@ public class SymphoneaScoreController {
             sections.addAll(movementSections);
             for(MovementSection section : movementSections) {
                 sectionIds.add(section.getSection());
+            }
+            String firstSection = movement.getFirstSection();
+            if(firstSection != null) {
+                mvtSectionsChob.getSelectionModel().select(firstSection);
             }
         });
     }

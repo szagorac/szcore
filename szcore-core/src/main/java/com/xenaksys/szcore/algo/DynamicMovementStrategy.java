@@ -4,9 +4,12 @@ import com.xenaksys.szcore.algo.config.DynamicMovementStrategyConfig;
 import com.xenaksys.szcore.algo.config.ExternalScoreConfig;
 import com.xenaksys.szcore.algo.config.MovementConfig;
 import com.xenaksys.szcore.model.ExtScoreInfo;
+import com.xenaksys.szcore.model.Instrument;
 import com.xenaksys.szcore.model.MaxScoreInfo;
 import com.xenaksys.szcore.model.MovementInfo;
 import com.xenaksys.szcore.model.MovementSectionInfo;
+import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.score.BasicScore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class DynamicMovementStrategy implements ScoreStrategy {
     static final Logger LOG = LoggerFactory.getLogger(DynamicMovementStrategy.class);
+    private static final long RECALC_TIME_LIMIT = 1000 * 3;
 
     private final BasicScore szcore;
     private final DynamicMovementStrategyConfig config;
@@ -33,6 +37,9 @@ public class DynamicMovementStrategy implements ScoreStrategy {
     private volatile String nextSectionOverride;
     private volatile boolean isStop;
     private volatile SelectionStrategy selectionStrategy;
+    private int lastScorePage;
+    private long lastSectionRecalc = 0L;
+    private long lastPageRecalc = 0L;
 
     public DynamicMovementStrategy(BasicScore szcore, DynamicMovementStrategyConfig config) {
         this.szcore = szcore;
@@ -106,6 +113,7 @@ public class DynamicMovementStrategy implements ScoreStrategy {
         }
         movementInfo.addSectionOrder(movementConfig.getSectionsOrder());
         movementInfo.setStartPage(movementConfig.getStartPage());
+        movementInfo.addScoreParts(getScoreParts());
 
         movementInfos.put(movementInfo.getMovementId(), movementInfo);
         return movementInfo;
@@ -121,6 +129,14 @@ public class DynamicMovementStrategy implements ScoreStrategy {
 
     public List<MovementConfig> getMovementConfigs() {
         return config.getMovements();
+    }
+
+    public List<String> getScoreParts() {
+        return config.getScoreParts();
+    }
+
+    public boolean isScorePart(String part) {
+        return config.getScoreParts().contains(part);
     }
 
     public List<String> getMovementOrder() {
@@ -201,6 +217,21 @@ public class DynamicMovementStrategy implements ScoreStrategy {
         for (MovementInfo movementInfo : movementInfos.values()) {
             movementInfo.addClientIdDefaultPart(clientId, defaultPart);
         }
+    }
+
+    public void addClientInstrument(String clientId, String instrumentId) {
+        String mov = null;
+        String section = null;
+        MovementInfo movementInfo = getCurrentMovementInfo();
+        if(movementInfo != null) {
+            mov = movementInfo.getMovementId();
+        }
+        MovementSectionInfo sectionInfo = getCurrentMovementSection();
+        if(sectionInfo != null) {
+            section = sectionInfo.getSectionId();
+        }
+
+        addClientInstrument(mov, section, clientId, instrumentId);
     }
 
     public void addClientInstrument(String movement, String section, String clientId, String instrumentId) {
@@ -366,7 +397,10 @@ public class DynamicMovementStrategy implements ScoreStrategy {
         return sectionInfo.getPlayEndPageNo();
     }
 
-    public void setNextSection(int sectionStartPageNo) {
+    public void setNextSection() {
+        if(!isRecalcTime(lastSectionRecalc)) {
+            return;
+        }
         MovementInfo mvt = getCurrentMovementInfo();
         if(mvt == null) {
             LOG.error("setNextSection: invalid current movement");
@@ -379,18 +413,26 @@ public class DynamicMovementStrategy implements ScoreStrategy {
         switch (selectionStrategy) {
             case HIGHEST_VOTE:
                 String highestVoteSection = mvt.getHighestVoteSection();
-                mvt.setNextSection(highestVoteSection, sectionStartPageNo);
+                mvt.setNextSection(highestVoteSection);
+                lastSectionRecalc = System.currentTimeMillis();
                 break;
             case OVERRIDE:
                 if(nextSectionOverride == null) {
                     LOG.error("setNextSection: OVERRIDE, invalid next section override, using current section {}", mvt.getCurrentSection());
                     nextSectionOverride = mvt.getCurrentSection();
                 }
-                mvt.setNextSection(nextSectionOverride, sectionStartPageNo);
+                mvt.setNextSection(nextSectionOverride);
+                lastSectionRecalc = System.currentTimeMillis();
                 break;
             default:
                 LOG.error("setNextSection: Unknown selection strategy {}", selectionStrategy);
         }
+    }
+
+    public boolean isRecalcTime(long lastRecalcTime) {
+        long now = System.currentTimeMillis();
+        long diff = now - (lastRecalcTime + RECALC_TIME_LIMIT);
+        return diff > 0;
     }
 
     public String getNextSectionOverride() {
@@ -436,12 +478,54 @@ public class DynamicMovementStrategy implements ScoreStrategy {
     }
 
     public void onPageStart(int currentPage) {
+        if(!isRecalcTime(lastPageRecalc)) {
+            return;
+        }
         MovementInfo mvtInfo = getCurrentMovementInfo();
         if(mvtInfo == null) {
             LOG.error("onPageStart: Invalid current movement");
             return;
         }
         mvtInfo.onPageStart(currentPage);
+        lastPageRecalc = System.currentTimeMillis();
+    }
+
+    public void setLastScorePage() {
+        Instrument defaultInst = szcore.getInstrument(defaultPart);
+        if(defaultInst == null) {
+            return;
+        }
+        Page lastPage = szcore.getLastInstrumentPage(defaultInst.getId());
+        if(lastPage == null) {
+            return;
+        }
+        lastScorePage = lastPage.getPageNo();
+    }
+
+    public void deleteTempPages() {
+        if(lastScorePage <= 0) {
+            return;
+        }
+
+        Collection<Instrument> instruments = szcore.getInstruments();
+        for(Instrument instrument : instruments) {
+            Page lastPage = szcore.getLastInstrumentPage(instrument.getId());
+            int lastPageNo = lastPage.getPageNo();
+            if(lastPageNo == lastScorePage) {
+                continue;
+            }
+            for(int i = lastScorePage + 1; i <= lastPageNo; i++) {
+                Page page = szcore.getPageNo(i, (InstrumentId) instrument.getId());
+                szcore.deletePage(page);
+            }
+        }
+    }
+
+    public void resetOnNewPosition() {
+        deleteTempPages();
+        for(MovementInfo movementInfo : movementInfos.values()) {
+            movementInfo.resetOnNewPosition();
+        }
     }
 
     enum SelectionStrategy {

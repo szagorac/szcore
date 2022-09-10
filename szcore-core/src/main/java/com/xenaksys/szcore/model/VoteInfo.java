@@ -56,6 +56,14 @@ public class VoteInfo {
         this.voterNo = voterNo;
     }
 
+    public void reset() {
+        this.current = 0;
+        this.min = 0;
+        this.max = 0;
+        this.avg = 0;
+        this.voterNo = 0;
+    }
+
     @Override
     public String toString() {
         return "VoteInfo{" +

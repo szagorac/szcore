@@ -2,8 +2,6 @@ package com.xenaksys.szcore.score.delegate;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.DynamicMovementStrategy;
-import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
-import com.xenaksys.szcore.algo.ScoreRandomisationStrategy;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.osc.VoteAudienceEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceVoteEvent;
@@ -83,6 +81,8 @@ public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
         BasicScore szcore = (BasicScore) score;
         setSzcore(szcore);
 
+        szcore.setUseContinuousPage(true);
+
         Transport transport = getTransportFactory().getTransport(Consts.DEFAULT_TRANSPORT_NAME);
         transport.addListener(new ScoreTransportListener(transport.getId()));
         getScheduler().addTransport(transport);
@@ -121,12 +121,9 @@ public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
         }
 
         szcore.initScoreStrategies();
-        DynamicMovementStrategy dynamicMovementStrategy = szcore.getDynamicScoreStrategy();
-        if(dynamicMovementStrategy != null && dynamicMovementStrategy.isActive()) {
-            dynamicMovementStrategy.setInstruments(INSTRUMENTS);
-            dynamicMovementStrategy.setDynamicParts(DYNAMIC_INSTRUMENTS);
-            dynamicMovementStrategy.setDefaultPart(INSTRUMENT_DEFAULT);
-        }
+
+        prepareStrategies(szcore);
+
 
         int precountMillis = 5 * 1000;
         int precountBeatNo = 4;
@@ -142,15 +139,15 @@ public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
         getWebScore().init();
     }
 
-    public void recalcRndStrategy(ScoreRandomisationStrategy strategy, Page page) {
-        if (strategy == null || page == null) {
+    private void prepareStrategies(BasicScore szcore) {
+        DynamicMovementStrategy dynamicMovementStrategy = szcore.getDynamicScoreStrategy();
+        if(dynamicMovementStrategy == null || !dynamicMovementStrategy.isActive()) {
             return;
         }
-        strategy.recalcStrategy(page);
-    }
-
-    public void processRndStrategyOnModClose(ScoreRandomisationStrategy strategy) {
-        //TODO
+        dynamicMovementStrategy.setInstruments(INSTRUMENTS);
+        dynamicMovementStrategy.setDynamicParts(DYNAMIC_INSTRUMENTS);
+        dynamicMovementStrategy.setDefaultPart(INSTRUMENT_DEFAULT);
+        dynamicMovementStrategy.setLastScorePage();
     }
 
     protected boolean isSendInstrumentSlotsEvent(String name) {
@@ -167,14 +164,14 @@ public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
     }
 
     protected void processInstrumentReplace(String sourceInst, String slotInstrument, Instrument currentInst, Instrument replaceInst, WebClientInfo clientInfo) {
-        ScoreBuilderStrategy builderStrategy = getBasicScore().getScoreBuilderStrategy();
-        if(builderStrategy == null || clientInfo == null) {
+        DynamicMovementStrategy dynamicScoreStrategy = getBasicScore().getDynamicScoreStrategy();
+        if(dynamicScoreStrategy == null || clientInfo == null) {
             return;
         }
 
         try {
             getWebScore().replaceInstrumentClient(slotInstrument, clientInfo);
-            builderStrategy.addClientInstrument(builderStrategy.getCurrentSection(), clientInfo.getClientId(), slotInstrument);
+            dynamicScoreStrategy.addClientInstrument(clientInfo.getClientId(), slotInstrument);
             getWebScore().sendPartInfo(clientInfo);
         } catch (Exception e) {
             LOG.error("processInstrumentReplace: cailed to set instrument client", e);

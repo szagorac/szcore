@@ -23,6 +23,7 @@ public class MovementInfo {
 
     private SequentalIntRange pageRange;
     private Set<String> parts = new HashSet<>();
+    private List<String> scoreParts = new ArrayList<>();
     private int startPage;
     private volatile boolean isActive;
     private volatile int currentSectionOrderIndex;
@@ -131,9 +132,27 @@ public class MovementInfo {
         isActive = active;
     }
 
-    public void addClientIdDefaultPart(String clientId, String partId) {
+    public void addClientIdDefaultPart(String clientId, String defaultPartId) {
+        //Assign default part if not taken, or next available if taken
         for (String section : sections.keySet()) {
-            addClientPart(clientId, partId, section);
+            MovementSectionInfo sectionInfo = sections.get(section);
+            String assignedPart = sectionInfo.getClientPart(clientId);
+            if(assignedPart != null) {
+                continue;
+            }
+            if(sectionInfo.isPartTaken(defaultPartId)) {
+                List<String> parts = sectionInfo.getParts();
+                for(String part : parts) {
+                    if(part.equals(defaultPartId) || !isScorePart(part)) {
+                        continue;
+                    }
+                    if(!sectionInfo.isPartTaken(part)) {
+                        addClientPart(clientId, part, section);
+                    }
+                }
+            } else {
+                addClientPart(clientId, defaultPartId, section);
+            }
         }
     }
 
@@ -183,6 +202,18 @@ public class MovementInfo {
         return parts;
     }
 
+    public List<String> getScoreParts() {
+        return scoreParts;
+    }
+
+    public void addScoreParts(List<String> scoreParts) {
+        this.scoreParts.addAll(scoreParts);
+    }
+
+    public boolean isScorePart(String part) {
+        return getScoreParts().contains(part);
+    }
+
     public String getCurrentSection() {
         return currentSection;
     }
@@ -226,12 +257,8 @@ public class MovementInfo {
         return nextSection;
     }
 
-    public void setNextSection(String nextSection, int sectionStartPageNo) {
-        this.nextSection = nextSection;
-        MovementSectionInfo nextSectionInfo = getNextSectionInfo();
-        if(nextSectionInfo != null) {
-            nextSectionInfo.recalculatePlayPageRange(sectionStartPageNo);
-        }
+    public void setNextSection(String section) {
+        this.nextSection = section;
     }
 
     public int getNextSectionStartPage() {
@@ -257,14 +284,32 @@ public class MovementInfo {
     }
 
     public void onPageStart(int currentPage) {
-        MovementSectionInfo sectionInfo = getCurrentSectionInfo();
-        if(sectionInfo == null) {
-            LOG.error("onPageStart: invalid current section");
-            return;
+        MovementSectionInfo currentSectionInfo = getCurrentSectionInfo();
+        LOG.info("onPageStart: currentPage: {}, currentSection: {}", currentPage, currentSectionInfo);
+        boolean isNextSection = true;
+        if(currentSectionInfo != null) {
+            if(currentSectionInfo.isSectionPage(currentPage)) {
+                isNextSection = false;
+                currentSectionInfo.setCurrentPlayPage(currentPage);
+            }
         }
-        boolean isSectionPage = sectionInfo.isSectionPage(currentPage);
-        if(isSectionPage) {
-            sectionInfo.setCurrentPlayPage(currentPage);
+        if(isNextSection) {
+            MovementSectionInfo nextSectionInfo = getNextSectionInfo();
+            if (nextSectionInfo != null) {
+                setCurrentSection(nextSectionInfo.getSectionId());
+                nextSectionInfo.recalculatePlayPageRange(currentPage);
+                nextSectionInfo.setCurrentPlayPage(currentPage);
+                LOG.info("onPageStart: starting next section {}", nextSectionInfo);
+            } else {
+                if(currentSectionInfo != null) {
+                    LOG.info("onPageStart: invalid next Section, replaying current section");
+                    currentSectionInfo.setCurrentPlayPage(currentPage);
+                    setCurrentSection(currentSectionInfo.getSectionId());
+                    currentSectionInfo.recalculatePlayPageRange(currentPage);
+                    nextSectionInfo.setCurrentPlayPage(currentPage);
+                }
+            }
+            setNextSection(null);
         }
     }
 
@@ -299,6 +344,12 @@ public class MovementInfo {
             return;
         }
         setCurrentSection(defaultSection);
+    }
+
+    public void resetOnNewPosition() {
+        for(MovementSectionInfo movementSectionInfo : sections.values()) {
+            movementSectionInfo.resetOnNewPosition();
+        }
     }
 
     @Override

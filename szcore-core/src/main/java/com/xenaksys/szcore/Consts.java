@@ -601,6 +601,7 @@ public interface Consts {
     String CONFIG_SECTIONS_ORDER = "sectionsOrder";
     String CONFIG_MOVEMENTS = "movements";
     String CONFIG_PARTS= "parts";
+    String CONFIG_SCORE_PARTS= "scoreParts";
     String CONFIG_MAX= "max";
     String CONFIG_WEB= "web";
     String CONFIG_MAX_CONFIGS = "maxConfigs";

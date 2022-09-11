@@ -36,6 +36,7 @@ public class DynamicMovementStrategy implements ScoreStrategy {
     private String nextMovement;
     private volatile String nextSectionOverride;
     private volatile boolean isStop;
+    private volatile boolean isCurrentSectionOverride;
     private volatile SelectionStrategy selectionStrategy;
     private int lastScorePage;
     private long lastSectionRecalc = 0L;
@@ -361,7 +362,10 @@ public class DynamicMovementStrategy implements ScoreStrategy {
             LOG.error("setCurrentSection: invalid movement info for section: {}", sectionName);
             return;
         }
-        movementInfo.setCurrentSection(sectionName);
+        String current = movementInfo.getCurrentSection();
+        if(current == null || isCurrentSectionOverride) {
+            movementInfo.setCurrentSection(sectionName);
+        }
     }
 
     public void setCurrentSectionOrderIndex(Integer orderIndex) {
@@ -414,6 +418,7 @@ public class DynamicMovementStrategy implements ScoreStrategy {
             case HIGHEST_VOTE:
                 String highestVoteSection = mvt.getHighestVoteSection();
                 mvt.setNextSection(highestVoteSection);
+                LOG.info("setNextSection: HIGHEST_VOTE, highestVoteSection {}", highestVoteSection);
                 lastSectionRecalc = System.currentTimeMillis();
                 break;
             case OVERRIDE:
@@ -422,6 +427,7 @@ public class DynamicMovementStrategy implements ScoreStrategy {
                     nextSectionOverride = mvt.getCurrentSection();
                 }
                 mvt.setNextSection(nextSectionOverride);
+                LOG.info("setNextSection: OVERRIDE, nextSectionOverride {}", nextSectionOverride);
                 lastSectionRecalc = System.currentTimeMillis();
                 break;
             default:
@@ -440,7 +446,42 @@ public class DynamicMovementStrategy implements ScoreStrategy {
     }
 
     public void setNextSectionOverride(String nextSectionOverride) {
+        if(nextSectionOverride == null || nextSectionOverride.isEmpty()) {
+            return;
+        }
+        MovementInfo mvtInfo = getCurrentMovementInfo();
+        if(mvtInfo == null) {
+            LOG.error("setNextSectionOverride: Invalid current movement");
+            return;
+        }
+        MovementSectionInfo section = mvtInfo.getSection(nextSectionOverride);
+        if(section == null) {
+            LOG.error("setNextSectionOverride: Invalid next section override: {}", nextSectionOverride);
+            return;
+        }
+        LOG.info("setNextSectionOverride: setting next section override: {}", nextSectionOverride);
         this.nextSectionOverride = nextSectionOverride;
+    }
+
+    public void setNextSectionOverride(Boolean isSectionOverride) {
+        if(isSectionOverride == null) {
+            return;
+        }
+        if(isSectionOverride) {
+            setSelectionStrategy(SelectionStrategy.OVERRIDE);
+        } else {
+            setSelectionStrategy(SelectionStrategy.HIGHEST_VOTE);
+        }
+
+        LOG.info("setNextSectionOverride: SelectionStrategy: {}", selectionStrategy);
+    }
+
+    public void setCurrentSectionOverride(Boolean isSectionOverride) {
+        if(isSectionOverride == null) {
+            return;
+        }
+        this.isCurrentSectionOverride = isSectionOverride;
+        LOG.info("setCurrentSectionOverride: isSectionOverride: {}", isSectionOverride);
     }
 
     public SelectionStrategy getSelectionStrategy() {

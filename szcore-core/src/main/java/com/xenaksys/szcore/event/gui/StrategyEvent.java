@@ -4,8 +4,12 @@ public class StrategyEvent extends ClientInEvent {
     private final StrategyEventType strategyEventType;
 
     private String sectionName;
+    private String nextSectionName;
     private String movementName;
+
     private Integer orderIndex;
+    private Boolean isOverrideNextSection;
+    private Boolean isOverrideCurrentSection;
 
     public StrategyEvent(StrategyEventType strategyEventType, long time) {
         super(time);
@@ -24,6 +28,14 @@ public class StrategyEvent extends ClientInEvent {
         this.sectionName = sectionName;
     }
 
+    public String getNextSectionName() {
+        return nextSectionName;
+    }
+
+    public void setNextSectionName(String nextSectionName) {
+        this.nextSectionName = nextSectionName;
+    }
+
     public String getMovementName() {
         return movementName;
     }
@@ -40,6 +52,22 @@ public class StrategyEvent extends ClientInEvent {
         this.orderIndex = orderIndex;
     }
 
+    public Boolean getOverrideNextSection() {
+        return isOverrideNextSection;
+    }
+
+    public void setOverrideNextSection(Boolean overrideSection) {
+        isOverrideNextSection = overrideSection;
+    }
+
+    public Boolean getOverrideCurrentSection() {
+        return isOverrideCurrentSection;
+    }
+
+    public void setOverrideCurrentSection(Boolean overrideSection) {
+        isOverrideCurrentSection = overrideSection;
+    }
+
     @Override
     public ClientInEventType getClientEventType() {
         return ClientInEventType.STRATEGY;
@@ -49,6 +77,12 @@ public class StrategyEvent extends ClientInEvent {
     public String toString() {
         return "StrategyEvent{" +
                 "strategyEventType=" + strategyEventType +
+                ", sectionName='" + sectionName + '\'' +
+                ", nextSectionName='" + nextSectionName + '\'' +
+                ", movementName='" + movementName + '\'' +
+                ", orderIndex=" + orderIndex +
+                ", isOverrideNextSection=" + isOverrideNextSection +
+                ", isOverrideCurrentSection=" + isOverrideCurrentSection +
                 '}';
     }
 }

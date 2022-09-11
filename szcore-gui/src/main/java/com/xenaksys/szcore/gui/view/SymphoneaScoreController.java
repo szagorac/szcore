@@ -912,15 +912,15 @@ public class SymphoneaScoreController {
         }
     }
 
-//    private void setNextSection(String sectionId) {
-//        MovementSection section = getSection(sectionId);
-//        if(section == null || !section.getSection().equals(sectionId)) {
-//            LOG.error("setNextSection: invalid sectionId: {}", sectionId);
-//            return;
-//        }
-//        nextSection.copy(section);
-//        sendSetMovementSection(sectionId, currentMovementProp.get());
-//    }
+    private void setNextSection(String sectionId) {
+        MovementSection section = getSection(sectionId);
+        if(section == null || !section.getSection().equals(sectionId)) {
+            LOG.error("setNextSection: invalid sectionId: {}", sectionId);
+            return;
+        }
+        nextSection.copy(section);
+        sendMovementInfo(false);
+    }
 
     private MovementSection getSection(int selectedIndex) {
         if(selectedIndex < 0 || selectedIndex >= sections.size()) {
@@ -962,6 +962,7 @@ public class SymphoneaScoreController {
 //            mvtSectionsChob.getSelectionModel().select(first);
         }
         processSectionVote();
+        sendMovementInfo(false);
     }
 
     private void resetVoteSections() {
@@ -1045,7 +1046,6 @@ public class SymphoneaScoreController {
         }
         setMovementSections(mov);
         setSectionOrder(mov);
-
     }
 
     private void setCurrentMovementLabel(String value) {
@@ -1072,7 +1072,7 @@ public class SymphoneaScoreController {
             return;
         }
         currentSection.copy(section);
-        sendMovementInfo(currentMovementProp.get(), name, sectionOrderLvw.getSelectionModel().getSelectedIndex());
+        sendMovementInfo(false);
     }
 
     private void setNextMovementSection(String name) {
@@ -1242,7 +1242,7 @@ public class SymphoneaScoreController {
         if (playMovName == null) {
             return;
         }
-        sendMovementInfo(playMovName, currentSection.getSection(), sectionOrderLvw.getSelectionModel().getSelectedIndex());
+        sendMovementInfo(true);
         Movement nextMovement = getMovement(playMovName);
         if (nextMovement == null) {
             return;
@@ -1301,12 +1301,16 @@ public class SymphoneaScoreController {
         mainApp.stopSection();
     }
 
-    private void sendMovementInfo(String movementName, String movementSectionName, Integer sectionOrderIndex) {
+    private void sendMovementInfo(Boolean isOverrideCurrentSection) {
         EventFactory eventFactory = publisher.getEventFactory();
         StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.SET_MOVEMENT_INFO, clock.getSystemTimeMillis());
-        strategyEvent.setMovementName(movementName);
-        strategyEvent.setSectionName(movementSectionName);
-        strategyEvent.setOrderIndex(sectionOrderIndex);
+        strategyEvent.setMovementName(currentMovementProp.get());
+        strategyEvent.setSectionName(currentSection.getSection());
+        strategyEvent.setNextSectionName(nextSection.getSection());
+        strategyEvent.setOrderIndex(sectionOrderLvw.getSelectionModel().getSelectedIndex());
+        strategyEvent.setOverrideNextSection(isOverrideNextSection);
+        strategyEvent.setOverrideCurrentSection(isOverrideCurrentSection);
+        LOG.info("sendMovementInfo: {}", strategyEvent);
         publisher.receive(strategyEvent);
     }
 

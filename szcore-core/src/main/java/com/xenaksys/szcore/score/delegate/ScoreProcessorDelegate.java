@@ -1312,10 +1312,13 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         } else {
             if(sectionPlayEndPage == currentPage) {
                 dynamicStrategy.setNextSection();
+                sourcePageNo = dynamicStrategy.getNextSectionStartPage();
+                LOG.info("prepareNextDynamicStrategyPage: sectionPlayEndPage == currentPage sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
+            } else {
+                // currentPage > sectionPlayStartPage
+                sourcePageNo = dynamicStrategy.getCurrentSectionNextPage();
+                LOG.info("prepareNextDynamicStrategyPage: currentPage > sectionPlayStartPage sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
             }
-            // currentPage > sectionPlayStartPage
-            sourcePageNo = dynamicStrategy.getCurrentSectionNextPage();
-            LOG.info("prepareNextDynamicStrategyPage: currentPage > sectionPlayStartPage sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
         }
 
         Page fromPage = szcore.getPageNo(sourcePageNo, instId);
@@ -2821,7 +2824,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                 setSectionName(event.getSectionName());
                 break;
             case SET_MOVEMENT_INFO:
-                setMovementInfo(event.getMovementName(), event.getSectionName(), event.getOrderIndex());
+                setMovementInfo(event.getMovementName(), event.getSectionName(), event.getNextSectionName(), event.getOrderIndex(), event.getOverrideNextSection(), event.getOverrideCurrentSection());
                 break;
             case SHUFFLE_ORDER:
                 shuffleSectionOrder();
@@ -2866,13 +2869,16 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         }
     }
 
-    private void setMovementInfo(String movementName, String sectionName, Integer orderIndex) {
+    private void setMovementInfo(String movementName, String sectionName, String nextSectionName, Integer orderIndex, Boolean isOverrideNextSection, Boolean isOverrideCurrentSection) {
         DynamicMovementStrategy strategy = szcore.getDynamicScoreStrategy();
         if(strategy == null) {
             return;
         }
+        strategy.setNextSectionOverride(isOverrideNextSection);
+        strategy.setCurrentSectionOverride(isOverrideCurrentSection);
         strategy.setCurrentMovement(movementName);
         strategy.setCurrentSection(sectionName);
+        strategy.setNextSectionOverride(nextSectionName);
         strategy.setCurrentSectionOrderIndex(orderIndex);
     }
 

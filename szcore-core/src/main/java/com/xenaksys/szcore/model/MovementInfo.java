@@ -97,6 +97,7 @@ public class MovementInfo {
                 maxVote = sectionVote;
             }
         }
+        LOG.error("getHighestVoteSection: selected section: {} votes: {}", maxVoteSection, maxVote);
         return maxVoteSection;
     }
 
@@ -238,6 +239,10 @@ public class MovementInfo {
             LOG.error("setCurrentSection: invalid sectionInfo for section: {}", sectionName);
             return;
         }
+        if(sectionName.equals(currentSection)) {
+            return;
+        }
+        LOG.info("setCurrentSection: sectionName: {}", sectionName);
         this.currentSection = sectionName;
     }
 

@@ -1283,43 +1283,9 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     }
 
     private Page prepareNextDynamicStrategyPage(DynamicMovementStrategy dynamicStrategy, InstrumentId instId, PageId currentPageId) {
-        MovementSectionInfo sectionInfo = dynamicStrategy.getCurrentMovementSection();
-        int currentPage = currentPageId.getPageNo();
-        int sectionPlayStartPage = sectionInfo.getPlayStartPageNo();
-        int sectionPlayEndPage = sectionInfo.getPlayEndPageNo();
-        int sectionPageDuration = sectionPlayEndPage - sectionPlayStartPage;
-        if(sectionPageDuration < 0) {
-            LOG.error("Unexpected section page duration: {}", sectionPageDuration);
-        }
-        int sourcePageNo = 0;
-        int nextPageNo = currentPageId.getPageNo() + 1;
-        if(currentPage < sectionPlayStartPage) {
-            LOG.error("prepareNextDynamicStrategyPage: Unexpected current page: {} before current section start {}", currentPage, sectionPlayStartPage);
-            sourcePageNo = sectionInfo.getStartPageNo();
-        } else if(currentPage == sectionPlayStartPage ) {
-            if(sectionPageDuration == 0) {
-                dynamicStrategy.setNextSection();
-                sourcePageNo = dynamicStrategy.getNextSectionStartPage();
-                LOG.info("prepareNextDynamicStrategyPage: sectionPageDuration == 0 sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
-            } else {
-                sourcePageNo = dynamicStrategy.getCurrentSectionNextPage();
-                LOG.info("prepareNextDynamicStrategyPage: sectionPageDuration != 0 sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
-                Page nextPage = szcore.getPageNo(sourcePageNo, instId);
-                if(nextPage != null) {
-                    return nextPage;
-                }
-            }
-        } else {
-            if(sectionPlayEndPage == currentPage) {
-                dynamicStrategy.setNextSection();
-                sourcePageNo = dynamicStrategy.getNextSectionStartPage();
-                LOG.info("prepareNextDynamicStrategyPage: sectionPlayEndPage == currentPage sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
-            } else {
-                // currentPage > sectionPlayStartPage
-                sourcePageNo = dynamicStrategy.getCurrentSectionNextPage();
-                LOG.info("prepareNextDynamicStrategyPage: currentPage > sectionPlayStartPage sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
-            }
-        }
+        int currentPageNo = currentPageId.getPageNo();
+
+        int sourcePageNo = dynamicStrategy.calcSourcePage(currentPageNo);
 
         Page fromPage = szcore.getPageNo(sourcePageNo, instId);
         if(fromPage == null) {
@@ -1327,6 +1293,17 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         }
         LOG.info("prepareNextDynamicStrategyPage: fromPage {} inst {} currentPageId: {}", sourcePageNo, instId.getName(), currentPageId.getPageNo());
         return prepareNextPage(instId, currentPageId, fromPage);
+    }
+
+    private int getNextSectionStartPage(DynamicMovementStrategy dynamicStrategy, MovementSectionInfo sectionInfo) {
+        dynamicStrategy.setNextSection();
+        sectionInfo.setActive(false);
+        return dynamicStrategy.getNextSectionStartPage();
+    }
+
+    private int getCurrentSectionNextPage(DynamicMovementStrategy dynamicStrategy, MovementSectionInfo sectionInfo) {
+        sectionInfo.setActive(true);
+        return dynamicStrategy.getCurrentSectionNextPage();
     }
 
     private void processRndStrategyOnCloseModWindow(ScoreRandomisationStrategy strategy, Stave stave, InstrumentId instId, Page nextPage, PageId currentPageId) {

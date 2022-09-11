@@ -39,8 +39,10 @@ public class DynamicMovementStrategy implements ScoreStrategy {
     private volatile boolean isCurrentSectionOverride;
     private volatile SelectionStrategy selectionStrategy;
     private int lastScorePage;
+    private int sourcePageNo = 0;
     private long lastSectionRecalc = 0L;
     private long lastPageRecalc = 0L;
+    private long lastSourcePageRecalc = 0L;
 
     public DynamicMovementStrategy(BasicScore szcore, DynamicMovementStrategyConfig config) {
         this.szcore = szcore;
@@ -365,6 +367,8 @@ public class DynamicMovementStrategy implements ScoreStrategy {
         String current = movementInfo.getCurrentSection();
         if(current == null || isCurrentSectionOverride) {
             movementInfo.setCurrentSection(sectionName);
+            MovementSectionInfo currentSectionInfo = movementInfo.getCurrentSectionInfo();
+            currentSectionInfo.setActive(true);
         }
     }
 
@@ -509,6 +513,15 @@ public class DynamicMovementStrategy implements ScoreStrategy {
         return mvtInfo.getNextSectionStartPage();
     }
 
+    public String getNextSectionName() {
+        MovementInfo mvtInfo = getCurrentMovementInfo();
+        if(mvtInfo == null) {
+            LOG.error("getNextSectionStartPage: Invalid current movement");
+            return null;
+        }
+        return mvtInfo.getNextSection();
+    }
+
     public int getCurrentSectionNextPage() {
         MovementInfo mvtInfo = getCurrentMovementInfo();
         if(mvtInfo == null) {
@@ -529,6 +542,66 @@ public class DynamicMovementStrategy implements ScoreStrategy {
         }
         mvtInfo.onPageStart(currentPage);
         lastPageRecalc = System.currentTimeMillis();
+    }
+
+    public int calcSourcePage(int currentPageNo) {
+        if(!isRecalcTime(lastSourcePageRecalc)) {
+            return this.sourcePageNo;
+        }
+
+        int sourcePageNo = 0;
+        MovementSectionInfo sectionInfo = getCurrentMovementSection();
+        int sectionPlayStartPage = sectionInfo.getPlayStartPageNo();
+        int sectionPlayEndPage = sectionInfo.getPlayEndPageNo();
+        int sectionPageDuration = sectionPlayEndPage - sectionPlayStartPage;
+        boolean isInterrupt = sectionInfo.isInterruptOnPageEnd();
+        if(sectionPageDuration < 0) {
+            LOG.error("Unexpected section page duration: {}", sectionPageDuration);
+        }
+        int nextPageNo = currentPageNo + 1;
+        if(currentPageNo < sectionPlayStartPage) {
+            LOG.error("prepareNextDynamicStrategyPage: Unexpected current page: {} before current section start {}", currentPageNo, sectionPlayStartPage);
+            sourcePageNo = sectionInfo.getStartPageNo();
+            sectionInfo.setActive(true);
+        } else if(currentPageNo == sectionPlayStartPage ) {
+            if(sectionPageDuration == 0 || isInterrupt) {
+                setNextSection();
+                String nextSection = getNextSectionName();
+                if (sectionInfo.getSectionId().equals(nextSection)){
+                    sourcePageNo = processCurrentSectionNextPage(sectionInfo);
+                } else {
+                    sectionInfo.setActive(false);
+                    sourcePageNo = getNextSectionStartPage();
+                }
+                LOG.info("prepareNextDynamicStrategyPage: sectionPageDuration == 0 sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
+            } else {
+                sourcePageNo = processCurrentSectionNextPage(sectionInfo);
+                LOG.info("prepareNextDynamicStrategyPage: sectionPageDuration != 0 sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
+            }
+        } else {
+            if(sectionPlayEndPage == currentPageNo ) {
+                sourcePageNo = processNextSectionStartPage(sectionInfo);
+                LOG.info("prepareNextDynamicStrategyPage: sectionPlayEndPage == currentPage sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
+            } else {
+                // currentPage > sectionPlayStartPage
+                sourcePageNo = processCurrentSectionNextPage(sectionInfo);
+                LOG.info("prepareNextDynamicStrategyPage: currentPage > sectionPlayStartPage sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
+            }
+        }
+        this.sourcePageNo = sourcePageNo;
+        this.lastSourcePageRecalc = System.currentTimeMillis();
+        return sourcePageNo;
+    }
+
+    private int processCurrentSectionNextPage(MovementSectionInfo sectionInfo) {
+        sectionInfo.setActive(true);
+        return getCurrentSectionNextPage();
+    }
+
+    private int processNextSectionStartPage(MovementSectionInfo sectionInfo) {
+        setNextSection();
+        sectionInfo.setActive(false);
+        return getNextSectionStartPage();
     }
 
     public void setLastScorePage() {

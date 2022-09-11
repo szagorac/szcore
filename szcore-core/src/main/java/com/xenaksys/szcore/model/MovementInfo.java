@@ -293,7 +293,7 @@ public class MovementInfo {
         LOG.info("onPageStart: currentPage: {}, currentSection: {}", currentPage, currentSectionInfo);
         boolean isNextSection = true;
         if(currentSectionInfo != null) {
-            if(currentSectionInfo.isSectionPage(currentPage)) {
+            if(currentSectionInfo.isSectionPage(currentPage) && currentSectionInfo.isActive()) {
                 isNextSection = false;
                 currentSectionInfo.setCurrentPlayPage(currentPage);
             }
@@ -304,6 +304,7 @@ public class MovementInfo {
                 setCurrentSection(nextSectionInfo.getSectionId());
                 nextSectionInfo.recalculatePlayPageRange(currentPage);
                 nextSectionInfo.setCurrentPlayPage(currentPage);
+                nextSectionInfo.setActive(true);
                 LOG.info("onPageStart: starting next section {}", nextSectionInfo);
             } else {
                 if(currentSectionInfo != null) {
@@ -311,7 +312,8 @@ public class MovementInfo {
                     currentSectionInfo.setCurrentPlayPage(currentPage);
                     setCurrentSection(currentSectionInfo.getSectionId());
                     currentSectionInfo.recalculatePlayPageRange(currentPage);
-                    nextSectionInfo.setCurrentPlayPage(currentPage);
+                    currentSectionInfo.setCurrentPlayPage(currentPage);
+                    currentSectionInfo.setActive(true);
                 }
             }
             setNextSection(null);

@@ -5,6 +5,7 @@ import com.aquafx_project.AquaFx;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.event.gui.PrecountInfo;
 import com.xenaksys.szcore.event.gui.ScoreInfoEvent;
+import com.xenaksys.szcore.event.gui.ScoreMovementInfoEvent;
 import com.xenaksys.szcore.event.gui.ScoreSectionInfoEvent;
 import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
@@ -21,6 +22,7 @@ import com.xenaksys.szcore.gui.view.SettingsController;
 import com.xenaksys.szcore.gui.view.SymphoneaScoreController;
 import com.xenaksys.szcore.model.EventService;
 import com.xenaksys.szcore.model.Id;
+import com.xenaksys.szcore.model.MovementInfo;
 import com.xenaksys.szcore.model.Score;
 import com.xenaksys.szcore.model.ScoreService;
 import com.xenaksys.szcore.model.SectionInfo;
@@ -421,6 +423,20 @@ public class SzcoreClient extends Application {
         } else {
             dialogsScoreController.onParticipantUpdate(participant);
         }
+    }
+
+    public void processScoreMovementInfos(ScoreMovementInfoEvent event) {
+        StrId scoreId = (StrId)event.getScoreId();
+        String currentScore = scoreController.getScoreName();
+        if(!scoreId.getName().equals(currentScore)) {
+            return;
+        }
+        List<MovementInfo> movementInfos = event.getMovementInfos();
+        String currentSection = event.getCurrentSection();
+        String nextSection = event.getNextSection();
+        String currentMovement = event.getCurrentMovement();
+        String nextMovement = event.getNextMovement();
+        symphoneaScoreController.onMovementInfo(movementInfos, currentMovement, nextMovement, currentSection, nextSection);
     }
 
     public void processScoreSectionInfos(ScoreSectionInfoEvent event) {

@@ -160,7 +160,7 @@ public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
 
     @Override
     public void processSelectSection(String section, WebClientInfo clientInfo) {
-        super.processSelectSection(section, clientInfo);
+//        super.processSelectSection(section, clientInfo);
     }
 
     protected void processInstrumentReplace(String sourceInst, String slotInstrument, Instrument currentInst, Instrument replaceInst, WebClientInfo clientInfo) {

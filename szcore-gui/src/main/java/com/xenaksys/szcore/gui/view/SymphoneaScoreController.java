@@ -313,6 +313,7 @@ public class SymphoneaScoreController {
     private double lastSythDurationValue = 8.0;
 
     private boolean isOverrideNextSection = false;
+    private String nextSectionOverride = null;
 
     public void setMainApp(SzcoreClient mainApp) {
         this.mainApp = mainApp;
@@ -906,9 +907,10 @@ public class SymphoneaScoreController {
         return instruction;
     }
 
-    private void onMvtSectionChobChange(String out) {
+    private void onMvtSectionChobChange(String section) {
+        nextSectionOverride = section;
         if(isOverrideNextSection) {
-            setNextMovementSection(out);
+            sendMovementInfo(false);
         }
     }
 
@@ -995,6 +997,9 @@ public class SymphoneaScoreController {
 
     private void setOverrideNextSection(Boolean newValue) {
         isOverrideNextSection = newValue;
+        if(!isOverrideNextSection) {
+            sendMovementInfo(false);
+        }
     }
 
     private void onMovementSelect(String movementName) {
@@ -1072,7 +1077,6 @@ public class SymphoneaScoreController {
             return;
         }
         currentSection.copy(section);
-        sendMovementInfo(false);
     }
 
     private void setNextMovementSection(String name) {
@@ -1201,6 +1205,19 @@ public class SymphoneaScoreController {
         initMovementsInfo(guiMovements, movementOrderNames, curMovementName);
     }
 
+    public void onMovementInfo(List<MovementInfo> movementInfos, String currentMovement, String nextMovement, String currentSection, String nextSection) {
+        Platform.runLater(() -> {
+            if(!currentMovementProp.get().equals(currentMovement)) {
+                currentMovementProp.setValue(currentMovement);
+            }
+            if(!nextMovementProp.get().equals(nextMovement)) {
+                nextMovementProp.setValue(nextMovement);
+            }
+            setCurrentMovementSection(currentSection);
+            setNextMovementSection(nextSection);
+        });
+    }
+
     private List<String> convertSectionsOrder(List<List<String>> sectionsOrder) {
         List<String> out = new ArrayList<>();
         if(sectionsOrder == null) {
@@ -1285,6 +1302,7 @@ public class SymphoneaScoreController {
                 String first = sectionOrder.get(0);
                 setCurrentMovementSection(first);
                 setNextMovementSection(first);
+                sendMovementInfo(false);
             }
             if(sectionOrder.size() > 0) {
                 sectionOrderLvw.getSelectionModel().select(0);
@@ -1306,7 +1324,11 @@ public class SymphoneaScoreController {
         StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.SET_MOVEMENT_INFO, clock.getSystemTimeMillis());
         strategyEvent.setMovementName(currentMovementProp.get());
         strategyEvent.setSectionName(currentSection.getSection());
-        strategyEvent.setNextSectionName(nextSection.getSection());
+        if(isOverrideNextSection) {
+            strategyEvent.setNextSectionName(nextSectionOverride);
+        } else {
+            strategyEvent.setNextSectionName(nextSection.getSection());
+        }
         strategyEvent.setOrderIndex(sectionOrderLvw.getSelectionModel().getSelectedIndex());
         strategyEvent.setOverrideNextSection(isOverrideNextSection);
         strategyEvent.setOverrideCurrentSection(isOverrideCurrentSection);

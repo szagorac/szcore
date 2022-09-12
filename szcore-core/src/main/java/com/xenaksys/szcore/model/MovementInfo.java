@@ -288,7 +288,7 @@ public class MovementInfo {
         return sectionInfo.getNextPage();
     }
 
-    public void onPageStart(int currentPage) {
+    public boolean onPageStart(int currentPage) {
         MovementSectionInfo currentSectionInfo = getCurrentSectionInfo();
         LOG.info("onPageStart: currentPage: {}, currentSection: {}", currentPage, currentSectionInfo);
         boolean isNextSection = true;
@@ -318,6 +318,7 @@ public class MovementInfo {
             }
             setNextSection(null);
         }
+        return isNextSection;
     }
 
     public void setSectionStartPage() {

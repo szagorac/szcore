@@ -42,7 +42,8 @@ public class DynamicMovementStrategy implements ScoreStrategy {
     private int sourcePageNo = 0;
     private long lastSectionRecalc = 0L;
     private long lastPageRecalc = 0L;
-    private long lastSourcePageRecalc = 0L;
+    protected long lastSourcePageRecalc = 0L;
+    protected boolean isUpdateClients = false;
 
     public DynamicMovementStrategy(BasicScore szcore, DynamicMovementStrategyConfig config) {
         this.szcore = szcore;
@@ -280,6 +281,22 @@ public class DynamicMovementStrategy implements ScoreStrategy {
     public Map<String, List<String>> getPartClientsMap() {
         MovementSectionInfo sectionInfo = getCurrentMovementSection();
         return sectionInfo.getPartClients();
+    }
+
+    public String getCurrentSection() {
+        MovementInfo movementInfo = getCurrentMovementInfo();
+        if(movementInfo != null) {
+            return movementInfo.getCurrentSection();
+        }
+        return null;
+    }
+
+    public String getNextSection() {
+        MovementInfo movementInfo = getCurrentMovementInfo();
+        if(movementInfo != null) {
+            return movementInfo.getNextSection();
+        }
+        return null;
     }
 
     public String getCurrentMovement() {
@@ -533,6 +550,7 @@ public class DynamicMovementStrategy implements ScoreStrategy {
 
     public void onPageStart(int currentPage) {
         if(!isRecalcTime(lastPageRecalc)) {
+            isUpdateClients = false;
             return;
         }
         MovementInfo mvtInfo = getCurrentMovementInfo();
@@ -540,12 +558,13 @@ public class DynamicMovementStrategy implements ScoreStrategy {
             LOG.error("onPageStart: Invalid current movement");
             return;
         }
-        mvtInfo.onPageStart(currentPage);
+        isUpdateClients =  mvtInfo.onPageStart(currentPage);
         lastPageRecalc = System.currentTimeMillis();
     }
 
     public int calcSourcePage(int currentPageNo) {
         if(!isRecalcTime(lastSourcePageRecalc)) {
+            isUpdateClients = false;
             return this.sourcePageNo;
         }
 
@@ -588,9 +607,16 @@ public class DynamicMovementStrategy implements ScoreStrategy {
                 LOG.info("prepareNextDynamicStrategyPage: currentPage > sectionPlayStartPage sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
             }
         }
+        if(this.sourcePageNo != sourcePageNo) {
+            isUpdateClients = true;
+        }
         this.sourcePageNo = sourcePageNo;
         this.lastSourcePageRecalc = System.currentTimeMillis();
         return sourcePageNo;
+    }
+
+    public boolean isUpdateClients() {
+        return isUpdateClients;
     }
 
     private int processCurrentSectionNextPage(MovementSectionInfo sectionInfo) {

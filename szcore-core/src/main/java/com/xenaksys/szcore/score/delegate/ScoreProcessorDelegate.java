@@ -16,6 +16,7 @@ import com.xenaksys.szcore.event.gui.ClientEvent;
 import com.xenaksys.szcore.event.gui.ClientInEvent;
 import com.xenaksys.szcore.event.gui.ClientInEventType;
 import com.xenaksys.szcore.event.gui.ScoreInfoEvent;
+import com.xenaksys.szcore.event.gui.ScoreMovementInfoEvent;
 import com.xenaksys.szcore.event.gui.ScoreSectionInfoEvent;
 import com.xenaksys.szcore.event.gui.StrategyEvent;
 import com.xenaksys.szcore.event.gui.StrategyEventType;
@@ -1136,6 +1137,9 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     private void processDynamicSectionOnOpenModWindow(DynamicMovementStrategy dynamicStrategy, InstrumentId instId, PageId currentPageId) {
         int currentPage = currentPageId.getPageNo();
         dynamicStrategy.onPageStart(currentPage);
+        if(dynamicStrategy.isUpdateClients()) {
+            updateClients(dynamicStrategy);
+        }
     }
 
     private void processBuilderStrategyOnOpenModWindow(ScoreBuilderStrategy builderStrategy, InstrumentId instId) {
@@ -1279,14 +1283,15 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                 publishOscEvent(instrumentSlotsEvent);
             }
         }
-
     }
 
     private Page prepareNextDynamicStrategyPage(DynamicMovementStrategy dynamicStrategy, InstrumentId instId, PageId currentPageId) {
         int currentPageNo = currentPageId.getPageNo();
 
         int sourcePageNo = dynamicStrategy.calcSourcePage(currentPageNo);
-
+        if(dynamicStrategy.isUpdateClients()) {
+            updateClients(dynamicStrategy);
+        }
         Page fromPage = szcore.getPageNo(sourcePageNo, instId);
         if(fromPage == null) {
             LOG.error("prepareNextDynamicStrategyPage: invalid fromPage {} inst {}", sourcePageNo, instId);
@@ -3490,6 +3495,16 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         }
     }
 
+    protected void updateClients(DynamicMovementStrategy dynamicMovementStrategy) {
+        if(dynamicMovementStrategy == null) {
+            return;
+        }
+        ScoreMovementInfoEvent movementInfoEvent = createMovementInfoEvent(dynamicMovementStrategy);
+        if(movementInfoEvent != null) {
+            sendClientEvent(movementInfoEvent);
+        }
+    }
+
     protected ScoreSectionInfoEvent createSectionInfoEvent(ScoreBuilderStrategy scoreBuilderStrategy) {
         if(scoreBuilderStrategy == null) {
             return null;
@@ -3502,6 +3517,20 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         String nextSection = scoreBuilderStrategy.getNextSection();
         long creationTime = clock.getSystemTimeMillis();
         return eventFactory.createScoreSectionInfoEvent(scoreId, sectionInfos, sectionOrder, isReady, currentSection, nextSection, creationTime);
+    }
+
+    protected ScoreMovementInfoEvent createMovementInfoEvent(DynamicMovementStrategy dynamicMovementStrategy) {
+        if(dynamicMovementStrategy == null) {
+            return null;
+        }
+        Id scoreId = getScore().getId();
+        List<MovementInfo> movementInfos = dynamicMovementStrategy.getMovementInfos();
+        String currentMov = dynamicMovementStrategy.getCurrentMovement();
+        String nextMov = dynamicMovementStrategy.getNextMovement();
+        String currentSection = dynamicMovementStrategy.getCurrentSection();
+        String nextSection = dynamicMovementStrategy.getNextSection();
+        long creationTime = clock.getSystemTimeMillis();
+        return eventFactory.createScoreMovementInfoEvent(scoreId, movementInfos, currentMov, nextMov, currentSection, nextSection, creationTime);
     }
 
 

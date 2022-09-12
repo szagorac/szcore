@@ -462,7 +462,6 @@ public class SzcoreClient extends Application {
         if(isStop) {
             Platform.runLater(this::onStop);
         }
-
     }
 
 
@@ -473,7 +472,7 @@ public class SzcoreClient extends Application {
     private void onStop() {
         scoreController.showSemaphore(1, Color.RED);
         dialogsScoreController.showSemaphore(1, Color.RED);
-        symphoneaScoreController.showSemaphore(1, Color.RED);
+        symphoneaScoreController.onStop();
     }
 
     private void updatePrecount(PrecountInfo precountInfo) {

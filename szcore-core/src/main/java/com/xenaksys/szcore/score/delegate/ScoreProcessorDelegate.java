@@ -1269,6 +1269,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                 addOneOffStopEvent(sectionLastBeat.getBeatId(), transport.getId());
                 addProcessSectionsEvent(sectionLastBeat.getBeatId(), dynamicStrategy.getCurrentMovement(), ScoreSectionEventType.STOP, transport.getId());
                 nextPage = szcore.getEndPage(instId);
+                LOG.info("processDynamicStrategyOn CloseModWindow: setStop");
             } else {
                 nextPage = prepareNextDynamicStrategyPage(dynamicStrategy, instId, currentPageId);
             }
@@ -2808,12 +2809,31 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             case SET_MOVEMENT_INFO:
                 setMovementInfo(event.getMovementName(), event.getSectionName(), event.getNextSectionName(), event.getOrderIndex(), event.getOverrideNextSection(), event.getOverrideCurrentSection());
                 break;
+            case STOP_NEXT:
+                stopNext();
+                break;
             case SHUFFLE_ORDER:
                 shuffleSectionOrder();
                 break;
             default:
                 LOG.error("processStrategyEvent: unknown event type: {}", strategyType);
         }
+    }
+
+    private void stopNext() {
+        List<ScoreStrategy> strategies = szcore.getStrategies();
+        for(ScoreStrategy strategy : strategies) {
+            switch (strategy.getType()) {
+                case DYNAMIC:
+                    DynamicMovementStrategy dynamicStrategy = (DynamicMovementStrategy)strategy;
+                    if(!dynamicStrategy.isActive()) {
+                        break;
+                    }
+                    dynamicStrategy.setStop(true);
+                    break;
+            }
+        }
+
     }
 
     private void shuffleSectionOrder() {
@@ -3669,7 +3689,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     @Override
     public void onSectionStop(String section) {
         ScoreBuilderStrategy builderStrategy = szcore.getScoreBuilderStrategy();
-        if(builderStrategy == null) {
+        if(builderStrategy == null || !builderStrategy.isActive()) {
             return;
         }
         String current = builderStrategy.getCurrentSection();

@@ -277,6 +277,8 @@ public class SymphoneaScoreController {
     private ChoiceBox<String> mvtSectionsChob;
     @FXML
     private CheckBox overrideNextSectionChb;
+    @FXML
+    private CheckBox stopOnNextPageEndChb;
 
     private SzcoreClient mainApp;
     private EventService publisher;
@@ -517,6 +519,9 @@ public class SymphoneaScoreController {
 
         overrideNextSectionChb.setSelected(false);
         overrideNextSectionChb.selectedProperty().addListener((observable, oldValue, newValue) -> setOverrideNextSection(newValue));
+
+        stopOnNextPageEndChb.setSelected(false);
+        stopOnNextPageEndChb.selectedProperty().addListener((observable, oldValue, newValue) -> setStopOnNextPage(newValue));
     }
 
     @FXML
@@ -1002,6 +1007,12 @@ public class SymphoneaScoreController {
         }
     }
 
+    private void setStopOnNextPage(Boolean isStop) {
+        if(isStop) {
+            sendStopNext();
+        }
+    }
+
     private void onMovementSelect(String movementName) {
         Movement movement = getMovement(movementName);
         if (movement == null) {
@@ -1254,6 +1265,8 @@ public class SymphoneaScoreController {
     }
 
     public void setMovement(ActionEvent actionEvent) {
+        stopOnNextPageEndChb.setSelected(false);
+        overrideNextSectionChb.setSelected(false);
         presetsChob.getSelectionModel().select(Consts.PRESET_ALL_ON);
         String playMovName = currentMovementProp.getValue();
         if (playMovName == null) {
@@ -1333,6 +1346,13 @@ public class SymphoneaScoreController {
         strategyEvent.setOverrideNextSection(isOverrideNextSection);
         strategyEvent.setOverrideCurrentSection(isOverrideCurrentSection);
         LOG.info("sendMovementInfo: {}", strategyEvent);
+        publisher.receive(strategyEvent);
+    }
+
+    private void sendStopNext() {
+        EventFactory eventFactory = publisher.getEventFactory();
+        StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.STOP_NEXT, clock.getSystemTimeMillis());
+        LOG.info("sendStopNext: {}", strategyEvent);
         publisher.receive(strategyEvent);
     }
 
@@ -1620,6 +1640,10 @@ public class SymphoneaScoreController {
         movementOrder.clear();
         nextMovementProp.setValue(Consts.NAME_NA);
         currentMovementProp.setValue(Consts.NAME_NA);
+        currentSection.reset();
+        nextSection.reset();
+        stopOnNextPageEndChb.setSelected(false);
+        overrideNextSectionChb.setSelected(false);
     }
 
     public void resetOverlays() {
@@ -1652,6 +1676,11 @@ public class SymphoneaScoreController {
 
     public void onTempoEvent(Tempo tempo) {
         this.tempo = tempo;
+    }
+
+    public void onStop() {
+        showSemaphore(1, Color.RED);
+        stopOnNextPageEndChb.setSelected(false);
     }
 
     class MaxSender implements Runnable {

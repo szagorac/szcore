@@ -15,6 +15,7 @@
                                 <Button fx:id="setNextSectionBtn" minWidth="30.0" mnemonicParsing="false" onAction="#setMovement" prefWidth="55.0" styleClass="button-orange" stylesheets="@css/szcoreStyle.css" text="Set" />
                                 <Button fx:id="playNextSectionBtn" layoutX="539.0" layoutY="11.0" minWidth="30.0" mnemonicParsing="false" onAction="#playMovement" prefWidth="55.0" styleClass="button-green" stylesheets="@css/szcoreStyle.css" text="Play" />
                                 <Button fx:id="stopNextSectionBtn" layoutX="586.0" layoutY="11.0" minWidth="30.0" mnemonicParsing="false" onAction="#stopSection" prefWidth="55.0" styleClass="button-red" stylesheets="@css/szcoreStyle.css" text="Stop" />
+                                <CheckBox fx:id="stopOnNextPageEndChb" mnemonicParsing="false" text="StopNextPge" />
                                 <Circle fx:id="semaphore4Crc" fill="#ff212100" radius="10.0" stroke="BLACK" strokeType="INSIDE" />
                                 <Circle fx:id="semaphore3Crc" fill="#21ff3400" radius="10.0" stroke="BLACK" strokeType="INSIDE" />
                                 <Circle fx:id="semaphore2Crc" fill="#1f93ff00" radius="10.0" stroke="BLACK" strokeType="INSIDE" />

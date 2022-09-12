@@ -662,6 +662,7 @@ public class DynamicMovementStrategy implements ScoreStrategy {
     }
 
     public void resetOnNewPosition() {
+        setStop(false);
         deleteTempPages();
         for(MovementInfo movementInfo : movementInfos.values()) {
             movementInfo.resetOnNewPosition();

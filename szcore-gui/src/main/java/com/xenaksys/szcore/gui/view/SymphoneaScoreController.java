@@ -1272,11 +1272,11 @@ public class SymphoneaScoreController {
         if (playMovName == null) {
             return;
         }
-        sendMovementInfo(true);
         Movement nextMovement = getMovement(playMovName);
         if (nextMovement == null) {
             return;
         }
+        setSections(sectionOrderLvw.getSelectionModel().getSelectedIndex());
         int startPage = nextMovement.getStartPage();
         mainApp.setPage(startPage);
         mainApp.sendPosition();
@@ -1307,20 +1307,26 @@ public class SymphoneaScoreController {
         if(movement == null) {
             return;
         }
-
         Platform.runLater(() -> {
             sectionOrder.clear();
             sectionOrder.addAll(movement.getSectionOrder());
-            if(sectionOrder.size() > 0) {
-                String first = sectionOrder.get(0);
-                setCurrentMovementSection(first);
-                setNextMovementSection(first);
-                sendMovementInfo(false);
-            }
-            if(sectionOrder.size() > 0) {
-                sectionOrderLvw.getSelectionModel().select(0);
-            }
+            setSections(0);
         });
+
+    }
+    private void setSections(int orderIndex) {
+        if (sectionOrder.size() <= orderIndex) {
+            return;
+        }
+        sectionOrderLvw.getSelectionModel().select(orderIndex);
+        String firstCsv = sectionOrder.get(orderIndex);
+        String[] sections = firstCsv.split(COMMA);
+        if(sections.length > 0) {
+            String first = sections[0];
+            setCurrentMovementSection(first);
+            setNextMovementSection(first);
+        }
+        sendMovementInfo(true);
     }
 
     public void playMovement(ActionEvent actionEvent) {
@@ -1632,10 +1638,10 @@ public class SymphoneaScoreController {
 
     public void reset() {
         resetOverlays();
-        resetSections();
+        resetMovements();
     }
 
-    public void resetSections() {
+    public void resetMovements() {
         movements.clear();
         movementOrder.clear();
         nextMovementProp.setValue(Consts.NAME_NA);

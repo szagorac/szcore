@@ -6,20 +6,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 public class MovementSectionInfo {
     static final Logger LOG = LoggerFactory.getLogger(MovementSectionInfo.class);
 
     private final String sectionId;
     private final List<String> parts = new ArrayList<>();
+    private final List<String> scoreParts = new ArrayList<>();
     private final VoteInfo voteInfo = new VoteInfo();
-    private final Map<String, String> clientPart = new HashMap<>();
-    private final Map<String, List<String>> partClients = new HashMap<>();
     private final List<ExtScoreInfo> maxConfigs = new ArrayList<>();
     private final List<ExtScoreInfo> webConfigs = new ArrayList<>();
 
@@ -36,59 +32,6 @@ public class MovementSectionInfo {
 
     public String getSectionId() {
         return sectionId;
-    }
-
-    public void addClientPart(String clientId, String partId) {
-        if (clientId == null || partId == null) {
-            return;
-        }
-        clientPart.put(clientId, partId);
-        updatePartClient(clientId, partId);
-    }
-
-    private void updatePartClient(String clientId, String partId) {
-        removeClientFromOtherPart(clientId, partId);
-        List<String> clients = partClients.computeIfAbsent(partId, k -> new ArrayList<>());
-        if (!clients.contains(clientId)) {
-            clients.add(clientId);
-        }
-    }
-
-    private void removeClientFromOtherPart(String clientId, String partId) {
-        for (String instrument : partClients.keySet()) {
-            if (instrument.equals(partId)) {
-                continue;
-            }
-            List<String> clients = partClients.get(instrument);
-            clients.remove(clientId);
-        }
-    }
-
-    public String getClientPart(String clientId) {
-        if (clientId == null) {
-            return null;
-        }
-        return clientPart.get(clientId);
-    }
-
-    public Map<String, String> getClientParts() {
-        return clientPart;
-    }
-
-    public Map<String, List<String>> getPartClients() {
-        return partClients;
-    }
-
-    public List<String> getPartClients(String part) {
-        return partClients.get(part);
-    }
-
-    public boolean isPartTaken(String part) {
-        List<String> clients = getPartClients(part);
-        if(clients == null || clients.isEmpty()) {
-            return false;
-        }
-        return true;
     }
 
     public void setPageRange(IntRange sectionPageRange) {
@@ -137,10 +80,6 @@ public class MovementSectionInfo {
             return -1;
         }
         return intRange.getStart();
-    }
-
-    public Set<String> getClients() {
-        return clientPart.keySet();
     }
 
     public VoteInfo getVoteInfo() {
@@ -225,8 +164,19 @@ public class MovementSectionInfo {
         this.parts.addAll(parts);
     }
 
+    public void setScoreParts(List<String> parts) {
+        if(parts == null) {
+            return;
+        }
+        this.scoreParts.addAll(parts);
+    }
+
     public List<String> getParts() {
         return parts;
+    }
+
+    public List<String> getScoreParts() {
+        return scoreParts;
     }
 
     public boolean isInterruptOnPageEnd() {

@@ -3,6 +3,7 @@ package com.xenaksys.szcore.score.delegate;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.DynamicMovementStrategy;
 import com.xenaksys.szcore.event.EventFactory;
+import com.xenaksys.szcore.event.osc.OscEvent;
 import com.xenaksys.szcore.event.osc.VoteAudienceEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceVoteEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
@@ -20,9 +21,11 @@ import com.xenaksys.szcore.model.WebPublisher;
 import com.xenaksys.szcore.model.id.BeatId;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.PageId;
+import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.model.id.StrId;
 import com.xenaksys.szcore.score.BasicPage;
 import com.xenaksys.szcore.score.BasicScore;
+import com.xenaksys.szcore.score.BasicStave;
 import com.xenaksys.szcore.score.InscorePageMap;
 import com.xenaksys.szcore.score.InstrumentBeatTracker;
 import com.xenaksys.szcore.score.ScoreLoader;
@@ -34,6 +37,7 @@ import com.xenaksys.szcore.task.TaskFactory;
 import com.xenaksys.szcore.time.TransportFactory;
 import com.xenaksys.szcore.web.WebClientInfo;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -155,7 +159,7 @@ public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
             return false;
         }
 //        return !INSTRUMENT_PRESENTER.equals(name);
-        return false;
+        return true;
     }
 
     @Override
@@ -220,5 +224,25 @@ public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
         if (audienceProcessor != null) {
             audienceProcessor.sendAudienceConfig(configName, presetNo, overrides);
         }
+    }
+
+    protected OscEvent createDisplayPageEvent(PageId pageId, String pageName, PageId rndPageId, BasicStave stave) {
+        if (pageName == null || stave == null) {
+            return null;
+        }
+
+        StaveId staveId = stave.getId();
+        String address = stave.getOscAddress();
+        String filename = pageName + Consts.PNG_FILE_EXTENSION;
+        ArrayList<Object> args = new ArrayList<>();
+        args.add(Consts.OSC_INSCORE_SET);
+        args.add(Consts.OSC_INSCORE_FILE);
+        args.add(filename);
+
+        String destination = getBasicScore().getOscDestination(staveId.getInstrumentId());
+//        LOG.info("createDisplayPageEvent: pageName: {} destination: {} staveId: {} stave address: {}", pageName, destination, staveId.getStaveNo(), address);
+
+        return getEventFactory().createPageDisplayEvent(pageId, rndPageId, filename, staveId, address, args, null, destination, getClock().getSystemTimeMillis());
+
     }
 }

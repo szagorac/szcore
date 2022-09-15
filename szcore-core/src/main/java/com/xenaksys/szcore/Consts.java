@@ -539,6 +539,7 @@ public interface Consts {
 
     String WEB_SCORE_PAGE_PREFIX = "p";
     String WEB_SCORE_PAGE_NO_TOKEN = "@PgNo@";
+    String WEB_SCORE_PART_TOKEN = "@Part@";
 
     String WEB_WS_CLOSE_REASON_NORMAL = "Closed by the server";
 

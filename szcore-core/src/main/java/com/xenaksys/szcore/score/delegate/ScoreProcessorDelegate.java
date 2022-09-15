@@ -1107,11 +1107,12 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
 
         processDynamicSectionOnOpenModWindow(dynamicStrategy, instId, currentPageId);
 
-        List<String> parts = dynamicStrategy.getCurrentSectionParts();
+        List<String> parts = dynamicStrategy.getCurrentSectionScoreParts();
         if(parts == null || parts.isEmpty()) {
             return;
         }
         String instSlotsCsv = ParseUtil.convertListToCsv(parts);
+        LOG.info("process DynamicStrategy OpenModWindow, parts to send to client: {} part:{}", instSlotsCsv, instId.getName());
         MovementSectionInfo sectionInfo = dynamicStrategy.getCurrentMovementSection();
         if(sectionInfo == null) {
             return;
@@ -1120,7 +1121,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         List<String> clients = dynamicStrategy.getPartClients(inst);
         boolean isSendSlotEvent = isSendInstrumentSlotsEvent(inst);
         if(clients == null || clients.isEmpty()) {
-            LOG.debug("processBuilderStrategy OpenModWindow, no clients for instrument: {}", inst);
+            LOG.debug("process DynamicStrategy OpenModWindow, no clients for instrument: {}", inst);
         } else {
             for(String client : clients) {
                 OscEvent instrumentSlotsEvent;
@@ -2009,7 +2010,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
         return eventFactory.createModWindowEvent(beatId, nextPage, currentPageId, stave, isOpen, clock.getSystemTimeMillis());
     }
 
-    private OscEvent createDisplayPageEvent(PageId pageId, String pageName, PageId rndPageId, BasicStave stave) {
+    protected OscEvent createDisplayPageEvent(PageId pageId, String pageName, PageId rndPageId, BasicStave stave) {
         if (pageName == null || stave == null) {
             return null;
         }
@@ -2255,9 +2256,9 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                         break;
                     }
                     movementInfo.setSectionStartPage();
-
                     Map<String, List<String>> partClients = dynamicStrategy.getPartClientsMap();
                     webScore.setSectionInstrumentClients(partClients);
+                    webScore.updateDynamicMovementStrategy(dynamicStrategy);
                     break;
             }
         }

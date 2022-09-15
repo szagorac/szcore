@@ -16,8 +16,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DynamicMovementStrategy implements ScoreStrategy {
@@ -44,6 +46,8 @@ public class DynamicMovementStrategy implements ScoreStrategy {
     private long lastPageRecalc = 0L;
     protected long lastSourcePageRecalc = 0L;
     protected boolean isUpdateClients = false;
+    private final Map<String, String> clientPart = new HashMap<>();
+    private final Map<String, List<String>> partClients = new HashMap<>();
 
     public DynamicMovementStrategy(BasicScore szcore, DynamicMovementStrategyConfig config) {
         this.szcore = szcore;
@@ -80,7 +84,15 @@ public class DynamicMovementStrategy implements ScoreStrategy {
             MovementSectionInfo sectionInfo = new MovementSectionInfo(sectionConfig.getName());
             sectionInfo.setPageRange(sectionConfig.getRange());
             sectionInfo.setActive(false);
-            sectionInfo.setParts(sectionConfig.getParts());
+            List<String> parts = sectionConfig.getParts();
+            sectionInfo.setParts(parts);
+            List<String> scoreParts = new ArrayList<>();
+            for(String part : parts) {
+                if(isScorePart(part)) {
+                    scoreParts.add(part);
+                }
+            }
+            sectionInfo.setScoreParts(scoreParts);
             movementInfo.addSection(sectionInfo);
 
             List<ExtScoreInfo> maxInfos = new ArrayList<>();
@@ -117,6 +129,7 @@ public class DynamicMovementStrategy implements ScoreStrategy {
         }
         movementInfo.addSectionOrder(movementConfig.getSectionsOrder());
         movementInfo.setStartPage(movementConfig.getStartPage());
+        movementInfo.addParts(getParts());
         movementInfo.addScoreParts(getScoreParts());
 
         movementInfos.put(movementInfo.getMovementId(), movementInfo);
@@ -133,6 +146,10 @@ public class DynamicMovementStrategy implements ScoreStrategy {
 
     public List<MovementConfig> getMovementConfigs() {
         return config.getMovements();
+    }
+
+    public List<String> getParts() {
+        return config.getParts();
     }
 
     public List<String> getScoreParts() {
@@ -195,6 +212,14 @@ public class DynamicMovementStrategy implements ScoreStrategy {
         return sectionInfo.getParts();
     }
 
+    public List<String> getCurrentSectionScoreParts() {
+        MovementSectionInfo sectionInfo = getCurrentMovementSection();
+        if(sectionInfo == null) {
+            return null;
+        }
+        return sectionInfo.getScoreParts();
+    }
+
     public void setDynamicParts(String[] instruments) {
         this.dynamicParts = instruments;
     }
@@ -218,36 +243,88 @@ public class DynamicMovementStrategy implements ScoreStrategy {
         if (defaultPart == null) {
             return;
         }
-        for (MovementInfo movementInfo : movementInfos.values()) {
-            movementInfo.addClientIdDefaultPart(clientId, defaultPart);
-        }
+        addClientIdDefaultPart(clientId, defaultPart);
     }
 
     public void addClientInstrument(String clientId, String instrumentId) {
-        String mov = null;
-        String section = null;
-        MovementInfo movementInfo = getCurrentMovementInfo();
-        if(movementInfo != null) {
-            mov = movementInfo.getMovementId();
-        }
-        MovementSectionInfo sectionInfo = getCurrentMovementSection();
-        if(sectionInfo != null) {
-            section = sectionInfo.getSectionId();
-        }
-
-        addClientInstrument(mov, section, clientId, instrumentId);
+        addClientPart(clientId, instrumentId);
     }
 
-    public void addClientInstrument(String movement, String section, String clientId, String instrumentId) {
-        if (movement == null || section == null || clientId == null || instrumentId == null) {
+    public void addClientPart(String clientId, String partId) {
+        if (clientId == null || partId == null) {
             return;
         }
-        MovementInfo movementInfo = getMovementInfo(movement);
-        if (movementInfo == null) {
-            return;
-        }
-        movementInfo.addClientPart(clientId, instrumentId, section);
+        clientPart.put(clientId, partId);
+        updatePartClient(clientId, partId);
     }
+
+    private void updatePartClient(String clientId, String partId) {
+        removeClientFromOtherPart(clientId, partId);
+        List<String> clients = partClients.computeIfAbsent(partId, k -> new ArrayList<>());
+        if (!clients.contains(clientId)) {
+            clients.add(clientId);
+        }
+    }
+
+    private void removeClientFromOtherPart(String clientId, String partId) {
+        for (String instrument : partClients.keySet()) {
+            if (instrument.equals(partId)) {
+                continue;
+            }
+            List<String> clients = partClients.get(instrument);
+            clients.remove(clientId);
+        }
+    }
+
+    public String getClientPart(String clientId) {
+        if (clientId == null) {
+            return null;
+        }
+        return clientPart.get(clientId);
+    }
+
+    public Map<String, String> getClientParts() {
+        return clientPart;
+    }
+
+    public Map<String, List<String>> getPartClientsMap() {
+        return partClients;
+    }
+
+    public List<String> getPartClients(String part) {
+        return partClients.get(part);
+    }
+
+    public void addClientIdDefaultPart(String clientId, String defaultPartId) {
+        //Assign default part if not taken, or next available if taken
+        String assignedPart = getClientPart(clientId);
+        if(assignedPart != null) {
+            return;
+        }
+        if(isPartTaken(defaultPartId)) {
+            List<String> parts = getParts();
+            for(String part : parts) {
+                if(part.equals(defaultPartId) || !isScorePart(part)) {
+                    continue;
+                }
+                if(!isPartTaken(part)) {
+                    addClientPart(clientId, part);
+                }
+            }
+        } else {
+            addClientPart(clientId, defaultPartId);
+        }
+    }
+
+    public boolean isPartTaken(String part) {
+        List<String> clients = getPartClients(part);
+        return clients != null && !clients.isEmpty();
+    }
+
+    public Set<String> getClients() {
+        return clientPart.keySet();
+    }
+
 
     public MovementInfo getMovementInfo(String movementId) {
         if (movementId == null) {
@@ -271,16 +348,6 @@ public class DynamicMovementStrategy implements ScoreStrategy {
         }
         MovementInfo movementInfo = getMovement(currentMovement);
         return movementInfo.getCurrentSectionInfo();
-    }
-
-    public List<String> getPartClients(String instrument) {
-        MovementSectionInfo sectionInfo = getCurrentMovementSection();
-        return sectionInfo.getPartClients().get(instrument);
-    }
-
-    public Map<String, List<String>> getPartClientsMap() {
-        MovementSectionInfo sectionInfo = getCurrentMovementSection();
-        return sectionInfo.getPartClients();
     }
 
     public String getCurrentSection() {

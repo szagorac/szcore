@@ -38,16 +38,6 @@ public class MovementInfo {
         return movementId;
     }
 
-    public void addClientPart(String clientId, String partId, String sectionId) {
-        if (clientId == null || partId == null || sectionId == null) {
-            return;
-        }
-        if (!sections.containsKey(sectionId)) {
-            return;
-        }
-        MovementSectionInfo sectionInfo = sections.get(sectionId);
-        sectionInfo.addClientPart(clientId, partId);
-    }
 
     public List<MovementSectionInfo> getSections() {
         return new ArrayList<>(sections.values());
@@ -66,7 +56,6 @@ public class MovementInfo {
         }
         sections.put(section.getSectionId(), section);
         recalcPageRange();
-        resetParts();
     }
 
     public void addSectionOrder(List<List<String>> sections) {
@@ -133,39 +122,8 @@ public class MovementInfo {
         isActive = active;
     }
 
-    public void addClientIdDefaultPart(String clientId, String defaultPartId) {
-        //Assign default part if not taken, or next available if taken
-        for (String section : sections.keySet()) {
-            MovementSectionInfo sectionInfo = sections.get(section);
-            String assignedPart = sectionInfo.getClientPart(clientId);
-            if(assignedPart != null) {
-                continue;
-            }
-            if(sectionInfo.isPartTaken(defaultPartId)) {
-                List<String> parts = sectionInfo.getParts();
-                for(String part : parts) {
-                    if(part.equals(defaultPartId) || !isScorePart(part)) {
-                        continue;
-                    }
-                    if(!sectionInfo.isPartTaken(part)) {
-                        addClientPart(clientId, part, section);
-                    }
-                }
-            } else {
-                addClientPart(clientId, defaultPartId, section);
-            }
-        }
-    }
-
     public SequentalIntRange getPageRange() {
         return pageRange;
-    }
-
-    public void resetParts() {
-        for (MovementSectionInfo sectionInfo : sections.values()) {
-            List<String> sectionParts = sectionInfo.getParts();
-            parts.addAll(sectionParts);
-        }
     }
 
     public void recalcPageRange() {
@@ -201,6 +159,10 @@ public class MovementInfo {
 
     public Set<String> getParts() {
         return parts;
+    }
+
+    public void addParts(List<String> parts) {
+        this.parts.addAll(parts);
     }
 
     public List<String> getScoreParts() {

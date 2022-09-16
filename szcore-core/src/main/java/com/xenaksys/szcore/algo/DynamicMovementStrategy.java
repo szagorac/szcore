@@ -3,23 +3,13 @@ package com.xenaksys.szcore.algo;
 import com.xenaksys.szcore.algo.config.DynamicMovementStrategyConfig;
 import com.xenaksys.szcore.algo.config.ExternalScoreConfig;
 import com.xenaksys.szcore.algo.config.MovementConfig;
-import com.xenaksys.szcore.model.ExtScoreInfo;
-import com.xenaksys.szcore.model.Instrument;
-import com.xenaksys.szcore.model.MaxScoreInfo;
-import com.xenaksys.szcore.model.MovementInfo;
-import com.xenaksys.szcore.model.MovementSectionInfo;
-import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.*;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.score.BasicScore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DynamicMovementStrategy implements ScoreStrategy {
@@ -731,9 +721,18 @@ public class DynamicMovementStrategy implements ScoreStrategy {
     public void resetOnNewPosition() {
         setStop(false);
         deleteTempPages();
-        for(MovementInfo movementInfo : movementInfos.values()) {
+        for (MovementInfo movementInfo : movementInfos.values()) {
             movementInfo.resetOnNewPosition();
         }
+    }
+
+    public Page getCurrentPage(InstrumentId instrumentId) {
+        MovementSectionInfo sectionInfo = getCurrentMovementSection();
+        if (sectionInfo == null) {
+            return null;
+        }
+        int currentPageNo = sectionInfo.getCurrentPage();
+        return szcore.getPageNo(currentPageNo, instrumentId);
     }
 
     enum SelectionStrategy {

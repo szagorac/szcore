@@ -214,10 +214,24 @@ public class MovementSectionInfo {
     }
 
     public boolean isSectionPage(int currentPage) {
-        if(playPageRange == null) {
+        if (playPageRange == null) {
             return false;
         }
         return playPageRange.isInRange(currentPage);
+    }
+
+    public boolean isSectionSourcePage(int currentPage) {
+        if (pageRange == null) {
+            return false;
+        }
+        return pageRange.isInRange(currentPage);
+    }
+
+    public boolean isPartInSection(String part) {
+        if (part == null) {
+            return false;
+        }
+        return parts.contains(part);
     }
 
     public void resetOnNewPosition() {
@@ -253,4 +267,5 @@ public class MovementSectionInfo {
                 ", isInterruptOnPageEnd=" + isInterruptOnPageEnd +
                 '}';
     }
+
 }

@@ -3,13 +3,23 @@ package com.xenaksys.szcore.algo;
 import com.xenaksys.szcore.algo.config.DynamicMovementStrategyConfig;
 import com.xenaksys.szcore.algo.config.ExternalScoreConfig;
 import com.xenaksys.szcore.algo.config.MovementConfig;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.model.ExtScoreInfo;
+import com.xenaksys.szcore.model.Instrument;
+import com.xenaksys.szcore.model.MaxScoreInfo;
+import com.xenaksys.szcore.model.MovementInfo;
+import com.xenaksys.szcore.model.MovementSectionInfo;
+import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.score.BasicScore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DynamicMovementStrategy implements ScoreStrategy {
@@ -23,6 +33,7 @@ public class DynamicMovementStrategy implements ScoreStrategy {
     private String[] instruments;
     private String[] dynamicParts;
     private String defaultPart;
+    private int defaultPageNo;
     private boolean isReady = false;
     private String currentMovement;
     private String nextMovement;
@@ -224,6 +235,14 @@ public class DynamicMovementStrategy implements ScoreStrategy {
 
     public String getDefaultPart() {
         return defaultPart;
+    }
+
+    public int getDefaultPageNo() {
+        return defaultPageNo;
+    }
+
+    public void setDefaultPageNo(int defaultPageNo) {
+        this.defaultPageNo = defaultPageNo;
     }
 
     public void addClientId(String clientId) {
@@ -674,6 +693,36 @@ public class DynamicMovementStrategy implements ScoreStrategy {
 
     public boolean isUpdateClients() {
         return isUpdateClients;
+    }
+
+    public boolean isPartInPageSection(int sourcePageNo, String part) {
+        if (isSourcePageInSection(sourcePageNo, getCurrentSection())) {
+            return isPartInSection(part, getCurrentSection());
+        } else if (isSourcePageInSection(sourcePageNo, getNextSection())) {
+            return isPartInSection(part, getNextSection());
+        }
+        LOG.error("isPartInPageSection: source page {} for part {} is not in current or next section", sourcePageNo, part);
+        return false;
+    }
+
+    private boolean isSourcePageInSection(int pageNo, String section) {
+        MovementInfo movementInfo = getCurrentMovementInfo();
+        if (movementInfo == null) {
+            return false;
+        }
+        return movementInfo.isSourcePageInSection(pageNo, section);
+    }
+
+    private boolean isPartInSection(String part, String nextSection) {
+        MovementInfo movementInfo = getCurrentMovementInfo();
+        if (movementInfo == null) {
+            return false;
+        }
+        MovementSectionInfo sectionInfo = movementInfo.getSection(nextSection);
+        if (sectionInfo == null) {
+            return false;
+        }
+        return sectionInfo.isPartInSection(part);
     }
 
     private int processCurrentSectionNextPage(MovementSectionInfo sectionInfo) {

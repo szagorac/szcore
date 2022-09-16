@@ -309,15 +309,26 @@ public class MovementInfo {
             return;
         }
         String defaultSection = first.get(0);
-        if(defaultSection == null) {
+        if (defaultSection == null) {
             LOG.info("setDefaultSection: invalid default section");
             return;
         }
         setCurrentSection(defaultSection);
     }
 
+    public boolean isSourcePageInSection(int pageNo, String section) {
+        if (section == null) {
+            return false;
+        }
+        MovementSectionInfo sectionInfo = getSection(section);
+        if (sectionInfo == null) {
+            return false;
+        }
+        return sectionInfo.isSectionSourcePage(pageNo);
+    }
+
     public void resetOnNewPosition() {
-        for(MovementSectionInfo movementSectionInfo : sections.values()) {
+        for (MovementSectionInfo movementSectionInfo : sections.values()) {
             movementSectionInfo.resetOnNewPosition();
         }
     }

@@ -93,11 +93,6 @@ public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
 
         getTransportTempoModifiers().put(transport.getId(), new TempoModifier(Consts.ONE_D));
 
-        PageId bpid = new PageId(0, new StrId(Consts.BLANK_PAGE_NAME), score.getId());
-        Page blankPage = new BasicPage(bpid, Consts.BLANK_PAGE_NAME, Consts.BLANK_PAGE_FILE);
-        szcore.setBlankPage(blankPage);
-
-
         Collection<Instrument> instruments = szcore.getInstruments();
         BeatId lastBeat = null;
         for (Instrument instrument : instruments) {
@@ -128,6 +123,14 @@ public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
 
         prepareStrategies(szcore);
 
+        PageId bpid = new PageId(0, new StrId(Consts.BLANK_PAGE_NAME), score.getId());
+        String blankFileName = Consts.BLANK_PAGE_NAME;
+        String defaultPart = szcore.getDynamicScoreStrategy().getDefaultPart();
+        if (defaultPart != null) {
+            blankFileName = defaultPart + UNDERSCORE + CONTINUOUS_PAGE_NAME;
+        }
+        Page blankPage = new BasicPage(bpid, Consts.BLANK_PAGE_NAME, blankFileName);
+        szcore.setBlankPage(blankPage);
 
         int precountMillis = 5 * 1000;
         int precountBeatNo = 4;
@@ -151,6 +154,7 @@ public class SymphoneaScoreProcessor extends ScoreProcessorDelegate {
         dynamicMovementStrategy.setInstruments(INSTRUMENTS);
         dynamicMovementStrategy.setDynamicParts(DYNAMIC_INSTRUMENTS);
         dynamicMovementStrategy.setDefaultPart(INSTRUMENT_DEFAULT);
+        dynamicMovementStrategy.setDefaultPageNo(CONTINUOUS_PAGE_NO);
         dynamicMovementStrategy.setLastScorePage();
     }
 

@@ -796,7 +796,11 @@ public class DynamicMovementStrategy implements ScoreStrategy {
             return null;
         }
         int currentPageNo = sectionInfo.getCurrentPage();
-        return szcore.getPageNo(currentPageNo, instrumentId);
+        if (isPartInSection(instrumentId.getName(), sectionInfo.getSectionId())) {
+            return szcore.getPageNo(currentPageNo, instrumentId);
+        } else {
+            return szcore.getContinuousPage(instrumentId);
+        }
     }
 
     enum SelectionStrategy {

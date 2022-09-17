@@ -2421,13 +2421,13 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                         if (rndPage == null) {
                             pageFileName = page.getFileName();
                             rndPageId = null;
-                            LOG.debug("prepareStrategiesForInstrument: Invalid random page file name, using: {}", pageFileName);
+                            LOG.debug("prepareStrategiesForNewPosition: Invalid random page file name, using: {}", pageFileName);
                         } else {
                             pageFileName = rndPage.getFileName();
                             rndPageId = rndPage.getPageId();
-                            LOG.info("prepareStrategiesForInstrument: Using random page file name: {} for instrument: {} page: {}", pageFileName, instrumentId, page.getPageNo());
+                            LOG.info("prepareStrategiesForNewPosition: Using random page file name: {} for instrument: {} page: {}", pageFileName, instrumentId, page.getPageNo());
                         }
-                        LOG.debug("prepareStrategiesForInstrument: page: {} for instrument: {}: stave: {}", pageFileName, currentStave.getStaveId().getInstrumentId(), currentStave.getStaveId().getStaveNo());
+                        LOG.debug("prepareStrategiesForNewPosition: page: {} for instrument: {}: stave: {}", pageFileName, currentStave.getStaveId().getInstrumentId(), currentStave.getStaveId().getStaveNo());
                         List<OscEvent> pageChangeEvents = createPageChangeEvents(page, pageFileName, rndPageId, currentStave);
                         initEvents.addAll(pageChangeEvents);
                     }
@@ -2450,13 +2450,13 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
                     if (currentPage == null) {
                         pageFileName = page.getFileName();
                         rndPageId = null;
-                        LOG.debug("prepareStrategiesForInstrument: Invalid random page file name, using: {}", pageFileName);
+                        LOG.debug("prepareStrategiesForNewPosition: Invalid dynamic page file name, using: {}", pageFileName);
                     } else {
                         pageFileName = currentPage.getFileName();
                         rndPageId = currentPage.getPageId();
-                        LOG.info("prepareStrategiesForInstrument: Using random page file name: {} for instrument: {} page: {}", pageFileName, instrumentId, page.getPageNo());
+                        LOG.info("prepareStrategiesForNewPosition: Using random page file name: {} for instrument: {} page: {}", pageFileName, instrumentId, page.getPageNo());
                     }
-                    LOG.debug("prepareStrategiesForInstrument: page: {} for instrument: {}: stave: {}", pageFileName, currentStave.getStaveId().getInstrumentId(), currentStave.getStaveId().getStaveNo());
+                    LOG.debug("prepareStrategiesForNewPosition: page: {} for instrument: {}: stave: {}", pageFileName, currentStave.getStaveId().getInstrumentId(), currentStave.getStaveId().getStaveNo());
                     List<OscEvent> pageChangeEvents = createPageChangeEvents(page, pageFileName, rndPageId, currentStave);
                     initEvents.addAll(pageChangeEvents);
                     isCloseOnMidPage = true;

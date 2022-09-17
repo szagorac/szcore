@@ -1112,7 +1112,7 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
             return;
         }
         String instSlotsCsv = ParseUtil.convertListToCsv(parts);
-        LOG.info("process DynamicStrategy OpenModWindow, parts to send to client: {} part:{}", instSlotsCsv, instId.getName());
+        LOG.debug("process DynamicStrategy OpenModWindow, parts to send to client: {} part:{}", instSlotsCsv, instId.getName());
         MovementSectionInfo sectionInfo = dynamicStrategy.getCurrentMovementSection();
         if(sectionInfo == null) {
             return;
@@ -1290,15 +1290,16 @@ public class ScoreProcessorDelegate implements ScoreProcessor {
     private Page prepareNextDynamicStrategyPage(DynamicMovementStrategy dynamicStrategy, InstrumentId instId, PageId currentPageId) {
         int currentPageNo = currentPageId.getPageNo();
 
-        int sourcePageNo = dynamicStrategy.calcSourcePage(currentPageNo);
-        boolean isPartInSection = dynamicStrategy.isPartInPageSection(sourcePageNo, instId.getName());
-        if (!isPartInSection) {
-            sourcePageNo = dynamicStrategy.getDefaultPageNo();
-        }
+        int sourcePageNo = dynamicStrategy.calcSourcePage(currentPageNo, instId.getName());
         if (dynamicStrategy.isUpdateClients()) {
             updateClients(dynamicStrategy);
         }
-        Page fromPage = szcore.getPageNo(sourcePageNo, instId);
+        Page fromPage;
+        if (sourcePageNo == CONTINUOUS_PAGE_NO) {
+            fromPage = szcore.getContinuousPage(instId);
+        } else {
+            fromPage = szcore.getPageNo(sourcePageNo, instId);
+        }
         if (fromPage == null) {
             LOG.error("prepareNextDynamicStrategyPage: invalid fromPage {} inst {}", sourcePageNo, instId);
         }

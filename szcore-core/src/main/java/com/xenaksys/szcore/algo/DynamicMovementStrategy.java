@@ -638,24 +638,25 @@ public class DynamicMovementStrategy implements ScoreStrategy {
         lastPageRecalc = System.currentTimeMillis();
     }
 
-    public int calcSourcePage(int currentPageNo) {
-        if(!isRecalcTime(lastSourcePageRecalc)) {
+    public int calcSourcePage(int currentPageNo, String part) {
+        if (!isRecalcTime(lastSourcePageRecalc)) {
             isUpdateClients = false;
             return this.sourcePageNo;
         }
 
         int sourcePageNo = 0;
+        boolean isSourcePageFromNextSection = false;
         MovementSectionInfo sectionInfo = getCurrentMovementSection();
         int sectionPlayStartPage = sectionInfo.getPlayStartPageNo();
         int sectionPlayEndPage = sectionInfo.getPlayEndPageNo();
         int sectionPageDuration = sectionPlayEndPage - sectionPlayStartPage;
         boolean isInterrupt = sectionInfo.isInterruptOnPageEnd();
         if(sectionPageDuration < 0) {
-            LOG.error("Unexpected section page duration: {}", sectionPageDuration);
+            LOG.error("calcSourcePage: Unexpected section page duration: {}", sectionPageDuration);
         }
         int nextPageNo = currentPageNo + 1;
         if(currentPageNo < sectionPlayStartPage) {
-            LOG.error("prepareNextDynamicStrategyPage: Unexpected current page: {} before current section start {}", currentPageNo, sectionPlayStartPage);
+            LOG.error("calcSourcePage: Unexpected current page: {} before current section start {}", currentPageNo, sectionPlayStartPage);
             sourcePageNo = sectionInfo.getStartPageNo();
             sectionInfo.setActive(true);
         } else if(currentPageNo == sectionPlayStartPage ) {
@@ -667,28 +668,42 @@ public class DynamicMovementStrategy implements ScoreStrategy {
                 } else {
                     sectionInfo.setActive(false);
                     sourcePageNo = getNextSectionStartPage();
+                    isSourcePageFromNextSection = true;
                 }
-                LOG.info("prepareNextDynamicStrategyPage: sectionPageDuration == 0 sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
+                LOG.info("calcSourcePage: sectionPageDuration == 0 sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
             } else {
                 sourcePageNo = processCurrentSectionNextPage(sectionInfo);
-                LOG.info("prepareNextDynamicStrategyPage: sectionPageDuration != 0 sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
+                LOG.info("calcSourcePage: sectionPageDuration != 0 sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
             }
         } else {
             if(sectionPlayEndPage == currentPageNo ) {
                 sourcePageNo = processNextSectionStartPage(sectionInfo);
-                LOG.info("prepareNextDynamicStrategyPage: sectionPlayEndPage == currentPage sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
+                isSourcePageFromNextSection = true;
+                LOG.info("calcSourcePage: sectionPlayEndPage == currentPage sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
             } else {
                 // currentPage > sectionPlayStartPage
                 sourcePageNo = processCurrentSectionNextPage(sectionInfo);
-                LOG.info("prepareNextDynamicStrategyPage: currentPage > sectionPlayStartPage sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
+                LOG.info("calcSourcePage: currentPage > sectionPlayStartPage sourcePageNo: {} nextPageNo {}", sourcePageNo, nextPageNo);
             }
         }
-        if(this.sourcePageNo != sourcePageNo) {
+        if (this.sourcePageNo != sourcePageNo) {
             isUpdateClients = true;
         }
         this.sourcePageNo = sourcePageNo;
         this.lastSourcePageRecalc = System.currentTimeMillis();
-        return sourcePageNo;
+        int out = sourcePageNo;
+        if (isSourcePageFromNextSection) {
+            if (!isPartInSection(part, getNextSection())) {
+                LOG.info("calcSourcePage: part: {} is not in next section: {}, returning default source", part, getNextSection());
+                out = getDefaultPageNo();
+            }
+        } else {
+            if (!isPartInSection(part, getCurrentSection())) {
+                LOG.info("calcSourcePage: part: {} is not in current section: {}, returning default source", part, getCurrentSection());
+                out = getDefaultPageNo();
+            }
+        }
+        return out;
     }
 
     public boolean isUpdateClients() {

@@ -86,7 +86,7 @@ public class MovementInfo {
                 maxVote = sectionVote;
             }
         }
-        LOG.error("getHighestVoteSection: selected section: {} votes: {}", maxVoteSection, maxVote);
+        LOG.info("getHighestVoteSection: selected section: {} votes: {}", maxVoteSection, maxVote);
         return maxVoteSection;
     }
 

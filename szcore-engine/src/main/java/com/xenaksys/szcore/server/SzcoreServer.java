@@ -308,6 +308,7 @@ public class SzcoreServer extends Server implements EventService, ScoreService {
     public Score loadScore(File file) {
         try {
             Score score = scoreProcessor.loadScore(file);
+            //TODO
             scoreProcessor.prepare(score);
             return score;
         } catch (Exception e) {

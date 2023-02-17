@@ -2,21 +2,8 @@ package com.xenaksys.szcore.score;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.instrument.BasicInstrument;
-import com.xenaksys.szcore.model.Id;
-import com.xenaksys.szcore.model.Instrument;
-import com.xenaksys.szcore.model.NoteDuration;
-import com.xenaksys.szcore.model.Score;
-import com.xenaksys.szcore.model.Script;
-import com.xenaksys.szcore.model.Tempo;
-import com.xenaksys.szcore.model.TempoImpl;
-import com.xenaksys.szcore.model.TimeSignature;
-import com.xenaksys.szcore.model.TimeSignatureImpl;
-import com.xenaksys.szcore.model.Transition;
-import com.xenaksys.szcore.model.id.BarId;
-import com.xenaksys.szcore.model.id.BeatId;
-import com.xenaksys.szcore.model.id.IntId;
-import com.xenaksys.szcore.model.id.PageId;
-import com.xenaksys.szcore.model.id.StrId;
+import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.model.id.*;
 import com.xenaksys.szcore.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,9 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import static com.xenaksys.szcore.score.ResourceType.FILE;
-import static com.xenaksys.szcore.score.ResourceType.JAVASCRIPT;
-import static com.xenaksys.szcore.score.ResourceType.TRANSITION;
+import static com.xenaksys.szcore.score.ResourceType.*;
 
 
 public class ScoreLoader {
@@ -69,7 +54,7 @@ public class ScoreLoader {
             "yStartPxl",            //19
             "yEndPxl",              //20
             "isUpbeat",             //21
-            "resource",             //22
+            "fileName",             //22
             "unitBeatNo"            //23
     };
 
@@ -93,7 +78,7 @@ public class ScoreLoader {
 
         boolean isHeaderCorrect = Arrays.equals(expextedHeaders, headers);
         if (!isHeaderCorrect) {
-            LOG.error("Unexpeted headers: " + headers);
+            LOG.error("Unexpected headers: " + headers);
             return null;
         }
 

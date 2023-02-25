@@ -196,11 +196,6 @@ public class WebServer {
         connections.addAll(getWsConnections());
         connections.addAll(getSseConnections());
 
-//        if (connections.isEmpty()) {
-//            return;
-//        }
-//        long now = System.currentTimeMillis();
-
         szcoreServer.updateWebServerStatus(connections);
     }
 

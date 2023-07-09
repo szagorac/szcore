@@ -3,6 +3,7 @@ package com.xenaksys.szcore.instrument;
 
 import com.xenaksys.szcore.model.Id;
 import com.xenaksys.szcore.model.Instrument;
+import com.xenaksys.szcore.model.id.InstrumentId;
 
 public class BasicInstrument implements Instrument {
 
@@ -19,6 +20,10 @@ public class BasicInstrument implements Instrument {
     @Override
     public Id getId() {
         return id;
+    }
+
+    public InstrumentId getInstrumentId() {
+        return (InstrumentId)id;
     }
 
     public String getName() {

@@ -1,11 +1,51 @@
 package com.xenaksys.szcore.score.web;
 
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.algo.*;
+import com.xenaksys.szcore.algo.DynamicMovementStrategy;
+import com.xenaksys.szcore.algo.IntRange;
+import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
+import com.xenaksys.szcore.algo.ScoreStrategy;
+import com.xenaksys.szcore.algo.SectionAssignmentType;
+import com.xenaksys.szcore.algo.SequentalIntRange;
+import com.xenaksys.szcore.algo.StrategyType;
+import com.xenaksys.szcore.algo.TranspositionStrategy;
 import com.xenaksys.szcore.event.EventFactory;
-import com.xenaksys.szcore.event.osc.*;
-import com.xenaksys.szcore.event.web.in.*;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.event.osc.DateTickEvent;
+import com.xenaksys.szcore.event.osc.ElementAlphaEvent;
+import com.xenaksys.szcore.event.osc.ElementColorEvent;
+import com.xenaksys.szcore.event.osc.ElementYPositionEvent;
+import com.xenaksys.szcore.event.osc.InstrumentResetSlotsEvent;
+import com.xenaksys.szcore.event.osc.InstrumentSlotsEvent;
+import com.xenaksys.szcore.event.osc.OscEvent;
+import com.xenaksys.szcore.event.osc.OscEventType;
+import com.xenaksys.szcore.event.osc.OscStaveActivateEvent;
+import com.xenaksys.szcore.event.osc.OscStaveTempoEvent;
+import com.xenaksys.szcore.event.osc.OscStopEvent;
+import com.xenaksys.szcore.event.osc.OverlayTextEvent;
+import com.xenaksys.szcore.event.osc.PageDisplayEvent;
+import com.xenaksys.szcore.event.osc.PageMapDisplayEvent;
+import com.xenaksys.szcore.event.osc.PrecountBeatOffEvent;
+import com.xenaksys.szcore.event.osc.PrecountBeatOnEvent;
+import com.xenaksys.szcore.event.osc.ResetScoreEvent;
+import com.xenaksys.szcore.event.osc.ResetStavesEvent;
+import com.xenaksys.szcore.event.osc.StaveStartMarkEvent;
+import com.xenaksys.szcore.event.osc.WebscoreVoteEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreConnectionEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreInEvent;
+import com.xenaksys.szcore.event.web.in.WebScorePartReadyEvent;
+import com.xenaksys.szcore.event.web.in.WebScorePartRegEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreRemoveConnectionEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreSelectInstrumentSlotEvent;
+import com.xenaksys.szcore.event.web.in.WebScoreSelectSectionEvent;
+import com.xenaksys.szcore.model.Clock;
+import com.xenaksys.szcore.model.Instrument;
+import com.xenaksys.szcore.model.MovementInfo;
+import com.xenaksys.szcore.model.Page;
+import com.xenaksys.szcore.model.ScoreProcessor;
+import com.xenaksys.szcore.model.SectionInfo;
+import com.xenaksys.szcore.model.Tempo;
+import com.xenaksys.szcore.model.Transport;
+import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.model.id.PageId;
 import com.xenaksys.szcore.model.id.StaveId;
 import com.xenaksys.szcore.score.BasicScore;
@@ -25,7 +65,14 @@ import com.xenaksys.szcore.web.WebScoreActionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WebScore {
@@ -364,6 +411,8 @@ public class WebScore {
         String destination = event.getDestination();
         String fileName = event.getFilename();
         StaveId staveId = event.getStaveId();
+        InstrumentId instrumentId = (InstrumentId)staveId.getInstrumentId();
+        String part = instrumentId.getName();
         String webPageId = getWebPageId(event.getPageId());
         String webStaveId = WebUtil.getWebStaveId(staveId);
         PageId rndPageId = event.getRndPageId();
@@ -378,7 +427,7 @@ public class WebScore {
             transpositionInfo = transpositionStrategy.getWebTranspositionInfo(pageId, staveId);
         }
 
-        sendPageInfo(destination, webPageId, webRndPageId, fileName, webStaveId, transpositionInfo);
+        sendPageInfo(destination, webPageId, part, webRndPageId, fileName, webStaveId, transpositionInfo);
     }
 
     public String getWebPageId(PageId pageId) {
@@ -416,9 +465,25 @@ public class WebScore {
             return;
         }
         addOrUpdateClient(clientInfo, clientId);
-        ScoreBuilderStrategy builderStrategy = score.getScoreBuilderStrategy();
-        if(builderStrategy != null) {
-            builderStrategy.addClientId(clientId);
+
+        List<ScoreStrategy> strategies = score.getStrategies();
+        for(ScoreStrategy strategy : strategies) {
+            switch (strategy.getType()) {
+                case BUILDER:
+                    ScoreBuilderStrategy builderStrategy = (ScoreBuilderStrategy)strategy;
+                    if(!builderStrategy.isActive()) {
+                        break;
+                    }
+                    builderStrategy.addClientId(clientId);
+                    break;
+                case DYNAMIC:
+                    DynamicMovementStrategy dynamicStrategy = (DynamicMovementStrategy)strategy;
+                    if(!dynamicStrategy.isActive()) {
+                        break;
+                    }
+                    dynamicStrategy.addClientId(clientId);
+                    break;
+            }
         }
     }
 
@@ -649,13 +714,14 @@ public class WebScore {
         return section;
     }
 
-    public void sendPageInfo(String destination, String pageId, String webRndPageId, String filename, String staveId, WebTranspositionInfo transpositionInfo) throws Exception {
+    public void sendPageInfo(String destination, String pageId, String part, String webRndPageId, String filename, String staveId, WebTranspositionInfo transpositionInfo) throws Exception {
         WebScoreState scoreState = scoreProcessor.getOrCreateWebScoreState();
         WebPageInfo webPageInfo = new WebPageInfo();
         webPageInfo.setFilename(filename);
         webPageInfo.setStaveId(staveId);
         webPageInfo.setPageId(pageId);
         webPageInfo.setRndPageId(webRndPageId);
+        webPageInfo.setPart(part);
         if(transpositionInfo != null) {
             webPageInfo.setTranspositionInfo(transpositionInfo);
         }
@@ -945,7 +1011,7 @@ public class WebScore {
             WebClientInfo clientInfo = getClientInfo(webEvent);
             scoreProcessor.processSelectInstrumentSlot(slotNo, slotInstrument, sourceInst, clientInfo);
         } catch (Exception e) {
-            LOG.error("processSelectInstrumentSlot: failed to process select intrument slot", e);
+            LOG.error("processSelectInstrumentSlot: failed to process select instrument slot", e);
         }
     }
 
@@ -965,7 +1031,16 @@ public class WebScore {
             createOrUpdateWebBuilderStrategy(scoreBuilderStrategy);
             sendStrategyInfo();
         } catch (Exception e) {
-            LOG.error("processSelectInstrumentSlot: failed to process select intrument slot", e);
+            LOG.error("processSelectSection: failed to process select section", e);
+        }
+    }
+
+    public void updateDynamicMovementStrategy(DynamicMovementStrategy dynamicMovementStrategy) {
+        try {
+            createOrUpdateWebDynamicScoreStrategy(dynamicMovementStrategy);
+            sendStrategyInfo();
+        } catch (Exception e) {
+            LOG.error("processMovementInfo: failed to process movement info", e);
         }
     }
 
@@ -999,18 +1074,35 @@ public class WebScore {
         }
         WebDynamicScoreStrategy webDynamicScoreStrategy = getOrCreateWebDynamicScoreStrategy();
         webDynamicScoreStrategy.setName(StrategyType.DYNAMIC.name());
-        webDynamicScoreStrategy.setReady(dynamicMovementStrategy.isReady());
-//        List<String> sections = dynamicMovementStrategy.getSections();
-//        webDynamicScoreStrategy.clearSectionOwners();
-//        if(sections != null) {
-//            webDynamicScoreStrategy.setSections(sections);
-//            for(String section : sections) {
-//                String owner = dynamicMovementStrategy.getSectionOwner(section);
-//                if(owner != null) {
-//                    webDynamicScoreStrategy.addSectionOwner(section, owner);
-//                }
-//            }
-//        }
+        MovementInfo movementInfo = dynamicMovementStrategy.getCurrentMovementInfo();
+        if(movementInfo != null) {
+            WebMovementInfo webMovementInfo = new WebMovementInfo();
+            webMovementInfo.setName(movementInfo.getMovementId());
+            webMovementInfo.setParts(movementInfo.getScoreParts());
+            IntRange pageRange = movementInfo.getPageRange();
+            if(pageRange != null) {
+                webMovementInfo.setStartPage(pageRange.getStart());
+                webMovementInfo.setEndPage(pageRange.getEnd());
+            }
+            String scoreNameToken = scoreInfo.getName().replaceAll("\\s+", "_");
+            String imgContPageName = Consts.WEB_SCORE_PART_TOKEN
+                    + Consts.UNDERSCORE
+                    + Consts.CONTINUOUS_PAGE_NAME
+                    + Consts.PNG_FILE_EXTENSION;
+            webMovementInfo.setImgContPageName(imgContPageName);
+            String imgPageNameToken = scoreNameToken
+                    + Consts.UNDERSCORE
+                    + Consts.WEB_SCORE_PART_TOKEN
+                    + Consts.UNDERSCORE
+                    + Consts.DEFAULT_PAGE_PREFIX
+                    + Consts.WEB_SCORE_PAGE_NO_TOKEN
+                    + Consts.PNG_FILE_EXTENSION;
+            webMovementInfo.setImgPageNameToken(imgPageNameToken);
+            webMovementInfo.setContPageNo(Consts.CONTINUOUS_PAGE_NO);
+            String imgDir = scoreInfo.getScoreDir() + Consts.RSRC_DIR;
+            webMovementInfo.setImgDir(imgDir);
+            webDynamicScoreStrategy.setCurrentMovement(webMovementInfo);
+        }
     }
 
     private WebBuilderStrategy getWebBuilderStrategy() {

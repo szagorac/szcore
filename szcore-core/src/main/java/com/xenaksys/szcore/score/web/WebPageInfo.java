@@ -3,6 +3,7 @@ package com.xenaksys.szcore.score.web;
 public class WebPageInfo {
     private String filename;
     private String staveId;
+    private String part;
     private String pageId;
     private String rndPageId;
     private WebTranspositionInfo transpositionInfo;
@@ -45,5 +46,13 @@ public class WebPageInfo {
 
     public WebTranspositionInfo getTranspositionInfo() {
         return transpositionInfo;
+    }
+
+    public String getPart() {
+        return part;
+    }
+
+    public void setPart(String part) {
+        this.part = part;
     }
 }

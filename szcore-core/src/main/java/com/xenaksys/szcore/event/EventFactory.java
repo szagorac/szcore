@@ -5,6 +5,7 @@ import com.xenaksys.szcore.event.gui.ParticipantEvent;
 import com.xenaksys.szcore.event.gui.ParticipantStatsEvent;
 import com.xenaksys.szcore.event.gui.PrecountInfo;
 import com.xenaksys.szcore.event.gui.ScoreInfoEvent;
+import com.xenaksys.szcore.event.gui.ScoreMovementInfoEvent;
 import com.xenaksys.szcore.event.gui.ScoreSectionInfoEvent;
 import com.xenaksys.szcore.event.gui.StrategyEvent;
 import com.xenaksys.szcore.event.gui.StrategyEventType;
@@ -87,6 +88,7 @@ import com.xenaksys.szcore.event.web.out.OutgoingWebEvent;
 import com.xenaksys.szcore.event.web.out.OutgoingWebEventType;
 import com.xenaksys.szcore.model.HistoBucketView;
 import com.xenaksys.szcore.model.Id;
+import com.xenaksys.szcore.model.MovementInfo;
 import com.xenaksys.szcore.model.Page;
 import com.xenaksys.szcore.model.SectionInfo;
 import com.xenaksys.szcore.model.Stave;
@@ -213,6 +215,10 @@ public class EventFactory {
 
     public ScoreSectionInfoEvent createScoreSectionInfoEvent(Id scoreId, List<SectionInfo> sectionInfos, List<String> sectionOrder, boolean isReady, String currentSection, String nextSection, long creationTime) {
         return new ScoreSectionInfoEvent(scoreId, sectionInfos, sectionOrder, isReady, currentSection, nextSection, creationTime);
+    }
+
+    public ScoreMovementInfoEvent createScoreMovementInfoEvent(Id scoreId, List<MovementInfo> movementInfos, String currentMovement, String nextMovement, String currentSection, String nextSection, long creationTime) {
+        return new ScoreMovementInfoEvent(scoreId, movementInfos, currentMovement, nextMovement, currentSection, nextSection, creationTime);
     }
 
     public ScoreInfoEvent createScoreInfoEvent(Id scoreId, boolean isStop, PrecountInfo precountInfo, long creationTime) {

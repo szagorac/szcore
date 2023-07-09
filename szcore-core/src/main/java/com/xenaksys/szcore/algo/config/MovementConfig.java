@@ -2,6 +2,7 @@ package com.xenaksys.szcore.algo.config;
 
 import com.xenaksys.szcore.algo.IntRange;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.Map;
 public class MovementConfig {
     private String name;
     private Map<String, SectionConfig> sections = new HashMap<>();
+    private List<List<String>> sectionsOrder = new ArrayList<>();
     private int startPage;
 
     public String getName() {
@@ -47,13 +49,24 @@ public class MovementConfig {
         }
     }
 
-    public void addSectionConfig(String name, IntRange pageRange, List<String> parts, List<String> maxConfig, List<String> webConfig) {
-        SectionConfig sectionConfig = createSectionConfig(name, pageRange, parts, maxConfig, webConfig);
+    public void addSectionsOrder(List<List<String>> sectionOrder) {
+        if(sectionOrder == null) {
+            return;
+        }
+        this.sectionsOrder.addAll(sectionOrder);
+    }
+
+    public List<List<String>> getSectionsOrder() {
+        return sectionsOrder;
+    }
+
+    public void addSectionConfig(String name, IntRange pageRange, List<String> parts, List<String> maxConfig, List<String> webConfig, boolean isInterruptOnPageEnd) {
+        SectionConfig sectionConfig = createSectionConfig(name, pageRange, parts, maxConfig, webConfig, isInterruptOnPageEnd);
         addSection(sectionConfig);
     }
 
-    public SectionConfig createSectionConfig(String name, IntRange pageRange, List<String> parts, List<String> maxConfig, List<String> webConfig) {
-        return new SectionConfig(name, pageRange, parts, maxConfig, webConfig);
+    public SectionConfig createSectionConfig(String name, IntRange pageRange, List<String> parts, List<String> maxConfig, List<String> webConfig, boolean isInterruptOnPageEnd) {
+        return new SectionConfig(name, pageRange, parts, maxConfig, webConfig, isInterruptOnPageEnd);
     }
 
     public int getStartPage() {
@@ -70,13 +83,15 @@ public class MovementConfig {
         private final List<String> parts;
         private final List<String> maxConfig;
         private final List<String> webConfig;
+        private final boolean isInterruptOnPageEnd;
 
-        public SectionConfig(String name, IntRange range, List<String> parts, List<String> maxConfig, List<String> webConfig) {
+        public SectionConfig(String name, IntRange range, List<String> parts, List<String> maxConfig, List<String> webConfig, boolean isInterruptOnPageEnd) {
             this.name = name;
             this.parts = parts;
             this.range = range;
             this.maxConfig = maxConfig;
             this.webConfig = webConfig;
+            this.isInterruptOnPageEnd = isInterruptOnPageEnd;
         }
 
         public String getName() {
@@ -97,6 +112,10 @@ public class MovementConfig {
 
         public List<String> getWebConfig() {
             return webConfig;
+        }
+
+        public boolean isInterruptOnPageEnd() {
+            return isInterruptOnPageEnd;
         }
     }
 }

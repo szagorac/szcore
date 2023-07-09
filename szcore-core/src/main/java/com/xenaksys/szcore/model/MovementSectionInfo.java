@@ -1,24 +1,30 @@
 package com.xenaksys.szcore.model;
 
 import com.xenaksys.szcore.algo.IntRange;
+import com.xenaksys.szcore.algo.SequentalIntRange;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 public class MovementSectionInfo {
+    static final Logger LOG = LoggerFactory.getLogger(MovementSectionInfo.class);
+
     private final String sectionId;
-    private IntRange pageRange;
-    private volatile boolean isActive;
-    private volatile int currentPage;
-    private final Map<String, String> clientPart = new HashMap<>();
-    private final Map<String, List<String>> partClients = new HashMap<>();
+    private final List<String> parts = new ArrayList<>();
+    private final List<String> scoreParts = new ArrayList<>();
     private final VoteInfo voteInfo = new VoteInfo();
     private final List<ExtScoreInfo> maxConfigs = new ArrayList<>();
     private final List<ExtScoreInfo> webConfigs = new ArrayList<>();
+
+    private IntRange pageRange;
+    private IntRange playPageRange;
+    private volatile boolean isActive;
+    private volatile int currentPage;
+    private volatile int currentPlayPage;
+    private boolean isInterruptOnPageEnd;
 
     public MovementSectionInfo(String sectionId) {
         this.sectionId = sectionId;
@@ -28,53 +34,20 @@ public class MovementSectionInfo {
         return sectionId;
     }
 
-    public void addClientPart(String clientId, String partId) {
-        if (clientId == null || partId == null) {
-            return;
-        }
-        clientPart.put(clientId, partId);
-        updatePartClient(clientId, partId);
-    }
-
-    private void updatePartClient(String clientId, String partId) {
-        removeClientFromOtherPart(clientId, partId);
-        List<String> clients = partClients.computeIfAbsent(partId, k -> new ArrayList<>());
-        if (!clients.contains(clientId)) {
-            clients.add(clientId);
-        }
-    }
-
-    private void removeClientFromOtherPart(String clientId, String partId) {
-        for (String instrument : partClients.keySet()) {
-            if (instrument.equals(partId)) {
-                continue;
-            }
-            List<String> clients = partClients.get(instrument);
-            clients.remove(clientId);
-        }
-    }
-
-    public String getClientPart(String clientId) {
-        if (clientId == null) {
-            return null;
-        }
-        return clientPart.get(clientId);
-    }
-
-    public Map<String, String> getClientParts() {
-        return clientPart;
-    }
-
-    public Map<String, List<String>> getPartClients() {
-        return partClients;
-    }
-
     public void setPageRange(IntRange sectionPageRange) {
         this.pageRange = sectionPageRange;
     }
 
     public IntRange getPageRange() {
         return pageRange;
+    }
+
+    public void setPlayPageRange(IntRange sectionPageRange) {
+        this.playPageRange = sectionPageRange;
+    }
+
+    public IntRange getPlayPageRange() {
+        return playPageRange;
     }
 
     public int getEndPageNo() {
@@ -93,8 +66,20 @@ public class MovementSectionInfo {
         return intRange.getStart();
     }
 
-    public Set<String> getClients() {
-        return clientPart.keySet();
+    public int getPlayEndPageNo() {
+        IntRange intRange = getPlayPageRange();
+        if (intRange == null) {
+            return -1;
+        }
+        return intRange.getEnd();
+    }
+
+    public int getPlayStartPageNo() {
+        IntRange intRange = getPlayPageRange();
+        if (intRange == null) {
+            return -1;
+        }
+        return intRange.getStart();
     }
 
     public VoteInfo getVoteInfo() {
@@ -121,6 +106,35 @@ public class MovementSectionInfo {
         this.currentPage = currentPage;
     }
 
+    public int getCurrentPlayPage() {
+        return currentPlayPage;
+    }
+
+    public void setCurrentPlayPage(int currentPlayPage) {
+        if(this.currentPlayPage == currentPlayPage) {
+            return;
+        }
+        if(playPageRange == null) {
+            int start = currentPlayPage;
+            int end = start + pageRange.getSize() - 1;
+            playPageRange = new SequentalIntRange(start, end);
+            LOG.info("setCurrentPlayPage: playPageRange start: {} end: {}", start, end);
+        }
+        if(!playPageRange.isInRange(currentPlayPage)) {
+            LOG.error("setCurrentPlayPage: page is not in range {}", playPageRange);
+        }
+        this.currentPlayPage = currentPlayPage;
+        LOG.info("setCurrentPlayPage: currentPlayPage {}", currentPlayPage);
+        recalcCurrentPage();
+    }
+
+    private void recalcCurrentPage() {
+        int diff = currentPlayPage - playPageRange.getStart();
+        int nextCurrent = pageRange.getStart() + diff;
+        LOG.info("recalcCurrentPage: setting current page: {} currentPlayPage: {} diff: {} ", nextCurrent, currentPlayPage, diff);
+        currentPage = nextCurrent;
+    }
+
     public List<ExtScoreInfo> getMaxConfigs() {
         return maxConfigs;
     }
@@ -143,6 +157,91 @@ public class MovementSectionInfo {
         this.webConfigs.addAll(webConfigs);
     }
 
+    public void setParts(List<String> parts) {
+        if(parts == null) {
+            return;
+        }
+        this.parts.addAll(parts);
+    }
+
+    public void setScoreParts(List<String> parts) {
+        if(parts == null) {
+            return;
+        }
+        this.scoreParts.addAll(parts);
+    }
+
+    public List<String> getParts() {
+        return parts;
+    }
+
+    public List<String> getScoreParts() {
+        return scoreParts;
+    }
+
+    public boolean isInterruptOnPageEnd() {
+        return isInterruptOnPageEnd;
+    }
+
+    public void setInterruptOnPageEnd(boolean interruptOnPageEnd) {
+        isInterruptOnPageEnd = interruptOnPageEnd;
+    }
+
+    public void recalculatePlayPageRange(int sectionStartPageNo) {
+        int pageNo = getNumberOfPages();
+        int end = sectionStartPageNo + pageNo - 1;
+        this.playPageRange = new SequentalIntRange(sectionStartPageNo, end);
+        LOG.info("recalculatePlayPageRange: playPageRange start: {} end: {}", sectionStartPageNo, end);
+    }
+
+    private int getNumberOfPages() {
+        if(pageRange == null) {
+            return 0;
+        }
+        return pageRange.getSize();
+    }
+
+    public int getNextPage() {
+        int current = getCurrentPage();
+        int next = current + 1;
+        if(next > getEndPageNo()) {
+//            next = getStartPageNo() + (next % pageRange.getSize());
+            int count = next;
+            next = getStartPageNo();
+            LOG.info("getNextPage: next > getEndPageNo() calculated next page: {} count: {} current: {}  currentPlay: {} endPage: {} startPage: {}", next, count, current, getCurrentPlayPage(), getEndPageNo(),getStartPageNo());
+        }
+        return next;
+    }
+
+    public boolean isSectionPage(int currentPage) {
+        if (playPageRange == null) {
+            return false;
+        }
+        return playPageRange.isInRange(currentPage);
+    }
+
+    public boolean isSectionSourcePage(int currentPage) {
+        if (pageRange == null) {
+            return false;
+        }
+        return pageRange.isInRange(currentPage);
+    }
+
+    public boolean isPartInSection(String part) {
+        if (part == null) {
+            return false;
+        }
+        return parts.contains(part);
+    }
+
+    public void resetOnNewPosition() {
+        playPageRange = null;
+        isActive = false;
+        currentPage = 0;
+        currentPlayPage = 0;
+        voteInfo.reset();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -158,10 +257,15 @@ public class MovementSectionInfo {
 
     @Override
     public String toString() {
-        return "SectionInfo{" +
+        return "MovementSectionInfo{" +
                 "sectionId='" + sectionId + '\'' +
-                ", clientInstrument=" + clientPart +
-                ", voteInfo=" + voteInfo +
+                ", pageRange=" + pageRange +
+                ", playPageRange=" + playPageRange +
+                ", isActive=" + isActive +
+                ", currentPage=" + currentPage +
+                ", currentPlayPage=" + currentPlayPage +
+                ", isInterruptOnPageEnd=" + isInterruptOnPageEnd +
                 '}';
     }
+
 }

@@ -11,6 +11,7 @@ public class DynamicMovementStrategyConfig implements StrategyConfig{
 
     private final List<MovementConfig> movements = new ArrayList<>();
     private final List<String> parts = new ArrayList<>();
+    private final List<String> scoreParts = new ArrayList<>();
     private final Map<String, ExternalScoreConfig> maxConfig = new HashMap<>();
     private final Map<String, ExternalScoreConfig> webConfig = new HashMap<>();
     private boolean isActive;
@@ -43,6 +44,14 @@ public class DynamicMovementStrategyConfig implements StrategyConfig{
 
     public List<String> getParts() {
         return parts;
+    }
+
+    public void addScoreParts(List<String> scoreParts) {
+        this.scoreParts.addAll(scoreParts);
+    }
+
+    public List<String> getScoreParts() {
+        return scoreParts;
     }
 
     public boolean isStopOnMovementEnd() {

@@ -539,6 +539,7 @@ public interface Consts {
 
     String WEB_SCORE_PAGE_PREFIX = "p";
     String WEB_SCORE_PAGE_NO_TOKEN = "@PgNo@";
+    String WEB_SCORE_PART_TOKEN = "@Part@";
 
     String WEB_WS_CLOSE_REASON_NORMAL = "Closed by the server";
 
@@ -598,8 +599,10 @@ public interface Consts {
     String CONFIG_PAGE_RANGES = "pageRanges";
     String CONFIG_PAGES = "pages";
     String CONFIG_SECTIONS = "sections";
+    String CONFIG_SECTIONS_ORDER = "sectionsOrder";
     String CONFIG_MOVEMENTS = "movements";
     String CONFIG_PARTS= "parts";
+    String CONFIG_SCORE_PARTS= "scoreParts";
     String CONFIG_MAX= "max";
     String CONFIG_WEB= "web";
     String CONFIG_MAX_CONFIGS = "maxConfigs";
@@ -629,7 +632,8 @@ public interface Consts {
     String CONFIG_BUFFER4 = "b4";
     String CONFIG_GRANULATOR = "grn";
     String CONFIG_GROOVE = "grv";
-    String CONFIG_START_PAGE = "  startPage";
+    String CONFIG_START_PAGE = "startPage";
+    String CONFIG_IS_INTERRUPT_ON_PAGE_END = "isInterruptOnPageEnd";
 
     String CONFIG_PAGE_NO = "pageNo";
     String CONFIG_PART = "part";

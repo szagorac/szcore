@@ -2,10 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.Circle?>
 <BorderPane prefHeight="729.0" prefWidth="870.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.xenaksys.szcore.gui.view.SymphoneaScoreController">
     <center>
@@ -15,12 +12,10 @@
                     <children>
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                             <children>
-                                <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Movements" />
-                                <Label fx:id="sectionsStatusLbl" styleClass="label-red" stylesheets="@css/szcoreStyle.css" text="WAITING" />
-                                <Separator orientation="VERTICAL" />
                                 <Button fx:id="setNextSectionBtn" minWidth="30.0" mnemonicParsing="false" onAction="#setMovement" prefWidth="55.0" styleClass="button-orange" stylesheets="@css/szcoreStyle.css" text="Set" />
                                 <Button fx:id="playNextSectionBtn" layoutX="539.0" layoutY="11.0" minWidth="30.0" mnemonicParsing="false" onAction="#playMovement" prefWidth="55.0" styleClass="button-green" stylesheets="@css/szcoreStyle.css" text="Play" />
                                 <Button fx:id="stopNextSectionBtn" layoutX="586.0" layoutY="11.0" minWidth="30.0" mnemonicParsing="false" onAction="#stopSection" prefWidth="55.0" styleClass="button-red" stylesheets="@css/szcoreStyle.css" text="Stop" />
+                                <CheckBox fx:id="stopOnNextPageEndChb" mnemonicParsing="false" text="StopNextPge" />
                                 <Circle fx:id="semaphore4Crc" fill="#ff212100" radius="10.0" stroke="BLACK" strokeType="INSIDE" />
                                 <Circle fx:id="semaphore3Crc" fill="#21ff3400" radius="10.0" stroke="BLACK" strokeType="INSIDE" />
                                 <Circle fx:id="semaphore2Crc" fill="#1f93ff00" radius="10.0" stroke="BLACK" strokeType="INSIDE" />
@@ -29,54 +24,128 @@
                         </HBox>
                         <HBox spacing="10.0">
                             <children>
-                                <VBox alignment="TOP_CENTER" stylesheets="@css/szcoreStyle.css">
+                                <VBox stylesheets="@css/szcoreStyle.css">
                                     <children>
-                                        <ListView fx:id="movementOrderLvw" prefHeight="100.0" prefWidth="100.0" />
+                                      <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Movements" />
+                                        <ListView fx:id="movementOrderLvw" prefHeight="137.0" prefWidth="100.0" />
                               <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="110.0" spacing="10.0">
                                  <children>
                                             <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Current:" />
-                                            <Label fx:id="playingSectionLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="N/A" />
+                                            <Label fx:id="currentMovementLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="N/A" />
                                  </children>
                               </HBox>
                               <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="209.0" spacing="10.0">
                                  <children>
                                             <Label styleClass="label-ord" stylesheets="@css/szcoreStyle.css" text="Next :" />
-                                            <Label fx:id="nextSectionLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="N/A" />
+                                            <Label fx:id="nextMovementLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="N/A" />
                                  </children>
                               </HBox>
                                     </children>
                                 </VBox>
-                                <TableView fx:id="sectionsTableView" prefHeight="150.0" prefWidth="250.0">
-                                    <columns>
-                                        <TableColumn fx:id="sectionColumn" maxWidth="200.0" minWidth="50.0" prefWidth="70.0" text="Section" />
-                                        <TableColumn fx:id="voteNoColumn" maxWidth="200.0" minWidth="30.0" prefWidth="40.0" text="Vote" />
-                                        <TableColumn fx:id="startPageColumn" maxWidth="120.0" minWidth="30.0" prefWidth="45.0" text="StartP" />
-                                        <TableColumn fx:id="endPageColumn" maxWidth="120.0" minWidth="29.0" prefWidth="45.0" text="EndP" />
-                                    </columns>
-                                </TableView>
-                                <VBox alignment="TOP_CENTER">
-                                    <children>
-                                        <Label text="Vote" />
-                                        <VBox fx:id="voteVbox" alignment="CENTER" prefHeight="130.0" styleClass="vbox-black" stylesheets="@css/szcoreStyle.css">
-                                            <children>
-                                                <VBox alignment="BOTTOM_CENTER" prefHeight="65.0">
-                                                    <children>
-                                                        <VBox fx:id="voteUpVbox" prefHeight="0.0" styleClass="vbox-green" stylesheets="@css/szcoreStyle.css" />
-                                                    </children>
-                                                </VBox>
-                                                <VBox alignment="TOP_CENTER" prefHeight="65.0">
-                                                    <children>
-                                                        <VBox fx:id="voteDownVbox" alignment="TOP_CENTER" prefHeight="0.0" styleClass="vbox-red" stylesheets="@css/szcoreStyle.css" />
-                                                    </children>
-                                                </VBox>
-                                            </children>
-                                        </VBox>
-                                    </children>
-                                </VBox>
+                        <VBox layoutX="416.0" layoutY="10.0" stylesheets="@css/szcoreStyle.css">
+                           <children>
+                              <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Sections" />
+                              <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="110.0" spacing="10.0">
+                                 <children>
+                                    <GridPane fx:id="sectionsGrd" gridLinesVisible="true">
+                                      <columnConstraints>
+                                          <ColumnConstraints hgrow="SOMETIMES" maxWidth="100.0" minWidth="10.0" prefWidth="50.0" />
+                                          <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="100.0" minWidth="10.0" prefWidth="70.0" />
+                                          <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="100.0" minWidth="10.0" prefWidth="30.0" />
+                                          <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="100.0" minWidth="10.0" prefWidth="30.0" />
+                                      </columnConstraints>
+                                      <rowConstraints>
+                                          <RowConstraints maxHeight="30.0" minHeight="10.0" prefHeight="25.0" vgrow="SOMETIMES" />
+                                          <RowConstraints maxHeight="30.0" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                          <RowConstraints maxHeight="30.0" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                      </rowConstraints>
+                                       <children>
+                                          <Label styleClass="label-pale" stylesheets="@css/szcoreStyle.css" text="Current" GridPane.rowIndex="1" />
+                                          <Label styleClass="label-pale" stylesheets="@css/szcoreStyle.css" text="id" GridPane.columnIndex="1" />
+                                          <Label layoutX="119.0" layoutY="16.0" styleClass="label-pale" stylesheets="@css/szcoreStyle.css" text="stP" GridPane.columnIndex="2" />
+                                          <Label layoutX="152.0" layoutY="16.0" styleClass="label-pale" stylesheets="@css/szcoreStyle.css" text="enP" GridPane.columnIndex="3" />
+                                          <Label layoutX="10.0" layoutY="34.0" styleClass="label-pale" stylesheets="@css/szcoreStyle.css" text="Next" GridPane.rowIndex="2" />
+                                          <Label fx:id="curSectionIdLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                          <Label fx:id="curSectionStartPageLbl" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                                          <Label fx:id="curSectionEndPageLbl" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                                          <Label fx:id="nextSectionIdLbl" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                          <Label fx:id="nextSectionStartPageLbl" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                                          <Label fx:id="nextSectionEndPageLbl" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                                       </children>
+                                    </GridPane>
+                                 </children>
+                              </HBox>
+                              <Region prefHeight="7.0" prefWidth="180.0" />
+                              <CheckBox fx:id="overrideNextSectionChb" mnemonicParsing="false" text="Override Next" />
+                              <ChoiceBox fx:id="mvtSectionsChob" prefHeight="27.0" prefWidth="180.0" />
+                           </children>
+                        </VBox>
+                        <VBox layoutX="10.0" layoutY="10.0" stylesheets="@css/szcoreStyle.css">
+                           <children>
+                              <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Order" />
+                              <ListView fx:id="sectionOrderLvw" prefHeight="141.0" prefWidth="112.0" />
+                              <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="110.0" spacing="10.0">
+                                 <children>
+                                    <Button fx:id="previousSectionBtn" mnemonicParsing="false" onAction="#setPreviousSectionOrder" styleClass="css/szcoreStyle.css" text="&lt; Prev" />
+                                    <Button fx:id="nextSectionBtn" mnemonicParsing="false" onAction="#setNextSectionOrder" styleClass="css/szcoreStyle.css" text="Next  &gt;" />
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
+                        <VBox layoutX="512.0" layoutY="10.0" prefHeight="0.0" prefWidth="170.0" stylesheets="@css/szcoreStyle.css">
+                           <children>
+                              <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Section Vote" />
+                              <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="110.0" spacing="10.0">
+                                 <children>
+                                    <GridPane fx:id="sectionsVoteGrd" gridLinesVisible="true">
+                                       <columnConstraints>
+                                          <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="100.0" minWidth="10.0" prefWidth="70.0" />
+                                          <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="100.0" minWidth="10.0" prefWidth="40.0" />
+                                          <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="100.0" minWidth="10.0" prefWidth="30.0" />
+                                          <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="100.0" minWidth="10.0" prefWidth="30.0" />
+                                       </columnConstraints>
+                                       <rowConstraints>
+                                          <RowConstraints maxHeight="30.0" minHeight="10.0" prefHeight="25.0" vgrow="SOMETIMES" />
+                                          <RowConstraints maxHeight="30.0" minHeight="10.0" prefHeight="25.0" vgrow="SOMETIMES" />
+                                          <RowConstraints maxHeight="30.0" minHeight="10.0" prefHeight="25.0" vgrow="SOMETIMES" />
+                                          <RowConstraints maxHeight="30.0" minHeight="10.0" prefHeight="25.0" vgrow="SOMETIMES" />
+                                          <RowConstraints maxHeight="30.0" minHeight="10.0" prefHeight="25.0" vgrow="SOMETIMES" />
+                                       </rowConstraints>
+                                       <children>
+                                          <Label styleClass="label-pale" stylesheets="@css/szcoreStyle.css" text="id" />
+                                          <Label styleClass="label-pale" stylesheets="@css/szcoreStyle.css" text="vote" GridPane.columnIndex="1" />
+                                          <Label layoutX="119.0" layoutY="16.0" styleClass="label-pale" stylesheets="@css/szcoreStyle.css" text="stP" GridPane.columnIndex="2" />
+                                          <Label layoutX="152.0" layoutY="16.0" styleClass="label-pale" stylesheets="@css/szcoreStyle.css" text="enP" GridPane.columnIndex="3" />
+                                          <Region fx:id="voteSection1IdRgn" stylesheets="@css/szcoreStyle.css" GridPane.rowIndex="1" />
+                                          <Label fx:id="voteSection1IdLbl" styleClass="label-ord" stylesheets="@css/szcoreStyle.css" GridPane.rowIndex="1" />
+                                          <Label fx:id="voteSection1VoteLbl" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                          <Label fx:id="voteSection1StartPageLbl" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                                          <Label fx:id="voteSection1EndPageLbl" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                                           <Region fx:id="voteSection2IdRgn" stylesheets="@css/szcoreStyle.css" GridPane.rowIndex="2" />
+                                          <Label fx:id="voteSection2IdLbl" GridPane.rowIndex="2" />
+                                          <Label fx:id="voteSection2VoteLbl" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                          <Label fx:id="voteSection2StartPageLbl" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                                          <Label fx:id="voteSection2EndPageLbl" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                                           <Region fx:id="voteSection3IdRgn" stylesheets="@css/szcoreStyle.css" GridPane.rowIndex="3" />
+                                          <Label fx:id="voteSection3IdLbl" GridPane.rowIndex="3" />
+                                          <Label fx:id="voteSection3VoteLbl" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                          <Label fx:id="voteSection3StartPageLbl" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                                          <Label fx:id="voteSection3EndPageLbl" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+                                           <Region fx:id="voteSection4IdRgn" stylesheets="@css/szcoreStyle.css" GridPane.rowIndex="4" />
+                                          <Label fx:id="voteSection4IdLbl" GridPane.rowIndex="4" />
+                                          <Label fx:id="voteSection4VoteLbl" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                          <Label fx:id="voteSection4StartPageLbl" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+                                          <Label fx:id="voteSection4EndPageLbl" GridPane.columnIndex="3" GridPane.rowIndex="4" />
+                                       </children>
+                                    </GridPane>
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
                             </children>
                         </HBox>
                         <Separator />
-                        <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="372.0" spacing="6.0">
+                        <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="372.0">
                             <children>
                                 <Label styleClass="label-subtitle" stylesheets="@css/szcoreStyle.css" text="Overlays " />
                         <Separator orientation="VERTICAL" />
@@ -91,7 +160,7 @@
                                     <children>
                                         <HBox alignment="CENTER_LEFT" spacing="5.0">
                                             <children>
-                                                <Label prefHeight="20.0" prefWidth="69.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Dynamics" />
+                                                <Label prefHeight="20.0" prefWidth="78.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Dynamics" />
                                                 <CheckBox fx:id="useDynamicsOverlayChb" mnemonicParsing="false" text="Ovl" />
                                                 <CheckBox fx:id="useDynamicsLineChb" mnemonicParsing="false" text="Ln" />
                                                 <Label fx:id="dynamicsValLbl" minWidth="40.0" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___" />
@@ -101,7 +170,7 @@
                                         </HBox>
                                         <HBox alignment="CENTER_LEFT" spacing="5.0">
                                             <children>
-                                                <Label styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Pitch            " />
+                                                <Label prefHeight="18.0" prefWidth="79.0" styleClass="label-ord-bold" stylesheets="@css/szcoreStyle.css" text="Pitch            " />
                                                 <CheckBox fx:id="usePitchOverlayChb" mnemonicParsing="false" text="Ovl" />
                                                 <CheckBox fx:id="usePitchLineChb" mnemonicParsing="false" text="Ln" />
                                                 <Label fx:id="pitchValLbl" minWidth="40.0" styleClass="label-big-black" stylesheets="@css/szcoreStyle.css" text="___" />

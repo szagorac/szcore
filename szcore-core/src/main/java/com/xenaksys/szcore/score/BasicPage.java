@@ -139,7 +139,7 @@ public class BasicPage implements Page {
 
     public void addBar(Bar bar) {
         if (bars.contains(bar)) {
-            LOG.warn("Page already contains bar: " + bar + ", replacing");
+            LOG.debug("Page already contains bar: " + bar + ", replacing");
             bars.remove(bar);
         }
         bars.add(bar);

@@ -148,4 +148,22 @@ public class YamlLoader {
         }
         return out;
     }
+    public static List<List<String>> getListOfStrList(String key, Map<String, Object> scoreMap) {
+        List<Object> ls = getList(key, scoreMap);
+        if (ls == null) {
+            return null;
+        }
+
+        List<List<String>> out = new ArrayList<>();
+        for (Object o : ls) {
+            if (!(o instanceof List)) {
+                List<String> l = new ArrayList<>();
+                l.add(String.valueOf(o));
+                out.add(l);
+            } else {
+                out.add((List<String>)o);
+            }
+        }
+        return out;
+    }
 }

@@ -9,6 +9,7 @@ import com.xenaksys.szcore.event.gui.InstrumentEvent;
 import com.xenaksys.szcore.event.gui.ParticipantEvent;
 import com.xenaksys.szcore.event.gui.ParticipantStatsEvent;
 import com.xenaksys.szcore.event.gui.ScoreInfoEvent;
+import com.xenaksys.szcore.event.gui.ScoreMovementInfoEvent;
 import com.xenaksys.szcore.event.gui.ScoreSectionInfoEvent;
 import com.xenaksys.szcore.event.gui.WebAudienceClientInfoUpdateEvent;
 import com.xenaksys.szcore.event.gui.WebScoreClientInfoUpdateEvent;
@@ -188,6 +189,9 @@ public class ClientEventProcessor implements Processor {
             case SECTION_INFO:
                 processSectionInfoEvent((ScoreSectionInfoEvent) event);
                 break;
+            case MOVEMENT_INFO:
+                processMovementInfoEvent((ScoreMovementInfoEvent) event);
+                break;
             case SCORE_INFO:
                 processScoreInfoEVent((ScoreInfoEvent) event);
                 break;
@@ -208,6 +212,13 @@ public class ClientEventProcessor implements Processor {
             return;
         }
         client.processWebScoreClientInfos(event);
+    }
+
+    private void processMovementInfoEvent(ScoreMovementInfoEvent event) {
+        if (event == null) {
+            return;
+        }
+        client.processScoreMovementInfos(event);
     }
 
     private void processSectionInfoEvent(ScoreSectionInfoEvent event) {

@@ -1,15 +1,22 @@
 package com.xenaksys.szcore.gui.model;
 
-import com.xenaksys.szcore.Consts;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ListProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import java.util.Objects;
 
+import static com.xenaksys.szcore.Consts.EMPTY;
+
 public class MovementSection {
-    private StringProperty section = new SimpleStringProperty(Consts.EMPTY);
+    private StringProperty section = new SimpleStringProperty(EMPTY);
     private IntegerProperty startPage = new SimpleIntegerProperty(0);
     private IntegerProperty endPage = new SimpleIntegerProperty(0);
     private IntegerProperty voteNo = new SimpleIntegerProperty(0);
@@ -17,6 +24,10 @@ public class MovementSection {
     private IntegerProperty maxVote = new SimpleIntegerProperty(0);
     private IntegerProperty avgVote = new SimpleIntegerProperty(0);
     private IntegerProperty voterNo = new SimpleIntegerProperty(0);
+    private BooleanProperty isActive = new SimpleBooleanProperty(false);
+    private ListProperty<String> parts = new SimpleListProperty<>(FXCollections.observableArrayList());
+    private final AudienceVote audienceVote = new AudienceVote();
+
 
     public String getSection() {
         return section.get();
@@ -114,6 +125,65 @@ public class MovementSection {
         this.voterNo.set(voterNo);
     }
 
+    public ObservableList<String> getParts() {
+        return parts.get();
+    }
+
+    public ListProperty<String> partsProperty() {
+        return parts;
+    }
+
+    public void addPart(String part) {
+        this.parts.add(part);
+    }
+
+    public void setParts(ObservableList<String> parts) {
+        this.parts.set(parts);
+    }
+
+    public boolean isIsActive() {
+        return isActive.get();
+    }
+
+    public BooleanProperty isActiveProperty() {
+        return isActive;
+    }
+
+    public void setIsActive(boolean isActive) {
+        this.isActive.set(isActive);
+    }
+
+    public AudienceVote getAudienceVote() {
+        return audienceVote;
+    }
+
+    public void copy(MovementSection from) {
+        setSection(from.getSection());
+        setStartPage(from.getStartPage());
+        setEndPage(from.getEndPage());
+        setIsActive(from.isIsActive());
+        setParts(from.getParts());
+        setAvgVote(from.getAvgVote());
+        setMaxVote(from.getMaxVote());
+        setMinVote(from.getMinVote());
+        setVoteNo(from.getVoteNo());
+        setVoterNo(from.getVoterNo());
+    }
+
+
+    public void reset() {
+        setSection(EMPTY);
+        setStartPage(0);
+        setEndPage(0);
+        setIsActive(false);
+        parts.clear();
+        setAvgVote(0);
+        setMaxVote(0);
+        setMinVote(0);
+        setVoteNo(0);
+        setVoterNo(0);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -139,4 +209,5 @@ public class MovementSection {
                 ", avgVote=" + avgVote +
                 '}';
     }
+
 }

@@ -20,6 +20,8 @@ Module szcore-player is not used currently.
 
 To build the project use standard Maven commands.
 
+Each score has a dedicated dev branch (e.g. dev_Dialogs_branch for the "Socket Dialogues" score)
+
 ## How to run
 
 The main class that runs integrated client/server process is:

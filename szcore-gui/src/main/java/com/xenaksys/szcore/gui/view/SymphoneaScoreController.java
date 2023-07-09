@@ -2,6 +2,7 @@ package com.xenaksys.szcore.gui.view;
 
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.algo.DynamicMovementStrategy;
+import com.xenaksys.szcore.algo.IntRange;
 import com.xenaksys.szcore.algo.SequentalIntRange;
 import com.xenaksys.szcore.algo.ValueScaler;
 import com.xenaksys.szcore.event.EventFactory;
@@ -11,31 +12,71 @@ import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEventType;
 import com.xenaksys.szcore.event.web.audience.WebAudienceInstructionsEvent;
 import com.xenaksys.szcore.gui.SzcoreClient;
-import com.xenaksys.szcore.gui.model.*;
-import com.xenaksys.szcore.model.*;
+import com.xenaksys.szcore.gui.model.Movement;
+import com.xenaksys.szcore.gui.model.MovementSection;
+import com.xenaksys.szcore.gui.model.WebscoreInstructions;
+import com.xenaksys.szcore.model.Clock;
+import com.xenaksys.szcore.model.EventService;
+import com.xenaksys.szcore.model.Id;
+import com.xenaksys.szcore.model.MovementInfo;
+import com.xenaksys.szcore.model.MovementSectionInfo;
+import com.xenaksys.szcore.model.Score;
+import com.xenaksys.szcore.model.ScoreService;
+import com.xenaksys.szcore.model.Tempo;
 import com.xenaksys.szcore.model.id.InstrumentId;
 import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.score.web.audience.AudioComponentType;
 import com.xenaksys.szcore.util.MathUtil;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.StringBinding;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.Slider;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseButton;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
-import static com.xenaksys.szcore.Consts.*;
+import static com.xenaksys.szcore.Consts.COMMA;
+import static com.xenaksys.szcore.Consts.EMPTY;
+import static com.xenaksys.szcore.Consts.MAXMSP_CMD_PLAY;
+import static com.xenaksys.szcore.Consts.MAXMSP_CMD_SET_FILE;
+import static com.xenaksys.szcore.Consts.MAXMSP_GRANULATOR;
+import static com.xenaksys.szcore.Consts.MAXMSP_GRANULATOR_CONT;
+import static com.xenaksys.szcore.Consts.MAXMSP_GRANULATOR_CONT_STOP;
+import static com.xenaksys.szcore.Consts.MAXMSP_GROOVE;
+import static com.xenaksys.szcore.Consts.MAXMSP_GROOVE_CONT;
+import static com.xenaksys.szcore.Consts.MAXMSP_GROOVE_CONT_STOP;
+import static com.xenaksys.szcore.Consts.NAME_NA;
+import static com.xenaksys.szcore.Consts.OSC_ADDRESS_ZSCORE;
+import static com.xenaksys.szcore.Consts.WEB_AUDIO_ACTION_DURATION_MS;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_DUR_MULTIPLIER;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_FREQ_MULTIPLIER;
+import static com.xenaksys.szcore.Consts.WEB_SYNTH;
 import static com.xenaksys.szcore.gui.view.ScoreController.fixedLengthString;
 
 public class SymphoneaScoreController {
@@ -44,6 +85,7 @@ public class SymphoneaScoreController {
     public static final String SCORE_NAME = "Symphonea";
     public static final String LABEL_GREEN = "label-green";
     public static final String LABEL_RED = "label-red";
+    public static final String REGION_SELECTED_CLASS = "cell-selected";
 
     public static final String MP = "MP";
     public static final String MF = "MF";
@@ -58,27 +100,15 @@ public class SymphoneaScoreController {
     public static final String MAX_GROOVE_CONT_ADDR = OSC_ADDRESS_ZSCORE + MAXMSP_GROOVE_CONT;
     public static final String MAX_GROOVE_CONT_STOP_ADDR = OSC_ADDRESS_ZSCORE + MAXMSP_GROOVE_CONT_STOP;
 
-    static final int MIN_VOTER_NO = 10;
+    static final int MAX_VOTE_SECTIONS = 4;
     private final ValueScaler transparencyValueScaler = new ValueScaler(0.0, 100.0, 255.0, 0.0);
 
     @FXML
-    private TableView<MovementSection> sectionsTableView;
-    @FXML
     private ListView<String> movementOrderLvw;
     @FXML
-    private TableColumn<MovementSection, String> sectionColumn;
+    private Label nextMovementLbl;
     @FXML
-    private TableColumn<MovementSection, Integer> startPageColumn;
-    @FXML
-    private TableColumn<MovementSection, Integer> endPageColumn;
-    @FXML
-    private TableColumn<MovementSection, Integer> voteNoColumn;
-    @FXML
-    private Label sectionsStatusLbl;
-    @FXML
-    private Label nextSectionLbl;
-    @FXML
-    private Label playingSectionLbl;
+    private Label currentMovementLbl;
     @FXML
     private Slider dynamicsSldr;
     @FXML
@@ -140,12 +170,6 @@ public class SymphoneaScoreController {
     @FXML
     private Slider pitchOverlayTransparencySldr;
     @FXML
-    private VBox voteVbox;
-    @FXML
-    private VBox voteUpVbox;
-    @FXML
-    private VBox voteDownVbox;
-    @FXML
     private Circle semaphore1Crc;
     @FXML
     private Circle semaphore2Crc;
@@ -195,12 +219,71 @@ public class SymphoneaScoreController {
     private RadioButton presetFreqDurPRdb;
     @FXML
     private RadioButton presetFreqDurPpRdb;
+    @FXML
+    private ListView<String> sectionOrderLvw;
+    @FXML
+    private Label curSectionIdLbl;
+    @FXML
+    private Label curSectionStartPageLbl;
+    @FXML
+    private Label curSectionEndPageLbl;
+    @FXML
+    private Label nextSectionIdLbl;
+    @FXML
+    private Label nextSectionStartPageLbl;
+    @FXML
+    private Label nextSectionEndPageLbl;
+    @FXML
+    private Region voteSection1IdRgn;
+    @FXML
+    private Label voteSection1IdLbl;
+    @FXML
+    private Label voteSection1VoteLbl;
+    @FXML
+    private Label voteSection1StartPageLbl;
+    @FXML
+    private Label voteSection1EndPageLbl;
+    @FXML
+    private Region voteSection2IdRgn;
+    @FXML
+    private Label voteSection2IdLbl;
+    @FXML
+    private Label voteSection2VoteLbl;
+    @FXML
+    private Label voteSection2StartPageLbl;
+    @FXML
+    private Label voteSection2EndPageLbl;
+    @FXML
+    private Region voteSection3IdRgn;
+    @FXML
+    private Label voteSection3IdLbl;
+    @FXML
+    private Label voteSection3VoteLbl;
+    @FXML
+    private Label voteSection3StartPageLbl;
+    @FXML
+    private Label voteSection3EndPageLbl;
+    @FXML
+    private Region voteSection4IdRgn;
+    @FXML
+    private Label voteSection4IdLbl;
+    @FXML
+    private Label voteSection4VoteLbl;
+    @FXML
+    private Label voteSection4StartPageLbl;
+    @FXML
+    private Label voteSection4EndPageLbl;
+    @FXML
+    private ChoiceBox<String> mvtSectionsChob;
+    @FXML
+    private CheckBox overrideNextSectionChb;
+    @FXML
+    private CheckBox stopOnNextPageEndChb;
 
     private SzcoreClient mainApp;
     private EventService publisher;
     private ScoreService scoreService;
     private Clock clock;
-    private String currentMovement;
 
     private WebscoreInstructions txtInstructions;
     private WebscoreInstructions presentInstructions;
@@ -208,12 +291,19 @@ public class SymphoneaScoreController {
 
     private final ObservableList<Movement> movements = FXCollections.observableArrayList();
     private final ObservableList<MovementSection> sections = FXCollections.observableArrayList();
+    private final ObservableList<String> sectionIds = FXCollections.observableArrayList();
     private final ObservableList<String> movementOrder = FXCollections.observableArrayList();
-    private final StringProperty nextMovementProp = new SimpleStringProperty("N/A");
-    private final StringProperty playingMovementProp = new SimpleStringProperty("N/A");
+    private final ObservableList<String> sectionOrder = FXCollections.observableArrayList();
+    private final StringProperty nextMovementProp = new SimpleStringProperty(EMPTY);
+    private final StringProperty currentMovementProp = new SimpleStringProperty(EMPTY);
     private final ObservableList<String> overlayPresets = FXCollections.observableArrayList();
     private final ObservableList<Double> synthFreq = FXCollections.observableArrayList();
     private final ObservableList<Double> synthDur = FXCollections.observableArrayList();
+    private final ObservableList<String> defaultRegionStyle = FXCollections.observableArrayList();
+    private final MovementSection currentSection = new MovementSection();
+    private final MovementSection nextSection = new MovementSection();
+    private final List<MovementSection> voteSections = new ArrayList<>();
+    private final List<Region> voteRegions = new ArrayList<>();
 
     private final ToggleGroup presetGroup = new ToggleGroup();
     private final ToggleGroup freqPresetGroup = new ToggleGroup();
@@ -221,18 +311,20 @@ public class SymphoneaScoreController {
 
     private Circle[] semaphore;
 
-    private final AudienceVote audienceVote = new AudienceVote();
-
     private double lastSythFreqValue = 0.0;
     private double lastSythDurationValue = 8.0;
+
+    private boolean isOverrideNextSection = false;
+    private String nextSectionOverride = null;
 
     public void setMainApp(SzcoreClient mainApp) {
         this.mainApp = mainApp;
     }
 
     public void populate() {
-        sectionsTableView.setItems(sections);
         movementOrderLvw.setItems(movementOrder);
+        sectionOrderLvw.setItems(sectionOrder);
+        mvtSectionsChob.setItems(sectionIds);
 
         useDynamicsOverlayChb.setSelected(false);
         useDynamicsLineChb.setSelected(false);
@@ -422,13 +514,18 @@ public class SymphoneaScoreController {
             long oldVal = Math.round(old_val.doubleValue());
             onAudienceSynthVolumeChange(newVal, oldVal);
         });
+
+        defaultRegionStyle.addAll(voteSection1IdRgn.getStyleClass());
+
+        overrideNextSectionChb.setSelected(false);
+        overrideNextSectionChb.selectedProperty().addListener((observable, oldValue, newValue) -> setOverrideNextSection(newValue));
+
+        stopOnNextPageEndChb.setSelected(false);
+        stopOnNextPageEndChb.selectedProperty().addListener((observable, oldValue, newValue) -> setStopOnNextPage(newValue));
     }
 
     @FXML
     private void initialize() {
-        sectionsTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-        sectionsTableView.setEditable(false);
-
         movementOrderLvw.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         movementOrderLvw.setEditable(false);
         movementOrderLvw.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
@@ -439,13 +536,26 @@ public class SymphoneaScoreController {
             onMovementSelect(out);
         });
 
-        sectionColumn.setCellValueFactory(cellData -> cellData.getValue().sectionProperty());
-        startPageColumn.setCellValueFactory(cellData -> cellData.getValue().startPageProperty().asObject());
-        endPageColumn.setCellValueFactory(cellData -> cellData.getValue().endPageProperty().asObject());
-        voteNoColumn.setCellValueFactory(cellData -> cellData.getValue().avgVoteProperty().asObject());
+        sectionOrderLvw.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        sectionOrderLvw.setEditable(false);
+        sectionOrderLvw.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            String out = newSelection;
+            if (newSelection == null) {
+                out = oldSelection;
+            }
+            onSectionOrderSelect(out);
+        });
 
-        nextSectionLbl.textProperty().bind(nextMovementProp);
-        playingSectionLbl.textProperty().bind(playingMovementProp);
+        mvtSectionsChob.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            String out = newSelection;
+            if (newSelection == null) {
+                out = oldSelection;
+            }
+            onMvtSectionChobChange(out);
+        });
+
+        nextMovementLbl.textProperty().bind(nextMovementProp);
+        currentMovementLbl.textProperty().bind(currentMovementProp);
 
         txtInstructions = new WebscoreInstructions();
         instPitchLn1Txt.textProperty().bindBidirectional(txtInstructions.line1Property());
@@ -465,9 +575,6 @@ public class SymphoneaScoreController {
         selectAllInstrumentsTxtChb.selectedProperty().addListener((observable, oldValue, newValue) -> selectTxtToAllInstruments(newValue));
         selectAudienceTxtChb.selectedProperty().addListener((observable, oldValue, newValue) -> selectTxtToAudience(newValue));
         selectAllTxtRecipientsChb.selectedProperty().addListener((observable, oldValue, newValue) -> selectTxtToAll(newValue));
-
-        voteUpVbox.setPrefHeight(0.0);
-        voteDownVbox.setPrefHeight(0.0);
 
         semaphore1Crc.setFill(Color.RED);
         semaphore1Crc.setStroke(Color.BLACK);
@@ -500,6 +607,42 @@ public class SymphoneaScoreController {
                 onFreqDurPresetChange(freqPresetGroup.getSelectedToggle().getUserData().toString());
             }
         });
+
+        curSectionIdLbl.textProperty().bind(currentSection.sectionProperty());
+        curSectionStartPageLbl.textProperty().bind(currentSection.startPageProperty().asString());
+        curSectionEndPageLbl.textProperty().bind(currentSection.endPageProperty().asString());
+
+        nextSectionIdLbl.textProperty().bind(nextSection.sectionProperty());
+        nextSectionStartPageLbl.textProperty().bind(nextSection.startPageProperty().asString());
+        nextSectionEndPageLbl.textProperty().bind(nextSection.endPageProperty().asString());
+
+        for(int i = 0; i < MAX_VOTE_SECTIONS; i++) {
+            voteSections.add(new MovementSection());
+        }
+        voteRegions.add(voteSection1IdRgn);
+        voteRegions.add(voteSection2IdRgn);
+        voteRegions.add(voteSection3IdRgn);
+        voteRegions.add(voteSection4IdRgn);
+
+        voteSection1IdLbl.textProperty().bind(voteSections.get(0).sectionProperty());
+        voteSection1VoteLbl.textProperty().bind(createIntToStrBinding(voteSections.get(0).voteNoProperty()));
+        voteSection1StartPageLbl.textProperty().bind(createIntToStrBinding(voteSections.get(0).startPageProperty()));
+        voteSection1EndPageLbl.textProperty().bind(createIntToStrBinding(voteSections.get(0).endPageProperty()));
+
+        voteSection2IdLbl.textProperty().bind(voteSections.get(1).sectionProperty());
+        voteSection2VoteLbl.textProperty().bind(createIntToStrBinding(voteSections.get(1).voteNoProperty()));
+        voteSection2StartPageLbl.textProperty().bind(createIntToStrBinding(voteSections.get(1).startPageProperty()));
+        voteSection2EndPageLbl.textProperty().bind(createIntToStrBinding(voteSections.get(1).endPageProperty()));
+
+        voteSection3IdLbl.textProperty().bind(voteSections.get(2).sectionProperty());
+        voteSection3VoteLbl.textProperty().bind(createIntToStrBinding(voteSections.get(2).voteNoProperty()));
+        voteSection3StartPageLbl.textProperty().bind(createIntToStrBinding(voteSections.get(2).startPageProperty()));
+        voteSection3EndPageLbl.textProperty().bind(createIntToStrBinding(voteSections.get(2).endPageProperty()));
+
+        voteSection4IdLbl.textProperty().bind(voteSections.get(3).sectionProperty());
+        voteSection4VoteLbl.textProperty().bind(createIntToStrBinding(voteSections.get(3).voteNoProperty()));
+        voteSection4StartPageLbl.textProperty().bind(createIntToStrBinding(voteSections.get(3).startPageProperty()));
+        voteSection4EndPageLbl.textProperty().bind(createIntToStrBinding(voteSections.get(3).endPageProperty()));
     }
 
     @FXML
@@ -539,6 +682,51 @@ public class SymphoneaScoreController {
 //            default:
 //                LOG.error("Unkonwn preset: {}", preset);
 //        }
+    }
+
+    @FXML
+    private void setPreviousSectionOrder(ActionEvent event) {
+        int selected = sectionOrderLvw.getSelectionModel().getSelectedIndex();
+        if(selected <= 0 ) {
+            return;
+        }
+        selected--;
+        sectionOrderLvw.getSelectionModel().select(selected);
+    }
+
+    @FXML
+    private void setNextSectionOrder(ActionEvent event) {
+        int selected = sectionOrderLvw.getSelectionModel().getSelectedIndex();
+        if(selected >= sectionOrder.size() - 1 ) {
+            return;
+        }
+        selected++;
+        sectionOrderLvw.getSelectionModel().select(selected);
+    }
+
+    private void setCellRegionBkg(Region region, boolean isSelected) {
+        Platform.runLater(() -> {
+            ObservableList<String> regionStyle = region.getStyleClass();
+            regionStyle.clear();
+            if (isSelected) {
+                regionStyle.add(REGION_SELECTED_CLASS);
+            } else {
+                if (defaultRegionStyle == null) {
+                    region.setStyle(null);
+                } else {
+                    regionStyle.addAll(defaultRegionStyle);
+                }
+            }
+        });
+    }
+    private StringBinding createIntToStrBinding(IntegerProperty intProp) {
+        return  Bindings.createStringBinding(() -> {
+            if(intProp.getValue() == 0) {
+                return "";
+            } else {
+                return intProp.getValue().toString();
+            }
+        }, intProp);
     }
 
     private void disableAllTxtRecipients() {
@@ -724,12 +912,117 @@ public class SymphoneaScoreController {
         return instruction;
     }
 
+    private void onMvtSectionChobChange(String section) {
+        nextSectionOverride = section;
+        if(isOverrideNextSection) {
+            sendMovementInfo(false);
+        }
+    }
+
+    private void setNextSection(String sectionId) {
+        MovementSection section = getSection(sectionId);
+        if(section == null || !section.getSection().equals(sectionId)) {
+            LOG.error("setNextSection: invalid sectionId: {}", sectionId);
+            return;
+        }
+        nextSection.copy(section);
+        sendMovementInfo(false);
+    }
+
+    private MovementSection getSection(int selectedIndex) {
+        if(selectedIndex < 0 || selectedIndex >= sections.size()) {
+            LOG.error("getSection: invalid section Index: {}", selectedIndex);
+            return null;
+        }
+        return sections.get(selectedIndex);
+    }
+
+    private MovementSection getSection(String sectionId) {
+        if(sectionId == null) {
+            return null;
+        }
+        for(MovementSection section : sections) {
+            if(sectionId.equals(section.getSection())) {
+                return section;
+            }
+        }
+        return null;
+    }
+
+    private void onSectionOrderSelect(String sectionOrder) {
+        String[] sections = sectionOrder.split(COMMA);
+        String first = null;
+        resetVoteSections();
+        for(int i = 0; i < sections.length; i++) {
+            String section = sections[i];
+            if(first == null) {
+                first = section;
+            }
+            MovementSection movSection = getSection(section);
+            if(movSection != null &&  i < voteSections.size()) {
+                MovementSection guiMovSection = voteSections.get(i);
+                guiMovSection.copy(movSection);
+            }
+        }
+        if(first != null && !isOverrideNextSection) {
+//            setNextSection(first);
+//            mvtSectionsChob.getSelectionModel().select(first);
+        }
+        processSectionVote();
+        sendMovementInfo(false);
+    }
+
+    private void resetVoteSections() {
+        for(MovementSection guiMovSection : voteSections) {
+            guiMovSection.reset();
+        }
+    }
+
+    private void processSectionVote() {
+        int maxIndex = 0;
+        int maxVote = 0;
+        for( int i = 0; i < voteSections.size(); i++) {
+            MovementSection movementSection = voteSections.get(i);
+            if(movementSection.getVoteNo() > maxVote) {
+                maxVote = movementSection.getVoteNo();
+                maxIndex = i;
+            }
+        }
+        showMaxVote(maxIndex);
+    }
+
+    private void showMaxVote(int maxIndex) {
+        Platform.runLater(() -> {
+            for(int i = 0; i < voteRegions.size(); i++) {
+                Region voteRegion = voteRegions.get(i);
+                setCellRegionBkg(voteRegion, i == maxIndex);
+            }
+        });
+    }
+
+    private void setOverrideNextSection(Boolean newValue) {
+        isOverrideNextSection = newValue;
+        if(!isOverrideNextSection) {
+            sendMovementInfo(false);
+        }
+    }
+
+    private void setStopOnNextPage(Boolean isStop) {
+        if(isStop) {
+            sendStopNext();
+        }
+    }
+
     private void onMovementSelect(String movementName) {
         Movement movement = getMovement(movementName);
         if (movement == null) {
             return;
         }
         onMovementSelect(movement);
+    }
+
+    private int getCurrentMovementIndex() {
+        return movementOrder.indexOf(currentMovementProp.get());
     }
 
     private void onPlayAudioOnNewSection(Boolean newValue) {
@@ -743,19 +1036,72 @@ public class SymphoneaScoreController {
         if (movement == null) {
             return;
         }
-        setCurrentMovementLabel(movement.getMovement());
+        String prev = this.currentMovementProp.get();
+        setCurrentMovementLabel(movement.getId());
+
+        setNextMovement();
+
+        if(prev != null && !prev.equals(movement.getId())) {
+            onCurrentMovementChange();
+        }
+    }
+
+    private void setNextMovement() {
+        String nextMovement = NAME_NA;
+        int currentIndex = getCurrentMovementIndex();
+        if(currentIndex >= 0 && currentIndex < ( movementOrder.size() - 1 )) {
+            nextMovement = movementOrder.get(currentIndex + 1);
+        }
+        setNextMovementsLabel(nextMovement);
+    }
+
+    private void onCurrentMovementChange() {
+        Movement mov = getMovement(currentMovementProp.get());
+        if(mov == null) {
+            return;
+        }
+        setMovementSections(mov);
+        setSectionOrder(mov);
     }
 
     private void setCurrentMovementLabel(String value) {
         if (value == null) {
             value = Consts.NAME_NA;
         }
-        String old = playingMovementProp.getValue();
+        String old = currentMovementProp.getValue();
         if (value.equals(old)) {
             return;
         }
-        playingMovementProp.setValue(value);
+        currentMovementProp.setValue(value);
         selectMovement(value);
+    }
+
+    private void setCurrentMovementSection(String name) {
+        if (name == null) {
+            return;
+        }
+        if(currentSection.getSection().equals(name)) {
+            return;
+        }
+        MovementSection section = getSection(name);
+        if(section == null) {
+            return;
+        }
+        currentSection.copy(section);
+    }
+
+    private void setNextMovementSection(String name) {
+        if (name == null) {
+            return;
+        }
+        if(nextSection.getSection().equals(name)) {
+            return;
+        }
+        MovementSection section = getSection(name);
+        if(section == null) {
+            return;
+        }
+        nextSection.copy(section);
     }
 
     public void showSemaphore(int lightNo, Color fill) {
@@ -810,93 +1156,100 @@ public class SymphoneaScoreController {
         List<Movement> guiMovements = new ArrayList<>();
         for(MovementInfo movementInfo : movementInfos) {
             Movement movement = new Movement();
-            movement.setMovement(movementInfo.getMovementId());
+            movement.setId(movementInfo.getMovementId());
             SequentalIntRange range = movementInfo.getPageRange();
-            if(range != null) {
+            if (range != null) {
                 movement.setFirstPage(range.getStart());
                 movement.setLastPage(range.getEnd());
             }
-            movement.setStartPage(movementInfo.getStartPage());
+            List<MovementSectionInfo> sectionInfos = movementInfo.getSections();
+            for (MovementSectionInfo sectionInfo : sectionInfos) {
+                MovementSection movementSection = new MovementSection();
+                movementSection.setSection(sectionInfo.getSectionId());
+                IntRange pageRange = sectionInfo.getPageRange();
+                if (pageRange != null) {
+                    movementSection.setStartPage(pageRange.getStart());
+                    movementSection.setEndPage(pageRange.getEnd());
+                }
+                List<String> sectionParts = sectionInfo.getParts();
+                for (String part : sectionParts) {
+                    movementSection.addPart(part);
+                }
+                movement.addSection(movementSection);
+            }
+            List<List<String>> sectionsOrder = movementInfo.getSectionsOrder();
+            int firstSectionPage = 0;
+            if (!sectionsOrder.isEmpty()) {
+                List<String> firstOrder = sectionsOrder.get(0);
+                if (firstOrder != null && !firstOrder.isEmpty()) {
+                    String firstSection = firstOrder.get(0);
+                    if(firstSection != null) {
+                        MovementSection movementSection = movement.getSection(firstSection);
+                        firstSectionPage = movementSection.getStartPage();
+                    }
+                }
+            }
+            int startPage = movementInfo.getStartPage();
+            if(startPage != firstSectionPage) {
+                LOG.error("onScoreLoad: Unequal startPage {}, section page {}", startPage, firstSectionPage);
+                if(firstSectionPage > 0) {
+                    startPage = firstSectionPage;
+                }
+            }
+            movement.setStartPage(startPage);
+
+            List<String> sectionsOrderCsv = convertSectionsOrder(sectionsOrder);
+            movement.addSectionOrder(sectionsOrderCsv);
+
             guiMovements.add(movement);
         }
 
-        List<String> movementNames = movementStrategy.getMovementOrder();
-        if (movementNames == null || movementNames.isEmpty()) {
+        List<String> movementOrderNames = movementStrategy.getMovementOrder();
+        if (movementOrderNames == null || movementOrderNames.isEmpty()) {
             return;
         }
-        String curMovement = NAME_NA;
-        if(movementNames.size() > 0) {
-            curMovement = movementNames.get(0);
+        String curMovementName = null;
+        if(movementOrderNames.size() > 0) {
+            curMovementName = movementOrderNames.get(0);
         }
-        String nextMovement = NAME_NA;
-        if(movementNames.size() > 1) {
-            nextMovement = movementNames.get(1);
+
+        initMovementsInfo(guiMovements, movementOrderNames, curMovementName);
+    }
+
+    public void onMovementInfo(List<MovementInfo> movementInfos, String currentMovement, String nextMovement, String currentSection, String nextSection) {
+        Platform.runLater(() -> {
+            if(!currentMovementProp.get().equals(currentMovement)) {
+                currentMovementProp.setValue(currentMovement);
+            }
+            if(!nextMovementProp.get().equals(nextMovement)) {
+                nextMovementProp.setValue(nextMovement);
+            }
+            setCurrentMovementSection(currentSection);
+            setNextMovementSection(nextSection);
+        });
+    }
+
+    private List<String> convertSectionsOrder(List<List<String>> sectionsOrder) {
+        List<String> out = new ArrayList<>();
+        if(sectionsOrder == null) {
+            return out;
         }
-        setMovementOrderInfo(movementNames, curMovement, nextMovement);
+
+        for(List<String> sectionOrder : sectionsOrder) {
+            String ord = String.join(",", sectionOrder);
+            out.add(ord);
+        }
+        return out;
+    }
+
+    private void initMovementsInfo(final List<Movement> guiMovements, final List<String> guiMovementOrder, final String curMovement) {
         Platform.runLater(() -> {
             resetOverlays();
-            movements.addAll(guiMovements);
+            this.movements.addAll(guiMovements);
+            this.movementOrder.clear();
+            this.movementOrder.addAll(guiMovementOrder);
+            movementOrderLvw.getSelectionModel().select(curMovement);
         });
-    }
-
-    private void setMovementOrderInfo(final List<String> movements, final String curMovement, final String nextMovement) {
-        String prev = this.currentMovement;
-        this.currentMovement = curMovement;
-        Platform.runLater(() -> {
-            String selectedItem = movementOrderLvw.getSelectionModel().getSelectedItem();
-            movementOrder.clear();
-            movementOrder.addAll(movements);
-            if (movements.contains(selectedItem)) {
-                movementOrderLvw.getSelectionModel().select(selectedItem);
-            }
-            setCurrentMovementLabel(curMovement);
-            setNextMovementsLabel(nextMovement);
-        });
-    }
-
-    private void processSectionVote(Section section) {
-        Platform.runLater(() -> {
-            audienceVote.setVoteNo(section.getVoteNo());
-            audienceVote.setMinVote(section.getMinVote());
-            audienceVote.setMaxVote(section.getMaxVote());
-            audienceVote.setAvgVote(section.getAvgVote());
-            audienceVote.setVoterNo(section.getVoterNo());
-            updateVoteBar();
-        });
-    }
-
-    private void setSectionStatusStyle(final String text, final String style, final String styleToRemove) {
-        Platform.runLater(() -> {
-            sectionsStatusLbl.setText(text);
-            ObservableList<String> styleClass = sectionsStatusLbl.getStyleClass();
-            styleClass.remove(styleToRemove);
-            if (!styleClass.contains(style)) {
-                styleClass.add(style);
-            }
-        });
-    }
-
-    public void updateVoteBar() {
-        int voteNo = audienceVote.getVoteNo();
-        if (voteNo == 0) {
-            voteUpVbox.setPrefHeight(0.0);
-            voteDownVbox.setPrefHeight(0.0);
-            return;
-        }
-        int voterNo = audienceVote.getVoterNo();
-        if(voterNo < MIN_VOTER_NO) {
-            voterNo = MIN_VOTER_NO;
-        }
-        double maxHeight = voteVbox.getHeight() / 2.0;
-        ValueScaler vs = new ValueScaler(0.0, voterNo, 0.0, maxHeight);
-        double h = vs.scaleValue(Math.abs(voteNo) * 1.0);
-        if (voteNo > 0) {
-            voteDownVbox.setPrefHeight(0.0);
-            voteUpVbox.setPrefHeight(h);
-        } else if (voteNo < 0) {
-            voteUpVbox.setPrefHeight(0.0);
-            voteDownVbox.setPrefHeight(h);
-        }
     }
 
     public Movement getMovement(String name) {
@@ -904,7 +1257,7 @@ public class SymphoneaScoreController {
             return null;
         }
         for (Movement movement : movements) {
-            if (name.equals(movement.getMovement())) {
+            if (name.equals(movement.getId())) {
                 return movement;
             }
         }
@@ -912,20 +1265,68 @@ public class SymphoneaScoreController {
     }
 
     public void setMovement(ActionEvent actionEvent) {
+        stopOnNextPageEndChb.setSelected(false);
+        overrideNextSectionChb.setSelected(false);
         presetsChob.getSelectionModel().select(Consts.PRESET_ALL_ON);
-        String playMovName = playingMovementProp.getValue();
+        String playMovName = currentMovementProp.getValue();
         if (playMovName == null) {
             return;
         }
-        sendSetMovement(playMovName);
         Movement nextMovement = getMovement(playMovName);
         if (nextMovement == null) {
             return;
         }
+        setSections(sectionOrderLvw.getSelectionModel().getSelectedIndex());
         int startPage = nextMovement.getStartPage();
         mainApp.setPage(startPage);
         mainApp.sendPosition();
         updateOverlays();
+    }
+
+    private void setMovementSections(Movement movement) {
+        ObservableList<MovementSection> movementSections = movement.getSections();
+        Platform.runLater(() -> {
+            sections.clear();
+            if(movementSections == null) {
+                return;
+            }
+            sections.clear();
+            sectionIds.clear();
+            sections.addAll(movementSections);
+            for(MovementSection section : movementSections) {
+                sectionIds.add(section.getSection());
+            }
+            String firstSection = movement.getFirstSection();
+            if(firstSection != null) {
+                mvtSectionsChob.getSelectionModel().select(firstSection);
+            }
+        });
+    }
+
+    private void setSectionOrder(Movement movement) {
+        if(movement == null) {
+            return;
+        }
+        Platform.runLater(() -> {
+            sectionOrder.clear();
+            sectionOrder.addAll(movement.getSectionOrder());
+            setSections(0);
+        });
+
+    }
+    private void setSections(int orderIndex) {
+        if (sectionOrder.size() <= orderIndex) {
+            return;
+        }
+        sectionOrderLvw.getSelectionModel().select(orderIndex);
+        String firstCsv = sectionOrder.get(orderIndex);
+        String[] sections = firstCsv.split(COMMA);
+        if(sections.length > 0) {
+            String first = sections[0];
+            setCurrentMovementSection(first);
+            setNextMovementSection(first);
+        }
+        sendMovementInfo(true);
     }
 
     public void playMovement(ActionEvent actionEvent) {
@@ -937,10 +1338,27 @@ public class SymphoneaScoreController {
         mainApp.stopSection();
     }
 
-    private void sendSetMovement(String movementName) {
+    private void sendMovementInfo(Boolean isOverrideCurrentSection) {
         EventFactory eventFactory = publisher.getEventFactory();
-        StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.SET_MOVEMENT, clock.getSystemTimeMillis());
-        strategyEvent.setMovementName(movementName);
+        StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.SET_MOVEMENT_INFO, clock.getSystemTimeMillis());
+        strategyEvent.setMovementName(currentMovementProp.get());
+        strategyEvent.setSectionName(currentSection.getSection());
+        if(isOverrideNextSection) {
+            strategyEvent.setNextSectionName(nextSectionOverride);
+        } else {
+            strategyEvent.setNextSectionName(nextSection.getSection());
+        }
+        strategyEvent.setOrderIndex(sectionOrderLvw.getSelectionModel().getSelectedIndex());
+        strategyEvent.setOverrideNextSection(isOverrideNextSection);
+        strategyEvent.setOverrideCurrentSection(isOverrideCurrentSection);
+        LOG.info("sendMovementInfo: {}", strategyEvent);
+        publisher.receive(strategyEvent);
+    }
+
+    private void sendStopNext() {
+        EventFactory eventFactory = publisher.getEventFactory();
+        StrategyEvent strategyEvent = eventFactory.createStrategyEvent(StrategyEventType.STOP_NEXT, clock.getSystemTimeMillis());
+        LOG.info("sendStopNext: {}", strategyEvent);
         publisher.receive(strategyEvent);
     }
 
@@ -1220,15 +1638,18 @@ public class SymphoneaScoreController {
 
     public void reset() {
         resetOverlays();
-        resetSections();
+        resetMovements();
     }
 
-    public void resetSections() {
+    public void resetMovements() {
         movements.clear();
         movementOrder.clear();
         nextMovementProp.setValue(Consts.NAME_NA);
-        playingMovementProp.setValue(Consts.NAME_NA);
-        setSectionStatusStyle(Consts.READY, LABEL_GREEN, LABEL_RED);
+        currentMovementProp.setValue(Consts.NAME_NA);
+        currentSection.reset();
+        nextSection.reset();
+        stopOnNextPageEndChb.setSelected(false);
+        overrideNextSectionChb.setSelected(false);
     }
 
     public void resetOverlays() {
@@ -1261,6 +1682,11 @@ public class SymphoneaScoreController {
 
     public void onTempoEvent(Tempo tempo) {
         this.tempo = tempo;
+    }
+
+    public void onStop() {
+        showSemaphore(1, Color.RED);
+        stopOnNextPageEndChb.setSelected(false);
     }
 
     class MaxSender implements Runnable {

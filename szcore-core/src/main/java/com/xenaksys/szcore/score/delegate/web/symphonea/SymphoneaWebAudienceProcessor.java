@@ -1,7 +1,7 @@
 package com.xenaksys.szcore.score.delegate.web.symphonea;
 
 import com.xenaksys.szcore.Consts;
-import com.xenaksys.szcore.algo.ScoreBuilderStrategy;
+import com.xenaksys.szcore.algo.DynamicMovementStrategy;
 import com.xenaksys.szcore.event.EventFactory;
 import com.xenaksys.szcore.event.osc.WebscoreVoteEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceAudioEvent;
@@ -13,9 +13,9 @@ import com.xenaksys.szcore.event.web.audience.WebAudienceStateUpdateEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceStopEvent;
 import com.xenaksys.szcore.event.web.audience.WebAudienceVoteEvent;
 import com.xenaksys.szcore.model.Clock;
+import com.xenaksys.szcore.model.MovementSectionInfo;
 import com.xenaksys.szcore.model.ScoreProcessor;
 import com.xenaksys.szcore.model.ScriptPreset;
-import com.xenaksys.szcore.model.SectionInfo;
 import com.xenaksys.szcore.model.VoteInfo;
 import com.xenaksys.szcore.score.BasicScore;
 import com.xenaksys.szcore.score.web.audience.WebAudienceChangeListener;
@@ -91,7 +91,7 @@ public class SymphoneaWebAudienceProcessor extends WebAudienceScoreProcessor {
     private SymphoneaAudienceWebscoreConfig audienceWebscoreConfig;
     private final SymphoneaAudienceConfigLoader configLoader = new SymphoneaAudienceConfigLoader();
     private SymphoneaWebAudienceStateDeltaTracker stateDeltaTracker;
-    private String currentSection;
+    private MovementSectionInfo currentSection;
     private long sectionStartTime;
 
     public SymphoneaWebAudienceProcessor(ScoreProcessor scoreProcessor, EventFactory eventFactory, Clock clock) {
@@ -340,10 +340,10 @@ public class SymphoneaWebAudienceProcessor extends WebAudienceScoreProcessor {
 
     private void processWebCounterOnStop() {
         try {
-            String section = this.currentSection;
+            MovementSectionInfo section = this.currentSection;
             if (section == null) {
-                ScoreBuilderStrategy scoreBuilderStrategy = ((BasicScore) getScore()).getScoreBuilderStrategy();
-                section = scoreBuilderStrategy.getCurrentSection();
+                DynamicMovementStrategy dynamicScoreStrategy = ((BasicScore) getScore()).getDynamicScoreStrategy();
+                section = dynamicScoreStrategy.getCurrentMovementSection();
             }
             SymphoneaWebAudienceServerState state = getDelegateState();
             WebCounter voteCounter = state.getCounter();
@@ -367,7 +367,11 @@ public class SymphoneaWebAudienceProcessor extends WebAudienceScoreProcessor {
     }
 
     public void onSectionStart(String section) {
-        currentSection = section;
+        DynamicMovementStrategy dynamicScoreStrategy = ((BasicScore) getScore()).getDynamicScoreStrategy();
+        currentSection = dynamicScoreStrategy.getCurrentMovementSection();
+        if(!currentSection.getSectionId().equals(section)) {
+            LOG.error("Unexpected section start {} current: {}", section, currentSection.getSectionId());
+        }
         sectionStartTime = getClock().getElapsedTimeMillis();
         resetVote();
         activateSection(section);
@@ -493,17 +497,16 @@ public class SymphoneaWebAudienceProcessor extends WebAudienceScoreProcessor {
     }
 
     private void processVote(WebCounter voteCounter) {
-        String section = this.currentSection;
-        ScoreBuilderStrategy scoreBuilderStrategy = ((BasicScore) getScore()).getScoreBuilderStrategy();
+        MovementSectionInfo section = this.currentSection;
+        DynamicMovementStrategy dynamicScoreStrategy = ((BasicScore) getScore()).getDynamicScoreStrategy();
         if (section == null) {
-            section = scoreBuilderStrategy.getCurrentSection();
+            section = dynamicScoreStrategy.getCurrentMovementSection();
         }
-        SectionInfo sectionInfo = scoreBuilderStrategy.getSectionInfo(section);
-        if (sectionInfo.isActive()) {
-            sectionInfo.populateVoteInfo(voteCounter.getCounterValue(), voteCounter.getMin(), voteCounter.getMax(), voteCounter.getAvg(), voteCounter.getVoterNo());
+        if (section.isActive()) {
+            section.populateVoteInfo(voteCounter.getCounterValue(), voteCounter.getMin(), voteCounter.getMax(), voteCounter.getAvg(), voteCounter.getVoterNo());
         }
 
-        VoteInfo sectionVoteInfo = sectionInfo.getVoteInfo();
+        VoteInfo sectionVoteInfo = section.getVoteInfo();
         WebscoreVoteEvent webscoreVoteEvent = getEventFactory().createWebscoreVoteEvent(
                 sectionVoteInfo.getCurrent(), sectionVoteInfo.getMin(), sectionVoteInfo.getMax(), sectionVoteInfo.getAvg(), sectionVoteInfo.getVoterNo(),
                 Consts.ALL_DESTINATIONS, getClock().getSystemTimeMillis());

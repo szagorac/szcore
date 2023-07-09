@@ -38,12 +38,12 @@
                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0"/>
                     </content>
                 </Tab>
-                <Tab fx:id="dialogsScoreTab" text="Dialogs">
+                <Tab fx:id="symphoneaScoreTab" text="Symphonea">
                     <content>
                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0"/>
                     </content>
                 </Tab>
-                <Tab fx:id="symphoneaScoreTab" text="Symphonea">
+                <Tab fx:id="dialogsScoreTab" text="Dialogs">
                     <content>
                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0"/>
                     </content>

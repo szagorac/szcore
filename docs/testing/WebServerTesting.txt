@@ -1,0 +1,27 @@
+
+--- Both server and test on localhost
+
+-- http request only
+Each client sends http requests for initial html/js/css/mp3, overall size 1.95MB
+Staggered client requests,
+Random number of clients between 1 and 5 starts at the same time
+Next client request batch happens at random time between 0 and 1000ms 
+
+Number of clients: 200, test duration ~ 50 sec
+Server Max JVM heap Max 250 Mb Min 50Mb, Mac CPU load 0.3%
+average latency: 20ms, min: 8ms, max: 91ms # Percentiles: 90th: 31, 95th: 34, 99th: 91
+average latency: 19ms, min: 11ms, max: 91ms # Percentiles: 90th: 29, 95th: 30, 99th: 91
+average latency: 18ms, min: 9ms, max: 62ms # Percentiles: 90th: 29, 95th: 32, 99th: 61
+average latency: 18ms, min: 10ms, max: 67ms # Percentiles: 90th: 29, 95th: 34, 99th: 66
+average latency: 20ms, min: 9ms, max: 114ms # Percentiles: 90th: 40, 95th: 44, 99th: 114
+
+
+--- Test on separate host, wired through Mikrotik router, same subnet and bridge, no firewall, switch hardware optimisation 
+Number of clients: 200, test duration ~ 50 sec
+Server Max JVM heap Max 250 Mb Min 50Mb, Mac CPU load 0.3%
+
+Item arrived more than a week late
+
+Stochastic Fairness Queuing (SFQ) is ensured by 
+5,102,011
+1239

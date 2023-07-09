@@ -1,0 +1,136 @@
+
+#####   Http requests only
+
+wired, same bridge, hardware switch, no firewall
+MultipleHttpClients clientNo: 200: 
+average latency: 109ms, min: 69ms, max: 233ms # Percentiles: 90th: 164, 95th: 186, 99th: 189
+average latency: 109ms, min: 69ms, max: 229ms # Percentiles: 90th: 167, 95th: 196, 99th: 229
+average latency: 102ms, min: 60ms, max: 234ms # Percentiles: 90th: 141, 95th: 168, 99th: 232
+average latency: 118ms, min: 63ms, max: 459ms # Percentiles: 90th: 148, 95th: 268, 99th: 311
+average latency: 112ms, min: 64ms, max: 260ms # Percentiles: 90th: 175, 95th: 188, 99th: 259
+
+wired, separate bridge and subnet, with firewall (14 rules, 6 NAT rules, 3 mangle, 1 raw)
+Queue limit 150Mbps up/down
+queue max 110Mbps, 10000 packets per sec
+average latency: 1025ms, min: 182ms, max: 4722ms # Percentiles: 90th: 2095, 95th: 3045, 99th: 4675
+average latency: 974ms, min: 201ms, max: 3678ms # Percentiles: 90th: 2062, 95th: 2788, 99th: 3359
+average latency: 982ms, min: 190ms, max: 3786ms # Percentiles: 90th: 2173, 95th: 2514, 99th: 3592
+average latency: 1271ms, min: 187ms, max: 6506ms # Percentiles: 90th: 2541, 95th: 4390, 99th: 5993
+average latency: 942ms, min: 182ms, max: 3553ms # Percentiles: 90th: 2008, 95th: 2841, 99th: 3549
+
+Wireless, 
+separate bridge and subnet, with firewall (14 rules, 6 NAT rules, 3 mangle, 1 raw)
+Queue limit 150Mbps up/down
+queue max 85Mbps, 8000 packets per sec
+JVM CPU Max 1.5%, JVM Heap Max 220Mb
+100 Clients (works with 125, Fails on 150)
+average latency: 1335ms, min: 273ms, max: 4739ms # Percentiles: 90th: 2657, 95th: 3335, 99th: 4739
+average latency: 2357ms, min: 270ms, max: 6209ms # Percentiles: 90th: 4650, 95th: 5151, 99th: 6209
+average latency: 1134ms, min: 251ms, max: 3372ms # Percentiles: 90th: 2155, 95th: 2730, 99th: 3372
+average latency: 1465ms, min: 271ms, max: 4492ms # Percentiles: 90th: 2808, 95th: 3108, 99th: 4492
+average latency: 2073ms, min: 322ms, max: 9220ms # Percentiles: 90th: 4521, 95th: 6420, 99th: 9220
+50 clients
+average latency: 2190ms, min: 318ms, max: 5719ms # Percentiles: 90th: 3935, 95th: 5054, 99th: 5719
+average latency: 895ms, min: 274ms, max: 2543ms # Percentiles: 90th: 1662, 95th: 1770, 99th: 2543
+average latency: 1070ms, min: 280ms, max: 2129ms # Percentiles: 90th: 1882, 95th: 1919, 99th: 2129
+average latency: 1570ms, min: 304ms, max: 5810ms # Percentiles: 90th: 2952, 95th: 3328, 99th: 5810
+average latency: 3105ms, min: 270ms, max: 7162ms # Percentiles: 90th: 5600, 95th: 6292, 99th: 7162
+
+Wireless
+same bridge and subnet, no firewall
+100 Clients
+average latency: 2637ms, min: 382ms, max: 6299ms # Percentiles: 90th: 4714, 95th: 5348, 99th: 6299
+average latency: 1000ms, min: 241ms, max: 3901ms # Percentiles: 90th: 2091, 95th: 2805, 99th: 3901
+average latency: 4279ms, min: 606ms, max: 8522ms # Percentiles: 90th: 6970, 95th: 8154, 99th: 8522
+average latency: 3051ms, min: 258ms, max: 8278ms # Percentiles: 90th: 5514, 95th: 6535, 99th: 8278
+average latency: 2751ms, min: 284ms, max: 8623ms # Percentiles: 90th: 4785, 95th: 5553, 99th: 8623
+50 Clients
+average latency: 2112ms, min: 257ms, max: 5598ms # Percentiles: 90th: 4869, 95th: 4987, 99th: 5598
+average latency: 1018ms, min: 321ms, max: 3014ms # Percentiles: 90th: 1857, 95th: 2338, 99th: 3014
+average latency: 701ms, min: 244ms, max: 2987ms # Percentiles: 90th: 1372, 95th: 1576, 99th: 2987
+average latency: 684ms, min: 255ms, max: 2892ms # Percentiles: 90th: 1215, 95th: 1321, 99th: 2892
+average latency: 1014ms, min: 271ms, max: 5114ms # Percentiles: 90th: 1814, 95th: 1821, 99th: 5114
+
+
+
+####  Websocket server push
+
+Wireless
+separate bridge and subnet, with firewall (14 rules, 6 NAT rules, 3 mangle, 1 raw)
+Queue limit 150Mbps up/down
+queue max 30Mbps, 3000 packets per sec
+JVM CPU Max 0.9%, JVM Heap Max 200Mb
+200 Clients (Fails on 300)
+average latency: 54ms, min: 0ms, max: 979ms # Percentiles: 90th: 162, 95th: 527, 99th: 727
+average latency: 60ms, min: 0ms, max: 1755ms # Percentiles: 90th: 352, 95th: 493, 99th: 864
+average latency: 54ms, min: 0ms, max: 1610ms # Percentiles: 90th: 176, 95th: 512, 99th: 734
+average latency: 49ms, min: 0ms, max: 1285ms # Percentiles: 90th: 164, 95th: 443, 99th: 711
+average latency: 55ms, min: 0ms, max: 1232ms # Percentiles: 90th: 181, 95th: 481, 99th: 836
+100 Clients 
+queue max 16Mbps, 1300 packets per sec
+JVM CPU Max 0.8%, JVM Heap Max 200Mb
+average latency: 46ms, min: 0ms, max: 745ms # Percentiles: 90th: 133, 95th: 413, 99th: 582
+average latency: 36ms, min: 0ms, max: 621ms # Percentiles: 90th: 139, 95th: 348, 99th: 472
+average latency: 41ms, min: 0ms, max: 823ms # Percentiles: 90th: 135, 95th: 431, 99th: 478
+average latency: 33ms, min: 0ms, max: 678ms # Percentiles: 90th: 104, 95th: 338, 99th: 436
+average latency: 41ms, min: 0ms, max: 514ms # Percentiles: 90th: 193, 95th: 388, 99th: 482
+
+Wireless
+same bridge and subnet, no firewall
+JVM CPU Max 1.2%, JVM Heap Max 160Mb
+200 Clients
+average latency: 55ms, min: 0ms, max: 1666ms # Percentiles: 90th: 154, 95th: 539, 99th: 844
+average latency: 56ms, min: 0ms, max: 1808ms # Percentiles: 90th: 131, 95th: 520, 99th: 946
+average latency: 64ms, min: 0ms, max: 1310ms # Percentiles: 90th: 166, 95th: 559, 99th: 963
+average latency: 60ms, min: 0ms, max: 1387ms # Percentiles: 90th: 201, 95th: 506, 99th: 1002
+average latency: 64ms, min: 0ms, max: 1653ms # Percentiles: 90th: 204, 95th: 520, 99th: 953
+JVM CPU Max 0.7%, JVM Heap Max 150Mb
+100 Clients
+average latency: 47ms, min: 0ms, max: 962ms # Percentiles: 90th: 134, 95th: 451, 99th: 804
+average latency: 37ms, min: 0ms, max: 1014ms # Percentiles: 90th: 94, 95th: 336, 99th: 603
+average latency: 46ms, min: 0ms, max: 881ms # Percentiles: 90th: 137, 95th: 464, 99th: 868
+average latency: 37ms, min: 0ms, max: 882ms # Percentiles: 90th: 72, 95th: 424, 99th: 502
+average latency: 29ms, min: -20ms, max: 831ms # Percentiles: 90th: 117, 95th: 315, 99th: 461
+
+
+Wired, 
+same bridge and subnet, hardware switch, no firewall
+clientNo: 200
+average latency: 10ms, min: 0ms, max: 476ms # Percentiles: 90th: 19, 95th: 40, 99th: 420
+average latency: 9ms, min: 0ms, max: 471ms # Percentiles: 90th: 15, 95th: 39, 99th: 316
+average latency: 8ms, min: 0ms, max: 471ms # Percentiles: 90th: 29, 95th: 39, 99th: 188
+average latency: 7ms, min: 0ms, max: 464ms # Percentiles: 90th: 13, 95th: 37, 99th: 195
+average latency: 8ms, min: 0ms, max: 574ms # Percentiles: 90th: 13, 95th: 35, 99th: 145
+clientNo: 100
+average latency: 8ms, min: 0ms, max: 461ms # Percentiles: 90th: 6, 95th: 14, 99th: 308
+average latency: 11ms, min: 0ms, max: 462ms # Percentiles: 90th: 6, 95th: 105, 99th: 308
+average latency: 8ms, min: 0ms, max: 472ms # Percentiles: 90th: 4, 95th: 13, 99th: 408
+average latency: 15ms, min: 0ms, max: 464ms # Percentiles: 90th: 5, 95th: 154, 99th: 408
+average latency: 6ms, min: 0ms, max: 458ms # Percentiles: 90th: 2, 95th: 11, 99th: 158
+
+
+Wired, 
+separate bridge and subnet, with firewall (14 IP rules, 6 NAT rules, 3 mangle, 1 raw)
+Queue limit 150Mbps up/down
+queue max 32Mbps, 3000 packets per sec
+JVM CPU Max 1.2%, JVM Heap Max 130Mb
+clientNo: 200
+average latency: 48ms, min: 0ms, max: 1044ms # Percentiles: 90th: 260, 95th: 401, 99th: 726
+average latency: 39ms, min: 0ms, max: 841ms # Percentiles: 90th: 141, 95th: 365, 99th: 460
+average latency: 39ms, min: 0ms, max: 960ms # Percentiles: 90th: 50, 95th: 361, 99th: 570
+average latency: 39ms, min: 0ms, max: 791ms # Percentiles: 90th: 41, 95th: 363, 99th: 692
+average latency: 35ms, min: 0ms, max: 702ms # Percentiles: 90th: 77, 95th: 339, 99th: 508
+queue max 15Mbps, 1200 packets per sec
+JVM CPU Max 1.0%, JVM Heap Max 130Mb
+clientNo: 100
+average latency: 30ms, min: 0ms, max: 626ms # Percentiles: 90th: 24, 95th: 305, 99th: 391
+average latency: 24ms, min: 0ms, max: 390ms # Percentiles: 90th: 26, 95th: 268, 99th: 355
+average latency: 30ms, min: 0ms, max: 676ms # Percentiles: 90th: 27, 95th: 303, 99th: 370
+average latency: 29ms, min: 0ms, max: 518ms # Percentiles: 90th: 63, 95th: 269, 99th: 379
+average latency: 26ms, min: 0ms, max: 390ms # Percentiles: 90th: 20, 95th: 293, 99th: 377
+
+
+
+
+
+

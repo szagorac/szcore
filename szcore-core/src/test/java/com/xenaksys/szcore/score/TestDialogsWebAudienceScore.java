@@ -29,7 +29,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-public class TestDIalogsWebAudienceScore {
+public class TestDialogsWebAudienceScore {
     private static final String TEST_SCRIPT_PREFIX = "Test script";
 
     private DialogsWebAudienceProcessor webAudienceScore;
@@ -55,11 +55,12 @@ public class TestDIalogsWebAudienceScore {
         webAudienceScore = new DialogsWebAudienceProcessor(scoreProcessor, eventFactory, clock);
         beatIds = new BeatId[10];
 
-        webAudienceScore.init(null);
+        webAudienceScore.init("webscore");
     }
 
     @Test
     public void testPlayerConfigUpdate() {
+        webAudienceScore.reset(2);
         Map<String, Object> params = new HashMap<>();
         WebPlayerConfig playerConfig = webAudienceScore.getDelegateState().getPlayerConfig();
         ArrayList<String> configFiles = playerConfig.getAudioFiles();

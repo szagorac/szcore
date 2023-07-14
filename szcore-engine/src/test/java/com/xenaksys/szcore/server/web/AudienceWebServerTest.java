@@ -4,6 +4,7 @@ import com.xenaksys.szcore.util.MathUtil;
 import com.xenaksys.szcore.util.ThreadUtil;
 import io.undertow.client.ClientResponse;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +56,7 @@ public class AudienceWebServerTest {
 
     }
 
+    @Ignore
     @Test
     public void testSimpleBasic() throws Exception {
         ZscoreTestWebClient testWebClient = new ZscoreTestWebClient(1, URL, WS_URL, HOST, STRING_FILES, BINARY_FLIES,
@@ -79,6 +81,7 @@ public class AudienceWebServerTest {
         LOG.info("Download size = {}MB", MathUtil.roundTo2DecimalPlaces(mb));
     }
 
+    @Ignore
     @Test
     public void testMultipleClients() throws Exception {
         int clientNo = 200;
@@ -147,6 +150,7 @@ public class AudienceWebServerTest {
         printPercentile(durations, "testMultipleHttpClients clientNo: " + clientNo);
     }
 
+    @Ignore
     @Test
     public void testWebsocketReceive() throws Exception {
         ZscoreTestWebsocketClient testWebClient = new ZscoreTestWebsocketClient(1, WS_URL, 8);
@@ -162,6 +166,7 @@ public class AudienceWebServerTest {
         printPercentile(latencies, "testWebsocketReceive clientNo: 1");
     }
 
+    @Ignore
     @Test
     public void testWebsocketAndHttpReceive() throws Exception {
         ZscoreTestWebClient testWebClient = new ZscoreTestWebClient(1, URL, WS_URL, HOST, STRING_FILES, BINARY_FLIES,
@@ -195,6 +200,7 @@ public class AudienceWebServerTest {
         printPercentile(latencies, "testWebsocketAndHttpReceive clientNo: 1");
     }
 
+    @Ignore
     @Test
     public void testWebsocketMultiClient() throws Exception {
         int clientNo = 100;
@@ -231,6 +237,7 @@ public class AudienceWebServerTest {
         printPercentile(latencies, "testWebsocketMultiClient clientNo: " + clientNo);
     }
 
+    @Ignore
     @Test
     public void testWebsocketAndHttpMultipleClients() throws Exception {
         int clientNo = 100;

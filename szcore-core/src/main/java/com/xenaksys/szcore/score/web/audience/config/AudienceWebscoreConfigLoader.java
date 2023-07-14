@@ -3,6 +3,7 @@ package com.xenaksys.szcore.score.web.audience.config;
 import com.xenaksys.szcore.Consts;
 import com.xenaksys.szcore.model.ScriptPreset;
 import com.xenaksys.szcore.score.YamlLoader;
+import com.xenaksys.szcore.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,7 +11,13 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-import static com.xenaksys.szcore.Consts.*;
+import static com.xenaksys.szcore.Consts.AUDIENCE_WEBSCORE_CONFIG_FILE_SUFFIX;
+import static com.xenaksys.szcore.Consts.CONFIG_ID;
+import static com.xenaksys.szcore.Consts.CONFIG_PRESETS;
+import static com.xenaksys.szcore.Consts.CONFIG_SCORE_NAME;
+import static com.xenaksys.szcore.Consts.CONFIG_SCRIPTS;
+import static com.xenaksys.szcore.Consts.CONFIG_WEB_CONFIG;
+import static com.xenaksys.szcore.Consts.YAML_FILE_EXTENSION;
 
 public abstract class AudienceWebscoreConfigLoader extends YamlLoader {
     static final Logger LOG = LoggerFactory.getLogger(AudienceWebscoreConfigLoader.class);
@@ -19,7 +26,11 @@ public abstract class AudienceWebscoreConfigLoader extends YamlLoader {
         String path = workingDir + Consts.SLASH + AUDIENCE_WEBSCORE_CONFIG_FILE_SUFFIX + YAML_FILE_EXTENSION;
         File file = new File(path);
         if (!file.exists()) {
-            throw new RuntimeException("loadStrategyConfig: Invalid Strategy Config File: " + path);
+            ClassLoader classLoader = getClass().getClassLoader();
+            file = FileUtil.getFileFromResources(path, classLoader);
+            if (!file.exists()) {
+                throw new RuntimeException("loadStrategyConfig: Invalid Strategy Config File: " + path);
+            }
         }
         load(file, config);
     }

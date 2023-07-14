@@ -329,6 +329,9 @@ public class ScoreLoader {
         InscorePageMap inscorePageMap = new InscorePageMap(pageId);
         try {
             File file = FileUtil.getFileFromPath(path);
+            if (file == null || !file.exists()) {
+                return inscorePageMap;
+            }
             List<String> lines = FileUtil.loadFile(file);
 
             for (String line : lines) {

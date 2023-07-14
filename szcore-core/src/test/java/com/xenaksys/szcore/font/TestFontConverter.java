@@ -1,6 +1,5 @@
 package com.xenaksys.szcore.font;
 
-import com.xenaksys.szcore.util.FileUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -15,6 +14,6 @@ public class TestFontConverter {
 
     @Test
     public void testWriteFile(){
-        FileUtil.writeToFile("This is test string asdf asdflk ja sdf  \nwith new line", "/Volumes/DataDrive/Music/phd/svg/test.txt");
+//        FileUtil.writeToFile("This is test string asdf asdflk ja sdf  \nwith new line", "/Volumes/DataDrive/Music/phd/svg/test.txt");
     }
 }

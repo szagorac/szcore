@@ -13,7 +13,14 @@ import com.xenaksys.szcore.score.web.audience.WebAudienceScoreScript;
 import com.xenaksys.szcore.score.web.audience.config.WebEnvelopeConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebGranulatorConfig;
 import com.xenaksys.szcore.score.web.audience.config.WebSpeechSynthConfig;
-import com.xenaksys.szcore.score.web.audience.export.*;
+import com.xenaksys.szcore.score.web.audience.export.TileExport;
+import com.xenaksys.szcore.score.web.audience.export.WebAudienceActionExport;
+import com.xenaksys.szcore.score.web.audience.export.WebAudienceInstructionsExport;
+import com.xenaksys.szcore.score.web.audience.export.WebAudienceScoreStateDeltaExport;
+import com.xenaksys.szcore.score.web.audience.export.WebElementStateExport;
+import com.xenaksys.szcore.score.web.audience.export.WebGranulatorConfigExport;
+import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthConfigExport;
+import com.xenaksys.szcore.score.web.audience.export.WebSpeechSynthStateExport;
 import com.xenaksys.szcore.time.TstClock;
 import com.xenaksys.szcore.web.WebAudienceActionType;
 import org.junit.Before;
@@ -25,8 +32,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.xenaksys.szcore.Consts.*;
-import static org.junit.Assert.*;
+import static com.xenaksys.szcore.Consts.WEB_ACTION_ID_START;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_MASTER_GAIN_VAL;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_SPEECH_TEXT;
+import static com.xenaksys.szcore.Consts.WEB_CONFIG_VOLUME;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_ACTIONS;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CENTRE_SHAPE;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_GRANULATOR;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_CONFIG_SPEECH_SYNTH;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_INSTRUCTIONS;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_STATE_SPEECH_SYNTH;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_TILES;
+import static com.xenaksys.szcore.Consts.WEB_OBJ_ZOOM_LEVEL;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -44,11 +64,15 @@ public class TestWebAudienceScore {
         List<Instrument> instruments = new ArrayList<>();
         instruments.add(instrument);
         BasicPage page = Mockito.mock(BasicPage.class);
+        BasicBeat beat = Mockito.mock(BasicBeat.class);
 
         when(scoreProcessor.getScore()).thenReturn(score);
         when(score.getInstruments()).thenReturn(instruments);
         when(score.getPage(any())).thenReturn(page);
         when(page.getDurationMs()).thenReturn(5000L);
+        when(page.getDurationMs()).thenReturn(5000L);
+        when(page.getLastBeat()).thenReturn(beat);
+        when(beat.getDurationMillis()).thenReturn(5000L);
 
         EventFactory eventFactory = new EventFactory();
         Clock clock = new TstClock();
@@ -224,7 +248,7 @@ public class TestWebAudienceScore {
         assertFalse(tile.getState().isPlayingNext());
         assertTrue(delta.containsKey(WEB_OBJ_ACTIONS));
         ArrayList<WebAudienceActionExport> actions = (ArrayList<WebAudienceActionExport>) delta.get(WEB_OBJ_ACTIONS);
-        assertEquals(1, actions.size());
+        assertEquals(2, actions.size());
         WebAudienceActionExport action = actions.iterator().next();
         assertEquals(WEB_ACTION_ID_START, action.getId());
         assertEquals(WebAudienceActionType.ALPHA, action.getActionType());

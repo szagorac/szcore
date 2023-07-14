@@ -6,6 +6,17 @@ ZScore Server and Control GUI builds require the latest versions of Java 8 and M
 
 Please note - slightly misleading module name "szcore" is used for historical reasons.
 
+### Score Packages
+
+Several [ZScore packages](https://bit.ly/zscorepackage), made for preformances of various scores, are available for
+download.
+
+To use a package:
+
+- [download a required zip file](https://bit.ly/zscorepackage)
+- unzip it in any directory
+- follow included User Guide
+
 ## Modules
 
 Java code is split into three Maven modules:

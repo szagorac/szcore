@@ -196,6 +196,9 @@ public class UnionRoseWebAudienceProcessor extends WebAudienceScoreProcessor {
 
     public void reset(int presetNo) {
         try {
+            if (audienceWebscoreConfig == null) {
+                return;
+            }
             ScriptPreset preset = audienceWebscoreConfig.getPreset(presetNo);
             if (preset == null) {
                 LOG.info("resetState: Unknown preset: {}", presetNo);

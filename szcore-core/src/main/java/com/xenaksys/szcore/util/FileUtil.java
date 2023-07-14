@@ -57,6 +57,20 @@ public class FileUtil {
         return null;
     }
 
+    public static File getFileFromResources(String path, ClassLoader classLoader) {
+        try {
+            URL resource = classLoader.getResource(path);
+            if (resource == null) {
+                throw new IllegalArgumentException("file not found!");
+            }
+
+            return new File(resource.toURI());
+        } catch (Exception e) {
+            LOG.error("Failed to process file path: " + path);
+        }
+        return null;
+    }
+
     public static File getFileFromPath(String path) {
         try {
             File file = new File(path);

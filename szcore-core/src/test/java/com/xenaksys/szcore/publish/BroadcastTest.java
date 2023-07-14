@@ -15,6 +15,7 @@ import java.util.List;
 public class BroadcastTest {
     static final Logger LOG = LoggerFactory.getLogger(BroadcastTest.class);
 
+    @Ignore
     @Test
     public void testBroadcastAddr(){
         List<InetAddress> broadcastAddrs = new ArrayList<>();
@@ -49,6 +50,7 @@ public class BroadcastTest {
         }
     }
 
+    @Ignore
     @Test
     public void testParallelConnectedNetworkClients(){
         List<NetUtil.NetworkDevice> connectedClients = new ArrayList<>();

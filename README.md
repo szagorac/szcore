@@ -29,9 +29,11 @@ Directory szcore-client contains Adobe Illustrator scripts used for score author
 
 Module szcore-player is not used currently.
 
-To build the project use standard Maven commands.
+To build the project, use standard Maven commands (e.g. mvn clean install).
 
 Each score has a dedicated dev branch (e.g. dev_Dialogs_branch for the "Socket Dialogues" score)
+
+The branch merge flow is: dev_(branch name) -> develop -> master
 
 ## How to run
 

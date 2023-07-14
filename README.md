@@ -8,12 +8,12 @@ Please note - slightly misleading module name "szcore" is used for historical re
 
 ### Score Packages
 
-Several [ZScore packages](https://bit.ly/zscorepackage), made for preformances of various scores, are available for
+Several [ZScore packages](https://bit.ly/zscorepackages), made for preformances of various scores, are available for
 download.
 
 To use a package:
 
-- [download a required zip file](https://bit.ly/zscorepackage)
+- [download a required zip file](https://bit.ly/zscorepackages)
 - unzip it in any directory
 - follow included User Guide
 
